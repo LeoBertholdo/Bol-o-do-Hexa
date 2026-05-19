@@ -28,6 +28,20 @@ as $$
   );
 $$;
 
+create or replace function app_private.has_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from profiles
+    where role = 'admin'
+  );
+$$;
+
 create or replace function app_private.owns_participant_index(idx integer)
 returns boolean
 language sql
@@ -43,9 +57,62 @@ as $$
   );
 $$;
 
+-- Verifica se o e-mail do usuário logado está convidado para o índice informado.
+-- Usa auth.jwt() para ler o e-mail sem precisar acessar auth.users diretamente.
+create or replace function app_private.is_invited_for_index(idx integer)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.invited_emails
+    where email = (auth.jwt() ->> 'email')
+      and participant_index = idx
+  );
+$$;
+
+create or replace function app_private.prevent_removing_last_admin()
+returns trigger
+language plpgsql
+set search_path = public
+as $$
+begin
+  if old.role <> 'admin'
+     and new.role = 'admin'
+     and not exists (
+       select 1
+       from profiles
+       where role = 'admin'
+         and id <> old.id
+     )
+     and (
+       old.participant_index is distinct from new.participant_index
+       or old.participant_name is distinct from new.participant_name
+     ) then
+    raise exception 'A primeira promoção para administrador só pode alterar a permissão da própria conta.';
+  end if;
+
+  if old.role = 'admin'
+     and new.role <> 'admin'
+     and not exists (
+       select 1
+       from profiles
+       where role = 'admin'
+         and id <> old.id
+     ) then
+    raise exception 'Mantenha pelo menos um administrador ativo.';
+  end if;
+  return new;
+end;
+$$;
+
 grant usage on schema app_private to authenticated;
 grant execute on function app_private.is_admin() to authenticated;
+grant execute on function app_private.has_admin() to authenticated;
 grant execute on function app_private.owns_participant_index(integer) to authenticated;
+grant execute on function app_private.is_invited_for_index(integer) to authenticated;
 
 create table if not exists public.settings (
   id text primary key default 'main' check (id = 'main'),
@@ -101,12 +168,21 @@ create table if not exists public.podium_predictions (
   updated_at timestamptz not null default now()
 );
 
+-- Lista de e-mails autorizados a criar conta e vincular um slot no bolão.
+-- O admin popula esta tabela antes de compartilhar o link.
+-- Apenas quem está aqui (com o índice correto) consegue criar perfil.
+create table if not exists public.invited_emails (
+  email text primary key,
+  participant_index integer not null unique check (participant_index >= 0)
+);
+
 alter table public.profiles enable row level security;
 alter table public.settings enable row level security;
 alter table public.results enable row level security;
 alter table public.predictions enable row level security;
 alter table public.actual_podium enable row level security;
 alter table public.podium_predictions enable row level security;
+alter table public.invited_emails enable row level security;
 
 grant select, insert, update, delete on public.profiles to authenticated;
 grant select, insert, update, delete on public.settings to authenticated;
@@ -114,6 +190,13 @@ grant select, insert, update, delete on public.results to authenticated;
 grant select, insert, update, delete on public.predictions to authenticated;
 grant select, insert, update, delete on public.actual_podium to authenticated;
 grant select, insert, update, delete on public.podium_predictions to authenticated;
+grant select, insert, update, delete on public.invited_emails to authenticated;
+
+drop trigger if exists protect_last_admin on public.profiles;
+create trigger protect_last_admin
+before update on public.profiles
+for each row
+execute function app_private.prevent_removing_last_admin();
 
 drop policy if exists "profiles visible to signed in users" on public.profiles;
 create policy "profiles visible to signed in users"
@@ -123,11 +206,48 @@ using (true);
 drop policy if exists "participants create own profile" on public.profiles;
 create policy "participants create own profile"
 on public.profiles for insert to authenticated
-with check (id = auth.uid() and role = 'participant');
+with check (
+  id = auth.uid()
+  and role = 'participant'
+  and app_private.is_invited_for_index(participant_index)
+);
 
 drop policy if exists "admins update profiles" on public.profiles;
 create policy "admins update profiles"
 on public.profiles for update to authenticated
+using (app_private.is_admin())
+with check (app_private.is_admin());
+
+drop policy if exists "bootstrap first admin" on public.profiles;
+create policy "bootstrap first admin"
+on public.profiles for update to authenticated
+using (
+  id = auth.uid()
+  and not app_private.has_admin()
+)
+with check (
+  id = auth.uid()
+  and role = 'admin'
+  and exists (
+    select 1
+    from public.profiles existing
+    where existing.id = auth.uid()
+      and existing.participant_index = participant_index
+      and existing.participant_name = participant_name
+  )
+);
+
+-- Policies: invited_emails
+-- Qualquer usuário autenticado pode ver a lista (necessário para o app verificar seu slot).
+-- Somente admins podem adicionar, alterar ou remover convites.
+drop policy if exists "invited emails visible to signed in users" on public.invited_emails;
+create policy "invited emails visible to signed in users"
+on public.invited_emails for select to authenticated
+using (true);
+
+drop policy if exists "admins manage invited emails" on public.invited_emails;
+create policy "admins manage invited emails"
+on public.invited_emails for all to authenticated
 using (app_private.is_admin())
 with check (app_private.is_admin());
 
@@ -243,5 +363,24 @@ drop policy if exists "admins delete podium predictions" on public.podium_predic
 create policy "admins delete podium predictions"
 on public.podium_predictions for delete to authenticated
 using (app_private.is_admin());
+
+-- ============================================================
+-- PASSO OBRIGATÓRIO APÓS RODAR ESTE SCRIPT:
+-- Insira os e-mails e índices dos participantes na tabela
+-- invited_emails. O índice deve bater com a posição do nome
+-- no array DEFAULT_PARTICIPANTS do HTML (começa em 0).
+--
+-- IMPORTANTE: inclua seu próprio e-mail aqui antes de criar
+-- sua conta no app — é ele que autoriza o seu cadastro.
+-- Depois que você virar admin, pode gerenciar esta tabela
+-- diretamente pela aba Config do bolão.
+--
+-- Exemplo:
+-- insert into public.invited_emails (email, participant_index) values
+--   ('voce@email.com',        0),
+--   ('amigo1@email.com',      1),
+--   ('amigo2@email.com',      2),
+--   ('amigo3@email.com',      3);
+-- ============================================================
 
 commit;
