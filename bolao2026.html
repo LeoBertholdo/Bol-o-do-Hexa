@@ -799,8 +799,10 @@ function remoteErrorText(error){
   return msg||"Não consegui conversar com o Supabase.";
 }
 function authRedirectURL(){
-  const cleanHref=window.location.href.split("#")[0];
-  return /^https?:\/\//i.test(cleanHref)?cleanHref:null;
+  const url=new URL(window.location.href);
+  url.search="";
+  url.hash="";
+  return /^https?:\/\//i.test(url.href)?url.toString():null;
 }
 function urlHasRecoveryParams(){
   const query=new URLSearchParams(window.location.search);
