@@ -753,14 +753,19 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 /* CONFIG */
 .cfg-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
 .cfg-row:last-child{border-bottom:0}
+.cfg-row.profile-row{align-items:flex-start}
 .cfg-lbl{flex:1}.cfg-lbl strong{display:block;font-size:.9rem}.cfg-lbl span{font-size:.74rem;color:var(--muted)}
 .cfg-inp{border:1.5px solid var(--border);border-radius:7px;padding:8px 10px;font-size:.9rem;width:92px;text-align:center;background:#fff}
 .rules-box{font-size:.84rem;line-height:1.95;color:#435064}
 .rules-box strong{color:var(--text)}
 .action-row{display:flex;gap:9px;flex-wrap:wrap}
+.cfg-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .action-btn,.action-label{flex:1;min-width:170px;padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:900;cursor:pointer;font-size:.84rem;text-align:center}
 .action-label{background:var(--blue)}
 .action-btn.secondary{background:#eef4ff;color:var(--blue);border:1px solid #d8e5ff}
+.role-chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:.68rem;font-weight:950;letter-spacing:.3px;border:1px solid rgba(0,39,118,.12);background:#eef5ff;color:var(--blue)}
+.role-chip.admin{background:#fff8d6;border-color:rgba(245,197,66,.55);color:#7a5600}
+.role-chip.participant{background:#edf7f0;border-color:rgba(0,132,61,.18);color:var(--green-2)}
 .sync-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:12px}
 .sync-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);border-radius:999px;padding:8px 11px;font-size:.74rem;font-weight:900;background:#fff;color:var(--blue)}
 .sync-dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
@@ -1079,7 +1084,12 @@ let remoteClient=null;
 let remoteSession=null;
 let remotePollTimer=null;
 let currentProfile=null;
+let remoteProfiles=[];
 let authReady=false;
+// null = não verificado ainda; 'loading' = buscando; 'not_invited' = não encontrado; number = participant_index autorizado
+let inviteSlot=null;
+// null = não carregado; array = lista de {email, participant_index} para o admin gerenciar
+let invitedEmailsList=null;
 let passwordResetMode=false;
 let palSelectionTouched=false;
 let syncStatus={kind:"local",text:"Dados salvos neste navegador"};
@@ -1142,6 +1152,21 @@ function isRemoteConfigured(){
 function isOnlineMode(){return Boolean(remoteClient);}
 function isSignedIn(){return Boolean(remoteSession&&remoteSession.user);}
 function isAdmin(){return currentProfile&&currentProfile.role==="admin";}
+function hasAdminProfile(){return remoteProfiles.some(profile=>profile.role==="admin");}
+function adminCount(){return remoteProfiles.filter(profile=>profile.role==="admin").length;}
+function canBootstrapAdmin(){
+  return Boolean(isOnlineMode()&&isSignedIn()&&currentProfile&&!isAdmin()&&!hasAdminProfile());
+}
+function canManageRoles(){return Boolean(isOnlineMode()&&isAdmin());}
+function orderedProfiles(){
+  return remoteProfiles.slice().sort((a,b)=>(a.participant_index??999)-(b.participant_index??999));
+}
+function roleLabel(role){
+  return role==="admin"?"Administrador":"Participante";
+}
+function isLastRemainingAdmin(profileId){
+  return adminCount()===1&&remoteProfiles.some(profile=>profile.id===profileId&&profile.role==="admin");
+}
 function myParticipantIndex(){
   return currentProfile&&Number.isInteger(currentProfile.participant_index)?currentProfile.participant_index:null;
 }
@@ -1240,6 +1265,7 @@ async function initRemote(){
   remoteClient.auth.onAuthStateChange((event,session)=>{
     remoteSession=session;
     currentProfile=null;
+    if(!session) remoteProfiles=[];
     if(event==="PASSWORD_RECOVERY"||(session&&pendingRecoveryLink&&!passwordResetMode)){
       pendingRecoveryLink=false;
       enterPasswordRecoveryMode();
@@ -1332,9 +1358,12 @@ async function loadRemoteData(showToast=false){
     render(activeTab);
     return;
   }
-  currentProfile=(profiles.data||[]).find(profile=>profile.id===remoteSession.user.id)||null;
+  remoteProfiles=profiles.data||[];
+  currentProfile=remoteProfiles.find(profile=>profile.id===remoteSession.user.id)||null;
+  // Se ainda não tem perfil vinculado, busca o slot de convite para exibir no painel
+  if(!currentProfile&&inviteSlot===null) fetchInviteSlot();
   applyRemoteData({
-    profiles:profiles.data,
+    profiles:remoteProfiles,
     settings:settings.data,
     results:results.data,
     predictions:predictions.data,
@@ -1414,15 +1443,40 @@ async function signOut(){
   await remoteClient.auth.signOut();
   currentProfile=null;
   remoteSession=null;
+  remoteProfiles=[];
   passwordResetMode=false;
   authPanelOpen=false;
+  inviteSlot=null;
+  invitedEmailsList=null;
   setSyncStatus("warn","Você saiu da conta.");
   render(activeTab);
 }
+// Busca qual participant_index o e-mail logado tem na tabela invited_emails.
+// Atualiza a variável inviteSlot e re-renderiza os painéis afetados.
+async function fetchInviteSlot(){
+  if(!remoteClient||!remoteSession){inviteSlot=null;return;}
+  inviteSlot='loading';
+  renderAuthControls();
+  const email=remoteSession.user.email||'';
+  const {data,error}=await remoteClient.from('invited_emails')
+    .select('participant_index')
+    .eq('email',email)
+    .maybeSingle();
+  inviteSlot=(error||!data)?'not_invited':data.participant_index;
+  renderAuthControls();
+  if(activeTab==='config') renderConfig();
+}
+
 async function claimParticipant(source="config"){
   if(!remoteClient||!remoteSession){toast("Entre antes de vincular seu nome.");return;}
-  const idx=parseInt(authValue(source,"participant"),10);
-  if(Number.isNaN(idx)||idx<0||idx>=S.participants.length){toast("Escolha seu nome na lista.");return;}
+  // O slot é determinado pelo servidor (invited_emails), não pelo dropdown — segurança contra impersonação
+  if(typeof inviteSlot!=='number'||inviteSlot<0||inviteSlot>=S.participants.length){
+    toast(inviteSlot==='not_invited'
+      ?"Seu e-mail não está na lista de convidados. Fale com o administrador."
+      :"Aguarde a verificação do convite e tente novamente.");
+    return;
+  }
+  const idx=inviteSlot;
   setSyncStatus("warn","Vinculando participante...");
   const {error}=await remoteClient.from("profiles").insert({
     id:remoteSession.user.id,
@@ -1435,6 +1489,35 @@ async function claimParticipant(source="config"){
   palSelectionTouched=false;
   authPanelOpen=false;
   await loadRemoteData(true);
+  if(!hasAdminProfile()) toast("Conta vinculada. Como ainda não existe administrador, você já pode assumir esse papel.");
+}
+
+async function bootstrapFirstAdmin(){
+  if(!remoteClient||!remoteSession||!currentProfile){toast("Entre e vincule seu nome antes.");return;}
+  if(isAdmin()){toast("Sua conta já é administradora.");return;}
+  if(hasAdminProfile()){toast("Já existe um administrador neste bolão.");await loadRemoteData(false);return;}
+  if(!window.confirm("Sua conta vai virar a primeira administradora deste bolão. Deseja continuar?")) return;
+  const ok=await remoteWrite(()=>remoteClient.from("profiles").update({role:"admin"}).eq("id",remoteSession.user.id));
+  if(!ok) return;
+  await loadRemoteData(false);
+  toast("Você agora é administrador.");
+}
+
+async function updateProfileRole(profileId,role){
+  if(!remoteClient||!remoteSession){toast("Entre como administrador primeiro.");return;}
+  if(!isAdmin()){toast("Só o administrador altera permissões.");return;}
+  const profile=remoteProfiles.find(item=>item.id===profileId);
+  if(!profile){toast("Conta não encontrada. Sincronize e tente de novo.");return;}
+  if(role!=="admin"&&isLastRemainingAdmin(profileId)){toast("Mantenha pelo menos um administrador ativo.");return;}
+  const targetName=participantName(profile.participant_index);
+  const message=role==="admin"
+    ? `Transformar ${targetName} em administrador?`
+    : `Remover o acesso de administrador de ${targetName}?`;
+  if(!window.confirm(message)) return;
+  const ok=await remoteWrite(()=>remoteClient.from("profiles").update({role}).eq("id",profileId));
+  if(!ok) return;
+  await loadRemoteData(false);
+  toast(`${targetName} agora está como ${roleLabel(role).toLowerCase()}.`);
 }
 
 async function remoteWrite(task){
@@ -1636,16 +1719,20 @@ function renderAuthControls(){
     return;
   }
   if(!currentProfile){
+    if(inviteSlot===null) fetchInviteSlot();
+    const topSlotBody=(inviteSlot===null||inviteSlot==='loading')
+      ?`<div class="microcopy">Verificando convite…</div>`
+      :inviteSlot==='not_invited'
+        ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+        :`<div class="microcopy">Você está convidado como <strong>${esc(participantName(inviteSlot))}</strong>.</div>
+          <div class="action-row" style="margin-top:8px">
+            <button class="action-btn" id="topClaimParticipant" onclick="claimParticipant('top')">Confirmar como ${esc(participantName(inviteSlot))}</button>
+          </div>`;
     el.innerHTML=`<button class="btn-auth primary user" onclick="toggleAuthPanel('claim')">Vincular nome</button>
     <div class="account-panel ${open}" onclick="event.stopPropagation()">
       <div class="card-title">Vincular participante</div>
       <div class="sync-pill ${syncStatus.kind}" id="topSyncStatusPill"><span class="sync-dot"></span><span id="topSyncStatusText">${esc(syncStatus.text)}</span></div>
-      <div class="login-grid">
-        <select class="txt-select" id="topClaimParticipant">
-          ${S.participants.map((name,i)=>`<option value="${i}">${esc(name)}</option>`).join("")}
-        </select>
-        <button class="action-btn" onclick="claimParticipant('top')">Usar este nome</button>
-      </div>
+      <div class="login-grid">${topSlotBody}</div>
       <div class="action-row" style="margin-top:10px">
         <button class="action-btn secondary" onclick="signOut()">Sair</button>
       </div>
@@ -1661,7 +1748,9 @@ function renderAuthControls(){
       <div class="microcopy"><strong>E-mail</strong><br>${esc(remoteSession.user.email||"")}</div>
       <div class="microcopy"><strong>Perfil</strong><br>${isAdmin()?"Administrador":"Participante"}</div>
     </div>
+    ${canBootstrapAdmin()?`<div class="microcopy" style="margin-top:10px">Ainda não existe administrador neste bolão. Você pode assumir esse papel agora.</div>`:""}
     <div class="action-row" style="margin-top:10px">
+      ${canBootstrapAdmin()?`<button class="action-btn" onclick="bootstrapFirstAdmin()">Virar administrador</button>`:""}
       <button class="action-btn secondary" onclick="loadRemoteData(true)">Sincronizar agora</button>
       <button class="action-btn secondary" onclick="signOut()">Sair</button>
     </div>
@@ -1722,15 +1811,19 @@ function accountCard(){
     </div>`;
   }
   if(!currentProfile){
+    if(inviteSlot===null) fetchInviteSlot();
+    const cfgSlotBody=(inviteSlot===null||inviteSlot==='loading')
+      ?`<div class="microcopy">Verificando convite…</div>`
+      :inviteSlot==='not_invited'
+        ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+        :`<div class="microcopy">Você está convidado como <strong>${esc(participantName(inviteSlot))}</strong>.</div>
+          <div class="action-row" style="margin-top:8px">
+            <button class="action-btn" onclick="claimParticipant()">Confirmar como ${esc(participantName(inviteSlot))}</button>
+          </div>`;
     return `<div class="card">
       <div class="card-title">Vincular participante</div>
       <div class="sync-pill ${syncStatus.kind}" id="syncStatusPill"><span class="sync-dot"></span><span id="syncStatusText">${esc(syncStatus.text)}</span></div>
-      <div class="login-grid">
-        <select class="txt-select" id="claimParticipant">
-          ${S.participants.map((name,i)=>`<option value="${i}">${esc(name)}</option>`).join("")}
-        </select>
-        <button class="action-btn" onclick="claimParticipant()">Usar este nome</button>
-      </div>
+      <div class="login-grid">${cfgSlotBody}</div>
       <div class="action-row" style="margin-top:10px">
         <button class="action-btn secondary" onclick="signOut()">Sair</button>
       </div>
@@ -1744,7 +1837,9 @@ function accountCard(){
       <div class="microcopy"><strong>E-mail</strong><br>${esc(remoteSession.user.email||"")}</div>
       <div class="microcopy"><strong>Perfil</strong><br>${isAdmin()?"Administrador":"Participante"}</div>
     </div>
+    ${canBootstrapAdmin()?`<div class="microcopy" style="margin-top:10px">Ainda não existe administrador neste bolão. Você pode assumir esse papel agora.</div>`:""}
     <div class="action-row" style="margin-top:10px">
+      ${canBootstrapAdmin()?`<button class="action-btn" onclick="bootstrapFirstAdmin()">Virar administrador</button>`:""}
       <button class="action-btn secondary" onclick="loadRemoteData(true)">Sincronizar agora</button>
       <button class="action-btn secondary" onclick="signOut()">Sair</button>
     </div>
@@ -2489,42 +2584,55 @@ function confirmRes(id){
   if(game.ko&&s1===s2){toast("Em mata-mata, informe o placar final com vencedor.");return;}
   S.results[id]={s1,s2};
   delete resultDrafts[id];
-  clearDependentKnockouts(id);
+  const clearedIds=clearDependentKnockouts(id);
   save();
   saveResultRemote(id);
+  // Propaga a cascata de deleção ao Supabase para evitar que o poll ressuscite resultados inválidos
+  if(remoteClient&&isAdmin()&&clearedIds.length){
+    remoteWrite(()=>remoteClient.from("results").delete().in("game_id",clearedIds));
+  }
   toast("Resultado salvo.");
   render(activeTab);
 }
+// Retorna array de game_ids deletados para que o chamador possa propagá-los ao Supabase
 function clearDependentKnockouts(id){
   const order=["R32","R16","QF","SF","P3","FINAL"];
   const prefix=id.split("_")[0];
   const idx=order.indexOf(prefix);
+  const cleared=[];
   if(idx<0&&id!=="P3"&&id!=="FINAL"){
     if(id.startsWith("G")){
       koGames().forEach(g=>{
+        if(S.results[g.id]) cleared.push(g.id);
         delete S.results[g.id];
         delete resultDrafts[g.id];
       });
     }
-    return;
+    return cleared;
   }
   const start=idx<0?order.length:idx+1;
   koGames().forEach(g=>{
     const gp=g.id.split("_")[0];
     if(order.indexOf(gp)>=start){
+      if(S.results[g.id]) cleared.push(g.id);
       delete S.results[g.id];
       delete resultDrafts[g.id];
     }
   });
+  return cleared;
 }
 function clearRes(id){
   if(!canEditResults()){toast("Só o administrador altera resultados.");render(activeTab);return;}
   if(!confirm("Remover este resultado?")) return;
   delete S.results[id];
   resultDrafts[id]={s1:0,s2:0};
-  clearDependentKnockouts(id);
+  const clearedOnRemove=clearDependentKnockouts(id);
   save();
   deleteResultRemote(id);
+  // Propaga a cascata ao Supabase
+  if(remoteClient&&isAdmin()&&clearedOnRemove.length){
+    remoteWrite(()=>remoteClient.from("results").delete().in("game_id",clearedOnRemove));
+  }
   render(activeTab);
 }
 
@@ -2575,15 +2683,21 @@ function renderPalpiteRow(game){
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
+  // Bloqueia palpites de jogos que já começaram (usa UTC do jogo)
+  const gameStarted=!!(game.utc&&new Date()>=new Date(game.utc));
+  const disabled=!canEdit||gameStarted;
+  // Badge de pontuação
   let badge=`<div class="sbadge bem">–</div>`;
   if(pal.s1!=null&&pal.s2!=null&&res){
     const sc=score(pal,res);
     const cls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":"b0";
     const lbl=sc===3?"+3":sc===1?"+1":sc===-2?"−2":"0";
     badge=`<div class="sbadge ${cls}">${lbl}</div>`;
+  } else if(gameStarted&&canEdit&&(pal.s1==null||pal.s2==null)){
+    // Jogo encerrado sem palpite completo: sinaliza ao participante
+    badge=`<div class="sbadge b0" title="Jogo encerrado sem palpite">–</div>`;
   }
   const waiting=game.ko&&!teams.ready;
-  const disabled=!canEdit;
   if(waiting){
     return `<div class="pal-row">
       <div class="gid">${esc(game.id)}</div>
@@ -2591,14 +2705,26 @@ function renderPalpiteRow(game){
       ${badge}
     </div>`;
   }
+  // Valores exibidos nos inputs:
+  // - Campo editável sem palpite → 0 (ponto de partida para facilitar a seleção)
+  // - Campo bloqueado sem palpite → null (fica em branco, fica claro que não foi preenchido)
+  const v1=canEdit&&!gameStarted?(pal.s1??0):pal.s1;
+  const v2=canEdit&&!gameStarted?(pal.s2??0):pal.s2;
+  // Indicador "Encerrado" abaixo dos placares quando jogo começou mas resultado ainda não saiu
+  const encerradoNote=gameStarted&&!res
+    ?`<div style="text-align:center;font-size:0.68rem;color:var(--text-muted,#888);margin-top:2px">Encerrado</div>`
+    :``;
   return `<div class="pal-row">
     <div class="gid">${esc(game.id)}</div>
     <div class="gteams">
         ${teamHTML(teams.t1,"r",!teams.ready)}
-      <div class="score-wrap">
-        ${scoreControl(`p_${palPi}_${game.id}_1`,pal.s1,`setPal(${palPi},'${game.id}',1,this.value)`,"–","onchange",disabled)}
-        <span class="ssep">×</span>
-        ${scoreControl(`p_${palPi}_${game.id}_2`,pal.s2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
+      <div>
+        <div class="score-wrap">
+          ${scoreControl(`p_${palPi}_${game.id}_1`,v1,`setPal(${palPi},'${game.id}',1,this.value)`,"–","onchange",disabled)}
+          <span class="ssep">×</span>
+          ${scoreControl(`p_${palPi}_${game.id}_2`,v2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
+        </div>
+        ${encerradoNote}
       </div>
       ${teamHTML(teams.t2,"",!teams.ready)}
     </div>
@@ -2610,6 +2736,12 @@ function setPalStage(stage){palStage=stage;palFilter="all";renderPalpites();}
 function setPalFilter(k){palFilter=k;renderPalpites();}
 function setPal(pi,gid,w,v){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");renderPalpites();return;}
+  const game=gameById(gid);
+  if(game&&game.utc&&new Date()>=new Date(game.utc)){
+    toast("Este jogo já começou. Palpites encerrados.");
+    renderPalpites();
+    return;
+  }
   const key=`${pi}_${gid}`;
   if(!S.palpites[key]) S.palpites[key]={};
   const n=parseInt(v,10);
@@ -2684,6 +2816,7 @@ function setPodio(pi,k,v){
 }
 
 function renderConfig(){
+  if(isOnlineMode()&&isAdmin()&&invitedEmailsList===null) loadInvitedEmails();
   const n=S.participants.length;
   const total=n*S.config.entryValue;
   const pcts=S.config.prizePercents;
@@ -2691,8 +2824,57 @@ function renderConfig(){
   const sum=prizes.reduce((a,b)=>a+b,0);
   const diff=total-sum;
   const locked=!canEditResults();
+  const profiles=orderedProfiles();
   let h=`<div class="panel">
     ${accountCard()}
+    ${isOnlineMode()&&currentProfile?`<div class="card">
+      <div class="card-title">Permissões online</div>
+      ${canManageRoles()
+        ? `${profiles.map(profile=>{
+            const admin=profile.role==="admin";
+            const self=profile.id===currentProfile.id;
+            const disableDemote=admin&&isLastRemainingAdmin(profile.id);
+            return `<div class="cfg-row profile-row">
+              <div class="cfg-lbl">
+                <strong>${esc(participantName(profile.participant_index))}${self?" (você)":""}</strong>
+                <span>${admin?"Pode alterar resultados, pódio, configurações e permissões.":"Pode editar apenas os próprios palpites e pódio."}</span>
+              </div>
+              <div class="cfg-actions">
+                <span class="role-chip ${admin?"admin":"participant"}">${roleLabel(profile.role)}</span>
+                ${admin
+                  ? `<button class="action-btn secondary" onclick="updateProfileRole('${profile.id}','participant')" ${disableDemote?"disabled":""}>Remover admin</button>`
+                  : `<button class="action-btn" onclick="updateProfileRole('${profile.id}','admin')">Tornar admin</button>`}
+              </div>
+            </div>`;
+          }).join("")}
+          <div class="microcopy" style="margin-top:10px">As permissões valem apenas para contas já vinculadas a um participante.</div>
+          ${adminCount()===1?`<div class="microcopy" style="margin-top:4px">O último administrador fica protegido para o bolão não ficar sem controle.</div>`:""}`
+        : canBootstrapAdmin()
+          ? `<div class="microcopy">Ainda não existe administrador neste bolão. Assuma a primeira administração para liberar a gestão de permissões aqui mesmo.</div>
+             <div class="action-row" style="margin-top:10px">
+               <button class="action-btn" onclick="bootstrapFirstAdmin()">Virar administrador</button>
+             </div>`
+          : `<div class="microcopy">${hasAdminProfile()?"Só administradores podem promover outras contas por aqui.":"Entre com uma conta vinculada para assumir a primeira administração."}</div>`}
+    </div>`:""}
+    ${isOnlineMode()&&isAdmin()?`<div class="card">
+      <div class="card-title">Lista de convidados</div>
+      <div class="microcopy" style="margin-bottom:10px">Somente e-mails desta lista podem criar conta e vincular um nome ao bolão.</div>
+      ${invitedEmailsList===null
+        ?`<div class="microcopy">Carregando…</div>`
+        :invitedEmailsList.length===0
+          ?`<div class="microcopy">Nenhum convite cadastrado ainda.</div>`
+          :invitedEmailsList.map(ie=>`<div class="cfg-row">
+              <div class="cfg-lbl"><strong>${esc(participantName(ie.participant_index))}</strong><span>${esc(ie.email)}</span></div>
+              <button class="action-btn secondary" onclick="removeInvitedEmail('${ie.email.replace(/'/g,"\\'")}')">Remover</button>
+            </div>`).join("")}
+      <div class="cfg-row" style="margin-top:12px;gap:6px;flex-wrap:wrap">
+        <input class="txt-inp" id="inviteEmailInp" type="email" placeholder="e-mail do convidado" style="flex:1;min-width:180px">
+        <select class="txt-select" id="inviteIdxSel" style="width:auto">
+          ${S.participants.map((name,i)=>`<option value="${i}">${esc(name)}</option>`).join("")}
+        </select>
+        <button class="action-btn" onclick="addInvitedEmail()">Adicionar</button>
+      </div>
+    </div>`:``}
     <div class="card">
       <div class="card-title">Participantes</div>
       <div class="rules-box">${S.participants.map((name,i)=>`<div>${i+1}. <strong>${esc(name)}</strong></div>`).join("")}</div>
@@ -2762,6 +2944,28 @@ function updPrize(i,v){
   save();
   saveConfigRemote();
   renderConfig();
+}
+// ── Gerenciamento de convidados (invited_emails) ──────────────────────────
+async function loadInvitedEmails(){
+  if(!remoteClient||!remoteSession||!isAdmin()) return;
+  const {data}=await remoteClient.from('invited_emails').select('email,participant_index').order('participant_index');
+  invitedEmailsList=data||[];
+  if(activeTab==='config') renderConfig();
+}
+async function addInvitedEmail(){
+  if(!remoteClient||!remoteSession||!isAdmin()){toast("Só o administrador pode gerenciar convidados.");return;}
+  const email=(document.getElementById('inviteEmailInp')?.value||'').toLowerCase().trim();
+  const idx=parseInt(document.getElementById('inviteIdxSel')?.value,10);
+  if(!email||!email.includes('@')){toast("Informe um e-mail válido.");return;}
+  if(!Number.isInteger(idx)||idx<0||idx>=S.participants.length){toast("Escolha um participante válido.");return;}
+  const ok=await remoteWrite(()=>remoteClient.from('invited_emails').upsert({email,participant_index:idx},{onConflict:'email'}));
+  if(ok){invitedEmailsList=null;await loadInvitedEmails();toast(`Convite salvo para ${email}.`);}
+}
+async function removeInvitedEmail(email){
+  if(!remoteClient||!remoteSession||!isAdmin()){toast("Só o administrador pode gerenciar convidados.");return;}
+  if(!confirm(`Remover o convite de ${email}?\nSe esta pessoa já tiver vinculado a conta, ela não conseguirá criar um novo perfil caso saia.`)) return;
+  const ok=await remoteWrite(()=>remoteClient.from('invited_emails').delete().eq('email',email));
+  if(ok){invitedEmailsList=null;await loadInvitedEmails();toast(`Convite de ${email} removido.`);}
 }
 
 function resetCompetitionDataState(){
