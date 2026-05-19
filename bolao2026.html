@@ -229,6 +229,50 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .home-metric strong{display:block;font-size:1.3rem;line-height:1;font-weight:950;color:#fff}
 .home-metric span{display:block;margin-top:5px;font-size:.65rem;text-transform:uppercase;letter-spacing:.55px;color:rgba(255,255,255,.76);font-weight:900}
+.home-metric small{display:block;margin-top:7px;font-size:.71rem;line-height:1.4;color:rgba(255,255,255,.82);font-weight:750}
+.position-value{
+  display:block;
+  margin-top:7px;
+  font-size:1.58rem;
+  line-height:1;
+  font-weight:950;
+  color:#fff;
+}
+.position-value.top-1{color:var(--gold)}
+.position-value.top-2{color:var(--silver)}
+.position-value.top-3{color:var(--bronze)}
+.position-help{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+.metric-inline-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid rgba(255,255,255,.3);
+  border-radius:999px;
+  padding:6px 10px;
+  background:rgba(255,255,255,.12);
+  color:#fff;
+  font-size:.7rem;
+  font-weight:900;
+}
+.home-copy-footer{margin-top:10px}
+.metric-link{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:999px;
+  padding:7px 10px;
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  font-size:.7rem;
+  font-weight:900;
+}
 .home-prize-board{
   align-self:stretch;
   display:flex;
@@ -242,20 +286,38 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   backdrop-filter:blur(12px);
 }
 .prize-total .label{font-size:.66rem;text-transform:uppercase;letter-spacing:1px;font-weight:950;color:rgba(255,255,255,.76)}
-.prize-total .value{margin-top:5px;font-size:2rem;line-height:1;font-weight:950;color:var(--yellow)}
-.prize-split{display:grid;gap:8px}
+.prize-total .value{margin-top:5px;font-size:1.6rem;line-height:1.05;font-weight:950;color:#fff}
+.prize-total .note{margin-top:6px;font-size:.72rem;line-height:1.45;color:rgba(255,255,255,.72)}
+.prize-split{display:grid;gap:10px}
 .prize-row{
   display:grid;
-  grid-template-columns:1fr auto auto;
-  gap:8px;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:10px;
   align-items:center;
-  padding:8px 0;
+  padding:10px 0;
   border-top:1px solid rgba(255,255,255,.16);
-  font-size:.8rem;
+  font-size:.82rem;
 }
-.prize-row span{font-weight:850}
-.prize-row strong{font-size:.9rem;color:#fff}
-.prize-row small{color:rgba(255,255,255,.66);font-weight:900}
+.prize-rank{
+  width:31px;
+  height:31px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.78rem;
+  font-weight:950;
+  flex-shrink:0;
+}
+.prize-rank.gold{background:var(--gold);color:#664b00}
+.prize-rank.silver{background:var(--silver);color:#334155}
+.prize-rank.bronze{background:var(--bronze);color:#fff}
+.prize-copy{min-width:0}
+.prize-copy strong{display:block;font-size:.92rem;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prize-copy span{display:block;margin-top:4px;font-size:.66rem;color:rgba(255,255,255,.72);font-weight:850}
+.prize-score{text-align:right;min-width:52px}
+.prize-score strong{display:block;font-size:1.1rem;color:#fff;line-height:1;font-weight:950}
+.prize-score span{display:block;margin-top:3px;font-size:.58rem;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.68);font-weight:900}
 .home-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:14px;align-items:start}
 .home-side{display:grid;gap:14px}
 .home-section{
@@ -281,6 +343,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .mini-action:hover{border-color:#b8c7df;background:#f7fbff}
 .ranking-compact{min-height:0}
+.home-ranking-full .lb-row:last-child{margin-bottom:0}
+.full-ranking-list{display:grid;gap:8px}
 .mini-ranking-list{display:grid;gap:7px;max-height:384px;overflow:auto;padding-right:2px;scrollbar-width:thin}
 .mini-rank-row{
   display:grid;
@@ -377,6 +441,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   line-height:1.45;
 }
 .home-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.home-insights.single{grid-template-columns:1fr}
 .quick-insight{
   background:#fff;
   border:1px solid var(--border);
@@ -387,8 +452,132 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .quick-insight .label{font-size:.62rem;text-transform:uppercase;letter-spacing:.65px;color:var(--muted);font-weight:950}
 .quick-insight .value{margin-top:6px;font-size:1.18rem;color:var(--blue);font-weight:950;line-height:1.05}
 .quick-insight .note{margin-top:5px;font-size:.72rem;color:var(--muted);line-height:1.4}
+.position-insight{
+  background:linear-gradient(135deg,#fffef7 0%,#f4fbff 100%);
+  border-color:#d8e5ff;
+  box-shadow:0 12px 30px rgba(0,39,118,.08);
+}
+.position-insight .value{color:var(--green)}
+.position-insight .note strong{color:var(--text)}
+.insight-action{margin-top:12px}
 
 /* RANKING */
+.ranking-page{display:grid;gap:14px}
+.ranking-hero{
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(220,229,216,.95);
+  border-radius:8px;
+  padding:16px;
+  background:
+    radial-gradient(circle at top right,rgba(255,223,0,.18),transparent 30%),
+    linear-gradient(135deg,#ffffff 0%,#f3fbff 48%,#f8fff5 100%);
+  box-shadow:0 18px 42px rgba(0,39,118,.08);
+}
+.ranking-hero:after{
+  content:"";
+  position:absolute;
+  inset:auto -60px -50px auto;
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,132,61,.1),transparent 68%);
+  pointer-events:none;
+}
+.ranking-hero-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.ranking-hero h2{font-size:1.5rem;line-height:1.02;color:var(--text);font-weight:950}
+.ranking-hero .section-sub{max-width:720px}
+.ranking-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ranking-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 11px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid var(--border);
+  font-size:.74rem;
+  font-weight:900;
+  color:var(--blue);
+}
+.ranking-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ranking-stat{
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(220,229,216,.95);
+  border-radius:8px;
+  padding:12px;
+  box-shadow:0 8px 20px rgba(0,39,118,.05);
+}
+.ranking-stat .eyebrow{font-size:.6rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:950}
+.ranking-stat strong{display:block;margin-top:6px;font-size:1.28rem;line-height:1;color:var(--blue);font-weight:950}
+.ranking-stat span{display:block;margin-top:6px;font-size:.74rem;color:var(--muted);line-height:1.35}
+.chart-shell{
+  display:grid;
+  gap:12px;
+  background:#fff;
+  border:1px solid rgba(220,229,216,.95);
+  border-radius:8px;
+  padding:14px;
+  box-shadow:0 14px 34px rgba(0,39,118,.07);
+}
+.chart-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.chart-presets,.chart-legend{display:flex;gap:8px;flex-wrap:wrap}
+.chart-chip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:8px 11px;
+  background:#fff;
+  color:var(--muted);
+  font-size:.74rem;
+  font-weight:900;
+}
+.chart-chip.active{border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(0,39,118,.16)}
+.chart-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.chart-stage{
+  border:1px solid #e5edf8;
+  border-radius:8px;
+  padding:12px;
+  background:linear-gradient(180deg,#fbfdff 0%,#f6fbf8 100%);
+}
+.chart-stage svg{display:block;width:100%;height:auto}
+.chart-axis{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.68rem;color:var(--muted);font-weight:850}
+.chart-empty{
+  padding:18px;
+  border:1px dashed #c7d7f0;
+  border-radius:8px;
+  background:#f7fbff;
+  font-size:.8rem;
+  color:#41516d;
+  font-weight:850;
+}
+.ranking-grid{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(280px,.82fr);gap:14px;align-items:start}
+.ranking-side{display:grid;gap:14px}
+.ranking-card{
+  background:#fff;
+  border:1px solid rgba(220,229,216,.95);
+  border-radius:8px;
+  padding:14px;
+  box-shadow:0 14px 34px rgba(0,39,118,.06);
+}
+.ranking-card h3{font-size:1rem;line-height:1.1;color:var(--text);font-weight:950}
+.ranking-card p{margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45}
+.ranking-card .mini-action{margin-top:12px}
+.ranking-card-list{display:grid;gap:8px;margin-top:12px}
+.ranking-mini-row{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+}
+.ranking-mini-row strong{font-size:.88rem;color:var(--text)}
+.ranking-mini-row span{font-size:.66rem;color:var(--muted);font-weight:850}
 .stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
 .stat-box{background:linear-gradient(180deg,#fff,#fbfff3);border-radius:8px;border:1px solid var(--border);padding:12px;text-align:center}
 .stat-box .bv{font-size:1.45rem;font-weight:950;color:var(--blue)}
@@ -404,6 +593,11 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .podium-row .rank{width:42px;height:42px;font-size:.95rem;box-shadow:0 8px 18px rgba(0,0,0,.12)}
 .r1{background:var(--gold);color:#664b00}.r2{background:var(--silver);color:#334155}.r3{background:var(--bronze);color:#fff}.ro{background:#eef3f8;color:var(--muted)}
 .pname{font-weight:900;font-size:.98rem;min-width:0}
+.lb-row.me{
+  border-color:#9fc5ff;
+  background:linear-gradient(110deg,#f7fbff,#ffffff 48%,#f7fbff);
+  box-shadow:0 12px 28px rgba(0,39,118,.1);
+}
 .pstats{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
 .stat{min-width:44px;text-align:center;padding:4px 6px;border-radius:7px;background:#f7fafc;border:1px solid #edf2f7}
 .sv{font-size:.9rem;font-weight:950}
@@ -532,6 +726,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .header-actions{width:100%;justify-content:flex-start}
   .home-spotlight{padding:15px}
   .home-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ranking-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ranking-grid{grid-template-columns:1fr}
   .section-head{align-items:stretch;flex-direction:column}
   .mini-action{width:max-content;max-width:100%}
   .fixture-row{grid-template-columns:1fr}
@@ -560,7 +756,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
     <div>
       <div class="brand-kicker">Brasil em busca do Hexa</div>
       <h1>Bolão do Hexa 2026</h1>
-      <div class="sub" id="headerSub">Copa do Mundo, 11 de junho a 19 de julho.</div>
       <div class="header-meta">
         <div class="badge-live" id="liveBadge">Classificação ao vivo</div>
       </div>
@@ -573,7 +768,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 </div>
 
 <nav id="nav">
-  <button class="active" onclick="goTab('ranking')">Início</button>
+  <button class="active" onclick="goTab('home')">Início</button>
+  <button onclick="goTab('ranking')">Ranking</button>
   <button onclick="goTab('grupos')">Grupos</button>
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
@@ -581,7 +777,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   <button onclick="goTab('config')">Configurações</button>
 </nav>
 
-<div id="tab-ranking" class="tab active"></div>
+<div id="tab-home" class="tab active"></div>
+<div id="tab-ranking" class="tab"></div>
 <div id="tab-grupos" class="tab"></div>
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
@@ -624,6 +821,16 @@ const TEAM_FLAGS = {
 const DEFAULT_PARTICIPANTS = ["Leo B.","Leo C.","Gabriel","Gustavo","Otávio","Vitão","Thyago"];
 const STORAGE_KEY = "bolao2026v4";
 const OLD_STORAGE_KEYS = ["bolao2026v2"];
+const CAN_USE_LOCAL_STORAGE = (() => {
+  try{
+    const probe="__bolao2026_probe__";
+    localStorage.setItem(probe,"1");
+    localStorage.removeItem(probe);
+    return true;
+  }catch(e){
+    return false;
+  }
+})();
 const SUPABASE_CONFIG = {
   url: "https://kbsjriixpqddgvwshucn.supabase.co",
   anonKey: "sb_publishable_jmOjfW2H2_yIaw09jpbuag_HbWwgS4p"
@@ -727,6 +934,7 @@ function defaultState(){
 }
 
 function loadState(){
+  if(!CAN_USE_LOCAL_STORAGE) return migrateState(defaultState());
   const keys=[STORAGE_KEY,...OLD_STORAGE_KEYS];
   for(const key of keys){
     try{
@@ -759,7 +967,10 @@ let S=loadState();
 
 function save(){
   S.savedAt=new Date().toISOString();
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
+  if(!CAN_USE_LOCAL_STORAGE) return;
+  try{
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
+  }catch(e){}
 }
 save();
 
@@ -804,9 +1015,14 @@ function authRedirectURL(){
   url.hash="";
   return /^https?:\/\//i.test(url.href)?url.toString():null;
 }
-function urlHasRecoveryParams(){
-  const query=new URLSearchParams(window.location.search);
-  const hash=new URLSearchParams(window.location.hash.replace(/^#/,""));
+function parseAuthParams(urlLike=window.location.href){
+  const url=new URL(urlLike,window.location.href);
+  const query=new URLSearchParams(url.search);
+  const hash=new URLSearchParams(url.hash.replace(/^#/,""));
+  return {query,hash};
+}
+function urlHasRecoveryParams(urlLike=window.location.href){
+  const {query,hash}=parseAuthParams(urlLike);
   return query.get("type")==="recovery"||hash.get("type")==="recovery";
 }
 function clearRecoveryParams(){
@@ -817,6 +1033,24 @@ function clearRecoveryParams(){
 }
 function isPasswordRecoveryView(){
   return passwordResetMode&&isSignedIn();
+}
+function focusRecoveryPasswordField(){
+  setTimeout(()=>{
+    const input=document.getElementById(activeTab==="config"?"loginPassword":"topLoginPassword")
+      ||document.getElementById("topLoginPassword")
+      ||document.getElementById("loginPassword");
+    input?.focus({preventScroll:true});
+  },0);
+}
+function enterPasswordRecoveryMode(){
+  passwordResetMode=true;
+  authMode="recover";
+  authPanelOpen=true;
+  setSyncStatus("warn","Defina sua nova senha para voltar ao bolão.");
+  if(remotePollTimer){clearInterval(remotePollTimer);remotePollTimer=null;}
+  if(activeTab!=="config") goTab("config");
+  else render(activeTab);
+  focusRecoveryPasswordField();
 }
 function requireOnlineLogin(){
   if(!isOnlineMode()) return true;
@@ -838,36 +1072,23 @@ async function initRemote(){
     render(activeTab);
     return;
   }
+  let pendingRecoveryLink=urlHasRecoveryParams(window.location.href);
   remoteClient=window.supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.anonKey);
   setSyncStatus("warn","Conectando ao Supabase...");
-  const {data,error}=await remoteClient.auth.getSession();
-  if(error){
-    setSyncStatus("err",remoteErrorText(error));
-    authReady=true;
-    render(activeTab);
-    return;
-  }
-  remoteSession=data.session;
-  if(remoteSession&&urlHasRecoveryParams()){
-    passwordResetMode=true;
-    authMode="recover";
-    authPanelOpen=true;
-    setSyncStatus("warn","Defina sua nova senha para voltar ao bolão.");
-  }
-  authReady=true;
   remoteClient.auth.onAuthStateChange((event,session)=>{
     remoteSession=session;
     currentProfile=null;
-    if(remotePollTimer){clearInterval(remotePollTimer);remotePollTimer=null;}
-    if(event==="PASSWORD_RECOVERY"){
-      passwordResetMode=true;
-      authMode="recover";
-      authPanelOpen=true;
-      setSyncStatus("warn","Defina sua nova senha para voltar ao bolão.");
-      render(activeTab);
+    if(event==="PASSWORD_RECOVERY"||(session&&pendingRecoveryLink&&!passwordResetMode)){
+      pendingRecoveryLink=false;
+      enterPasswordRecoveryMode();
       return;
     }
+    if(remotePollTimer){clearInterval(remotePollTimer);remotePollTimer=null;}
     if(session){
+      if(passwordResetMode){
+        render(activeTab);
+        return;
+      }
       loadRemoteData(true);
       remotePollTimer=setInterval(()=>loadRemoteData(false),REMOTE_POLL_MS);
     }else{
@@ -876,10 +1097,23 @@ async function initRemote(){
       render(activeTab);
     }
   });
-  if(remoteSession){
+  const {data,error}=await remoteClient.auth.getSession();
+  if(error){
+    setSyncStatus("err",remoteErrorText(error));
+    authReady=true;
+    render(activeTab);
+    return;
+  }
+  remoteSession=data.session;
+  if(remoteSession&&pendingRecoveryLink){
+    pendingRecoveryLink=false;
+    enterPasswordRecoveryMode();
+  }
+  authReady=true;
+  if(remoteSession&&!passwordResetMode){
     await loadRemoteData(false);
     remotePollTimer=setInterval(()=>loadRemoteData(false),REMOTE_POLL_MS);
-  }else{
+  }else if(!remoteSession){
     setSyncStatus("warn","Entre para carregar o bolão online.");
     render(activeTab);
   }
@@ -1549,7 +1783,8 @@ function gameTeams(game){
   return {t1:"A definir",t2:"A definir",ready:false};
 }
 
-let activeTab="ranking";
+const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
+let activeTab="home";
 let palPi=0;
 let jFilter="all";
 let palStage="groups";
@@ -1557,21 +1792,22 @@ let palFilter="all";
 let resultDrafts={};
 let authPanelOpen=false;
 let authMode="signin";
+let rankingChartSelection=[];
+let rankingChartTouched=false;
 
 function goTab(t){
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["ranking","grupos","jogos","palpites","podio","config"];
+  const tabs=["home","ranking","grupos","jogos","palpites","podio","config"];
   document.querySelectorAll("nav button")[tabs.indexOf(t)].classList.add("active");
   activeTab=t;
   render(t);
 }
 function render(t){
-  const account=isOnlineMode()?(currentProfile?`Online: ${participantName(currentProfile.participant_index)}`:"Online: login pendente"):"Modo local";
-  document.getElementById("headerSub").textContent=`Copa do Mundo, 11 de junho a 19 de julho. ${S.participants.length} participantes. ${account}.`;
   document.getElementById("liveBadge").textContent=`${GAMES.filter(g=>S.results[g.id]).length}/${GAMES.length} jogos apurados`;
   renderAuthControls();
+  if(t==="home") renderHome();
   if(t==="ranking") renderRanking();
   if(t==="grupos") renderGrupos();
   if(t==="jogos") renderJogos();
@@ -1637,15 +1873,165 @@ function renderBrazilMiniTable(){
     ${next?`<div class="brazil-next"><strong>Próximo do Brasil:</strong> ${formatGameDate(next.date)}, ${esc(next.time)} · ${esc(next.t1)} x ${esc(next.t2)}</div>`:`<div class="brazil-next"><strong>Brasil:</strong> todos os jogos do grupo foram apurados.</div>`}
   </div>`;
 }
-function renderRanking(){
+function rankingChartDefaultSelection(rows){
+  const mine=myParticipantIndex();
+  const preferred=[];
+  if(Number.isInteger(mine)) preferred.push(mine);
+  rows.slice(0,3).forEach(p=>{
+    if(!preferred.includes(p.i)) preferred.push(p.i);
+  });
+  return preferred.slice(0,4);
+}
+function rankingTimeline(rows){
+  const resolved=GAMES.filter(g=>S.results[g.id]).sort(compareGameSchedule);
+  const labels=["Início"];
+  const totals={};
+  const series=rows.map((p,idx)=>{
+    totals[p.i]=0;
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+  });
+  resolved.forEach(game=>{
+    labels.push(game.id);
+    series.forEach(line=>{
+      const res=S.results[game.id];
+      const pal=S.palpites[`${line.i}_${game.id}`];
+      const gain=score(pal,res);
+      totals[line.i]+=gain==null?0:gain;
+      line.values.push(totals[line.i]);
+    });
+  });
+  const actual=S.actualPodio||{};
+  const includePodio=["p1","p2","p3","p4"].some(k=>norm(actual[k]));
+  if(includePodio){
+    labels.push("Pódio");
+    series.forEach(line=>{
+      totals[line.i]+=podioScore(S.podio[line.i]||{},actual);
+      line.values.push(totals[line.i]);
+    });
+  }
+  const allValues=series.flatMap(line=>line.values);
+  const maxVal=Math.max(3,...allValues);
+  const minVal=Math.min(0,...allValues);
+  return {labels,series,maxVal,minVal,resolvedCount:resolved.length,includePodio};
+}
+function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
+  const usableWidth=width-padX*2;
+  const usableHeight=height-padY*2;
+  const steps=Math.max(1,values.length-1);
+  const range=Math.max(1,maxVal-minVal);
+  return values.map((value,index)=>{
+    const x=padX+(usableWidth*(index/steps));
+    const y=height-padY-(usableHeight*((value-minVal)/range));
+    return `${index===0?"M":"L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
+  }).join(" ");
+}
+function rankingPointDot(value,index,totalPoints,width,height,padX,padY,minVal,maxVal,color){
+  const usableWidth=width-padX*2;
+  const usableHeight=height-padY*2;
+  const steps=Math.max(1,totalPoints-1);
+  const range=Math.max(1,maxVal-minVal);
+  const x=padX+(usableWidth*(index/steps));
+  const y=height-padY-(usableHeight*((value-minVal)/range));
+  return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${color}" stroke="#fff" stroke-width="2"></circle>`;
+}
+function toggleRankingSeries(participantIndex){
+  rankingChartTouched=true;
+  if(rankingChartSelection.includes(participantIndex)) rankingChartSelection=rankingChartSelection.filter(id=>id!==participantIndex);
+  else rankingChartSelection=[...rankingChartSelection,participantIndex];
+  if(activeTab==="ranking") renderRanking();
+}
+function setRankingChartPreset(mode){
+  rankingChartTouched=true;
+  const rows=ranking();
+  if(mode==="top3") rankingChartSelection=rows.slice(0,3).map(p=>p.i);
+  if(mode==="me"){
+    const mine=myParticipantIndex();
+    rankingChartSelection=Number.isInteger(mine)?[mine]:[];
+  }
+  if(mode==="all") rankingChartSelection=rows.map(p=>p.i);
+  if(mode==="clear") rankingChartSelection=[];
+  if(activeTab==="ranking") renderRanking();
+}
+function renderRankingChart(rows){
+  if(!rankingChartTouched&&!rankingChartSelection.length) rankingChartSelection=rankingChartDefaultSelection(rows);
+  const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
+  const chart=rankingTimeline(rows);
+  const lineWidth=760;
+  const lineHeight=280;
+  const padX=36;
+  const padY=22;
+  const tickValues=[0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)));
+  const labels=[
+    "Início",
+    chart.resolvedCount?`Após ${chart.resolvedCount} jogos apurados`:"Sem jogos apurados ainda",
+    chart.includePodio?"Pódio oficial incluído":""
+  ].filter(Boolean);
+  return `<section class="chart-shell">
+    <div class="chart-toolbar">
+      <div>
+        <div class="section-kicker">Evolução dos pontos</div>
+        <h3 style="margin-top:4px">Compare um ou vários participantes ao mesmo tempo</h3>
+        <p style="margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45">Ative os nomes para sobrepor as curvas e ver quem acelera mais rápido ao longo do bolão.</p>
+      </div>
+      <div class="chart-presets">
+        <button class="mini-action" onclick="setRankingChartPreset('top3')">Top 3</button>
+        <button class="mini-action" onclick="setRankingChartPreset('me')">Só eu</button>
+        <button class="mini-action" onclick="setRankingChartPreset('all')">Todos</button>
+        <button class="mini-action" onclick="setRankingChartPreset('clear')">Limpar</button>
+      </div>
+    </div>
+    <div class="chart-legend">
+      ${rows.map((p,idx)=>{
+        const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
+        const active=rankingChartSelection.includes(p.i);
+        return `<button class="chart-chip ${active?"active":""}" onclick="toggleRankingSeries(${p.i})" style="${active?`background:${color}`:""}">
+          <span class="chart-dot" style="background:${color}"></span>
+          <span>${esc(p.name)}</span>
+        </button>`;
+      }).join("")}
+    </div>
+    ${selected.length?`<div class="chart-stage">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
+        ${tickValues.map(value=>{
+          const y=lineHeight-padY-((lineHeight-padY*2)*((value-chart.minVal)/Math.max(1,chart.maxVal-chart.minVal)));
+          return `<g>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${lineWidth-padX}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.10)" stroke-width="1"></line>
+            <text x="4" y="${(y+4).toFixed(2)}" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+          </g>`;
+        }).join("")}
+        ${selected.map(line=>{
+          const color=chart.series.find(s=>s.i===line.i)?.color||"#002776";
+          const values=chart.series.find(s=>s.i===line.i)?.values||[0];
+          return `<g>
+            <path d="${rankingLinePath(values,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal)}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+            ${values.map((value,index)=>rankingPointDot(value,index,values.length,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal,color)).join("")}
+          </g>`;
+        }).join("")}
+      </svg>
+    </div>`:`<div class="chart-empty">Ative pelo menos um participante para desenhar a curva de evolução.</div>`}
+    <div class="chart-axis">${labels.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+  </section>`;
+}
+function renderHome(){
   const r=ranking();
   const played=GAMES.filter(g=>S.results[g.id]).length;
-  const invTotal=r.reduce((acc,p)=>acc+p.inv,0);
-  const cravTotal=r.reduce((acc,p)=>acc+p.crav,0);
   const fixtures=homeFixtureWindow();
   const progress=predictionProgress();
-  const totalPrize=S.participants.length*S.config.entryValue;
-  const leader=r[0]||{name:"-",pts:0,crav:0,inv:0};
+  const myIndex=myParticipantIndex();
+  const myRank=Number.isInteger(myIndex)?r.findIndex(p=>p.i===myIndex):-1;
+  const myPlayer=myRank>=0?r[myRank]:null;
+  const positionClass=myRank===0?"top-1":myRank===1?"top-2":myRank===2?"top-3":"";
+  const positionValue=myPlayer?`#${myRank+1}`:"# ?";
+  const positionNote=myPlayer
+    ?`${esc(myPlayer.name)} com ${myPlayer.pts} pontos no ranking atual.`
+    :(isSignedIn()
+      ?"Vincule seu nome para descobrir sua posição no ranking."
+      :"Faça login para descobrir sua posição no ranking.");
+  const positionAction=myPlayer
+    ?""
+    :(isSignedIn()
+      ?`<button class="metric-inline-link" onclick="openAuthPanel('claim');window.scrollTo({top:0,behavior:'smooth'})">Vincular nome</button>`
+      :`<button class="metric-inline-link" onclick="openAuthPanel('signin');window.scrollTo({top:0,behavior:'smooth'})">Entrar</button>`);
   let h=`<div class="home-dashboard">
     <section class="home-spotlight">
       <div class="home-copy">
@@ -1653,72 +2039,166 @@ function renderRanking(){
           <button class="home-link-btn" onclick="goTab('palpites')">Preencher palpites</button>
         </div>
         <div class="home-metrics">
-          <div class="home-metric"><strong>${GAMES.length}</strong><span>Jogos</span></div>
-          <div class="home-metric"><strong>${played}</strong><span>Apurados</span></div>
+          <div class="home-metric">
+            <strong>${played}/${GAMES.length}</strong>
+            <span>Jogos apurados</span>
+          </div>
+          <div class="home-metric">
+            <span>Sua posição</span>
+            <strong class="position-value ${positionClass}">${positionValue}</strong>
+            <div class="position-help">
+              <small>${positionNote}</small>
+              ${positionAction}
+            </div>
+          </div>
+        </div>
+        <div class="home-copy-footer">
+          <button class="metric-link" onclick="goTab('ranking')">Ranking completo &rarr;</button>
         </div>
       </div>
       <aside class="home-prize-board">
         <div class="prize-total">
-          <div class="label">Premiação estimada</div>
-          <div class="value">${brl(totalPrize)}</div>
+          <div class="label">Resumo do ranking</div>
+          <div class="value">Pódio</div>
         </div>
         <div class="prize-split">
-          ${[1,2,3].map(rank=>`<div class="prize-row"><span>${rank}º lugar</span><strong>${brl(prize(rank))}</strong><small>${S.config.prizePercents[rank-1]}%</small></div>`).join("")}
+          ${r.slice(0,3).map((p,ri)=>{
+            const medal=ri===0?"gold":ri===1?"silver":"bronze";
+            return `<div class="prize-row">
+              <div class="prize-rank ${medal}">${ri+1}</div>
+              <div class="prize-copy">
+                <strong>${esc(p.name)}</strong>
+                <span>${p.crav} crav. · ${p.corr} certos · ${p.inv} inv.</span>
+              </div>
+              <div class="prize-score"><strong>${p.pts}</strong><span>pts</span></div>
+            </div>`;
+          }).join("")}
         </div>
       </aside>
     </section>
 
-    <div class="home-insights">
-      <div class="quick-insight"><div class="label">Líder atual</div><div class="value">${esc(leader.name)}</div><div class="note">${leader.pts} pontos, ${leader.crav} cravadas e ${leader.inv} invertidas.</div></div>
+    <div class="home-insights single">
       <div class="quick-insight"><div class="label">Palpites</div><div class="value">${progress.pct}% enviados</div><div class="note">${progress.filled}/${progress.expected} placares preenchidos no bolão.</div></div>
     </div>
 
     <div class="home-layout">
-      <section class="home-section ranking-compact">
+      <section class="home-section">
         <div class="section-head">
           <div>
-            <div class="section-kicker">Classificação ao vivo</div>
-            <h2>Ranking completo, em modo compacto</h2>
-            <div class="section-sub">${cravTotal} cravadas e ${invTotal} invertidas somadas até agora.</div>
+            <div class="section-kicker">${fixtures.title}</div>
+            <h2>${fixtures.subtitle}</h2>
+          </div>
+          <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
+        </div>
+        <div class="fixture-list">
+          ${fixtures.games.length?fixtures.games.map(renderFixtureRow).join(""):`<div class="fixture-empty">Todos os resultados oficiais já entraram no bolão.</div>`}
+        </div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Brasil no Grupo C</div>
+            <h2>Tabela rápida do grupo</h2>
+          </div>
+          <button class="mini-action" onclick="goTab('grupos')">Ver grupos</button>
+        </div>
+        ${renderBrazilMiniTable()}
+      </section>
+    </div>
+  </div>`;
+  document.getElementById("tab-home").innerHTML=h;
+}
+function renderRanking(){
+  const r=ranking();
+  const played=GAMES.filter(g=>S.results[g.id]).length;
+  const invTotal=r.reduce((acc,p)=>acc+p.inv,0);
+  const cravTotal=r.reduce((acc,p)=>acc+p.crav,0);
+  const myIndex=myParticipantIndex();
+  const myRank=Number.isInteger(myIndex)?r.findIndex(p=>p.i===myIndex):-1;
+  const myPlayer=myRank>=0?r[myRank]:null;
+  const leader=r[0]||{name:"-",pts:0,crav:0};
+  const topCravador=[...r].sort((a,b)=>b.crav-a.crav||b.pts-a.pts||a.name.localeCompare(b.name,"pt-BR"))[0]||leader;
+  const totalPoints=r.reduce((acc,p)=>acc+p.pts,0);
+  let h=`<div class="ranking-page">
+    <section class="ranking-hero">
+      <div class="ranking-hero-top">
+        <div>
+          <div class="section-kicker">Ranking</div>
+          <h2>Classificação completa com leitura de evolução</h2>
+          <div class="section-sub">Acompanhe a disputa rodada a rodada, compare curvas de pontuação e veja quem mais cresce ao longo do bolão.</div>
+          <div class="ranking-badges">
+            <div class="ranking-badge">${played}/${GAMES.length} jogos apurados</div>
+            <div class="ranking-badge">${S.participants.length} participantes</div>
+            <div class="ranking-badge">${cravTotal} cravadas no total</div>
+          </div>
+        </div>
+        <button class="mini-action" onclick="goTab('home')">Voltar ao início</button>
+      </div>
+    </section>
+
+    <div class="ranking-overview">
+      <div class="ranking-stat"><div class="eyebrow">Líder</div><strong>${esc(leader.name)}</strong><span>${leader.pts} pontos e ${leader.crav} cravadas até agora.</span></div>
+      <div class="ranking-stat"><div class="eyebrow">Maior cravador</div><strong>${esc(topCravador.name)}</strong><span>${topCravador.crav} cravadas acumuladas na competição.</span></div>
+      <div class="ranking-stat"><div class="eyebrow">Sua posição</div><strong>${myPlayer?`${myRank+1}º lugar`:"Entre para destacar"}</strong><span>${myPlayer?`${myPlayer.pts} pontos no momento.`:"Faça login e vincule seu nome para acompanhar sua corrida no ranking."}</span></div>
+      <div class="ranking-stat"><div class="eyebrow">Pontos em jogo</div><strong>${totalPoints}</strong><span>${invTotal} invertidas e muitos pontos ainda podem mexer nessa tabela.</span></div>
+    </div>
+
+    ${renderRankingChart(r)}
+
+    <div class="ranking-grid">
+      <section class="ranking-card">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Tabela principal</div>
+            <h3>Ranking completo</h3>
+            <p>${cravTotal} cravadas e ${invTotal} invertidas somadas até agora.</p>
           </div>
           <button class="mini-action" onclick="goTab('podio')">Ver pódio</button>
         </div>
-        <div class="mini-ranking-list">
+        <div class="full-ranking-list">
           ${r.map((p,ri)=>{
-            const cls=ri===0?"gold":ri===1?"silver":ri===2?"bronze":"";
-            const rowCls=ri===0?"top-1":ri===1?"top-2":ri===2?"top-3":"";
-            return `<div class="mini-rank-row ${rowCls}">
-              <div class="mini-rank ${cls}">${ri+1}</div>
-              <div class="mini-name"><span>${esc(p.name)}</span><div class="mini-meta"><span>${p.crav} crav.</span><span>${p.corr} certos</span><span>${p.inv} inv.</span>${p.pp>0?`<span>+${p.pp} pódio</span>`:""}</div></div>
-              <div class="mini-points"><strong>${p.pts}</strong><span>pts</span></div>
+            const rowCls=[
+              ri===0?"podium-row top-1":ri===1?"podium-row top-2":ri===2?"podium-row top-3":"",
+              myPlayer&&p.i===myPlayer.i?"me":""
+            ].filter(Boolean).join(" ");
+            const rankCls=ri===0?"r1":ri===1?"r2":ri===2?"r3":"ro";
+            return `<div class="lb-row ${rowCls}">
+              <div class="rank ${rankCls}">${ri+1}</div>
+              <div class="pname">${esc(p.name)}</div>
+              <div class="pstats">
+                <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Crav.</div></div>
+                <div class="stat"><div class="sv">${p.corr}</div><div class="sl">Certos</div></div>
+                <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Inv.</div></div>
+                ${p.pp>0?`<div class="stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
+                <div class="pts">${p.pts}</div>
+              </div>
             </div>`;
           }).join("")}
         </div>
       </section>
 
-      <div class="home-side">
-        <section class="home-section">
-          <div class="section-head">
-            <div>
-              <div class="section-kicker">${fixtures.title}</div>
-              <h2>${fixtures.subtitle}</h2>
-            </div>
-            <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
-          </div>
-          <div class="fixture-list">
-            ${fixtures.games.length?fixtures.games.map(renderFixtureRow).join(""):`<div class="fixture-empty">Todos os resultados oficiais já entraram no bolão.</div>`}
-          </div>
+      <div class="ranking-side">
+        <section class="ranking-card">
+          <div class="section-kicker">Resumo pessoal</div>
+          <h3>${myPlayer?esc(myPlayer.name):"Sua corrida no bolão"}</h3>
+          <p>${myPlayer?`Você está em ${myRank+1}º lugar, com ${myPlayer.corr} acertos secos, ${myPlayer.crav} cravadas e ${myPlayer.inv} invertidas.`:"Entre com sua conta para fixar seu nome na comparação e ver a sua evolução isolada."}</p>
+          <button class="mini-action" onclick="setRankingChartPreset('me')">Mostrar só minha linha</button>
         </section>
 
-        <section class="home-section">
-          <div class="section-head">
-            <div>
-              <div class="section-kicker">Brasil no Grupo C</div>
-              <h2>Tabela rápida do grupo</h2>
-            </div>
-            <button class="mini-action" onclick="goTab('grupos')">Ver grupos</button>
+        <section class="ranking-card">
+          <div class="section-kicker">Pódio atual</div>
+          <h3>Quem está puxando a fila</h3>
+          <div class="ranking-card-list">
+            ${r.slice(0,3).map((p,ri)=>{
+              const medal=ri===0?"r1":ri===1?"r2":"r3";
+              return `<div class="ranking-mini-row">
+                <div class="rank ${medal}">${ri+1}</div>
+                <div><strong>${esc(p.name)}</strong><span>${p.crav} crav. · ${p.corr} certos · ${p.inv} inv.</span></div>
+                <div class="pts">${p.pts}</div>
+              </div>`;
+            }).join("")}
           </div>
-          ${renderBrazilMiniTable()}
         </section>
       </div>
     </div>
@@ -2162,7 +2642,7 @@ document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
 });
 
-render("ranking");
+render("home");
 initRemote();
 </script>
 </body>
