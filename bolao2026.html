@@ -711,6 +711,7 @@ let remoteSession=null;
 let remotePollTimer=null;
 let currentProfile=null;
 let authReady=false;
+let passwordResetMode=false;
 let palSelectionTouched=false;
 let syncStatus={kind:"local",text:"Dados salvos neste navegador"};
 
@@ -797,6 +798,24 @@ function remoteErrorText(error){
   if(msg.includes("row-level security")) return "Seu login não tem permissão para essa alteração.";
   return msg||"Não consegui conversar com o Supabase.";
 }
+function authRedirectURL(){
+  const cleanHref=window.location.href.split("#")[0];
+  return /^https?:\/\//i.test(cleanHref)?cleanHref:null;
+}
+function urlHasRecoveryParams(){
+  const query=new URLSearchParams(window.location.search);
+  const hash=new URLSearchParams(window.location.hash.replace(/^#/,""));
+  return query.get("type")==="recovery"||hash.get("type")==="recovery";
+}
+function clearRecoveryParams(){
+  const url=new URL(window.location.href);
+  url.hash="";
+  ["type","access_token","refresh_token","expires_at","expires_in","token_type","code"].forEach(key=>url.searchParams.delete(key));
+  window.history.replaceState({},document.title,url.toString());
+}
+function isPasswordRecoveryView(){
+  return passwordResetMode&&isSignedIn();
+}
 function requireOnlineLogin(){
   if(!isOnlineMode()) return true;
   if(!isSignedIn()){toast("Entre com seu e-mail para salvar online.");return false;}
@@ -827,15 +846,30 @@ async function initRemote(){
     return;
   }
   remoteSession=data.session;
+  if(remoteSession&&urlHasRecoveryParams()){
+    passwordResetMode=true;
+    authMode="recover";
+    authPanelOpen=true;
+    setSyncStatus("warn","Defina sua nova senha para voltar ao bolão.");
+  }
   authReady=true;
-  remoteClient.auth.onAuthStateChange((_event,session)=>{
+  remoteClient.auth.onAuthStateChange((event,session)=>{
     remoteSession=session;
     currentProfile=null;
     if(remotePollTimer){clearInterval(remotePollTimer);remotePollTimer=null;}
+    if(event==="PASSWORD_RECOVERY"){
+      passwordResetMode=true;
+      authMode="recover";
+      authPanelOpen=true;
+      setSyncStatus("warn","Defina sua nova senha para voltar ao bolão.");
+      render(activeTab);
+      return;
+    }
     if(session){
       loadRemoteData(true);
       remotePollTimer=setInterval(()=>loadRemoteData(false),REMOTE_POLL_MS);
     }else{
+      passwordResetMode=false;
       setSyncStatus("warn","Entre para carregar o bolão online.");
       render(activeTab);
     }
@@ -917,8 +951,8 @@ async function loadRemoteData(showToast=false){
 
 function authValue(source,field){
   const ids=source==="top"
-    ? {email:"topLoginEmail",password:"topLoginPassword",participant:"topClaimParticipant"}
-    : {email:"loginEmail",password:"loginPassword",participant:"claimParticipant"};
+    ? {email:"topLoginEmail",password:"topLoginPassword",passwordConfirm:"topLoginPasswordConfirm",participant:"topClaimParticipant"}
+    : {email:"loginEmail",password:"loginPassword",passwordConfirm:"loginPasswordConfirm",participant:"claimParticipant"};
   return document.getElementById(ids[field])?.value;
 }
 async function signIn(source="config"){
@@ -943,11 +977,46 @@ async function signUp(source="config"){
   if(data.session) toast("Conta criada.");
   else toast("Conta criada. Confira seu e-mail para confirmar.");
 }
+async function sendPasswordReset(source="config"){
+  if(!remoteClient) return;
+  const email=norm(authValue(source,"email"));
+  if(!email){toast("Informe seu e-mail.");return;}
+  setSyncStatus("warn","Enviando link de recuperação...");
+  const options={};
+  const redirectTo=authRedirectURL();
+  if(redirectTo) options.redirectTo=redirectTo;
+  const {error}=await remoteClient.auth.resetPasswordForEmail(email,options);
+  if(error){setSyncStatus("err",remoteErrorText(error));toast(remoteErrorText(error));return;}
+  authMode="signin";
+  authPanelOpen=false;
+  setSyncStatus("ok","Link de recuperação enviado para seu e-mail.");
+  toast("Confira seu e-mail para redefinir a senha.");
+  render(activeTab);
+}
+async function updatePassword(source="config"){
+  if(!remoteClient||!remoteSession){toast("Abra o link recebido no e-mail para continuar.");return;}
+  const password=authValue(source,"password")||"";
+  const passwordConfirm=authValue(source,"passwordConfirm")||"";
+  if(password.length<6){toast("Use uma senha com pelo menos 6 caracteres.");return;}
+  if(password!==passwordConfirm){toast("As senhas não coincidem.");return;}
+  setSyncStatus("warn","Salvando nova senha...");
+  const {error}=await remoteClient.auth.updateUser({password});
+  if(error){setSyncStatus("err",remoteErrorText(error));toast(remoteErrorText(error));return;}
+  passwordResetMode=false;
+  authMode="signin";
+  authPanelOpen=false;
+  clearRecoveryParams();
+  await loadRemoteData(false);
+  setSyncStatus("ok","Senha atualizada.");
+  toast("Senha atualizada. Agora seu acesso voltou ao normal.");
+  render(activeTab);
+}
 async function signOut(){
   if(!remoteClient) return;
   await remoteClient.auth.signOut();
   currentProfile=null;
   remoteSession=null;
+  passwordResetMode=false;
   authPanelOpen=false;
   setSyncStatus("warn","Você saiu da conta.");
   render(activeTab);
@@ -1108,7 +1177,9 @@ function closeAuthPanel(){
 function handleTopAuthKey(event){
   if(event.key!=="Enter") return;
   event.preventDefault();
-  if(authMode==="signup") signUp("top");
+  if(isPasswordRecoveryView()) updatePassword("top");
+  else if(authMode==="signup") signUp("top");
+  else if(authMode==="recover") sendPasswordReset("top");
   else signIn("top");
 }
 function renderAuthControls(){
@@ -1125,20 +1196,41 @@ function renderAuthControls(){
   const open=authPanelOpen?"open":"";
   if(!isSignedIn()){
     const isSignup=authMode==="signup";
+    const isRecover=authMode==="recover";
     el.innerHTML=`<div class="account-buttons">
-      <button class="btn-auth ${!isSignup?"primary":""}" onclick="toggleAuthPanel('signin')">Entrar</button>
+      <button class="btn-auth ${!isSignup&&!isRecover?"primary":""}" onclick="toggleAuthPanel('signin')">Entrar</button>
       <button class="btn-auth ${isSignup?"primary":""}" onclick="toggleAuthPanel('signup')">Criar conta</button>
+      <button class="btn-auth ${isRecover?"primary":""}" onclick="toggleAuthPanel('recover')">Esqueci a senha</button>
     </div>
     <div class="account-panel ${open}" onclick="event.stopPropagation()">
-      <div class="card-title">${isSignup?"Criar conta":"Entrar no bolão"}</div>
+      <div class="card-title">${isSignup?"Criar conta":(isRecover?"Recuperar acesso":"Entrar no bolão")}</div>
       <div class="sync-pill ${syncStatus.kind}" id="topSyncStatusPill"><span class="sync-dot"></span><span id="topSyncStatusText">${esc(syncStatus.text)}</span></div>
       <div class="login-grid" onkeydown="handleTopAuthKey(event)">
         <input class="txt-inp" id="topLoginEmail" type="email" autocomplete="email" placeholder="E-mail">
-        <input class="txt-inp" id="topLoginPassword" type="password" autocomplete="${isSignup?"new-password":"current-password"}" placeholder="Senha">
+        ${isRecover?"":`<input class="txt-inp" id="topLoginPassword" type="password" autocomplete="${isSignup?"new-password":"current-password"}" placeholder="Senha">`}
       </div>
       <div class="action-row" style="margin-top:10px">
-        <button class="action-btn" onclick="signIn('top')">Entrar</button>
-        <button class="action-btn secondary" onclick="signUp('top')">Criar conta</button>
+        ${isRecover
+          ? `<button class="action-btn" onclick="sendPasswordReset('top')">Enviar link</button>
+             <button class="action-btn secondary" onclick="toggleAuthPanel('signin')">Voltar</button>`
+          : `<button class="action-btn" onclick="signIn('top')">Entrar</button>
+             <button class="action-btn secondary" onclick="signUp('top')">Criar conta</button>`}
+      </div>
+    </div>`;
+    return;
+  }
+  if(isPasswordRecoveryView()){
+    el.innerHTML=`<button class="btn-auth primary user" onclick="toggleAuthPanel('recover')">Nova senha</button>
+    <div class="account-panel ${open}" onclick="event.stopPropagation()">
+      <div class="card-title">Definir nova senha</div>
+      <div class="sync-pill ${syncStatus.kind}" id="topSyncStatusPill"><span class="sync-dot"></span><span id="topSyncStatusText">${esc(syncStatus.text)}</span></div>
+      <div class="login-grid" onkeydown="handleTopAuthKey(event)">
+        <input class="txt-inp" id="topLoginPassword" type="password" autocomplete="new-password" placeholder="Nova senha">
+        <input class="txt-inp" id="topLoginPasswordConfirm" type="password" autocomplete="new-password" placeholder="Repita a nova senha">
+      </div>
+      <div class="action-row" style="margin-top:10px">
+        <button class="action-btn" onclick="updatePassword('top')">Salvar nova senha</button>
+        <button class="action-btn secondary" onclick="signOut()">Sair</button>
       </div>
     </div>`;
     return;
@@ -1188,6 +1280,19 @@ function accountCard(){
     return `<div class="card"><div class="card-title">Conta</div><div class="sync-pill warn" id="syncStatusPill"><span class="sync-dot"></span><span id="syncStatusText">Carregando login...</span></div></div>`;
   }
   if(!isSignedIn()){
+    if(authMode==="recover"){
+      return `<div class="card">
+        <div class="card-title">Recuperar acesso</div>
+        <div class="sync-pill ${syncStatus.kind}" id="syncStatusPill"><span class="sync-dot"></span><span id="syncStatusText">${esc(syncStatus.text)}</span></div>
+        <div class="login-grid">
+          <input class="txt-inp" id="loginEmail" type="email" autocomplete="email" placeholder="E-mail">
+        </div>
+        <div class="action-row" style="margin-top:10px">
+          <button class="action-btn" onclick="sendPasswordReset()">Enviar link</button>
+          <button class="action-btn secondary" onclick="authMode='signin';render(activeTab)">Voltar</button>
+        </div>
+      </div>`;
+    }
     return `<div class="card">
       <div class="card-title">Entrar no bolão</div>
       <div class="sync-pill ${syncStatus.kind}" id="syncStatusPill"><span class="sync-dot"></span><span id="syncStatusText">${esc(syncStatus.text)}</span></div>
@@ -1198,6 +1303,21 @@ function accountCard(){
       <div class="action-row" style="margin-top:10px">
         <button class="action-btn" onclick="signIn()">Entrar</button>
         <button class="action-btn secondary" onclick="signUp()">Criar conta</button>
+        <button class="action-btn secondary" onclick="authMode='recover';render(activeTab)">Esqueci a senha</button>
+      </div>
+    </div>`;
+  }
+  if(isPasswordRecoveryView()){
+    return `<div class="card">
+      <div class="card-title">Definir nova senha</div>
+      <div class="sync-pill ${syncStatus.kind}" id="syncStatusPill"><span class="sync-dot"></span><span id="syncStatusText">${esc(syncStatus.text)}</span></div>
+      <div class="login-grid">
+        <input class="txt-inp" id="loginPassword" type="password" autocomplete="new-password" placeholder="Nova senha">
+        <input class="txt-inp" id="loginPasswordConfirm" type="password" autocomplete="new-password" placeholder="Repita a nova senha">
+      </div>
+      <div class="action-row" style="margin-top:10px">
+        <button class="action-btn" onclick="updatePassword()">Salvar nova senha</button>
+        <button class="action-btn secondary" onclick="signOut()">Sair</button>
       </div>
     </div>`;
   }
