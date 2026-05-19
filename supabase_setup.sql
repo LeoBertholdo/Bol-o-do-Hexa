@@ -1,0 +1,247 @@
+-- Bolao do Hexa 2026 - estrutura online gratuita no Supabase
+-- Cole este arquivo no SQL Editor do Supabase e clique em Run.
+
+begin;
+
+create schema if not exists app_private;
+
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  participant_index integer not null unique check (participant_index >= 0),
+  participant_name text not null,
+  role text not null default 'participant' check (role in ('participant','admin')),
+  created_at timestamptz not null default now()
+);
+
+create or replace function app_private.is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from profiles
+    where id = auth.uid()
+      and role = 'admin'
+  );
+$$;
+
+create or replace function app_private.owns_participant_index(idx integer)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from profiles
+    where id = auth.uid()
+      and participant_index = idx
+  );
+$$;
+
+grant usage on schema app_private to authenticated;
+grant execute on function app_private.is_admin() to authenticated;
+grant execute on function app_private.owns_participant_index(integer) to authenticated;
+
+create table if not exists public.settings (
+  id text primary key default 'main' check (id = 'main'),
+  entry_value numeric not null default 200 check (entry_value >= 0),
+  prize_percents integer[] not null default array[60,25,15],
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null
+);
+
+insert into public.settings (id, entry_value, prize_percents)
+values ('main', 200, array[60,25,15])
+on conflict (id) do nothing;
+
+create table if not exists public.results (
+  game_id text primary key,
+  s1 integer not null check (s1 between 0 and 30),
+  s2 integer not null check (s2 between 0 and 30),
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null
+);
+
+create table if not exists public.predictions (
+  participant_index integer not null check (participant_index >= 0),
+  game_id text not null,
+  user_id uuid references auth.users(id) on delete set null,
+  s1 integer check (s1 between 0 and 30),
+  s2 integer check (s2 between 0 and 30),
+  updated_at timestamptz not null default now(),
+  primary key (participant_index, game_id)
+);
+
+create table if not exists public.actual_podium (
+  id text primary key default 'main' check (id = 'main'),
+  p1 text,
+  p2 text,
+  p3 text,
+  p4 text,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null
+);
+
+insert into public.actual_podium (id)
+values ('main')
+on conflict (id) do nothing;
+
+create table if not exists public.podium_predictions (
+  participant_index integer primary key check (participant_index >= 0),
+  user_id uuid references auth.users(id) on delete set null,
+  p1 text,
+  p2 text,
+  p3 text,
+  p4 text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.profiles enable row level security;
+alter table public.settings enable row level security;
+alter table public.results enable row level security;
+alter table public.predictions enable row level security;
+alter table public.actual_podium enable row level security;
+alter table public.podium_predictions enable row level security;
+
+grant select, insert, update, delete on public.profiles to authenticated;
+grant select, insert, update, delete on public.settings to authenticated;
+grant select, insert, update, delete on public.results to authenticated;
+grant select, insert, update, delete on public.predictions to authenticated;
+grant select, insert, update, delete on public.actual_podium to authenticated;
+grant select, insert, update, delete on public.podium_predictions to authenticated;
+
+drop policy if exists "profiles visible to signed in users" on public.profiles;
+create policy "profiles visible to signed in users"
+on public.profiles for select to authenticated
+using (true);
+
+drop policy if exists "participants create own profile" on public.profiles;
+create policy "participants create own profile"
+on public.profiles for insert to authenticated
+with check (id = auth.uid() and role = 'participant');
+
+drop policy if exists "admins update profiles" on public.profiles;
+create policy "admins update profiles"
+on public.profiles for update to authenticated
+using (app_private.is_admin())
+with check (app_private.is_admin());
+
+drop policy if exists "settings visible to signed in users" on public.settings;
+create policy "settings visible to signed in users"
+on public.settings for select to authenticated
+using (true);
+
+drop policy if exists "admins insert settings" on public.settings;
+create policy "admins insert settings"
+on public.settings for insert to authenticated
+with check (app_private.is_admin());
+
+drop policy if exists "admins update settings" on public.settings;
+create policy "admins update settings"
+on public.settings for update to authenticated
+using (app_private.is_admin())
+with check (app_private.is_admin());
+
+drop policy if exists "results visible to signed in users" on public.results;
+create policy "results visible to signed in users"
+on public.results for select to authenticated
+using (true);
+
+drop policy if exists "admins insert results" on public.results;
+create policy "admins insert results"
+on public.results for insert to authenticated
+with check (app_private.is_admin());
+
+drop policy if exists "admins update results" on public.results;
+create policy "admins update results"
+on public.results for update to authenticated
+using (app_private.is_admin())
+with check (app_private.is_admin());
+
+drop policy if exists "admins delete results" on public.results;
+create policy "admins delete results"
+on public.results for delete to authenticated
+using (app_private.is_admin());
+
+drop policy if exists "predictions visible to signed in users" on public.predictions;
+create policy "predictions visible to signed in users"
+on public.predictions for select to authenticated
+using (true);
+
+drop policy if exists "participants insert own predictions" on public.predictions;
+create policy "participants insert own predictions"
+on public.predictions for insert to authenticated
+with check (
+  app_private.is_admin()
+  or (user_id = auth.uid() and app_private.owns_participant_index(participant_index))
+);
+
+drop policy if exists "participants update own predictions" on public.predictions;
+create policy "participants update own predictions"
+on public.predictions for update to authenticated
+using (
+  app_private.is_admin()
+  or ((user_id = auth.uid() or user_id is null) and app_private.owns_participant_index(participant_index))
+)
+with check (
+  app_private.is_admin()
+  or (user_id = auth.uid() and app_private.owns_participant_index(participant_index))
+);
+
+drop policy if exists "admins delete predictions" on public.predictions;
+create policy "admins delete predictions"
+on public.predictions for delete to authenticated
+using (app_private.is_admin());
+
+drop policy if exists "actual podium visible to signed in users" on public.actual_podium;
+create policy "actual podium visible to signed in users"
+on public.actual_podium for select to authenticated
+using (true);
+
+drop policy if exists "admins insert actual podium" on public.actual_podium;
+create policy "admins insert actual podium"
+on public.actual_podium for insert to authenticated
+with check (app_private.is_admin());
+
+drop policy if exists "admins update actual podium" on public.actual_podium;
+create policy "admins update actual podium"
+on public.actual_podium for update to authenticated
+using (app_private.is_admin())
+with check (app_private.is_admin());
+
+drop policy if exists "podium predictions visible to signed in users" on public.podium_predictions;
+create policy "podium predictions visible to signed in users"
+on public.podium_predictions for select to authenticated
+using (true);
+
+drop policy if exists "participants insert own podium" on public.podium_predictions;
+create policy "participants insert own podium"
+on public.podium_predictions for insert to authenticated
+with check (
+  app_private.is_admin()
+  or (user_id = auth.uid() and app_private.owns_participant_index(participant_index))
+);
+
+drop policy if exists "participants update own podium" on public.podium_predictions;
+create policy "participants update own podium"
+on public.podium_predictions for update to authenticated
+using (
+  app_private.is_admin()
+  or ((user_id = auth.uid() or user_id is null) and app_private.owns_participant_index(participant_index))
+)
+with check (
+  app_private.is_admin()
+  or (user_id = auth.uid() and app_private.owns_participant_index(participant_index))
+);
+
+drop policy if exists "admins delete podium predictions" on public.podium_predictions;
+create policy "admins delete podium predictions"
+on public.podium_predictions for delete to authenticated
+using (app_private.is_admin());
+
+commit;
