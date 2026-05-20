@@ -223,7 +223,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .home-link-btn{background:var(--yellow);color:var(--blue);border-color:var(--yellow)}
 .home-ghost-btn{background:rgba(255,255,255,.1);color:#fff}
-.home-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
+.home-metrics{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(260px,.92fr);gap:8px;margin-top:12px;align-items:stretch}
+.home-metric-stack{display:grid;gap:8px;min-width:0}
 .home-metric{
   border:1px solid rgba(255,255,255,.18);
   border-radius:8px;
@@ -281,24 +282,37 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .progress-metric-foot{
   width:100%;
+  margin-top:auto;
   padding-top:1px;
   border-top:1px solid rgba(255,255,255,.12);
   color:rgba(255,255,255,.8);
   font-size:.72rem;
   font-weight:850;
-  line-height:1.2;
+  line-height:1.4;
+  text-align:right;
 }
-.position-value{
-  display:block;
+.home-metric.compact-insight{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:4px;
+}
+.home-metric.compact-insight span{margin-top:0}
+.home-metric strong.compact-insight-value{
+  font-size:1.36rem;
+  line-height:1.05;
+}
+.home-metric strong.position-value{
+  display:inline-block;
   margin-top:7px;
   font-size:1.58rem;
   line-height:1;
   font-weight:950;
   color:#fff;
 }
-.position-value.top-1{color:var(--gold)}
-.position-value.top-2{color:var(--silver)}
-.position-value.top-3{color:var(--bronze)}
+.home-metric strong.position-value.top-1{color:var(--gold)}
+.home-metric strong.position-value.top-2{color:var(--silver)}
+.home-metric strong.position-value.top-3{color:var(--bronze)}
 .position-help{
   display:flex;
   align-items:center;
@@ -465,6 +479,15 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   gap:10px;
   flex-wrap:wrap;
 }
+.fixture-date-inline{
+  width:100%;
+  font-size:.62rem;
+  font-weight:900;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.45px;
+  line-height:1.2;
+}
 .fixture-time{
   display:inline-flex;
   align-items:center;
@@ -527,10 +550,10 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-size:.8rem;
   font-weight:850;
 }
-.brazil-table{display:grid;gap:6px}
+.brazil-table{display:grid;gap:6px;overflow-x:auto;padding-bottom:2px}
 .brazil-row{
   display:grid;
-  grid-template-columns:30px minmax(0,1fr) repeat(4,34px);
+  grid-template-columns:30px minmax(170px,1fr) repeat(7,34px) 40px;
   gap:6px;
   align-items:center;
   padding:8px 9px;
@@ -538,6 +561,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border-radius:8px;
   background:#fff;
   font-size:.75rem;
+  min-width:560px;
 }
 .brazil-row.head{
   background:#f2f7ef;
@@ -645,9 +669,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
 .podium-row .pname{font-size:1.06rem}
 .podium-row .pts{font-size:1.72rem}
-.top-1{background:linear-gradient(110deg,#fff8d8,#fffdf4 46%,#fff);border-color:#f5c542}
-.top-2{background:linear-gradient(110deg,#f4f7fb,#fff 48%,#fff);border-color:#b9c3cf}
-.top-3{background:linear-gradient(110deg,#fff0df,#fff 48%,#fff);border-color:#c98747}
+.podium-row.top-1{background:linear-gradient(110deg,#fff8d8,#fffdf4 46%,#fff);border-color:#f5c542}
+.podium-row.top-2{background:linear-gradient(110deg,#f4f7fb,#fff 48%,#fff);border-color:#b9c3cf}
+.podium-row.top-3{background:linear-gradient(110deg,#fff0df,#fff 48%,#fff);border-color:#c98747}
 .rank{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.82rem;flex-shrink:0}
 .podium-row .rank{width:42px;height:42px;font-size:.95rem;box-shadow:0 8px 18px rgba(0,0,0,.12)}
 .r1{background:var(--gold);color:#664b00}.r2{background:var(--silver);color:#334155}.r3{background:var(--bronze);color:#fff}.ro{background:#eef3f8;color:var(--muted)}
@@ -810,6 +834,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .home-metric{padding:9px}
   .progress-metric-ratio{font-size:1.45rem}
   .progress-metric-percent{font-size:1rem}
+  .ranking-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ranking-grid{grid-template-columns:1fr}
   .section-head{
     display:grid;
@@ -820,6 +845,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   }
   .section-head h2{font-size:.96rem}
   .mini-action{width:max-content;max-width:100%;padding:8px 9px;font-size:.7rem}
+  .prize-head{align-items:flex-start;flex-direction:column;gap:8px}
   .fixture-list{gap:8px}
   .fixture-row{
     grid-template-columns:72px minmax(0,1fr);
@@ -852,7 +878,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
     font-size:.66rem;
   }
   .fixture-row.is-result .fixture-vs{min-width:0;background:transparent;color:var(--green)}
-  .brazil-row{grid-template-columns:26px minmax(0,1fr) repeat(4,30px);font-size:.7rem;padding:8px 7px}
+  .brazil-row{grid-template-columns:26px minmax(150px,1fr) repeat(7,30px) 36px;font-size:.7rem;padding:8px 7px;min-width:520px}
   .brazil-row .team-cell{font-size:.74rem}
   .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lb-row{grid-template-columns:auto minmax(0,1fr)}
@@ -884,7 +910,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .fixture-time{font-size:.7rem;padding:5px 8px}
   .fixture-row .team{font-size:.78rem;line-height:1.15}
   .flag{font-size:1rem}
-  .brazil-row{grid-template-columns:24px minmax(0,1fr) repeat(4,27px);gap:4px}
+  .brazil-row{grid-template-columns:24px minmax(150px,1fr) repeat(7,27px) 34px;gap:4px;min-width:480px}
   .group-table th,.group-table td{padding:6px 5px}
   .phase-hdr{font-size:.66rem;padding:7px 9px}
   .game-row,.pal-row{grid-template-columns:42px minmax(0,1fr);gap:8px;padding:9px}
@@ -2134,7 +2160,13 @@ function homeFixtureWindow(){
   const today=todayKey();
   const todays=GAMES.filter(g=>g.date===today).sort(compareGameSchedule);
   if(todays.length){
-    return {title:"Jogos do dia",subtitle:`${formatGameDate(today)} · ${todays.length} partidas`,games:todays.slice(0,6)};
+    const games=todays.slice(0,6);
+    return {
+      title:"Jogos do dia",
+      subtitle:`${formatGameDate(today)} · ${games.length} partidas`,
+      games,
+      showDates:new Set(games.map(game=>game.date)).size>1
+    };
   }
   const pending=GAMES.filter(g=>!S.results[g.id]).sort(compareGameSchedule);
   const future=pending.filter(g=>g.date>=today);
@@ -2142,15 +2174,21 @@ function homeFixtureWindow(){
   if(!source.length) return {title:"Copa encerrada",subtitle:"Todos os jogos oficiais foram apurados.",games:[]};
   const date=source[0].date;
   const games=source.filter(g=>g.date===date).slice(0,6);
-  return {title:"Próximos jogos",subtitle:`${formatGameDate(date)} · ${games.length} partidas`,games};
+  return {
+    title:"Próximos jogos",
+    subtitle:`${formatGameDate(date)} · ${games.length} partidas`,
+    games,
+    showDates:new Set(games.map(game=>game.date)).size>1
+  };
 }
-function renderFixtureRow(game){
+function renderFixtureRow(game,showDate){
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const timeLabel=game.time||"A definir";
   const versusLabel=res?`${res.s1} × ${res.s2}`:"x";
   return `<div class="fixture-row ${res?"is-result":"is-upcoming"}">
     <div class="fixture-meta">
+      ${showDate?`<div class="fixture-date-inline">${formatGameDate(game.date)}</div>`:""}
       <span class="fixture-time">${esc(timeLabel)}</span>
       <div class="fixture-phase">${esc(game.phase)}</div>
     </div>
@@ -2170,12 +2208,16 @@ function renderBrazilMiniTable(){
   const rows=groupStandings().C;
   const next=nextBrazilGame();
   return `<div class="brazil-table">
-    <div class="brazil-row head"><div>#</div><div>Seleção</div><div>J</div><div>V</div><div>SG</div><div>Pts</div></div>
+    <div class="brazil-row head"><div>#</div><div>Seleção</div><div>J</div><div>V</div><div>E</div><div>D</div><div>GP</div><div>GC</div><div>SG</div><div>Pts</div></div>
     ${rows.map(row=>`<div class="brazil-row ${row.team==="Brasil"?"brazil-highlight":""}">
       <div>${row.pos}</div>
       <div class="team-cell">${teamFlag(row.team)?`<span class="flag">${teamFlag(row.team)}</span>`:""}<span class="team-name">${esc(row.team)}</span></div>
       <div>${row.played}</div>
       <div>${row.w}</div>
+      <div>${row.d}</div>
+      <div>${row.l}</div>
+      <div>${row.gf}</div>
+      <div>${row.ga}</div>
       <div>${row.gd}</div>
       <strong>${row.pts}</strong>
     </div>`).join("")}
@@ -2367,12 +2409,19 @@ function renderHome(){
             <div class="progress-metric-bar" aria-hidden="true"></div>
             <div class="progress-metric-foot">${finalCountdown}</div>
           </div>
-          <div class="home-metric">
-            <span>Sua posição</span>
-            <strong class="position-value ${positionClass}">${positionValue}</strong>
-            <div class="position-help">
-              <small>${positionNote}</small>
-              ${positionAction}
+          <div class="home-metric-stack">
+            <div class="home-metric">
+              <span>Sua posição</span>
+              <strong class="position-value ${positionClass}">${positionValue}</strong>
+              <div class="position-help">
+                <small>${positionNote}</small>
+                ${positionAction}
+              </div>
+            </div>
+            <div class="home-metric compact-insight">
+              <span>Palpites</span>
+              <strong class="compact-insight-value">${progress.pct}% enviados</strong>
+              <small>${progress.filled}/${progress.expected} placares preenchidos no bolão.</small>
             </div>
           </div>
         </div>
@@ -2403,10 +2452,6 @@ function renderHome(){
       </aside>
     </section>
 
-    <div class="home-insights single">
-      <div class="quick-insight"><div class="label">Palpites</div><div class="value">${progress.pct}% enviados</div><div class="note">${progress.filled}/${progress.expected} placares preenchidos no bolão.</div></div>
-    </div>
-
     <div class="home-layout">
       <section class="home-section">
         <div class="section-head">
@@ -2417,7 +2462,7 @@ function renderHome(){
           <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
         </div>
         <div class="fixture-list">
-          ${fixtures.games.length?fixtures.games.map(renderFixtureRow).join(""):`<div class="fixture-empty">Todos os resultados oficiais já entraram no bolão.</div>`}
+          ${fixtures.games.length?fixtures.games.map(game=>renderFixtureRow(game,fixtures.showDates)).join(""):`<div class="fixture-empty">Todos os resultados oficiais já entraram no bolão.</div>`}
         </div>
       </section>
 
