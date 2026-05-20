@@ -826,22 +826,480 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .res .sc{background:var(--green);color:#fff;padding:4px 9px;border-radius:7px;min-width:28px;text-align:center}
 .ko-note{background:#fffbe6;border:1px solid #f3df89;color:#725400;border-radius:8px;padding:10px 12px;font-size:.8rem;font-weight:750;margin-bottom:12px}
 
-/* PALPITES */
-.pal-tools{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:12px}
-.progress-pill{background:#fff;border:1px solid var(--border);border-radius:999px;padding:8px 11px;font-size:.75rem;font-weight:900;color:var(--blue)}
-.pal-row{grid-template-columns:64px minmax(0,1fr) auto}
-.pgn{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center;min-width:0}
-.sbadge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:.68rem;font-weight:950;flex-shrink:0}
-.b3{background:#d1fae5;color:#065f46}.b1{background:#dbeafe;color:#1e40af}.bn2{background:#fee2e2;color:#b91c1c}.b0{background:#f3f4f6;color:#6b7280}.bem{background:#f3f4f6;color:#a3aab6}
+/* PALPITES — PREMIUM (compact) */
+.pal-shell{display:grid;gap:14px}
+.pal-hero{
+  position:relative;
+  overflow:hidden;
+  border-radius:14px;
+  padding:14px 16px;
+  color:#fff;
+  background:
+    radial-gradient(110% 140% at 0% 0%,rgba(255,223,0,.18),transparent 55%),
+    radial-gradient(120% 140% at 100% 100%,rgba(0,132,61,.5),transparent 60%),
+    linear-gradient(135deg,#001b54 0%,#002776 45%,#004c2d 100%);
+  box-shadow:0 18px 44px rgba(0,39,118,.24);
+  border:1px solid rgba(255,255,255,.18);
+}
+.pal-hero:before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(135deg,rgba(255,255,255,.04) 0 1px,transparent 1px 28px),
+    radial-gradient(60% 80% at 80% 20%,rgba(255,223,0,.16),transparent 65%);
+  mix-blend-mode:screen;opacity:.9;
+}
+.pal-hero-top{
+  position:relative;display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;align-items:center;
+}
+.pal-hero-title{display:flex;align-items:center;gap:12px;min-width:0}
+.pal-hero-title h2{font-size:clamp(1.05rem,2.1vw,1.32rem);font-weight:950;letter-spacing:.2px;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pal-hero-title .kicker{font-size:.6rem;letter-spacing:1.1px;text-transform:uppercase;font-weight:950;color:var(--yellow);line-height:1;display:block;margin-bottom:4px}
+.pal-hero-avatar{
+  width:42px;height:42px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;font-weight:950;color:#1a1300;
+  background:linear-gradient(135deg,#ffdf00,#f5c542);
+  box-shadow:0 6px 14px rgba(0,0,0,.22);
+}
+.pal-hero-metrics{
+  position:relative;display:flex;gap:6px;flex-wrap:nowrap;
+}
+.pal-metric{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  border-radius:10px;padding:6px 10px;min-width:0;
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+}
+.pal-metric .lbl{font-size:.54rem;text-transform:uppercase;letter-spacing:.8px;font-weight:900;opacity:.78;white-space:nowrap}
+.pal-metric .val{font-size:1.05rem;font-weight:950;line-height:1.05;color:#fff;display:flex;align-items:baseline;gap:3px;white-space:nowrap}
+.pal-metric .val small{font-size:.6rem;font-weight:800;opacity:.7;letter-spacing:.4px}
+.pal-metric.accent{background:linear-gradient(135deg,rgba(255,223,0,.92),rgba(245,197,66,.82));color:#1a1300;border-color:rgba(255,255,255,.5);box-shadow:0 6px 14px rgba(255,223,0,.22)}
+.pal-metric.accent .lbl,.pal-metric.accent .val{color:#1a1300}
+.pal-progress-bar{position:relative;width:100%;height:4px;border-radius:99px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:4px}
+.pal-progress-fill{position:absolute;inset:0;width:0%;background:linear-gradient(90deg,var(--yellow),#9fffb6);border-radius:99px;transition:width .4s ease}
 
-/* PODIO */
-.podio-wrap{overflow-x:auto}
-.podio-tbl{width:100%;border-collapse:collapse;font-size:.82rem;background:#fff;border-radius:8px;overflow:hidden}
-.podio-tbl th,.podio-tbl td{padding:9px;border-bottom:1px solid var(--border);text-align:center}
-.podio-tbl th{background:#f2f7ef;font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
-.podio-tbl td:first-child{text-align:left;font-weight:900;white-space:nowrap}
-.txt-inp,.txt-select,.podio-tbl input{width:100%;min-width:92px;border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:.82rem;text-align:center;background:#fff}
-.txt-inp:focus,.txt-select:focus,.podio-tbl input:focus{outline:none;border-color:var(--blue)}
+/* Hero bottom row: people + stages */
+.pal-hero-bottom{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;align-items:center;margin-top:12px;
+}
+
+/* Participant selector — compact pills */
+.pal-people{
+  display:flex;gap:6px;overflow-x:auto;padding:2px 2px 4px;
+  scrollbar-width:thin;min-width:0;
+}
+.pal-people::-webkit-scrollbar{height:5px}
+.pal-people::-webkit-scrollbar-thumb{background:rgba(255,255,255,.25);border-radius:99px}
+.pal-person{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;
+  padding:5px 11px 5px 5px;border-radius:99px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:#fff;font-weight:850;font-size:.74rem;white-space:nowrap;
+  cursor:pointer;transition:transform .15s,background .15s,border-color .15s;line-height:1;
+}
+.pal-person:hover{background:rgba(255,255,255,.18)}
+.pal-person .avatar{
+  width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,#ffdf00,#f5c542);color:#1a1300;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.66rem;font-weight:950;letter-spacing:.3px;
+  box-shadow:0 3px 8px rgba(0,0,0,.18);
+}
+.pal-person.active{background:#fff;color:var(--blue);border-color:#fff;box-shadow:0 6px 14px rgba(0,0,0,.2)}
+.pal-person.active .avatar{background:linear-gradient(135deg,var(--blue),var(--green));color:#fff}
+.pal-person.self:after{content:"você";font-size:.5rem;font-weight:950;text-transform:uppercase;letter-spacing:.5px;padding:2px 5px;border-radius:99px;background:rgba(255,223,0,.92);color:#1a1300;margin-left:2px}
+
+/* Stage segmented — compact 3 stages */
+.pal-stages{
+  display:flex;gap:4px;flex-shrink:0;
+  padding:4px;border-radius:11px;background:rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.16);
+}
+.pal-stage{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 12px;border-radius:8px;background:transparent;border:0;color:rgba(255,255,255,.78);
+  font-size:.74rem;font-weight:900;cursor:pointer;transition:background .18s,color .18s;white-space:nowrap;
+}
+.pal-stage .ico{font-size:.95rem;line-height:1}
+.pal-stage:hover{background:rgba(255,255,255,.08);color:#fff}
+.pal-stage.active{background:#fff;color:var(--blue);box-shadow:0 6px 14px rgba(0,0,0,.18)}
+
+/* Filter bar inside main panel */
+.pal-filters{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.pal-filters .fbar{margin-bottom:0;flex:1;min-width:0}
+.pal-stage-note{
+  background:linear-gradient(135deg,#fffbe6,#fff7c2);
+  border:1px solid #f3df89;color:#725400;
+  border-radius:10px;padding:11px 13px;font-size:.78rem;font-weight:800;margin-bottom:12px;
+  display:flex;gap:9px;align-items:flex-start;
+}
+.pal-stage-note .ic{font-size:.95rem;line-height:1.2}
+
+/* ==== PREMIUM FIXTURE CARD (palpite-card) ==== */
+.pal-card{
+  position:relative;
+  display:grid;
+  grid-template-columns:88px minmax(0,1fr) auto;
+  gap:14px;align-items:center;
+  background:linear-gradient(180deg,#fff,#fbfdf8);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:11px 14px;
+  margin-bottom:8px;
+  box-shadow:0 6px 18px rgba(0,39,118,.05);
+  transition:transform .15s,box-shadow .2s,border-color .2s;
+}
+.pal-card:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
+.pal-card.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
+.pal-card.is-locked{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
+.pal-card.is-waiting{background:linear-gradient(180deg,#fafbfd,#fff);border-style:dashed}
+.pal-card.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
+
+.pal-card-meta{
+  display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;
+}
+.pal-card-date{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 9px;border-radius:8px;
+  background:linear-gradient(135deg,var(--blue),#003a9e);color:#fff;
+  font-size:.7rem;font-weight:950;letter-spacing:.2px;line-height:1;
+  box-shadow:0 4px 10px rgba(0,39,118,.16);
+}
+.pal-card-date .wd{font-size:.55rem;text-transform:uppercase;letter-spacing:.6px;opacity:.85;font-weight:900}
+.pal-card-date .dm{font-weight:950}
+.pal-card-time{
+  font-size:.7rem;font-weight:900;color:var(--muted);letter-spacing:.3px;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.pal-card-time:before{content:"";width:5px;height:5px;border-radius:50%;background:#a3aab6;display:inline-block}
+.pal-card.is-live .pal-card-time:before{background:var(--green);animation:livePulse 1.4s ease-in-out infinite}
+.pal-card.is-live .pal-card-time{color:var(--green-2)}
+@keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+.pal-card-gid{
+  font-size:.55rem;letter-spacing:.6px;font-weight:900;
+  color:#a3aab6;text-transform:uppercase;line-height:1;
+}
+
+.pal-card-body{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;gap:10px;min-width:0;
+}
+.pal-card-team{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:0;
+  font-size:.82rem;font-weight:850;color:var(--text);text-align:center;
+  padding:2px 4px;
+}
+.pal-card-team .flag{
+  font-size:2.6rem;line-height:1;
+  filter:saturate(1.08) drop-shadow(0 3px 6px rgba(0,0,0,.12));
+  flex-shrink:0;
+}
+.pal-card-team .nm{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%;
+  letter-spacing:.1px;
+}
+.pal-card-team.muted{color:var(--muted);font-weight:700}
+.pal-card-team.muted .flag{opacity:.55}
+
+.pal-card-score{
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+}
+.pal-card-score .ssep{color:var(--muted);font-weight:950;font-size:.92rem}
+.pal-card-score .score-control{box-shadow:0 4px 10px rgba(0,39,118,.08)}
+.pal-card-status{
+  font-size:.58rem;font-weight:900;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--muted);text-align:center;margin-top:4px;
+}
+.pal-card-status.live{color:var(--green-2)}
+.pal-card-status.locked{color:#a3aab6}
+
+.pal-card-result{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  margin-top:3px;font-size:.65rem;font-weight:900;color:var(--muted);
+}
+.pal-card-result .real{
+  display:inline-flex;gap:5px;align-items:center;background:#f7faf2;border:1px solid var(--border);
+  padding:3px 7px;border-radius:6px;color:var(--text);font-weight:950;font-size:.7rem;
+}
+
+.pal-card-badge{
+  display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:50px;
+}
+.pal-card-badge .sbadge{
+  width:34px;height:34px;border-radius:11px;font-size:.78rem;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:950;letter-spacing:.2px;
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+.pal-card-badge .lbl{font-size:.5rem;font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:var(--muted)}
+
+/* Score badges (reused) */
+.sbadge{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:.68rem;font-weight:950;flex-shrink:0}
+.b3{background:linear-gradient(135deg,#a7f3c8,#22c55e);color:#053822}
+.b1{background:linear-gradient(135deg,#bfd3ff,#3b82f6);color:#0c2e75}
+.bn2{background:linear-gradient(135deg,#ffc8c6,#ef4444);color:#5a0e0e}
+.b0{background:linear-gradient(135deg,#e5e7eb,#cbd5e1);color:#475569}
+.bem{background:#f3f4f6;color:#a3aab6;box-shadow:none}
+
+/* ==== KNOCKOUT BRACKET ==== */
+.bracket-wrap{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:18px;
+  padding:18px 4px 8px;
+}
+.bracket-col{
+  display:flex;flex-direction:column;gap:10px;justify-content:space-around;min-width:0;
+}
+.bracket-col-head{
+  font-size:.58rem;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
+  color:var(--blue);text-align:center;
+  padding:5px 0 6px;border-bottom:1.5px dashed #cfdcf0;margin-bottom:4px;
+}
+.bracket-card{
+  position:relative;
+  border:1.5px solid var(--border);background:#fff;border-radius:10px;
+  padding:6px 8px;display:flex;flex-direction:column;gap:4px;
+  box-shadow:0 4px 12px rgba(0,39,118,.06);
+  transition:transform .15s,box-shadow .2s,border-color .2s;
+  min-width:0;
+}
+.bracket-card:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,39,118,.1);border-color:#cbd9eb}
+.bracket-card.waiting{background:#fafbfd;border-style:dashed;opacity:.85}
+.bracket-card.hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
+.bracket-card.live{border-color:#7ed1a1;background:linear-gradient(180deg,#f7fff9,#fff)}
+.bracket-card.final{border-color:#f0d77e;background:linear-gradient(180deg,#fffaea,#fff);box-shadow:0 12px 28px rgba(245,197,66,.18)}
+.bracket-card .bk-meta{
+  display:flex;justify-content:space-between;align-items:center;gap:6px;
+  font-size:.5rem;font-weight:900;letter-spacing:.45px;color:var(--muted);text-transform:uppercase;
+}
+.bracket-card .bk-meta .date{color:var(--blue);font-weight:950}
+.bracket-card .bk-row{
+  display:grid;grid-template-columns:minmax(0,1fr) 38px;
+  align-items:center;gap:6px;font-size:.74rem;font-weight:850;color:var(--text);min-width:0;
+}
+.bracket-card .bk-row.muted{color:var(--muted);font-weight:700}
+.bracket-card .bk-row .nm{
+  display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;
+}
+.bracket-card .bk-row .nm .flag{font-size:.95rem;flex-shrink:0}
+.bracket-card .bk-row .nm .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.bracket-card .bk-row input{
+  width:100%;height:26px;border:1.2px solid var(--border);border-radius:6px;
+  text-align:center;font-size:.78rem;font-weight:950;color:var(--text);background:#fff;
+  -moz-appearance:textfield;
+}
+.bracket-card .bk-row input::-webkit-outer-spin-button,
+.bracket-card .bk-row input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.bracket-card .bk-row input:disabled{background:#f4f7f5;color:#8792a3}
+.bracket-card .bk-divider{height:1px;background:#eef2f7}
+.bracket-card .bk-badge{
+  position:absolute;top:-7px;right:8px;
+  font-size:.55rem;font-weight:950;letter-spacing:.35px;
+  padding:2px 7px;border-radius:99px;color:#fff;
+  background:linear-gradient(135deg,var(--blue),#003a9e);
+  box-shadow:0 4px 10px rgba(0,39,118,.18);
+}
+.bracket-card.hit .bk-badge{background:linear-gradient(135deg,#22c55e,#047857)}
+.bracket-card.final .bk-badge{background:linear-gradient(135deg,#f5c542,#b48400);color:#3a2700}
+
+.bracket-final-col{grid-column:4;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.bracket-trophy{
+  text-align:center;font-size:1.8rem;line-height:1;
+  filter:drop-shadow(0 6px 12px rgba(245,197,66,.45));
+  animation:trophyFloat 4s ease-in-out infinite;
+}
+@keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+.bracket-third-card{
+  margin-top:14px;background:linear-gradient(135deg,#fff4e9,#fff);
+  border:1.5px solid #e3b793;border-radius:12px;padding:12px;
+  box-shadow:0 10px 24px rgba(201,135,71,.16);
+}
+.bracket-third-head{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:10px;font-size:.7rem;font-weight:950;color:#915221;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.bracket-third-head .ic{font-size:1.05rem}
+
+.bracket-stage{
+  background:rgba(255,253,244,.86);
+  border:1px solid rgba(220,229,216,.9);
+  border-radius:12px;padding:14px;
+  box-shadow:var(--shadow);
+  overflow-x:auto;
+  scrollbar-width:thin;
+}
+.bracket-stage::-webkit-scrollbar{height:6px}
+.bracket-stage::-webkit-scrollbar-thumb{background:#cbd9eb;border-radius:99px}
+
+/* R32 separate compact grid */
+.r32-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:8px;margin-top:8px;
+}
+.r32-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin:6px 0 4px;font-size:.66rem;font-weight:900;color:var(--blue);
+  text-transform:uppercase;letter-spacing:.7px;
+}
+.r32-head .count{font-size:.6rem;color:var(--muted);font-weight:800}
+
+/* ===== PÓDIO — PREMIUM ===== */
+.podio-shell{display:grid;gap:18px}
+.podio-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:4px}
+.podio-section-head h3{font-size:1.05rem;font-weight:950;color:var(--text);letter-spacing:.2px}
+.podio-section-head p{font-size:.78rem;color:var(--muted);margin-top:4px;line-height:1.5}
+.podio-status-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 11px;border-radius:99px;
+  font-size:.7rem;font-weight:900;letter-spacing:.3px;
+  background:#eef5ff;color:var(--blue);border:1px solid #d8e5ff;
+}
+.podio-status-chip.locked{background:#fff3e0;color:#a8550a;border-color:#ffd8a1}
+.podio-status-chip .dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.8}
+
+.podium-cards{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;
+}
+.podium-card{
+  position:relative;
+  border-radius:14px;
+  padding:16px 14px 14px;
+  background:#fff;
+  border:1px solid var(--border);
+  box-shadow:0 14px 32px rgba(0,39,118,.08);
+  overflow:hidden;
+  display:flex;flex-direction:column;gap:11px;
+  transition:transform .2s,box-shadow .2s;
+}
+.podium-card:before{
+  content:"";position:absolute;left:0;top:0;right:0;height:5px;
+  background:linear-gradient(90deg,transparent,currentColor,transparent);opacity:.85;
+}
+.podium-card .crown{
+  position:absolute;top:-22px;right:-20px;font-size:5.2rem;opacity:.08;transform:rotate(18deg);
+}
+.podium-card .pos-line{display:flex;align-items:center;gap:9px}
+.podium-medal{
+  width:42px;height:42px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.18rem;font-weight:950;color:#fff;
+  background:linear-gradient(135deg,#888,#bbb);
+  box-shadow:0 8px 16px rgba(0,0,0,.18);flex-shrink:0;
+}
+.podium-card .pos-info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.podium-card .pos-info .lbl{font-size:.66rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.podium-card .pos-info .ttl{font-size:1rem;font-weight:950;color:var(--text);line-height:1}
+.podium-card .pts-pill{
+  margin-left:auto;font-size:.7rem;font-weight:950;color:#fff;
+  background:currentColor;padding:5px 10px;border-radius:99px;
+  filter:saturate(1.1);
+}
+.podium-card .pts-pill span{color:#fff}
+.podium-card .country-input{display:flex;flex-direction:column;gap:6px}
+.podium-card input{
+  width:100%;border:1.6px solid var(--border);border-radius:10px;
+  padding:11px 12px;font-size:.92rem;font-weight:850;background:#fff;text-align:left;
+}
+.podium-card input:focus{outline:none;border-color:currentColor;box-shadow:0 0 0 3px rgba(0,39,118,.12)}
+.podium-card .country-display{
+  display:flex;align-items:center;gap:9px;
+  padding:11px 12px;border:1.6px dashed var(--border);border-radius:10px;
+  font-size:.9rem;font-weight:900;color:var(--text);min-height:46px;background:#fafdf3;
+}
+.podium-card .country-display.empty{color:var(--muted);font-weight:700;font-style:italic;border-style:dashed}
+.podium-card .country-display .flag{font-size:1.4rem}
+.podium-card.gold{color:#b48400;background:linear-gradient(180deg,#fffaea 0%,#fff 60%);border-color:#f0d77e}
+.podium-card.gold .podium-medal{background:linear-gradient(135deg,#fff1a8,#f5c542 60%,#b48400);color:#5a3d00;border:2px solid #fff1a8}
+.podium-card.silver{color:#5f6c7d;background:linear-gradient(180deg,#f6f9fc 0%,#fff 60%);border-color:#cdd6e0}
+.podium-card.silver .podium-medal{background:linear-gradient(135deg,#e7ecf2,#b9c3cf 60%,#7f8b9b);color:#fff}
+.podium-card.bronze{color:#915221;background:linear-gradient(180deg,#fff4e9 0%,#fff 60%);border-color:#e3b793}
+.podium-card.bronze .podium-medal{background:linear-gradient(135deg,#f3c79a,#c98747 60%,#7d4715);color:#fff}
+.podium-card.fourth{color:var(--blue);background:linear-gradient(180deg,#eef4fb 0%,#fff 60%);border-color:#cfdcf0}
+.podium-card.fourth .podium-medal{background:linear-gradient(135deg,#dbe7f6,var(--blue) 80%);color:#fff}
+
+/* Locked / muted state */
+.podium-card.locked .country-input input{background:#f6f8fa;color:#7c8693}
+.podium-locked-note{
+  margin-top:8px;font-size:.74rem;color:var(--muted);
+  display:flex;gap:7px;align-items:center;
+}
+
+/* My pódio mini-summary */
+.my-podio-summary{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  background:linear-gradient(135deg,#fff,#fbfff3);
+  border:1px dashed #c7d7f0;border-radius:12px;padding:11px 14px;
+  margin-top:14px;font-size:.8rem;font-weight:800;color:var(--text);
+}
+.my-podio-summary .label{color:var(--muted);font-weight:850;text-transform:uppercase;font-size:.65rem;letter-spacing:.7px}
+.my-podio-summary .score-pill{
+  background:var(--green);color:#fff;padding:6px 11px;border-radius:99px;font-weight:950;font-size:.78rem;
+}
+.my-podio-summary .score-pill.empty{background:#eef3f8;color:var(--muted)}
+
+/* Participants podium leaderboard */
+.podio-board{
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 14px 32px rgba(0,39,118,.06);overflow:hidden;
+}
+.podio-board-head{
+  padding:14px 16px;background:linear-gradient(135deg,#f7faf2,#fff);
+  border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;
+}
+.podio-board-head h3{font-size:1rem;font-weight:950;color:var(--text)}
+.podio-board-head p{font-size:.76rem;color:var(--muted);margin-top:3px}
+.podio-board-legend{display:flex;gap:8px;flex-wrap:wrap}
+.podio-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;font-size:.66rem;font-weight:900;color:var(--text);background:#f7faf2;border:1px solid var(--border)}
+.podio-legend-chip .sw{width:9px;height:9px;border-radius:50%}
+.podio-list{display:grid;gap:8px;padding:12px}
+.podio-entry{
+  display:grid;grid-template-columns:36px minmax(140px,1.05fr) minmax(0,2.2fr) auto;
+  align-items:center;gap:14px;
+  padding:11px 14px;border-radius:12px;
+  background:#fff;border:1px solid var(--border);
+  transition:transform .15s,box-shadow .2s,border-color .2s;
+}
+.podio-entry:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
+.podio-entry.me{border-color:#9fc5ff;background:linear-gradient(110deg,#f7fbff,#fff 48%,#f7fbff)}
+.podio-entry .pe-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--blue),var(--green));color:#fff;
+  display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.78rem;
+}
+.podio-entry .pe-name{font-weight:900;font-size:.9rem;color:var(--text);min-width:0;display:flex;flex-direction:column;gap:2px}
+.podio-entry .pe-name .you{font-size:.6rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--blue)}
+.podio-entry .pe-picks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;min-width:0}
+.pe-pick{
+  display:flex;flex-direction:column;align-items:flex-start;gap:2px;
+  padding:6px 8px;border-radius:9px;background:#fafcff;border:1px solid #e5ecf6;
+  font-size:.76rem;font-weight:850;color:var(--text);min-width:0;
+}
+.pe-pick .pos{font-size:.55rem;font-weight:900;letter-spacing:.5px;color:var(--muted);text-transform:uppercase}
+.pe-pick .country{display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.pe-pick .country .flag{font-size:1rem;flex-shrink:0}
+.pe-pick .country .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pe-pick.hit{background:#d1fae5;border-color:#7ed1a1;color:#065f46}
+.pe-pick.miss{background:#fff;border-color:#e5ecf6;color:var(--muted)}
+.pe-pick.empty{background:#f6f8fa;border-style:dashed;color:#a3aab6}
+.pe-pick.hit .pos{color:#04714b}
+.podio-entry .pe-score{
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right;flex-shrink:0;
+}
+.podio-entry .pe-score .pts{font-size:1.35rem;font-weight:950;color:var(--green);line-height:1}
+.podio-entry .pe-score.empty .pts{color:#a3aab6}
+.podio-entry .pe-score .lbl{font-size:.55rem;font-weight:900;letter-spacing:.6px;color:var(--muted);text-transform:uppercase}
+
+/* Inputs reused */
+.txt-inp,.txt-select{width:100%;min-width:92px;border:1.5px solid var(--border);border-radius:7px;padding:8px;font-size:.82rem;text-align:center;background:#fff}
+.txt-inp:focus,.txt-select:focus{outline:none;border-color:var(--blue)}
 .ppts{font-weight:950;color:var(--green)}
 
 /* CONFIG */
@@ -876,6 +1334,20 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .home-spotlight,.home-layout{grid-template-columns:1fr}
   .home-prize-board{max-width:none}
   .home-insights{grid-template-columns:1fr}
+  .podium-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .podio-entry{grid-template-columns:36px minmax(0,1fr) auto;grid-auto-rows:auto}
+  .podio-entry .pe-picks{grid-column:1 / -1;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .pal-hero-top{grid-template-columns:1fr;gap:10px}
+  .pal-hero-metrics{flex-wrap:wrap}
+  .pal-hero-bottom{grid-template-columns:1fr;gap:8px}
+  .pal-stages{align-self:stretch;justify-content:space-between}
+  .pal-stage{flex:1;justify-content:center}
+  /* Bracket falls back to phase-stacked view */
+  .bracket-wrap{grid-template-columns:1fr;gap:14px}
+  .bracket-col{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:8px}
+  .bracket-col-head{width:100%;text-align:left;border-bottom:1.5px solid var(--border);margin-bottom:6px}
+  .bracket-card{flex:1 1 220px;min-width:0}
+  .bracket-final-col{grid-column:auto}
 }
 
 @media(max-width:760px){
@@ -964,6 +1436,29 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .team.r{justify-content:flex-start;text-align:left}
   .score-wrap{justify-content:flex-start}
   .pal-row .score-wrap{justify-content:space-between}
+  .pal-hero{padding:12px}
+  .pal-stages{flex:1}
+  .pal-stage{padding:7px 8px;font-size:.66rem}
+  .pal-stage .ico{font-size:.85rem}
+  .pal-stage span:not(.ico){display:none}
+  .podio-entry .pe-picks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .podio-entry{padding:10px}
+  .pe-pick{font-size:.7rem;padding:5px 7px}
+
+  /* Premium fixture card mobile */
+  .pal-card{
+    grid-template-columns:1fr;
+    gap:8px;padding:10px 12px;
+  }
+  .pal-card-meta{
+    flex-direction:row;align-items:center;justify-content:space-between;
+    gap:8px;width:100%;
+  }
+  .pal-card-meta .pal-card-gid{margin-left:auto}
+  .pal-card-body{grid-template-columns:1fr 1fr;gap:8px;text-align:center;align-items:center}
+  .pal-card-team .flag{font-size:2.1rem}
+  .pal-card-score{grid-column:1 / -1;justify-content:center}
+  .pal-card-badge{flex-direction:row;align-self:flex-end}
 }
 
 @media(max-width:520px){
@@ -996,6 +1491,14 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .action-btn,.action-label{min-width:130px;padding:10px;font-size:.78rem}
   .cfg-row{align-items:flex-start;flex-direction:column;gap:8px}
   .cfg-inp{width:100%;max-width:180px}
+  .podium-cards{grid-template-columns:1fr}
+  .podium-card{padding:14px 13px}
+  .podium-medal{width:38px;height:38px;font-size:1rem}
+  .pal-hero h2{font-size:1.18rem}
+  .pal-hero p.lead{font-size:.78rem}
+  .pal-hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .podio-entry{grid-template-columns:32px minmax(0,1fr) auto;gap:10px;padding:9px}
+  .podio-entry .pe-avatar{width:32px;height:32px;font-size:.7rem}
 }
 </style>
 </head>
@@ -1020,7 +1523,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   <button onclick="goTab('grupos')">Grupos</button>
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
-  <button onclick="goTab('podio')">Pódio</button>
   <button onclick="goTab('config')">Config</button>
 </nav>
 
@@ -1029,7 +1531,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 <div id="tab-grupos" class="tab"></div>
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
-<div id="tab-podio" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
 
@@ -2216,11 +2717,14 @@ let rankingChartSelection=[];
 let rankingChartTouched=false;
 
 function goTab(t){
+  // Pódio foi integrado à página de Palpites como um estágio adicional
+  if(t==="podio"){palStage="podio";t="palpites";}
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["home","ranking","grupos","jogos","palpites","podio","config"];
-  document.querySelectorAll("nav button")[tabs.indexOf(t)].classList.add("active");
+  const tabs=["home","ranking","grupos","jogos","palpites","config"];
+  const idx=tabs.indexOf(t);
+  if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
 }
@@ -2231,7 +2735,6 @@ function render(t){
   if(t==="grupos") renderGrupos();
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
-  if(t==="podio") renderPodio();
   if(t==="config") renderConfig();
 }
 
@@ -2788,46 +3291,411 @@ function clearRes(id){
   render(activeTab);
 }
 
+function palInitials(name){
+  if(!name) return "?";
+  const parts=String(name).trim().split(/\s+/);
+  if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
 function renderPalpites(){
   if(palPi>=S.participants.length) palPi=0;
+  if(!["groups","ko","podio"].includes(palStage)) palStage="groups";
   if(isOnlineMode()&&(!isSignedIn()||!currentProfile)){
     document.getElementById("tab-palpites").innerHTML=`<div class="panel">${accountCard()}</div>`;
     return;
   }
-  const groupFilters=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`Grupo ${g}`,l:`Grupo ${g}`}))];
-  const koFilters=[{k:"all",l:"Todos"},...KO_PHASES.map(p=>({k:p.k,l:p.l}))];
-  const filters=palStage==="groups"?groupFilters:koFilters;
-  let h=`<div class="panel">
-    <div class="pal-tools">
-      <div>
-        <div class="psel">${S.participants.map((n,i)=>`<button class="pbtn ${palPi===i?"active":""}" onclick="selPal(${i})">${esc(n)}</button>`).join("")}</div>
-        ${isOnlineMode()&&!canEditParticipant(palPi)?`<div class="ko-note">Você está visualizando os palpites de ${esc(participantName(palPi))}. Só ${esc(participantName(palPi))} consegue alterar estes campos.</div>`:""}
-        <div class="section-switch">
-          <button class="seg-btn ${palStage==="groups"?"active":""}" onclick="setPalStage('groups')">Fase de grupos</button>
-          <button class="seg-btn ${palStage==="ko"?"active":""}" onclick="setPalStage('ko')">Mata-mata</button>
+  const myIdx=myParticipantIndex();
+  const stats=playerStats(palPi);
+  const rank=ranking();
+  const rankIdx=rank.findIndex(r=>r.i===palPi);
+  const rankPos=rankIdx>=0?rankIdx+1:null;
+  const matchPalpites=Object.keys(S.palpites||{}).filter(k=>k.startsWith(`${palPi}_`)&&S.palpites[k]&&S.palpites[k].s1!=null&&S.palpites[k].s2!=null).length;
+  const totalGames=GAMES.length;
+  const filledPct=totalGames?Math.round(matchPalpites*100/totalGames):0;
+
+  const STAGE_META={
+    groups:{ico:"⚽",label:"Grupos"},
+    ko:    {ico:"⚔️",label:"Mata-mata"},
+    podio: {ico:"\u{1F451}",label:"Pódio"}
+  };
+
+  let bodyHTML="";
+
+  if(palStage==="podio"){
+    bodyHTML=renderPodioBody();
+  }else if(palStage==="ko"){
+    bodyHTML=renderKnockoutBody();
+  }else{
+    const groupFilters=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`Grupo ${g}`,l:`Grupo ${g}`}))];
+    let filtered=groupGames();
+    if(palFilter!=="all"){
+      filtered=filtered.filter(g=>g.phase===palFilter);
+    }
+    const filledFiltered=filtered.filter(g=>{const p=S.palpites[`${palPi}_${g.id}`];return p&&p.s1!=null&&p.s2!=null;}).length;
+    let inner=`
+      <div class="pal-filters">
+        <div class="fbar">${groupFilters.map(p=>`<button class="fbtn ${palFilter===p.k?"active":""}" onclick="setPalFilter('${esc(p.k)}')">${esc(p.l)}</button>`).join("")}</div>
+        <div class="progress-pill" id="palProgress">${filledFiltered}/${filtered.length} preenchidos</div>
+      </div>`;
+    let curPhase="";
+    filtered.forEach(game=>{
+      if(game.phase!==curPhase){
+        curPhase=game.phase;
+        inner+=`<div class="phase-hdr">${esc(game.phase)}</div>`;
+      }
+      inner+=renderPalpiteRow(game);
+    });
+    bodyHTML=`<div class="panel">${inner}</div>`;
+  }
+
+  const stageBtns=["groups","ko","podio"].map(s=>`
+    <button class="pal-stage ${palStage===s?"active":""}" onclick="setPalStage('${s}')">
+      <span class="ico">${STAGE_META[s].ico}</span>
+      <span>${STAGE_META[s].label}</span>
+    </button>`).join("");
+
+  const heroHTML=`
+    <div class="pal-hero">
+      <div class="pal-hero-top">
+        <div class="pal-hero-title">
+          <div class="pal-hero-avatar">${esc(palInitials(participantName(palPi)))}</div>
+          <div style="min-width:0">
+            <span class="kicker">Central de palpites</span>
+            <h2>${esc(participantName(palPi))}</h2>
+          </div>
+        </div>
+        <div class="pal-hero-metrics">
+          <div class="pal-metric accent">
+            <div class="lbl">Pontos</div>
+            <div class="val">${stats.pts}<small>pts</small></div>
+          </div>
+          <div class="pal-metric">
+            <div class="lbl">Ranking</div>
+            <div class="val">${rankPos?`#${rankPos}`:"–"}<small>/${S.participants.length}</small></div>
+          </div>
+          <div class="pal-metric" style="min-width:90px">
+            <div class="lbl">Palpites</div>
+            <div class="val">${matchPalpites}<small>/${totalGames}</small></div>
+            <div class="pal-progress-bar"><div class="pal-progress-fill" style="width:${filledPct}%"></div></div>
+          </div>
         </div>
       </div>
-      <div class="progress-pill" id="palProgress"></div>
-    </div>
-    <div class="fbar">${filters.map(p=>`<button class="fbtn ${palFilter===p.k?"active":""}" onclick="setPalFilter('${p.k}')">${p.l}</button>`).join("")}</div>
-    ${palStage==="ko"&&!groupPhaseComplete()?`<div class="ko-note">Os palpites do mata-mata aparecem com os confrontos calculados assim que a fase de grupos estiver completa.</div>`:""}`;
 
-  let filtered=palStage==="groups"?groupGames():koGames();
-  if(palFilter!=="all"){
-    filtered=filtered.filter(g=>palStage==="groups"?g.phase===palFilter:g.phaseKey===palFilter);
+      <div class="pal-hero-bottom">
+        <div class="pal-people" id="palPeople">
+          ${S.participants.map((n,i)=>`
+            <button class="pal-person ${palPi===i?"active":""} ${myIdx===i?"self":""}" onclick="selPal(${i})" title="${esc(n)}">
+              <span class="avatar">${esc(palInitials(n))}</span>
+              <span>${esc(n)}</span>
+            </button>`).join("")}
+        </div>
+        <div class="pal-stages" role="tablist">${stageBtns}</div>
+      </div>
+    </div>
+    ${bodyHTML}`;
+
+  document.getElementById("tab-palpites").innerHTML=`<div class="pal-shell">${heroHTML}</div>`;
+}
+
+function renderPodioBody(){
+  const ap=S.actualPodio||{};
+  const pos=[
+    {k:"p1",l:"Campeão",sub:"1º lugar",pts:20,cls:"gold",medal:"\u{1F947}"},
+    {k:"p2",l:"Vice-campeão",sub:"2º lugar",pts:10,cls:"silver",medal:"\u{1F948}"},
+    {k:"p3",l:"3º lugar",sub:"Bronze",pts:5,cls:"bronze",medal:"\u{1F949}"},
+    {k:"p4",l:"4º lugar",sub:"Top 4",pts:3,cls:"fourth",medal:"4"}
+  ];
+  const officialLocked=!canEditResults();
+  const myIdx=myParticipantIndex();
+  const myPodio=(palPi!=null&&S.podio[palPi])||{};
+  const myPodioScore=podioScore(myPodio,ap);
+  const apFilled=pos.filter(p=>ap[p.k]).length;
+  const meCanEditOwn=canEditParticipant(palPi);
+
+  const officialCard=`
+    <div class="card" style="margin-bottom:0">
+      <div class="podio-section-head">
+        <div>
+          <div class="card-title" style="margin:0">Resultado oficial</div>
+          <h3>Pódio da Copa</h3>
+          <p>Definido pelo administrador. Cada acerto soma pontos no ranking final.</p>
+        </div>
+        <span class="podio-status-chip ${officialLocked?"locked":""}">
+          <span class="dot"></span>
+          ${officialLocked?`Bloqueado · ${apFilled}/4 definidos`:`Edição liberada · ${apFilled}/4 definidos`}
+        </span>
+      </div>
+      <div class="podium-cards" style="margin-top:14px">
+        ${pos.map(p=>{
+          const v=ap[p.k]||"";
+          return `<div class="podium-card ${p.cls} ${officialLocked?"locked":""}">
+            <span class="crown">${p.medal}</span>
+            <div class="pos-line">
+              <div class="podium-medal">${p.medal}</div>
+              <div class="pos-info">
+                <span class="lbl">${esc(p.sub)}</span>
+                <span class="ttl">${esc(p.l)}</span>
+              </div>
+              <span class="pts-pill"><span>+${p.pts} pts</span></span>
+            </div>
+            <div class="country-input">
+              ${officialLocked
+                ? `<div class="country-display ${v?"":"empty"}">${v?`<span class="flag">${teamFlag(v)}</span><span>${esc(v)}</span>`:"Aguardando definição"}</div>`
+                : `<input type="text" list="countries" placeholder="Selecione o país" value="${esc(v)}" onchange="setAP('${p.k}',this.value)">`
+              }
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+      ${officialLocked?`<div class="podium-locked-note">\u{1F512} Apenas o administrador altera o pódio oficial.</div>`:""}
+    </div>`;
+
+  const myPodioCard=`
+    <div class="card" style="margin-bottom:0">
+      <div class="podio-section-head">
+        <div>
+          <div class="card-title" style="margin:0">Meus palpites</div>
+          <h3>Pódio de ${esc(participantName(palPi))}</h3>
+          <p>Escolha os quatro primeiros colocados para garantir pontos extras no encerramento.</p>
+        </div>
+        <span class="podio-status-chip ${myPodioScore>0?"":"locked"}">
+          <span class="dot"></span>
+          ${myPodioScore>0?`+${myPodioScore} pts já garantidos`:"Sem pontos ainda"}
+        </span>
+      </div>
+      <div class="podium-cards" style="margin-top:14px">
+        ${pos.map(p=>{
+          const v=myPodio[p.k]||"";
+          const hit=ap[p.k]&&v===ap[p.k];
+          return `<div class="podium-card ${p.cls} ${meCanEditOwn?"":"locked"}">
+            <span class="crown">${p.medal}</span>
+            <div class="pos-line">
+              <div class="podium-medal">${p.medal}</div>
+              <div class="pos-info">
+                <span class="lbl">${esc(p.sub)}${hit?" · acerto":""}</span>
+                <span class="ttl">${esc(p.l)}</span>
+              </div>
+              <span class="pts-pill"><span>${hit?`+${p.pts}`:`+${p.pts} pts`}</span></span>
+            </div>
+            <div class="country-input">
+              ${meCanEditOwn
+                ? `<input type="text" list="countries" placeholder="Sua aposta" value="${esc(v)}" onchange="setPodio(${palPi},'${p.k}',this.value)">`
+                : `<div class="country-display ${v?"":"empty"}">${v?`<span class="flag">${teamFlag(v)}</span><span>${esc(v)}</span>`:"Sem palpite"}</div>`
+              }
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+      ${!meCanEditOwn?`<div class="podium-locked-note">\u{1F441}️ Você está visualizando os palpites de ${esc(participantName(palPi))}.</div>`:""}
+    </div>`;
+
+  // Leaderboard ordenada por pontos do pódio (desc)
+  const board=S.participants.map((n,i)=>({n,i,pd:S.podio[i]||{},pts:podioScore(S.podio[i]||{},ap)}))
+    .sort((a,b)=>b.pts-a.pts||a.i-b.i);
+
+  const legend=`
+    <div class="podio-board-legend">
+      <span class="podio-legend-chip"><span class="sw" style="background:#d1fae5;border:1px solid #7ed1a1"></span>Acerto</span>
+      <span class="podio-legend-chip"><span class="sw" style="background:#fff;border:1px solid #e5ecf6"></span>Palpite</span>
+      <span class="podio-legend-chip"><span class="sw" style="background:#f6f8fa;border:1px dashed #cbd1d9"></span>Vazio</span>
+    </div>`;
+
+  const boardCard=`
+    <div class="podio-board">
+      <div class="podio-board-head">
+        <div>
+          <h3>Pódios da galera</h3>
+          <p>Compare quem apostou no quê e quanto já pontuou no pódio.</p>
+        </div>
+        ${legend}
+      </div>
+      <div class="podio-list">
+        ${board.map(row=>{
+          const pCls=row.i===myIdx?"me":"";
+          return `<div class="podio-entry ${pCls}">
+            <div class="pe-avatar">${esc(palInitials(row.n))}</div>
+            <div class="pe-name">
+              <span>${esc(row.n)}</span>
+              ${row.i===myIdx?`<span class="you">você</span>`:""}
+            </div>
+            <div class="pe-picks">
+              ${pos.map(p=>{
+                const v=row.pd[p.k]||"";
+                const cls=!v?"empty":(ap[p.k]&&v===ap[p.k]?"hit":"miss");
+                return `<div class="pe-pick ${cls}">
+                  <span class="pos">${esc(p.sub)}</span>
+                  <span class="country">${v?`<span class="flag">${teamFlag(v)}</span><span class="nm">${esc(v)}</span>`:`<span class="nm">—</span>`}</span>
+                </div>`;
+              }).join("")}
+            </div>
+            <div class="pe-score ${row.pts>0?"":"empty"}">
+              <span class="pts">${row.pts>0?`+${row.pts}`:"–"}</span>
+              <span class="lbl">pts pódio</span>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+
+  return `<div class="podio-shell">
+    ${officialCard}
+    ${myPodioCard}
+    ${countryDatalist()}
+    ${boardCard}
+  </div>`;
+}
+// ===== KNOCKOUT BRACKET =====
+function renderKnockoutBody(){
+  if(!groupPhaseComplete()){
+    return `<div class="panel"><div class="pal-stage-note"><span class="ic">⏳</span><span>Os palpites do mata-mata aparecem com os confrontos calculados assim que a fase de grupos estiver completa.</span></div></div>`;
   }
-  const filled=filtered.filter(g=>{const p=S.palpites[`${palPi}_${g.id}`];return p&&p.s1!=null&&p.s2!=null;}).length;
-  let curPhase="";
-  filtered.forEach(game=>{
-    if(game.phase!==curPhase){
-      curPhase=game.phase;
-      h+=`<div class="phase-hdr">${esc(game.phase)}</div>`;
-    }
-    h+=renderPalpiteRow(game);
-  });
-  h+=`</div>`;
-  document.getElementById("tab-palpites").innerHTML=h;
-  document.getElementById("palProgress").textContent=`${filled}/${filtered.length} palpites preenchidos`;
+  const r32=koGames().filter(g=>g.phaseKey==="r32");
+  const finalGame=GAMES.find(g=>g.phaseKey==="final");
+  const p3Game=GAMES.find(g=>g.phaseKey==="p3");
+
+  // Bracket layout (R16 → Final). Left side has QF_01,QF_02; right side has QF_03,QF_04.
+  const r16Left=["R16_01","R16_02","R16_05","R16_06"].map(id=>gameById(id));
+  const r16Right=["R16_03","R16_04","R16_07","R16_08"].map(id=>gameById(id));
+  const qfLeft=["QF_01","QF_02"].map(id=>gameById(id));
+  const qfRight=["QF_03","QF_04"].map(id=>gameById(id));
+  const sfLeft=gameById("SF_01");
+  const sfRight=gameById("SF_02");
+
+  const filledFiltered=koGames().filter(g=>{const p=S.palpites[`${palPi}_${g.id}`];return p&&p.s1!=null&&p.s2!=null;}).length;
+
+  // R32 grouped by side (matches that feed into left vs right bracket)
+  const r32LeftIds=new Set();
+  const r32RightIds=new Set();
+  const matchNoToId=Object.fromEntries(koGames().filter(g=>g.phaseKey==="r32").map(g=>[g.matchNo,g.id]));
+  r16Left.forEach(g=>(g.sources||[]).forEach(s=>r32LeftIds.add(matchNoToId[s])));
+  r16Right.forEach(g=>(g.sources||[]).forEach(s=>r32RightIds.add(matchNoToId[s])));
+
+  const r32Left=r32.filter(g=>r32LeftIds.has(g.id));
+  const r32Right=r32.filter(g=>r32RightIds.has(g.id));
+
+  const bracketHTML=`
+    <div class="bracket-wrap">
+      <div class="bracket-col">
+        <div class="bracket-col-head">Oitavas</div>
+        ${r16Left.map(g=>bracketCard(g)).join("")}
+      </div>
+      <div class="bracket-col">
+        <div class="bracket-col-head">Quartas</div>
+        ${qfLeft.map(g=>bracketCard(g)).join("")}
+      </div>
+      <div class="bracket-col">
+        <div class="bracket-col-head">Semi</div>
+        ${bracketCard(sfLeft)}
+      </div>
+      <div class="bracket-col bracket-final-col">
+        <div class="bracket-col-head">Final</div>
+        <div class="bracket-trophy">\u{1F3C6}</div>
+        ${bracketCard(finalGame,{accent:"final"})}
+        ${p3Game?`<div class="bracket-third-card">
+          <div class="bracket-third-head"><span><span class="ic">\u{1F948}</span> Disputa de 3º lugar</span></div>
+          ${bracketCard(p3Game,{accent:"bronze"})}
+        </div>`:""}
+      </div>
+      <div class="bracket-col">
+        <div class="bracket-col-head">Semi</div>
+        ${bracketCard(sfRight)}
+      </div>
+      <div class="bracket-col">
+        <div class="bracket-col-head">Quartas</div>
+        ${qfRight.map(g=>bracketCard(g)).join("")}
+      </div>
+      <div class="bracket-col">
+        <div class="bracket-col-head">Oitavas</div>
+        ${r16Right.map(g=>bracketCard(g)).join("")}
+      </div>
+    </div>`;
+
+  const r32HTML=`
+    <div class="r32-head">
+      <span>\u{1F3DF}\u{FE0F} 32-avos de final</span>
+      <span class="count">${r32.length} confrontos</span>
+    </div>
+    <div class="r32-grid">
+      ${r32Left.map(g=>bracketCard(g)).join("")}
+      ${r32Right.map(g=>bracketCard(g)).join("")}
+    </div>`;
+
+  return `<div class="panel" style="padding:14px">
+    <div class="pal-filters">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <div style="font-size:.95rem;font-weight:950;color:var(--text);letter-spacing:.2px">Chaveamento do mata-mata</div>
+        <div class="microcopy">Edite os placares direto na chave. ${koGames().length} confrontos até o título.</div>
+      </div>
+      <div class="progress-pill">${filledFiltered}/${koGames().length} preenchidos</div>
+    </div>
+    <div class="bracket-stage">${bracketHTML}</div>
+    ${r32HTML}
+  </div>`;
+}
+
+function bracketCard(game,opts){
+  if(!game) return "";
+  opts=opts||{};
+  const key=`${palPi}_${game.id}`;
+  const pal=S.palpites[key]||{};
+  const res=S.results[game.id];
+  const teams=gameTeams(game);
+  const canEdit=canEditParticipant(palPi);
+  const gameStarted=!!(game.utc&&new Date()>=new Date(game.utc));
+  const disabled=!canEdit||gameStarted;
+  const waiting=!teams.ready;
+  const dateParts=game.date?formatGameDateParts(game.date):null;
+
+  let cls="bracket-card";
+  if(opts.accent) cls+=" "+opts.accent;
+  if(waiting) cls+=" waiting";
+  if(gameStarted&&!res) cls+=" live";
+
+  let badge="";
+  if(pal.s1!=null&&pal.s2!=null&&res){
+    const sc=score(pal,res);
+    if(sc===3){cls+=" hit";badge=`<span class="bk-badge">+3 cravou</span>`;}
+    else if(sc===1) badge=`<span class="bk-badge">+1</span>`;
+    else if(sc===-2) badge=`<span class="bk-badge" style="background:linear-gradient(135deg,#ef4444,#991b1b)">-2</span>`;
+    else badge=`<span class="bk-badge" style="background:#9ca3af">0</span>`;
+  }
+
+  const v1=canEdit&&!gameStarted&&!waiting?(pal.s1??0):pal.s1;
+  const v2=canEdit&&!gameStarted&&!waiting?(pal.s2??0):pal.s2;
+  const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="–" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
+
+  const rowHTML=(name,side,val,which)=>{
+    const flag=teamFlag(name);
+    const placeholder=!flag;
+    const rcls=`bk-row ${placeholder?"muted":""}`;
+    return `<div class="${rcls}">
+      <div class="nm">${flag?`<span class="flag">${flag}</span>`:""}<span class="txt">${esc(name)}</span></div>
+      ${inp(`bk_${palPi}_${game.id}_${which}`,val,which)}
+    </div>`;
+  };
+
+  const meta=`<div class="bk-meta">
+    <span>${esc(game.id)}</span>
+    ${dateParts?`<span class="date">${esc(dateParts.dayMonth)}${game.time?` · ${esc(game.time)}`:""}</span>`:""}
+  </div>`;
+
+  return `<div class="${cls}">
+    ${badge}
+    ${meta}
+    ${rowHTML(teams.t1,"t1",v1,1)}
+    <div class="bk-divider"></div>
+    ${rowHTML(teams.t2,"t2",v2,2)}
+  </div>`;
+}
+
+function palTeamHTML(name,side,muted){
+  const flag=teamFlag(name);
+  const isPlaceholder=!flag;
+  const cls=`pal-card-team ${muted||isPlaceholder?"muted":""}`;
+  return `<div class="${cls}">
+    <span class="flag">${flag||"\u{1F3F3}"}</span>
+    <span class="nm">${esc(name)}</span>
+  </div>`;
 }
 function renderPalpiteRow(game){
   const key=`${palPi}_${game.id}`;
@@ -2835,52 +3703,75 @@ function renderPalpiteRow(game){
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
-  // Bloqueia palpites de jogos que já começaram (usa UTC do jogo)
   const gameStarted=!!(game.utc&&new Date()>=new Date(game.utc));
   const disabled=!canEdit||gameStarted;
-  // Badge de pontuação
-  let badge=`<div class="sbadge bem">–</div>`;
+  const waiting=game.ko&&!teams.ready;
+  const dateParts=game.date?formatGameDateParts(game.date):null;
+  let cardCls="pal-card";
+  let badgeHTML=`<div class="sbadge bem">–</div>`;
+  let badgeLbl="aguardando";
+  let sc=null;
   if(pal.s1!=null&&pal.s2!=null&&res){
-    const sc=score(pal,res);
+    sc=score(pal,res);
     const cls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":"b0";
     const lbl=sc===3?"+3":sc===1?"+1":sc===-2?"−2":"0";
-    badge=`<div class="sbadge ${cls}">${lbl}</div>`;
-  } else if(gameStarted&&canEdit&&(pal.s1==null||pal.s2==null)){
-    // Jogo encerrado sem palpite completo: sinaliza ao participante
-    badge=`<div class="sbadge b0" title="Jogo encerrado sem palpite">–</div>`;
+    badgeHTML=`<div class="sbadge ${cls}">${lbl}</div>`;
+    badgeLbl=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":"errou";
+    if(sc===3) cardCls+=" is-hit";
+  }else if(gameStarted&&canEdit&&(pal.s1==null||pal.s2==null)){
+    badgeHTML=`<div class="sbadge b0" title="Jogo encerrado sem palpite">–</div>`;
+    badgeLbl="sem palpite";
   }
-  const waiting=game.ko&&!teams.ready;
-  if(waiting){
-    return `<div class="pal-row">
-      <div class="gid">${esc(game.id)}</div>
-      <div class="gteams">${teamHTML(teams.t1,"",true)}<div class="microcopy">Aguardando definição</div>${teamHTML(teams.t2,"",true)}</div>
-      ${badge}
+  if(gameStarted&&!res) cardCls+=" is-live";
+  if(disabled&&!gameStarted) cardCls+=" is-locked";
+  if(waiting) cardCls+=" is-waiting";
+
+  const dateHTML=dateParts?`
+    <div class="pal-card-date" title="${esc(dateParts.weekdayLong)}">
+      <span class="wd">${esc(dateParts.weekdayShort)}</span>
+      <span class="dm">${esc(dateParts.dayMonth)}</span>
+    </div>
+    ${game.time?`<div class="pal-card-time">${esc(game.time)}</div>`:""}`:"";
+
+  const metaHTML=`
+    <div class="pal-card-meta">
+      ${dateHTML}
+      <div class="pal-card-gid">${esc(game.id)}</div>
     </div>`;
-  }
-  // Valores exibidos nos inputs:
-  // - Campo editável sem palpite → 0 (ponto de partida para facilitar a seleção)
-  // - Campo bloqueado sem palpite → null (fica em branco, fica claro que não foi preenchido)
-  const v1=canEdit&&!gameStarted?(pal.s1??0):pal.s1;
-  const v2=canEdit&&!gameStarted?(pal.s2??0):pal.s2;
-  // Indicador "Encerrado" abaixo dos placares quando jogo começou mas resultado ainda não saiu
-  const encerradoNote=gameStarted&&!res
-    ?`<div style="text-align:center;font-size:0.68rem;color:var(--text-muted,#888);margin-top:2px">Encerrado</div>`
-    :``;
-  return `<div class="pal-row">
-    <div class="gid">${esc(game.id)}</div>
-    <div class="gteams">
-        ${teamHTML(teams.t1,"r",!teams.ready)}
+
+  let bodyHTML;
+  if(waiting){
+    bodyHTML=`<div class="pal-card-body">
+      ${palTeamHTML(teams.t1,"",true)}
+      <div class="pal-card-status">aguardando definição</div>
+      ${palTeamHTML(teams.t2,"r",true)}
+    </div>`;
+  }else{
+    const v1=canEdit&&!gameStarted?(pal.s1??0):pal.s1;
+    const v2=canEdit&&!gameStarted?(pal.s2??0):pal.s2;
+    const statusNote=gameStarted&&!res
+      ? `<div class="pal-card-status live">encerrado · aguardando resultado</div>`
+      : res
+        ? `<div class="pal-card-result"><span class="real">Resultado oficial: ${esc(res.s1)} × ${esc(res.s2)}</span></div>`
+        : "";
+    bodyHTML=`<div class="pal-card-body">
+      ${palTeamHTML(teams.t1,"",!teams.ready)}
       <div>
-        <div class="score-wrap">
+        <div class="pal-card-score">
           ${scoreControl(`p_${palPi}_${game.id}_1`,v1,`setPal(${palPi},'${game.id}',1,this.value)`,"–","onchange",disabled)}
           <span class="ssep">×</span>
           ${scoreControl(`p_${palPi}_${game.id}_2`,v2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
         </div>
-        ${encerradoNote}
+        ${statusNote}
       </div>
-      ${teamHTML(teams.t2,"",!teams.ready)}
-    </div>
-    ${badge}
+      ${palTeamHTML(teams.t2,"r",!teams.ready)}
+    </div>`;
+  }
+
+  return `<div class="${cardCls}">
+    ${metaHTML}
+    ${bodyHTML}
+    <div class="pal-card-badge">${badgeHTML}<span class="lbl">${esc(badgeLbl)}</span></div>
   </div>`;
 }
 function selPal(i){palPi=i;palSelectionTouched=true;renderPalpites();}
@@ -2910,41 +3801,9 @@ function setPal(pi,gid,w,v){
 }
 
 function renderPodio(){
-  if(isOnlineMode()&&(!isSignedIn()||!currentProfile)){
-    document.getElementById("tab-podio").innerHTML=`<div class="panel">${accountCard()}</div>`;
-    return;
-  }
-  const ap=S.actualPodio||{};
-  const pos=[{k:"p1",l:"Campeão",pts:20},{k:"p2",l:"Vice-campeão",pts:10},{k:"p3",l:"3º lugar",pts:5},{k:"p4",l:"4º lugar",pts:3}];
-  const officialLocked=!canEditResults();
-  let h=`<div class="panel">
-    <div class="card">
-      <div class="card-title">Resultado oficial do pódio</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
-        ${pos.map(p=>`<div>
-          <div class="microcopy"><strong>${p.l}</strong> (+${p.pts} pts)</div>
-          <input class="txt-inp" type="text" list="countries" placeholder="País" value="${esc(ap[p.k]||"")}" onchange="setAP('${p.k}',this.value)" ${officialLocked?"disabled":""}>
-        </div>`).join("")}
-      </div>
-      ${officialLocked?`<div class="microcopy" style="margin-top:10px">Resultado oficial bloqueado para participantes.</div>`:""}
-    </div>
-    ${countryDatalist()}
-    <div class="card-title">Palpites dos participantes</div>
-    <div class="podio-wrap"><table class="podio-tbl">
-      <thead><tr><th>Participante</th>${pos.map(p=>`<th>${p.l}</th>`).join("")}<th>Pontos</th></tr></thead>
-      <tbody>`;
-  S.participants.forEach((name,i)=>{
-    const pd=S.podio[i]||{};
-    const pts=podioScore(pd,ap);
-    const locked=!canEditParticipant(i);
-    h+=`<tr>
-      <td>${esc(name)}</td>
-      ${pos.map(p=>`<td><input type="text" list="countries" placeholder="País" value="${esc(pd[p.k]||"")}" onchange="setPodio(${i},'${p.k}',this.value)" ${locked?"disabled":""}></td>`).join("")}
-      <td class="ppts">${pts>0?`+${pts}`:"–"}</td>
-    </tr>`;
-  });
-  h+=`</tbody></table></div></div>`;
-  document.getElementById("tab-podio").innerHTML=h;
+  // Pódio foi integrado à página de Palpites; redireciona o render para o estágio "podio"
+  palStage="podio";
+  renderPalpites();
 }
 function countryDatalist(){
   const countries=Object.values(GROUPS).flat();
