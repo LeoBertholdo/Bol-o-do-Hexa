@@ -1054,17 +1054,19 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .bracket-wrap{
   position:relative;
   display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  gap:18px;
-  padding:18px 4px 8px;
+  grid-template-columns:repeat(7,minmax(168px,1fr));
+  align-items:start;
+  gap:20px;
+  min-width:1420px;
+  padding:22px 8px 14px;
 }
 .bracket-col{
-  display:flex;flex-direction:column;gap:10px;justify-content:space-around;min-width:0;
+  display:flex;flex-direction:column;gap:16px;justify-content:flex-start;min-width:0;
 }
 .bracket-col-head{
   font-size:.58rem;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
   color:var(--blue);text-align:center;
-  padding:5px 0 6px;border-bottom:1.5px dashed #cfdcf0;margin-bottom:4px;
+  padding:5px 0 8px;border-bottom:1.5px dashed #cfdcf0;margin-bottom:2px;
 }
 .bracket-card{
   position:relative;
@@ -1083,7 +1085,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   display:flex;justify-content:space-between;align-items:center;gap:6px;
   font-size:.5rem;font-weight:900;letter-spacing:.45px;color:var(--muted);text-transform:uppercase;
 }
-.bracket-card .bk-meta .date{color:var(--blue);font-weight:950}
+.bracket-card .bk-meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bracket-card .bk-meta .date{color:var(--blue);font-weight:950;white-space:nowrap;flex-shrink:0;text-align:right}
 .bracket-card .bk-row{
   display:grid;grid-template-columns:minmax(0,1fr) 38px;
   align-items:center;gap:6px;font-size:.74rem;font-weight:850;color:var(--text);min-width:0;
@@ -1113,19 +1116,41 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .bracket-card.hit .bk-badge{background:linear-gradient(135deg,#22c55e,#047857)}
 .bracket-card.final .bk-badge{background:linear-gradient(135deg,#f5c542,#b48400);color:#3a2700}
 
+.bracket-wrap > .bracket-col:nth-child(2),
+.bracket-wrap > .bracket-col:nth-child(6){
+  padding-top:104px;
+  gap:154px;
+}
+.bracket-wrap > .bracket-col:nth-child(3),
+.bracket-wrap > .bracket-col:nth-child(5){
+  padding-top:216px;
+  gap:292px;
+}
+
 .bracket-final-col{
   grid-column:4;
-  display:grid;
-  grid-template-rows:1fr auto 1fr;
-  gap:12px;
-  align-items:start;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  gap:18px;
+  padding-top:146px;
 }
 .bracket-final-col > .bk-final-top{
-  align-self:end;
-  display:flex;flex-direction:column;align-items:center;gap:6px;
+  align-self:center;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
 }
-.bracket-final-col > .bracket-card.final{align-self:center}
-.bracket-final-col > .bracket-third-card{align-self:start;margin-top:0}
+.bracket-final-col > .bracket-card.final{
+  align-self:center;
+  width:100%;
+  transform:scale(1.04);
+  transform-origin:center top;
+}
+.bracket-final-col > .bracket-third-card{
+  align-self:center;
+  width:94%;
+  margin-top:10px;
+}
 .bracket-trophy{
   text-align:center;font-size:1.8rem;line-height:1;
   filter:drop-shadow(0 6px 12px rgba(245,197,66,.45));
@@ -1134,16 +1159,16 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 @keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
 .bracket-third-card{
-  background:linear-gradient(135deg,#fff4e9,#fff);
-  border:1.5px solid #e3b793;border-radius:12px;padding:12px;
-  box-shadow:0 10px 24px rgba(201,135,71,.16);
+  background:linear-gradient(180deg,#fffaf5,#fff);
+  border:1.5px dashed #e6c6a8;border-radius:12px;padding:10px;
+  box-shadow:0 8px 18px rgba(201,135,71,.10);
 }
 .bracket-third-head{
   display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:10px;font-size:.7rem;font-weight:950;color:#915221;
+  margin-bottom:8px;font-size:.62rem;font-weight:900;color:#a06839;
   letter-spacing:.5px;text-transform:uppercase;
 }
-.bracket-third-head .ic{font-size:1.05rem}
+.bracket-third-head .ic{font-size:.92rem}
 
 .bracket-stage{
   background:rgba(255,253,244,.86);
