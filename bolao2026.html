@@ -724,7 +724,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .stat-box{background:linear-gradient(180deg,#fff,#fbfff3);border-radius:8px;border:1px solid var(--border);padding:12px;text-align:center}
 .stat-box .bv{font-size:1.45rem;font-weight:950;color:var(--blue)}
 .stat-box .bl{font-size:.62rem;color:var(--muted);text-transform:uppercase;font-weight:850;letter-spacing:.5px}
-.lb-row{display:grid;grid-template-columns:auto minmax(120px,1fr) auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05)}
+.lb-row{display:grid;grid-template-columns:auto minmax(120px,1fr) 1fr auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05)}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
 .podium-row .pname{font-size:1.06rem}
 .podium-row .pts{font-size:1.72rem}
@@ -1464,8 +1464,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .brazil-row{grid-template-columns:21px minmax(136px,1fr) 36px repeat(7,29px);font-size:.7rem;padding:8px 7px;min-width:483px}
   .brazil-row .team-cell{font-size:.74rem}
   .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .lb-row{grid-template-columns:auto minmax(0,1fr)}
-  .pstats{grid-column:1 / -1;justify-content:flex-start;padding-left:46px;gap:14px}
+  .lb-row{grid-template-columns:auto 1fr auto}
+  .lb-row .pts{grid-column:3;grid-row:1;align-self:center}
+  .pstats{grid-column:1 / -1;grid-row:2;justify-content:flex-start;padding-left:46px;gap:16px}
   .game-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
   .game-row .btn-ok,.game-row .btn-x{grid-column:2;justify-self:end}
   .pal-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
@@ -3155,8 +3156,8 @@ function renderRanking(){
                 <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
                 <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
                 ${p.pp>0?`<div class="stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
-                <div class="pts">${p.pts}</div>
               </div>
+              <div class="pts">${p.pts}</div>
             </div>`;
           }).join("")}
         </div>
