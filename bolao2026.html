@@ -381,28 +381,30 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-size:.82rem;
 }
 .prize-rank{
-  width:31px;
-  height:31px;
-  border-radius:50%;
+  width:auto;
+  height:auto;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:.78rem;
-  font-weight:950;
+  font-size:1.72rem;
+  line-height:1;
   flex-shrink:0;
+  background:transparent;
+  border:0;
+  box-shadow:none;
 }
-.prize-rank.gold{background:var(--gold);color:#664b00}
-.prize-rank.silver{background:var(--silver);color:#334155}
-.prize-rank.bronze{background:var(--bronze);color:#fff}
+.prize-rank.silver,.prize-rank.bronze{font-size:1.95rem}
 .prize-copy{min-width:0}
 .prize-copy strong{display:block;font-size:.92rem;color:#fff;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .prize-copy span{display:block;margin-top:4px;font-size:.66rem;color:rgba(255,255,255,.72);font-weight:850}
 .prize-score{text-align:right;min-width:52px}
 .prize-score strong{display:block;font-size:1.1rem;color:#fff;line-height:1;font-weight:950}
 .prize-score span{display:block;margin-top:3px;font-size:.58rem;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.68);font-weight:900}
-.home-layout{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.92fr);gap:14px;align-items:start}
+.home-layout{display:grid;grid-template-columns:minmax(0,.94fr) minmax(340px,1.06fr);gap:14px;align-items:stretch}
 .home-side{display:grid;gap:14px}
 .home-section{
+  display:flex;
+  flex-direction:column;
   background:rgba(255,255,255,.92);
   border:1px solid rgba(220,229,216,.95);
   border-radius:8px;
@@ -453,18 +455,41 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-size:.72rem;
   font-weight:950;
 }
-.mini-rank.gold{background:var(--gold);color:#664b00}
-.mini-rank.silver{background:var(--silver);color:#334155}
-.mini-rank.bronze{background:var(--bronze);color:#fff}
+.mini-rank.gold,.r1{
+  background:
+    radial-gradient(circle at 30% 28%,rgba(255,247,196,.95) 0 18%,transparent 19%),
+    linear-gradient(145deg,#fff6bf 0%,#f7d45e 32%,#d49b16 72%,#8a5c00 100%);
+  color:#6d4700;
+  border:1px solid rgba(255,227,132,.85);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(0,0,0,.12);
+}
+.mini-rank.silver,.r2{
+  background:
+    radial-gradient(circle at 30% 28%,rgba(255,255,255,.95) 0 18%,transparent 19%),
+    linear-gradient(145deg,#ffffff 0%,#dce4ee 34%,#a1adbb 70%,#657283 100%);
+  color:#3e4b5d;
+  border:1px solid rgba(230,238,247,.9);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(0,0,0,.12);
+}
+.mini-rank.bronze,.r3{
+  background:
+    radial-gradient(circle at 30% 28%,rgba(255,228,202,.92) 0 18%,transparent 19%),
+    linear-gradient(145deg,#ffd4b0 0%,#d89255 35%,#aa5a24 72%,#6f3111 100%);
+  color:#fff7f0;
+  border:1px solid rgba(255,194,145,.78);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.42), inset 0 -2px 6px rgba(0,0,0,.12);
+}
 .mini-name{min-width:0;font-size:.88rem;font-weight:950}
 .mini-name span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .mini-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px;color:var(--muted);font-size:.66rem;font-weight:850}
 .mini-points{text-align:right;min-width:48px}
 .mini-points strong{display:block;color:var(--green);font-size:1.15rem;line-height:1;font-weight:950}
 .mini-points span{font-size:.58rem;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.35px}
-.fixture-list{display:grid;gap:10px}
+.fixture-list{display:grid;gap:10px;flex:1}
 .fixture-row{
   display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
   gap:12px;
   padding:12px;
   border:1px solid var(--border);
@@ -475,18 +500,37 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .fixture-meta{
   display:flex;
   align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  flex-wrap:wrap;
+  gap:8px;
+  min-width:0;
 }
 .fixture-date-inline{
   width:100%;
-  font-size:.62rem;
-  font-weight:900;
-  color:var(--muted);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  line-height:1.1;
+}
+.fixture-date-inline .fixture-weekday{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:24px;
+  padding:0 9px;
+  border-radius:999px;
+  background:#eef5ff;
+  color:var(--blue);
+  font-size:.61rem;
+  font-weight:950;
   text-transform:uppercase;
-  letter-spacing:.45px;
-  line-height:1.2;
+  letter-spacing:.55px;
+}
+.fixture-date-inline .fixture-weekday-short{display:none}
+.fixture-date-inline .fixture-day{
+  font-size:.68rem;
+  font-weight:900;
+  color:#4f5f79;
+  text-transform:uppercase;
+  letter-spacing:.4px;
 }
 .fixture-time{
   display:inline-flex;
@@ -502,24 +546,35 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   line-height:1;
 }
 .fixture-phase{
+  justify-self:end;
   font-size:.66rem;
   text-transform:uppercase;
   letter-spacing:.6px;
   color:var(--muted);
   font-weight:900;
+  white-space:nowrap;
 }
 .fixture-match{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  gap:10px;
   align-items:center;
+  gap:6px;
+  min-width:0;
 }
 .fixture-row .team{
   font-size:.96rem;
   font-weight:850;
 }
+.fixture-row .team.r{justify-content:flex-end;text-align:right}
+.fixture-row .flag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:1.15em;
+  text-align:center;
+}
 .fixture-row .team-name{
-  white-space:normal;
+  white-space:nowrap;
   line-height:1.2;
 }
 .fixture-vs{
@@ -528,7 +583,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   justify-content:center;
   min-width:34px;
   min-height:34px;
-  padding:0 9px;
+  padding:0 7px;
   border-radius:999px;
   background:#f2f5f9;
   color:var(--muted);
@@ -550,18 +605,18 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-size:.8rem;
   font-weight:850;
 }
-.brazil-table{display:grid;gap:6px;overflow-x:auto;padding-bottom:2px}
+.brazil-table{display:grid;gap:6px;overflow-x:auto;padding-bottom:2px;flex:1}
 .brazil-row{
   display:grid;
-  grid-template-columns:30px minmax(170px,1fr) repeat(7,34px) 40px;
-  gap:6px;
+  grid-template-columns:22px minmax(128px,1fr) 42px repeat(7,31px);
+  gap:3px;
   align-items:center;
-  padding:8px 9px;
+  padding:8px 8px;
   border:1px solid var(--border);
   border-radius:8px;
   background:#fff;
   font-size:.75rem;
-  min-width:560px;
+  min-width:492px;
 }
 .brazil-row.head{
   background:#f2f7ef;
@@ -572,7 +627,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-weight:950;
 }
 .brazil-row.brazil-highlight{border-color:#a7d8b4;background:#f3fff5}
-.brazil-row .team-cell{font-size:.78rem}
+.brazil-row .team-cell{font-size:.78rem;gap:5px}
 .brazil-row strong{color:var(--green);font-weight:950}
 .brazil-next{
   margin-top:10px;
@@ -618,6 +673,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .chart-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
 .chart-presets,.chart-legend{display:flex;gap:8px;flex-wrap:wrap}
+.chart-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .chart-chip{
   display:inline-flex;
   align-items:center;
@@ -649,8 +705,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   color:#41516d;
   font-weight:850;
 }
-.ranking-grid{display:grid;grid-template-columns:minmax(0,1.18fr) minmax(280px,.82fr);gap:14px;align-items:start}
-.ranking-side{display:grid;gap:14px}
+.ranking-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);gap:14px;align-items:start}
+.ranking-side{display:grid;gap:14px;min-width:0}
 .ranking-card{
   background:#fff;
   border:1px solid rgba(220,229,216,.95);
@@ -674,25 +730,36 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .podium-row.top-3{background:linear-gradient(110deg,#fff0df,#fff 48%,#fff);border-color:#c98747}
 .rank{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.82rem;flex-shrink:0}
 .podium-row .rank{width:42px;height:42px;font-size:.95rem;box-shadow:0 8px 18px rgba(0,0,0,.12)}
-.r1{background:var(--gold);color:#664b00}.r2{background:var(--silver);color:#334155}.r3{background:var(--bronze);color:#fff}.ro{background:#eef3f8;color:var(--muted)}
+.ro{background:#eef3f8;color:var(--muted)}
 .pname{font-weight:900;font-size:.98rem;min-width:0}
 .lb-row.me{
   border-color:#9fc5ff;
   background:linear-gradient(110deg,#f7fbff,#ffffff 48%,#f7fbff);
   box-shadow:0 12px 28px rgba(0,39,118,.1);
 }
-.pstats{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
-.stat{min-width:44px;text-align:center;padding:4px 6px;border-radius:7px;background:#f7fafc;border:1px solid #edf2f7}
-.sv{font-size:.9rem;font-weight:950}
-.sl{font-size:.56rem;text-transform:uppercase;color:var(--muted);font-weight:850;letter-spacing:.35px}
-.pts{min-width:58px;text-align:center;font-size:1.45rem;font-weight:950;color:var(--green);line-height:1}
-.crav-stat{background:#fff8d7;border-color:#f4d35e}
-.crav-stat .sv,.inv-stat .sv{display:inline-flex;align-items:center;justify-content:center;gap:5px}
-.crav-stat .sv{color:#8a5b00}
-.crav-stat .sv:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 3px #fff0a6}
-.inv-stat{background:#fff1f1;border-color:#fecaca}
+.pstats{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.stat{
+  display:grid;
+  gap:2px;
+  min-width:60px;
+  padding:0;
+  border:0;
+  background:transparent;
+  text-align:left;
+}
+.sv{font-size:1rem;font-weight:950;line-height:1;color:var(--text)}
+.sl{font-size:.58rem;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.45px}
+.pts{
+  min-width:44px;
+  text-align:right;
+  font-size:1.85rem;
+  font-weight:950;
+  color:var(--green);
+  line-height:1;
+}
+.crav-stat .sv{color:#9a7200}
+.corr-stat .sv{color:var(--blue)}
 .inv-stat .sv{color:var(--red)}
-.inv-stat .sv:before{content:"";width:11px;height:7px;border-top:3px solid var(--red);border-bottom:3px solid var(--red);transform:skewX(-18deg);opacity:.9}
 
 /* GROUP TABLES */
 .groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:12px}
@@ -738,8 +805,11 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .team{display:flex;align-items:center;gap:7px;min-width:0;font-size:.86rem;font-weight:760}
 .team.r{justify-content:flex-end;text-align:right}
 .team.muted{color:var(--muted);font-weight:650}
+.gteams .team,.pgn .team,.fixture-match .team{width:max-content;max-width:100%}
+.gteams .team.r,.pgn .team.r,.fixture-match .team.r{justify-self:end}
+.gteams .team:not(.r),.pgn .team:not(.r),.fixture-match .team:not(.r){justify-self:start}
 .team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.flag{font-size:1.08rem;line-height:1;filter:saturate(1.08)}
+.flag{font-size:1.16rem;line-height:1;filter:saturate(1.08)}
 .score-wrap{display:flex;align-items:center;gap:5px;justify-content:center}
 .score-control{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;box-shadow:inset 0 1px 0 rgba(0,0,0,.02)}
 .score-control input{width:42px;height:38px;border:0;text-align:center;font-size:.95rem;font-weight:950;color:var(--text);background:#fff}
@@ -860,9 +930,12 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
     align-items:flex-start;
     gap:6px;
   }
+  .fixture-date-inline .fixture-weekday-full{display:none}
+  .fixture-date-inline .fixture-weekday-short{display:inline-flex}
   .fixture-time{min-height:28px;padding:5px 9px;font-size:.72rem}
   .fixture-phase{font-size:.58rem;letter-spacing:.45px;line-height:1.15}
   .fixture-match{
+    display:grid;
     grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
     gap:6px;
   }
@@ -878,11 +951,11 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
     font-size:.66rem;
   }
   .fixture-row.is-result .fixture-vs{min-width:0;background:transparent;color:var(--green)}
-  .brazil-row{grid-template-columns:26px minmax(150px,1fr) repeat(7,30px) 36px;font-size:.7rem;padding:8px 7px;min-width:520px}
+  .brazil-row{grid-template-columns:21px minmax(136px,1fr) 36px repeat(7,29px);font-size:.7rem;padding:8px 7px;min-width:483px}
   .brazil-row .team-cell{font-size:.74rem}
   .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lb-row{grid-template-columns:auto minmax(0,1fr)}
-  .pstats{grid-column:1 / -1;justify-content:flex-start;padding-left:46px}
+  .pstats{grid-column:1 / -1;justify-content:flex-start;padding-left:46px;gap:14px}
   .game-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
   .game-row .btn-ok,.game-row .btn-x{grid-column:2;justify-self:end}
   .pal-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
@@ -907,10 +980,11 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .section-head h2{font-size:.94rem}
   .section-sub,.microcopy{font-size:.72rem}
   .fixture-row{grid-template-columns:62px minmax(0,1fr);gap:8px;padding:9px}
+  .fixture-date-inline{gap:6px}
   .fixture-time{font-size:.7rem;padding:5px 8px}
   .fixture-row .team{font-size:.78rem;line-height:1.15}
-  .flag{font-size:1rem}
-  .brazil-row{grid-template-columns:24px minmax(150px,1fr) repeat(7,27px) 34px;gap:4px;min-width:480px}
+  .flag{font-size:1.08rem}
+  .brazil-row{grid-template-columns:20px minmax(132px,1fr) 34px repeat(7,26px);gap:3px;min-width:458px}
   .group-table th,.group-table td{padding:6px 5px}
   .phase-hdr{font-size:.66rem;padding:7px 9px}
   .game-row,.pal-row{grid-template-columns:42px minmax(0,1fr);gap:8px;padding:9px}
@@ -1086,6 +1160,16 @@ function compareGameSchedule(a,b){
 }
 function formatGameDate(key){
   return new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short"}).format(parseDateKey(key)).replace(/\./g,"");
+}
+function formatGameDateParts(key){
+  const date=parseDateKey(key);
+  const parts=Object.fromEntries(new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short"}).formatToParts(date).map(({type,value})=>[type,value]));
+  const weekdayLong=new Intl.DateTimeFormat("pt-BR",{weekday:"long"}).format(date).replace(/\./g,"");
+  return {
+    weekdayShort:(parts.weekday||"").replace(/\./g,""),
+    weekdayLong,
+    dayMonth:`${parts.day||""} ${parts.month||""}`.trim().replace(/\./g,"")
+  };
 }
 
 function groupFixtureFromRow(row){
@@ -2161,9 +2245,11 @@ function homeFixtureWindow(){
   const todays=GAMES.filter(g=>g.date===today).sort(compareGameSchedule);
   if(todays.length){
     const games=todays.slice(0,6);
+    const parts=formatGameDateParts(today);
     return {
       title:"Jogos do dia",
-      subtitle:`${formatGameDate(today)} · ${games.length} partidas`,
+      headline:`${parts.weekdayLong}, ${parts.dayMonth}`,
+      detail:`${games.length} ${games.length===1?"partida":"partidas"}`,
       games,
       showDates:new Set(games.map(game=>game.date)).size>1
     };
@@ -2171,12 +2257,14 @@ function homeFixtureWindow(){
   const pending=GAMES.filter(g=>!S.results[g.id]).sort(compareGameSchedule);
   const future=pending.filter(g=>g.date>=today);
   const source=future.length?future:pending;
-  if(!source.length) return {title:"Copa encerrada",subtitle:"Todos os jogos oficiais foram apurados.",games:[]};
+  if(!source.length) return {title:"Copa encerrada",headline:"Todos os jogos oficiais foram apurados.",detail:"",games:[]};
   const date=source[0].date;
   const games=source.filter(g=>g.date===date).slice(0,6);
+  const parts=formatGameDateParts(date);
   return {
     title:"Próximos jogos",
-    subtitle:`${formatGameDate(date)} · ${games.length} partidas`,
+    headline:`${parts.weekdayLong}, ${parts.dayMonth}`,
+    detail:`${games.length} ${games.length===1?"partida":"partidas"}`,
     games,
     showDates:new Set(games.map(game=>game.date)).size>1
   };
@@ -2186,17 +2274,18 @@ function renderFixtureRow(game,showDate){
   const teams=gameTeams(game);
   const timeLabel=game.time||"A definir";
   const versusLabel=res?`${res.s1} × ${res.s2}`:"x";
+  const dateParts=showDate?formatGameDateParts(game.date):null;
   return `<div class="fixture-row ${res?"is-result":"is-upcoming"}">
     <div class="fixture-meta">
-      ${showDate?`<div class="fixture-date-inline">${formatGameDate(game.date)}</div>`:""}
+      ${showDate?`<div class="fixture-date-inline"><span class="fixture-weekday fixture-weekday-full">${esc(dateParts.weekdayLong)}</span><span class="fixture-weekday fixture-weekday-short">${esc(dateParts.weekdayShort)}</span><span class="fixture-day">${esc(dateParts.dayMonth)}</span></div>`:""}
       <span class="fixture-time">${esc(timeLabel)}</span>
-      <div class="fixture-phase">${esc(game.phase)}</div>
     </div>
     <div class="fixture-match">
       ${teamHTML(teams.t1,"r",!teams.ready)}
       <span class="fixture-vs">${esc(versusLabel)}</span>
       ${teamHTML(teams.t2,"",!teams.ready)}
     </div>
+    <div class="fixture-phase">${esc(game.phase)}</div>
   </div>`;
 }
 function nextBrazilGame(){
@@ -2208,10 +2297,11 @@ function renderBrazilMiniTable(){
   const rows=groupStandings().C;
   const next=nextBrazilGame();
   return `<div class="brazil-table">
-    <div class="brazil-row head"><div>#</div><div>Seleção</div><div>J</div><div>V</div><div>E</div><div>D</div><div>GP</div><div>GC</div><div>SG</div><div>Pts</div></div>
+    <div class="brazil-row head"><div>#</div><div>Seleção</div><div>Pts</div><div>J</div><div>V</div><div>E</div><div>D</div><div>GP</div><div>GC</div><div>SG</div></div>
     ${rows.map(row=>`<div class="brazil-row ${row.team==="Brasil"?"brazil-highlight":""}">
       <div>${row.pos}</div>
       <div class="team-cell">${teamFlag(row.team)?`<span class="flag">${teamFlag(row.team)}</span>`:""}<span class="team-name">${esc(row.team)}</span></div>
+      <strong>${row.pts}</strong>
       <div>${row.played}</div>
       <div>${row.w}</div>
       <div>${row.d}</div>
@@ -2219,19 +2309,14 @@ function renderBrazilMiniTable(){
       <div>${row.gf}</div>
       <div>${row.ga}</div>
       <div>${row.gd}</div>
-      <strong>${row.pts}</strong>
     </div>`).join("")}
     ${next?`<div class="brazil-next"><strong>Próximo do Brasil:</strong> ${formatGameDate(next.date)}, ${esc(next.time)} · ${esc(next.t1)} x ${esc(next.t2)}</div>`:`<div class="brazil-next"><strong>Brasil:</strong> todos os jogos do grupo foram apurados.</div>`}
   </div>`;
 }
 function rankingChartDefaultSelection(rows){
   const mine=myParticipantIndex();
-  const preferred=[];
-  if(Number.isInteger(mine)) preferred.push(mine);
-  rows.slice(0,3).forEach(p=>{
-    if(!preferred.includes(p.i)) preferred.push(p.i);
-  });
-  return preferred.slice(0,4);
+  if(Number.isInteger(mine)) return [mine];
+  return rows.slice(0,3).map(p=>p.i);
 }
 function rankingTimeline(rows){
   const resolved=GAMES.filter(g=>S.results[g.id]).sort(compareGameSchedule);
@@ -2294,18 +2379,20 @@ function toggleRankingSeries(participantIndex){
 function setRankingChartPreset(mode){
   rankingChartTouched=true;
   const rows=ranking();
-  if(mode==="top3") rankingChartSelection=rows.slice(0,3).map(p=>p.i);
-  if(mode==="me"){
-    const mine=myParticipantIndex();
-    rankingChartSelection=Number.isInteger(mine)?[mine]:[];
-  }
-  if(mode==="all") rankingChartSelection=rows.map(p=>p.i);
-  if(mode==="clear") rankingChartSelection=[];
+  const presetIds=mode==="top3"?rows.slice(0,3).map(p=>p.i):rows.map(p=>p.i);
+  const hasAllPreset=presetIds.every(id=>rankingChartSelection.includes(id));
+  rankingChartSelection=hasAllPreset
+    ?rankingChartSelection.filter(id=>!presetIds.includes(id))
+    :Array.from(new Set([...rankingChartSelection,...presetIds]));
   if(activeTab==="ranking") renderRanking();
 }
 function renderRankingChart(rows){
   if(!rankingChartTouched&&!rankingChartSelection.length) rankingChartSelection=rankingChartDefaultSelection(rows);
   const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
+  const top3Ids=rows.slice(0,3).map(p=>p.i);
+  const allIds=rows.map(p=>p.i);
+  const top3Active=top3Ids.length>0&&top3Ids.every(id=>rankingChartSelection.includes(id));
+  const allActive=allIds.length>0&&allIds.every(id=>rankingChartSelection.includes(id));
   const chart=rankingTimeline(rows);
   const lineWidth=760;
   const lineHeight=280;
@@ -2322,13 +2409,10 @@ function renderRankingChart(rows){
       <div>
         <div class="section-kicker">Evolução dos pontos</div>
         <h3 style="margin-top:4px">Compare um ou vários participantes ao mesmo tempo</h3>
-        <p style="margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45">Ative os nomes para sobrepor as curvas e ver quem acelera mais rápido ao longo do bolão.</p>
       </div>
       <div class="chart-presets">
-        <button class="mini-action" onclick="setRankingChartPreset('top3')">Top 3</button>
-        <button class="mini-action" onclick="setRankingChartPreset('me')">Só eu</button>
-        <button class="mini-action" onclick="setRankingChartPreset('all')">Todos</button>
-        <button class="mini-action" onclick="setRankingChartPreset('clear')">Limpar</button>
+        <button class="mini-action chart-toggle ${allActive?"active":""}" onclick="setRankingChartPreset('all')">Todos</button>
+        <button class="mini-action chart-toggle ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')">Top 3</button>
       </div>
     </div>
     <div class="chart-legend">
@@ -2439,11 +2523,12 @@ function renderHome(){
         <div class="prize-split">
           ${r.slice(0,3).map((p,ri)=>{
             const medal=ri===0?"gold":ri===1?"silver":"bronze";
+            const medalIcon=ri===0?"🏆":ri===1?"🥈":"🥉";
             return `<div class="prize-row">
-              <div class="prize-rank ${medal}">${ri+1}</div>
+              <div class="prize-rank ${medal}" aria-label="${ri+1}º lugar">${medalIcon}</div>
               <div class="prize-copy">
                 <strong>${esc(p.name)}</strong>
-                <span>${p.crav} crav. · ${p.corr} certos · ${p.inv} inv.</span>
+                <span>${p.crav} crav. · ${p.corr} acertos · ${p.inv} inv.</span>
               </div>
               <div class="prize-score"><strong>${p.pts}</strong><span>pts</span></div>
             </div>`;
@@ -2457,7 +2542,8 @@ function renderHome(){
         <div class="section-head">
           <div>
             <div class="section-kicker">${fixtures.title}</div>
-            <h2>${fixtures.subtitle}</h2>
+            <h2>${fixtures.headline}</h2>
+            ${fixtures.detail?`<div class="section-sub">${esc(fixtures.detail)}</div>`:""}
           </div>
           <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
         </div>
@@ -2469,8 +2555,7 @@ function renderHome(){
       <section class="home-section">
         <div class="section-head">
           <div>
-            <div class="section-kicker">Brasil no Grupo C</div>
-            <h2>Tabela rápida do grupo</h2>
+            <h2>Brasil no Grupo C</h2>
           </div>
           <button class="mini-action" onclick="goTab('grupos')">Ver grupos</button>
         </div>
@@ -2495,7 +2580,7 @@ function renderRanking(){
           <div>
             <div class="section-kicker">Tabela principal</div>
             <h3>Ranking completo</h3>
-            <p>${cravTotal} cravadas, ${corrTotal} resultados certos e ${invTotal} invertidas somadas até agora.</p>
+            <p>${cravTotal} cravadas, ${corrTotal} acertos e ${invTotal} invertidas somadas até agora.</p>
           </div>
           <button class="mini-action" onclick="goTab('podio')">Ver pódio</button>
         </div>
@@ -2510,9 +2595,9 @@ function renderRanking(){
               <div class="rank ${rankCls}">${ri+1}</div>
               <div class="pname">${esc(p.name)}</div>
               <div class="pstats">
-                <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Crav.</div></div>
-                <div class="stat"><div class="sv">${p.corr}</div><div class="sl">Certos</div></div>
-                <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Inv.</div></div>
+                <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
+                <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
+                <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
                 ${p.pp>0?`<div class="stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
                 <div class="pts">${p.pts}</div>
               </div>
@@ -2522,17 +2607,9 @@ function renderRanking(){
       </section>
 
       <div class="ranking-side">
-        <section class="ranking-card">
-          <div class="section-kicker">Resumo pessoal</div>
-          <h3>${myPlayer?esc(myPlayer.name):"Sua corrida no bolão"}</h3>
-          <p>${myPlayer?`Você está em ${myRank+1}º lugar, com ${myPlayer.corr} acertos secos, ${myPlayer.crav} cravadas e ${myPlayer.inv} invertidas.`:"Entre com sua conta para fixar seu nome na comparação e ver a sua evolução isolada."}</p>
-          <button class="mini-action" onclick="setRankingChartPreset('me')">Mostrar só minha linha</button>
-        </section>
-
+        ${renderRankingChart(r)}
       </div>
     </div>
-
-    ${renderRankingChart(r)}
   </div>`;
   document.getElementById("tab-ranking").innerHTML=h;
 }
@@ -2544,8 +2621,6 @@ function renderGrupos(){
     <div class="stats-row">
       <div class="stat-box"><div class="bv">${played}</div><div class="bl">Jogos dos grupos</div></div>
       <div class="stat-box"><div class="bv">${groupGames().length-played}</div><div class="bl">Restantes</div></div>
-      <div class="stat-box"><div class="bv">3</div><div class="bl">Pontos vitória</div></div>
-      <div class="stat-box"><div class="bv">1</div><div class="bl">Ponto empate</div></div>
     </div>
     <div class="card-title">Classificação dos grupos</div>
     <div class="groups-grid">`;
