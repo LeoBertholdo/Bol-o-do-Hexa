@@ -2,6 +2,8 @@
 
 Aplicação web para gerenciar um bolão da Copa do Mundo FIFA 2026. Permite que um grupo de participantes registre palpites de placar para cada partida, acompanhe o ranking em tempo real e visualize a distribuição de prêmios.
 
+Repositório oficial: [LeoBertholdo/Bol-o-do-Hexa](https://github.com/LeoBertholdo/Bol-o-do-Hexa)
+
 ---
 
 ## Visão geral
