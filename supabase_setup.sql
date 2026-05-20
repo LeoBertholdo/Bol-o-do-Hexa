@@ -13,6 +13,13 @@ create table if not exists public.profiles (
   created_at timestamptz not null default now()
 );
 
+-- Lista de e-mails autorizados a criar conta e vincular um slot no bolão.
+-- Deve ser criada antes das funções que a referenciam.
+create table if not exists public.invited_emails (
+  email text primary key,
+  participant_index integer not null unique check (participant_index >= 0)
+);
+
 create or replace function app_private.is_admin()
 returns boolean
 language sql
@@ -168,14 +175,6 @@ create table if not exists public.podium_predictions (
   updated_at timestamptz not null default now()
 );
 
--- Lista de e-mails autorizados a criar conta e vincular um slot no bolão.
--- O admin popula esta tabela antes de compartilhar o link.
--- Apenas quem está aqui (com o índice correto) consegue criar perfil.
-create table if not exists public.invited_emails (
-  email text primary key,
-  participant_index integer not null unique check (participant_index >= 0)
-);
-
 alter table public.profiles enable row level security;
 alter table public.settings enable row level security;
 alter table public.results enable row level security;
@@ -250,6 +249,17 @@ create policy "admins manage invited emails"
 on public.invited_emails for all to authenticated
 using (app_private.is_admin())
 with check (app_private.is_admin());
+
+-- Permite que o primeiro usuário adicione SOMENTE o próprio e-mail à lista quando
+-- ainda não existe nenhum administrador (bootstrap inicial pelo app, sem SQL Editor).
+-- Assim que o primeiro admin for criado, esta policy deixa de valer.
+drop policy if exists "bootstrap add own email" on public.invited_emails;
+create policy "bootstrap add own email"
+on public.invited_emails for insert to authenticated
+with check (
+  not app_private.has_admin()
+  and email = (auth.jwt() ->> 'email')
+);
 
 drop policy if exists "settings visible to signed in users" on public.settings;
 create policy "settings visible to signed in users"
