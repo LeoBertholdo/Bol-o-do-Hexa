@@ -1467,6 +1467,22 @@ async function fetchInviteSlot(){
   if(activeTab==='config') renderConfig();
 }
 
+// Usado apenas no setup inicial (sem admin): adiciona o próprio e-mail à lista de convidados.
+// Após o primeiro admin existir, somente o admin consegue inserir em invited_emails.
+async function bootstrapAddSelfToInvite(source="config"){
+  if(!remoteClient||!remoteSession){toast("Entre antes de continuar.");return;}
+  if(hasAdminProfile()){toast("Fale com o administrador do bolão para ser adicionado à lista.");return;}
+  const idxEl=document.getElementById(source==="top"?"topBootstrapIdx":"bootstrapIdx");
+  const idx=parseInt(idxEl?.value,10);
+  if(!Number.isInteger(idx)||idx<0||idx>=S.participants.length){toast("Escolha seu nome na lista.");return;}
+  const email=remoteSession.user.email||"";
+  setSyncStatus("warn","Adicionando à lista de convidados...");
+  const {error}=await remoteClient.from("invited_emails").insert({email,participant_index:idx});
+  if(error){setSyncStatus("err",remoteErrorText(error));toast(remoteErrorText(error));return;}
+  inviteSlot=null; // força re-fetch para pegar o slot recém-adicionado
+  await fetchInviteSlot();
+}
+
 async function claimParticipant(source="config"){
   if(!remoteClient||!remoteSession){toast("Entre antes de vincular seu nome.");return;}
   // O slot é determinado pelo servidor (invited_emails), não pelo dropdown — segurança contra impersonação
@@ -1723,7 +1739,15 @@ function renderAuthControls(){
     const topSlotBody=(inviteSlot===null||inviteSlot==='loading')
       ?`<div class="microcopy">Verificando convite…</div>`
       :inviteSlot==='not_invited'
-        ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+        ?(hasAdminProfile()
+          ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+          :`<div class="microcopy">Configuração inicial — escolha seu nome e adicione seu e-mail à lista para criar o primeiro perfil.</div>
+            <select class="txt-select" id="topBootstrapIdx" style="margin-top:8px;width:100%">
+              ${S.participants.map((name,i)=>`<option value="${i}">${esc(name)}</option>`).join("")}
+            </select>
+            <div class="action-row" style="margin-top:8px">
+              <button class="action-btn" onclick="bootstrapAddSelfToInvite('top')">Sou eu — entrar na lista</button>
+            </div>`)
         :`<div class="microcopy">Você está convidado como <strong>${esc(participantName(inviteSlot))}</strong>.</div>
           <div class="action-row" style="margin-top:8px">
             <button class="action-btn" id="topClaimParticipant" onclick="claimParticipant('top')">Confirmar como ${esc(participantName(inviteSlot))}</button>
@@ -1815,7 +1839,15 @@ function accountCard(){
     const cfgSlotBody=(inviteSlot===null||inviteSlot==='loading')
       ?`<div class="microcopy">Verificando convite…</div>`
       :inviteSlot==='not_invited'
-        ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+        ?(hasAdminProfile()
+          ?`<div class="microcopy" style="color:#b91c1c">Seu e-mail não está na lista de convidados. Fale com o administrador do bolão.</div>`
+          :`<div class="microcopy">Configuração inicial — escolha seu nome e adicione seu e-mail à lista para criar o primeiro perfil.</div>
+            <select class="txt-select" id="bootstrapIdx" style="margin-top:8px;width:100%">
+              ${S.participants.map((name,i)=>`<option value="${i}">${esc(name)}</option>`).join("")}
+            </select>
+            <div class="action-row" style="margin-top:8px">
+              <button class="action-btn" onclick="bootstrapAddSelfToInvite()">Sou eu — entrar na lista</button>
+            </div>`)
         :`<div class="microcopy">Você está convidado como <strong>${esc(participantName(inviteSlot))}</strong>.</div>
           <div class="action-row" style="margin-top:8px">
             <button class="action-btn" onclick="claimParticipant()">Confirmar como ${esc(participantName(inviteSlot))}</button>
