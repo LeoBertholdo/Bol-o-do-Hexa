@@ -1107,7 +1107,19 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .bracket-card.hit .bk-badge{background:linear-gradient(135deg,#22c55e,#047857)}
 .bracket-card.final .bk-badge{background:linear-gradient(135deg,#f5c542,#b48400);color:#3a2700}
 
-.bracket-final-col{grid-column:4;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.bracket-final-col{
+  grid-column:4;
+  display:grid;
+  grid-template-rows:1fr auto 1fr;
+  gap:12px;
+  align-items:start;
+}
+.bracket-final-col > .bk-final-top{
+  align-self:end;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.bracket-final-col > .bracket-card.final{align-self:center}
+.bracket-final-col > .bracket-third-card{align-self:start;margin-top:0}
 .bracket-trophy{
   text-align:center;font-size:1.8rem;line-height:1;
   filter:drop-shadow(0 6px 12px rgba(245,197,66,.45));
@@ -1116,7 +1128,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 @keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
 .bracket-third-card{
-  margin-top:14px;background:linear-gradient(135deg,#fff4e9,#fff);
+  background:linear-gradient(135deg,#fff4e9,#fff);
   border:1.5px solid #e3b793;border-radius:12px;padding:12px;
   box-shadow:0 10px 24px rgba(201,135,71,.16);
 }
@@ -1149,6 +1161,27 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   text-transform:uppercase;letter-spacing:.7px;
 }
 .r32-head .count{font-size:.6rem;color:var(--muted);font-weight:800}
+
+/* Mobile / narrow knockout list (chronological) */
+.ko-mobile-list{display:none;flex-direction:column;gap:16px}
+.ko-mobile-section{display:flex;flex-direction:column;gap:8px}
+.ko-mobile-head{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  font-size:.66rem;font-weight:900;color:var(--blue);
+  text-transform:uppercase;letter-spacing:.7px;
+  padding:6px 10px;border-radius:8px;
+  background:linear-gradient(90deg,rgba(0,39,118,.08),rgba(0,132,61,.04));
+}
+.ko-mobile-head .count{font-size:.6rem;color:var(--muted);font-weight:800}
+.ko-mobile-cards{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;
+}
+.ko-mobile-section.final-section .ko-mobile-head{
+  background:linear-gradient(90deg,#fff4c8,#fff);color:#7a5600;
+}
+.ko-mobile-section.p3-section .ko-mobile-head{
+  background:linear-gradient(90deg,#fff0df,#fff);color:#915221;
+}
 
 /* ===== PÓDIO — PREMIUM ===== */
 .podio-shell{display:grid;gap:18px}
@@ -1342,12 +1375,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .pal-hero-bottom{grid-template-columns:1fr;gap:8px}
   .pal-stages{align-self:stretch;justify-content:space-between}
   .pal-stage{flex:1;justify-content:center}
-  /* Bracket falls back to phase-stacked view */
-  .bracket-wrap{grid-template-columns:1fr;gap:14px}
-  .bracket-col{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;gap:8px}
-  .bracket-col-head{width:100%;text-align:left;border-bottom:1.5px solid var(--border);margin-bottom:6px}
-  .bracket-card{flex:1 1 220px;min-width:0}
-  .bracket-final-col{grid-column:auto}
+  /* Bracket falls back to chronological list (rendered in .ko-mobile-list) */
+  .bracket-stage,.r32-head,.r32-grid{display:none}
+  .ko-mobile-list{display:flex}
 }
 
 @media(max-width:760px){
@@ -3588,8 +3618,10 @@ function renderKnockoutBody(){
         ${bracketCard(sfLeft)}
       </div>
       <div class="bracket-col bracket-final-col">
-        <div class="bracket-col-head">Final</div>
-        <div class="bracket-trophy">\u{1F3C6}</div>
+        <div class="bk-final-top">
+          <div class="bracket-col-head">Final</div>
+          <div class="bracket-trophy">\u{1F3C6}</div>
+        </div>
         ${bracketCard(finalGame,{accent:"final"})}
         ${p3Game?`<div class="bracket-third-card">
           <div class="bracket-third-head"><span><span class="ic">\u{1F948}</span> Disputa de 3º lugar</span></div>
@@ -3620,6 +3652,22 @@ function renderKnockoutBody(){
       ${r32Right.map(g=>bracketCard(g)).join("")}
     </div>`;
 
+  const mobileSections=[
+    {title:"32-avos de final",games:r32,extraCls:""},
+    {title:"Oitavas de final",games:[...r16Left,...r16Right],extraCls:""},
+    {title:"Quartas de final",games:[...qfLeft,...qfRight],extraCls:""},
+    {title:"Semifinais",games:[sfLeft,sfRight].filter(Boolean),extraCls:""},
+    {title:"Disputa de 3º lugar",games:p3Game?[p3Game]:[],extraCls:"p3-section"},
+    {title:"Final",games:finalGame?[finalGame]:[],extraCls:"final-section"}
+  ];
+  const mobileHTML=`<div class="ko-mobile-list">
+    ${mobileSections.filter(s=>s.games.length).map(s=>`
+      <div class="ko-mobile-section ${s.extraCls}">
+        <div class="ko-mobile-head"><span>${esc(s.title)}</span><span class="count">${s.games.length} confronto${s.games.length>1?"s":""}</span></div>
+        <div class="ko-mobile-cards">${s.games.map(g=>bracketCard(g)).join("")}</div>
+      </div>`).join("")}
+  </div>`;
+
   return `<div class="panel" style="padding:14px">
     <div class="pal-filters">
       <div style="display:flex;flex-direction:column;gap:2px">
@@ -3630,6 +3678,7 @@ function renderKnockoutBody(){
     </div>
     <div class="bracket-stage">${bracketHTML}</div>
     ${r32HTML}
+    ${mobileHTML}
   </div>`;
 }
 
