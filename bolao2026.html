@@ -205,7 +205,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   background:linear-gradient(115deg,transparent 0 34%,rgba(255,255,255,.12) 34% 35%,transparent 35% 100%);
   pointer-events:none;
 }
-.home-copy,.home-prize-board{position:relative;z-index:1}
+.home-copy,.home-prize-board{position:relative;z-index:1;min-width:0}
 .home-kicker,.section-kicker{
   font-size:.68rem;
   text-transform:uppercase;
@@ -366,6 +366,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border-radius:8px;
   background:rgba(255,255,255,.12);
   backdrop-filter:blur(12px);
+  min-width:0;
 }
 .prize-total .label{font-size:.66rem;text-transform:uppercase;letter-spacing:1px;font-weight:950;color:rgba(255,255,255,.76)}
 .prize-total .value{margin-top:5px;font-size:1.6rem;line-height:1.05;font-weight:950;color:#fff}
@@ -379,6 +380,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   padding:10px 0;
   border-top:1px solid rgba(255,255,255,.16);
   font-size:.82rem;
+  min-width:0;
 }
 .prize-rank{
   width:auto;
@@ -400,7 +402,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .prize-score{text-align:right;min-width:52px}
 .prize-score strong{display:block;font-size:1.1rem;color:#fff;line-height:1;font-weight:950}
 .prize-score span{display:block;margin-top:3px;font-size:.58rem;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.68);font-weight:900}
-.home-layout{display:grid;grid-template-columns:minmax(0,.94fr) minmax(340px,1.06fr);gap:14px;align-items:stretch}
+.home-layout{display:grid;grid-template-columns:minmax(0,.94fr) minmax(340px,1.06fr);gap:14px;align-items:stretch;min-width:0}
 .home-side{display:grid;gap:14px}
 .home-section{
   display:flex;
@@ -410,6 +412,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border-radius:8px;
   padding:14px;
   box-shadow:0 16px 42px rgba(0,39,118,.1);
+  min-width:0;
 }
 .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
 .section-kicker{color:var(--green);margin-bottom:5px}
@@ -865,6 +868,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .pal-hero-metrics{
   position:relative;display:flex;gap:6px;flex-wrap:nowrap;
+  min-width:0;
 }
 .pal-metric{
   background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
@@ -916,6 +920,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   display:flex;gap:4px;flex-shrink:0;
   padding:4px;border-radius:11px;background:rgba(0,0,0,.22);
   border:1px solid rgba(255,255,255,.16);
+  min-width:0;
 }
 .pal-stage{
   display:inline-flex;align-items:center;gap:6px;
@@ -950,6 +955,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   margin-bottom:8px;
   box-shadow:0 6px 18px rgba(0,39,118,.05);
   transition:transform .15s,box-shadow .2s,border-color .2s;
+  min-width:0;
 }
 .pal-card:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
 .pal-card.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
@@ -1218,7 +1224,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .podium-card .crown{
   position:absolute;top:-22px;right:-20px;font-size:5.2rem;opacity:.08;transform:rotate(18deg);
 }
-.podium-card .pos-line{display:flex;align-items:center;gap:9px}
+.podium-card .pos-line{display:flex;align-items:center;gap:9px;min-width:0}
 .podium-medal{
   width:42px;height:42px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
@@ -1233,6 +1239,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   margin-left:auto;font-size:.7rem;font-weight:950;color:#fff;
   background:currentColor;padding:5px 10px;border-radius:99px;
   filter:saturate(1.1);
+  flex-shrink:0;
 }
 .podium-card .pts-pill span{color:#fff}
 .podium-card .country-input{display:flex;flex-direction:column;gap:6px}
@@ -1443,6 +1450,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   }
   .fixture-row .team{font-size:.82rem;gap:5px}
   .fixture-row .team.r{justify-content:flex-end;text-align:right}
+  .fixture-phase{grid-column:2;justify-self:start;align-self:start}
   .fixture-vs{
     justify-self:center;
     min-width:0;
@@ -1467,6 +1475,12 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .score-wrap{justify-content:flex-start}
   .pal-row .score-wrap{justify-content:space-between}
   .pal-hero{padding:12px}
+  .pal-hero-title h2{white-space:normal;overflow:visible;text-overflow:clip}
+  .pal-hero-metrics{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
   .pal-stages{flex:1}
   .pal-stage{padding:7px 8px;font-size:.66rem}
   .pal-stage .ico{font-size:.85rem}
@@ -1500,6 +1514,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .tab{padding:10px 8px 26px}
   .home-section,.card,.panel,.ranking-card{padding:10px}
   .home-metrics,.home-insights{grid-template-columns:1fr}
+  .home-spotlight{width:100%;max-width:100%;gap:12px}
+  .home-link-btn,.home-ghost-btn{width:100%;text-align:center}
   .prize-head{align-items:flex-start;flex-direction:column;gap:8px}
   .section-head{grid-template-columns:1fr auto;gap:8px}
   .section-head h2{font-size:.94rem}
@@ -1509,8 +1525,14 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .fixture-time{font-size:.7rem;padding:5px 8px}
   .fixture-row .team{font-size:.78rem;line-height:1.15}
   .flag{font-size:1.08rem}
-  .brazil-row{grid-template-columns:20px minmax(132px,1fr) 34px repeat(7,26px);gap:3px;min-width:458px}
-  .group-table th,.group-table td{padding:6px 5px}
+  .brazil-row{grid-template-columns:18px minmax(96px,1fr) 30px repeat(7,22px);gap:3px;padding:7px 6px;min-width:340px}
+  .group-table{table-layout:fixed;font-size:.68rem}
+  .group-table th,.group-table td{padding:5px 3px}
+  .group-table td:first-child,.group-table th:first-child{width:44%}
+  .group-table .team-cell{align-items:flex-start;gap:4px}
+  .group-table .team-name{line-height:1.15;overflow-wrap:anywhere}
+  .group-table .flag{font-size:.95rem}
+  .group-table .pos-pill{width:18px;height:18px;font-size:.58rem;flex:0 0 auto}
   .phase-hdr{font-size:.66rem;padding:7px 9px}
   .game-row,.pal-row{grid-template-columns:42px minmax(0,1fr);gap:8px;padding:9px}
   .gid{font-size:.62rem}
@@ -1527,6 +1549,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .pal-hero h2{font-size:1.18rem}
   .pal-hero p.lead{font-size:.78rem}
   .pal-hero-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pal-metric{padding:7px 8px}
   .podio-entry{grid-template-columns:32px minmax(0,1fr) auto;gap:10px;padding:9px}
   .podio-entry .pe-avatar{width:32px;height:32px;font-size:.7rem}
 }
@@ -1617,7 +1640,7 @@ const REMOTE_STATE_ID = "main";
 const REMOTE_POLL_MS = 30000;
 const GROUP_KEYS = Object.keys(GROUPS);
 const KO_PHASES = [
-  {k:"r32",l:"32-avos",full:"32-avos de final"},
+  {k:"r32",l:"16-avos",full:"16-avos de final"},
   {k:"r16",l:"Oitavas",full:"Oitavas de final"},
   {k:"qf",l:"Quartas",full:"Quartas de final"},
   {k:"sf",l:"Semifinais",full:"Semifinais"},
@@ -3644,7 +3667,7 @@ function renderKnockoutBody(){
 
   const r32HTML=`
     <div class="r32-head">
-      <span>\u{1F3DF}\u{FE0F} 32-avos de final</span>
+      <span>\u{1F3DF}\u{FE0F} 16-avos de final</span>
       <span class="count">${r32.length} confrontos</span>
     </div>
     <div class="r32-grid">
@@ -3653,7 +3676,7 @@ function renderKnockoutBody(){
     </div>`;
 
   const mobileSections=[
-    {title:"32-avos de final",games:r32,extraCls:""},
+    {title:"16-avos de final",games:r32,extraCls:""},
     {title:"Oitavas de final",games:[...r16Left,...r16Right],extraCls:""},
     {title:"Quartas de final",games:[...qfLeft,...qfRight],extraCls:""},
     {title:"Semifinais",games:[sfLeft,sfRight].filter(Boolean),extraCls:""},
@@ -3709,9 +3732,9 @@ function bracketCard(game,opts){
     else badge=`<span class="bk-badge" style="background:#9ca3af">0</span>`;
   }
 
-  const v1=canEdit&&!gameStarted&&!waiting?(pal.s1??0):pal.s1;
-  const v2=canEdit&&!gameStarted&&!waiting?(pal.s2??0):pal.s2;
-  const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="–" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
+  const v1=canEdit&&!gameStarted&&!waiting?(pal.s1??null):pal.s1;
+  const v2=canEdit&&!gameStarted&&!waiting?(pal.s2??null):pal.s2;
+  const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="0" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
 
   const rowHTML=(name,side,val,which)=>{
     const flag=teamFlag(name);
