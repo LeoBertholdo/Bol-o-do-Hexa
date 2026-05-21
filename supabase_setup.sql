@@ -137,9 +137,13 @@ create table if not exists public.results (
   game_id text primary key,
   s1 integer not null check (s1 between 0 and 30),
   s2 integer not null check (s2 between 0 and 30),
+  ko_winner text,
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users(id) on delete set null
 );
+
+alter table public.results
+add column if not exists ko_winner text;
 
 create table if not exists public.predictions (
   participant_index integer not null check (participant_index >= 0),

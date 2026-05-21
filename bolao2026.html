@@ -814,6 +814,12 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .flag{font-size:1.16rem;line-height:1;filter:saturate(1.08)}
 .score-wrap{display:flex;align-items:center;gap:5px;justify-content:center}
+.result-stack{display:flex;flex-direction:column;align-items:center;gap:4px}
+.ko-advancer{display:flex;flex-direction:column;gap:4px;min-width:188px}
+.ko-advancer label,.advancer-badge{font-size:.62rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;color:var(--green);text-align:center}
+.ko-advancer.muted label{color:var(--muted)}
+.ko-advancer .txt-select{height:34px;padding:5px 8px;font-size:.72rem;font-weight:850;text-align:left}
+.advancer-badge{background:#e7f8ed;border:1px solid #b8ebcb;border-radius:999px;padding:3px 8px;text-transform:none;letter-spacing:0}
 .score-control{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;box-shadow:inset 0 1px 0 rgba(0,0,0,.02)}
 .score-control input{width:42px;height:38px;border:0;text-align:center;font-size:.95rem;font-weight:950;color:var(--text);background:#fff}
 .score-control input::-webkit-outer-spin-button,.score-control input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -1517,6 +1523,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   .gteams,.pgn{grid-template-columns:1fr;gap:6px}
   .team.r{justify-content:flex-start;text-align:left}
   .score-wrap{justify-content:flex-start}
+  .result-stack{align-items:flex-start}
+  .ko-advancer{min-width:0;width:100%;max-width:260px}
+  .ko-advancer label,.advancer-badge{text-align:left}
   .pal-row .score-wrap{justify-content:space-between}
   .pal-hero{padding:12px}
   .pal-hero-title h2{white-space:normal;overflow:visible;text-overflow:clip}
@@ -1683,6 +1692,18 @@ const SUPABASE_CONFIG = {
 const REMOTE_STATE_ID = "main";
 const REMOTE_POLL_MS = 30000;
 const GROUP_KEYS = Object.keys(GROUPS);
+const COUNTRY_LIST = Object.freeze(Object.values(GROUPS).flat());
+const PODIO_FIELDS = Object.freeze([
+  ["p1","Campeão"],
+  ["p2","Vice-campeão"],
+  ["p3","3º lugar"],
+  ["p4","4º lugar"]
+]);
+const PODIO_KEYS = PODIO_FIELDS.map(([key])=>key);
+const PODIO_LABELS = Object.fromEntries(PODIO_FIELDS);
+const TEAM_CONDUCT_SCORES = Object.freeze({});
+const FIFA_RANKING_ORDER = Object.freeze({});
+const FIFA_RANKING_HISTORY = Object.freeze([FIFA_RANKING_ORDER]);
 const KO_PHASES = [
   {k:"r32",l:"16-avos",full:"16-avos de final"},
   {k:"r16",l:"Oitavas",full:"Oitavas de final"},
@@ -1828,10 +1849,14 @@ function loadState(){
 function migrateState(raw){
   const base=defaultState();
   const state={...base,...(raw||{})};
-  state.results=state.results&&typeof state.results==="object"?state.results:{};
+  state.results=state.results&&typeof state.results==="object"
+    ? Object.fromEntries(Object.entries(state.results).map(([gameId,result])=>[gameId,normalizeResult(gameId,result)]).filter(([,result])=>result))
+    : {};
   state.palpites=state.palpites&&typeof state.palpites==="object"?state.palpites:{};
-  state.podio=state.podio&&typeof state.podio==="object"?state.podio:{};
-  state.actualPodio=state.actualPodio&&typeof state.actualPodio==="object"?state.actualPodio:{};
+  state.podio=state.podio&&typeof state.podio==="object"
+    ? Object.fromEntries(Object.entries(state.podio).map(([participantIndex,podio])=>[participantIndex,normalizePodio(podio)]))
+    : {};
+  state.actualPodio=normalizePodio(state.actualPodio&&typeof state.actualPodio==="object"?state.actualPodio:{});
   state.config={...base.config,...(state.config||{})};
   state.config.prizePercents=Array.isArray(state.config.prizePercents)?state.config.prizePercents.slice(0,3):[60,25,15];
   while(state.config.prizePercents.length<3) state.config.prizePercents.push(0);
@@ -1900,6 +1925,7 @@ function setSyncStatus(kind,text){
 }
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
+  if(msg.includes("ko_winner")) return "Atualize o Supabase com a nova coluna ko_winner para salvar empates no mata-mata.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
   if(msg.includes("row-level security")) return "Seu login não tem permissão para essa alteração.";
   return msg||"Não consegui conversar com o Supabase.";
@@ -2029,7 +2055,7 @@ function applyRemoteData(payload){
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
   }
   (payload.results||[]).forEach(row=>{
-    next.results[row.game_id]={s1:row.s1,s2:row.s2};
+    next.results[row.game_id]=normalizeResult(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner});
   });
   (payload.predictions||[]).forEach(row=>{
     next.palpites[`${row.participant_index}_${row.game_id}`]={s1:row.s1,s2:row.s2};
@@ -2049,13 +2075,21 @@ function applyRemoteData(payload){
   save();
 }
 
+async function fetchResultsRemote(){
+  const withKoWinner=await remoteClient.from("results").select("game_id,s1,s2,ko_winner");
+  if(!withKoWinner.error) return withKoWinner;
+  const message=remoteErrorText(withKoWinner.error).toLowerCase();
+  if(!message.includes("ko_winner")) return withKoWinner;
+  return remoteClient.from("results").select("game_id,s1,s2");
+}
+
 async function loadRemoteData(showToast=false){
   if(!remoteClient||!remoteSession) return;
   setSyncStatus("warn","Sincronizando...");
   const [profiles,settings,results,predictions,podium,actualPodio]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
     remoteClient.from("settings").select("entry_value,prize_percents").eq("id","main").maybeSingle(),
-    remoteClient.from("results").select("game_id,s1,s2"),
+    fetchResultsRemote(),
     remoteClient.from("predictions").select("participant_index,game_id,s1,s2"),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
     remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle()
@@ -2266,6 +2300,7 @@ function saveResultRemote(id){
     game_id:id,
     s1:res.s1,
     s2:res.s2,
+    ko_winner:res.koWinner||null,
     updated_by:remoteSession.user.id
   },{onConflict:"game_id"}));
 }
@@ -2291,7 +2326,7 @@ function savePodioRemote(pi){
   if(!remoteClient) return;
   if(!requireOnlineLogin()) return;
   if(!canEditParticipant(pi)){toast("Você só pode alterar seu próprio pódio.");loadRemoteData(false);return;}
-  const pd=S.podio[pi]||{};
+  const pd=normalizePodio(S.podio[pi]||{});
   remoteWrite(()=>remoteClient.from("podium_predictions").upsert({
     user_id:remoteSession.user.id,
     participant_index:pi,
@@ -2304,7 +2339,7 @@ function savePodioRemote(pi){
 function saveActualPodioRemote(){
   if(!remoteClient) return;
   if(!isAdmin()){toast("Só o administrador altera o pódio oficial.");loadRemoteData(false);return;}
-  const ap=S.actualPodio||{};
+  const ap=normalizePodio(S.actualPodio||{});
   remoteWrite(()=>remoteClient.from("actual_podium").upsert({
     id:"main",
     p1:ap.p1||null,
@@ -2329,7 +2364,7 @@ async function pushLocalStateToRemote(){
   if(!remoteClient||!remoteSession){toast("Entre como administrador primeiro.");return;}
   if(!isAdmin()){toast("Só o administrador pode publicar o backup online.");return;}
   setSyncStatus("warn","Enviando backup para o Supabase...");
-  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,updated_by:remoteSession.user.id}));
+  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,updated_by:remoteSession.user.id}));
   const predictionRows=Object.entries(S.palpites).map(([key,pal])=>{
     const cut=key.indexOf("_");
     return {
@@ -2340,17 +2375,28 @@ async function pushLocalStateToRemote(){
       s2:pal.s2??null
     };
   }).filter(row=>Number.isInteger(row.participant_index)&&row.game_id);
-  const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>({
-    user_id:null,
-    participant_index:Number(participant_index),
-    p1:pd.p1||null,
-    p2:pd.p2||null,
-    p3:pd.p3||null,
-    p4:pd.p4||null
-  })).filter(row=>Number.isInteger(row.participant_index));
+  const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>{
+    const clean=normalizePodio(pd);
+    return {
+      user_id:null,
+      participant_index:Number(participant_index),
+      p1:clean.p1||null,
+      p2:clean.p2||null,
+      p3:clean.p3||null,
+      p4:clean.p4||null
+    };
+  }).filter(row=>Number.isInteger(row.participant_index));
+  const actualPodioRow=normalizePodio(S.actualPodio||{});
   const writes=[
     remoteClient.from("settings").upsert({id:"main",entry_value:S.config.entryValue,prize_percents:S.config.prizePercents,updated_by:remoteSession.user.id},{onConflict:"id"}),
-    remoteClient.from("actual_podium").upsert({id:"main",...(S.actualPodio||{}),updated_by:remoteSession.user.id},{onConflict:"id"})
+    remoteClient.from("actual_podium").upsert({
+      id:"main",
+      p1:actualPodioRow.p1||null,
+      p2:actualPodioRow.p2||null,
+      p3:actualPodioRow.p3||null,
+      p4:actualPodioRow.p4||null,
+      updated_by:remoteSession.user.id
+    },{onConflict:"id"})
   ];
   if(resultRows.length) writes.push(remoteClient.from("results").upsert(resultRows,{onConflict:"game_id"}));
   if(predictionRows.length) writes.push(remoteClient.from("predictions").upsert(predictionRows,{onConflict:"participant_index,game_id"}));
@@ -2590,6 +2636,59 @@ function esc(v){
   return String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
 }
 function norm(v){return String(v||"").trim();}
+function normalizeResult(id,result){
+  if(!result||typeof result!=="object") return null;
+  const s1=parseInt(result.s1,10);
+  const s2=parseInt(result.s2,10);
+  if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0) return null;
+  const clean={s1:Math.min(30,s1),s2:Math.min(30,s2)};
+  const game=gameById(id);
+  const koWinner=norm(result.koWinner||result.ko_winner||result.winner||result.advancer);
+  if(game?.ko&&koWinner) clean.koWinner=koWinner;
+  return clean;
+}
+function podioLabel(key){return PODIO_LABELS[key]||key;}
+function normalizePodio(podio){
+  const next={};
+  const seen=new Set();
+  PODIO_KEYS.forEach(key=>{
+    const value=norm(podio&&podio[key]);
+    if(!value||seen.has(value)){
+      next[key]="";
+      return;
+    }
+    next[key]=value;
+    seen.add(value);
+  });
+  return next;
+}
+function podioDuplicateKey(podio,key,value){
+  const pick=norm(value);
+  if(!pick) return null;
+  return PODIO_KEYS.find(other=>other!==key&&norm(podio&&podio[other])===pick)||null;
+}
+function draftPodio(podio,key,value){
+  const next={...normalizePodio(podio)};
+  const pick=norm(value);
+  const duplicateKey=podioDuplicateKey(next,key,pick);
+  if(duplicateKey) return {ok:false,duplicateKey,value:pick,next};
+  next[key]=pick;
+  return {ok:true,next:normalizePodio(next)};
+}
+function podioDatalistId(scope,key){
+  return `podio-${scope}-${key}`;
+}
+function countryDatalist(id,blocked=[]){
+  const blockedSet=new Set((blocked||[]).filter(Boolean));
+  const countries=COUNTRY_LIST.filter(country=>!blockedSet.has(country));
+  return `<datalist id="${esc(id)}">${countries.map(c=>`<option value="${esc(c)}">${esc(teamFlag(c)+" "+c)}</option>`).join("")}</datalist>`;
+}
+function podioDatalists(scope,podio){
+  return PODIO_KEYS.map(key=>{
+    const blocked=PODIO_KEYS.filter(other=>other!==key).map(other=>norm(podio&&podio[other]));
+    return countryDatalist(podioDatalistId(scope,key),blocked);
+  }).join("");
+}
 function brl(n){return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",minimumFractionDigits:0}).format(n);}
 function gameById(id){return GAMES.find(g=>g.id===id);}
 function groupGames(){return GAMES.filter(g=>!g.ko);}
@@ -2632,11 +2731,13 @@ function score(pal,res){
 }
 function podioScore(pal,actual){
   if(!pal||!actual) return 0;
+  const cleanPal=normalizePodio(pal);
+  const cleanActual=normalizePodio(actual);
   let p=0;
-  if(actual.p1&&pal.p1===actual.p1) p+=20;
-  if(actual.p2&&pal.p2===actual.p2) p+=10;
-  if(actual.p3&&pal.p3===actual.p3) p+=5;
-  if(actual.p4&&pal.p4===actual.p4) p+=3;
+  if(cleanActual.p1&&cleanPal.p1===cleanActual.p1) p+=20;
+  if(cleanActual.p2&&cleanPal.p2===cleanActual.p2) p+=10;
+  if(cleanActual.p3&&cleanPal.p3===cleanActual.p3) p+=5;
+  if(cleanActual.p4&&cleanPal.p4===cleanActual.p4) p+=3;
   return p;
 }
 function playerStats(pi){
@@ -2690,16 +2791,107 @@ function groupStandings(){
     else if(+res.s1<+res.s2){b.w++; a.l++; b.pts+=3;}
     else{a.d++; b.d++; a.pts++; b.pts++;}
   });
-  Object.values(tables).forEach(table=>{
-    table.sort(compareTeams);
-    table.forEach((row,i)=>row.pos=i+1);
+  Object.entries(tables).forEach(([group,table])=>{
+    tables[group]=rankGroupTable(table,group);
+    tables[group].forEach((row,i)=>row.pos=i+1);
   });
   return tables;
+}
+function teamConductScore(team){
+  return Number(TEAM_CONDUCT_SCORES[team]||0);
+}
+function fifaRankingOrder(team,ranking=FIFA_RANKING_ORDER){
+  return Number(ranking[team]||Number.POSITIVE_INFINITY);
+}
+function fifaRankingCriteria(){
+  return FIFA_RANKING_HISTORY.map(ranking=>({value:row=>fifaRankingOrder(row.team,ranking),dir:"asc"}));
+}
+function splitByCriterion(rows,getValue,dir="desc"){
+  const buckets=new Map();
+  rows.forEach(row=>{
+    const value=getValue(row);
+    const key=String(value);
+    if(!buckets.has(key)) buckets.set(key,{value,rows:[]});
+    buckets.get(key).rows.push(row);
+  });
+  return Array.from(buckets.values())
+    .sort((a,b)=>{
+      if(typeof a.value==="number"&&typeof b.value==="number"){
+        return dir==="asc"?a.value-b.value:b.value-a.value;
+      }
+      const result=String(a.value).localeCompare(String(b.value),"pt-BR");
+      return dir==="asc"?result:-result;
+    })
+    .map(bucket=>bucket.rows);
+}
+function applyCriteriaGroups(rows,criteria){
+  return criteria.reduce((groups,criterion)=>{
+    return groups.flatMap(group=>group.length<2?[group]:splitByCriterion(group,criterion.value,criterion.dir));
+  },[rows]);
+}
+function sameTeamSet(a,b){
+  if(a.length!==b.length) return false;
+  const teams=new Set(a.map(row=>row.team));
+  return b.every(row=>teams.has(row.team));
+}
+function headToHeadStats(group,rows){
+  const teams=new Set(rows.map(row=>row.team));
+  const stats=Object.fromEntries(rows.map(row=>[row.team,{pts:0,gf:0,ga:0,gd:0}]));
+  groupGames().forEach(game=>{
+    const res=S.results[game.id];
+    if(!res||game.group!==group||!teams.has(game.t1)||!teams.has(game.t2)) return;
+    const a=stats[game.t1];
+    const b=stats[game.t2];
+    const s1=+res.s1;
+    const s2=+res.s2;
+    a.gf+=s1; a.ga+=s2; b.gf+=s2; b.ga+=s1;
+    if(s1>s2) a.pts+=3;
+    else if(s1<s2) b.pts+=3;
+    else{a.pts++; b.pts++;}
+  });
+  Object.values(stats).forEach(row=>row.gd=row.gf-row.ga);
+  return stats;
+}
+function applyHeadToHeadStep(rows,group){
+  const h2h=headToHeadStats(group,rows);
+  const groups=applyCriteriaGroups(rows,[
+    {value:row=>h2h[row.team].pts,dir:"desc"},
+    {value:row=>h2h[row.team].gd,dir:"desc"},
+    {value:row=>h2h[row.team].gf,dir:"desc"}
+  ]);
+  return groups.flatMap(groupRows=>{
+    if(groupRows.length<2||sameTeamSet(groupRows,rows)) return [groupRows];
+    return applyHeadToHeadStep(groupRows,group);
+  });
+}
+function rankEqualPointRows(rows,group){
+  return applyHeadToHeadStep(rows,group).flatMap(groupRows=>{
+    if(groupRows.length<2) return groupRows;
+    return applyCriteriaGroups(groupRows,[
+      {value:row=>row.gd,dir:"desc"},
+      {value:row=>row.gf,dir:"desc"},
+      {value:row=>teamConductScore(row.team),dir:"desc"},
+      ...fifaRankingCriteria(),
+      {value:row=>row.team,dir:"asc"}
+    ]).flat();
+  });
+}
+function rankGroupTable(table,group){
+  return splitByCriterion(table,row=>row.pts,"desc").flatMap(rows=>{
+    return rows.length<2?rows:rankEqualPointRows(rows,group);
+  });
 }
 function compareTeams(a,b){
   if(b.pts!==a.pts) return b.pts-a.pts;
   if(b.gd!==a.gd) return b.gd-a.gd;
   if(b.gf!==a.gf) return b.gf-a.gf;
+  const conduct=teamConductScore(b.team)-teamConductScore(a.team);
+  if(conduct) return conduct;
+  for(const ranking of FIFA_RANKING_HISTORY){
+    const rankA=fifaRankingOrder(a.team,ranking);
+    const rankB=fifaRankingOrder(b.team,ranking);
+    if(rankA!==rankB) return rankA-rankB;
+  }
   return a.team.localeCompare(b.team,"pt-BR");
 }
 function groupPhaseComplete(){
@@ -2724,16 +2916,32 @@ function winnerOf(id){
   if(!game) return "";
   const teams=gameTeams(game);
   const res=S.results[id];
-  if(!res||!teams.t1||!teams.t2||res.s1===res.s2) return "";
-  return +res.s1>+res.s2?teams.t1:teams.t2;
+  if(!res||!teams.t1||!teams.t2) return "";
+  if(+res.s1>+res.s2) return teams.t1;
+  if(+res.s1<+res.s2) return teams.t2;
+  return koAdvancerFromResult(game,res,teams);
 }
 function loserOf(id){
   const game=gameById(id);
   if(!game) return "";
   const teams=gameTeams(game);
   const res=S.results[id];
-  if(!res||!teams.t1||!teams.t2||res.s1===res.s2) return "";
-  return +res.s1>+res.s2?teams.t2:teams.t1;
+  if(!res||!teams.t1||!teams.t2) return "";
+  if(+res.s1>+res.s2) return teams.t2;
+  if(+res.s1<+res.s2) return teams.t1;
+  const advancer=koAdvancerFromResult(game,res,teams);
+  if(!advancer) return "";
+  return advancer===teams.t1?teams.t2:teams.t1;
+}
+function koAdvancerFromResult(game,res,teams=gameTeams(game)){
+  if(!game?.ko||!res||+res.s1!==+res.s2) return "";
+  const advancer=norm(res.koWinner);
+  return [teams.t1,teams.t2].includes(advancer)?advancer:"";
+}
+function resultLabel(game,res,teams=gameTeams(game)){
+  const scoreText=`${res.s1} × ${res.s2}`;
+  const advancer=koAdvancerFromResult(game,res,teams);
+  return advancer?`${scoreText} · ${advancer} passa no OT`:scoreText;
 }
 function seedLabel(seed){
   const direct=String(seed||"").match(/^([12])([A-L])$/);
@@ -2873,7 +3081,7 @@ function renderFixtureRow(game,showDate){
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const timeLabel=game.time||"A definir";
-  const versusLabel=res?`${res.s1} × ${res.s2}`:"x";
+  const versusLabel=res?resultLabel(game,res,teams):"x";
   const dateParts=showDate?formatGameDateParts(game.date):null;
   return `<div class="fixture-row ${res?"is-result":"is-upcoming"}">
     <div class="fixture-meta">
@@ -3242,7 +3450,7 @@ function renderGrupos(){
     h+=`</tbody></table></div>`;
   });
   h+=`</div>
-    <div class="microcopy" style="margin-top:12px">Critérios usados com os dados disponíveis: pontos, saldo de gols, gols pró e ordem alfabética como desempate final.</div>
+    <div class="microcopy" style="margin-top:12px">Critérios FIFA 2026: confronto direto entre empatados, saldo e gols nesses confrontos; depois saldo geral, gols pró, fair play e Ranking FIFA. Melhores terceiros: pontos, saldo geral, gols pró, fair play e Ranking FIFA.</div>
   </div>`;
   document.getElementById("tab-grupos").innerHTML=h;
 }
@@ -3282,11 +3490,15 @@ function renderGameRow(game,forPalpite){
   const t2=teams.t2;
   const canEdit=canEditResults();
   if(res&&!forPalpite){
+    const advancer=koAdvancerFromResult(game,res,teams);
     return `<div class="game-row">
       <div class="gid">${esc(game.id)}</div>
       <div class="gteams">
         ${teamHTML(t1,"r",!teams.ready)}
-        <div class="res"><span class="sc">${res.s1}</span><span>×</span><span class="sc">${res.s2}</span></div>
+        <div class="result-stack">
+          <div class="res"><span class="sc">${res.s1}</span><span>×</span><span class="sc">${res.s2}</span></div>
+          ${advancer?`<div class="advancer-badge">${esc(advancer)} passa no OT</div>`:""}
+        </div>
         ${teamHTML(t2,"",!teams.ready)}
       </div>
       ${canEdit?`<button class="btn-x" onclick="clearRes('${game.id}')">Remover</button>`:`<div class="microcopy">Oficial</div>`}
@@ -3309,14 +3521,31 @@ function renderGameRow(game,forPalpite){
     <div class="gid">${esc(game.id)}</div>
     <div class="gteams">
       ${teamHTML(t1,"r",!teams.ready)}
-      <div class="score-wrap">
-        ${scoreControl(`r1_${game.id}`,draft.s1,`setResDraft('${game.id}',1,this.value)`,"0","oninput",disabled)}
-        <span class="ssep">×</span>
-        ${scoreControl(`r2_${game.id}`,draft.s2,`setResDraft('${game.id}',2,this.value)`,"0","oninput",disabled)}
+      <div class="result-stack">
+        <div class="score-wrap">
+          ${scoreControl(`r1_${game.id}`,draft.s1,`setResDraft('${game.id}',1,this.value)`,"0","oninput",disabled)}
+          <span class="ssep">×</span>
+          ${scoreControl(`r2_${game.id}`,draft.s2,`setResDraft('${game.id}',2,this.value)`,"0","oninput",disabled)}
+        </div>
+        ${koAdvancerControl(game,teams,draft,disabled)}
       </div>
       ${teamHTML(t2,"",!teams.ready)}
     </div>
     <button class="btn-ok" ${disabled?"disabled":""} onclick="confirmRes('${game.id}')">Salvar</button>
+  </div>`;
+}
+function koAdvancerControl(game,teams,draft,disabled){
+  if(!game.ko) return "";
+  const tied=Number(draft.s1)===Number(draft.s2);
+  const selectDisabled=disabled||!tied;
+  const selected=norm(draft.koWinner);
+  const options=[teams.t1,teams.t2].filter(Boolean);
+  return `<div class="ko-advancer ${tied?"":"muted"}" id="advwrap_${game.id}">
+    <label for="adv_${game.id}">Empate: quem passa no overtime?</label>
+    <select class="txt-select" id="adv_${game.id}" onchange="setResAdvancer('${game.id}',this.value)" ${selectDisabled?"disabled":""}>
+      <option value="">Selecione a seleção</option>
+      ${options.map(team=>`<option value="${esc(team)}" ${selected===team?"selected":""}>${esc(teamFlag(team)+" "+team)}</option>`).join("")}
+    </select>
   </div>`;
 }
 function setJFilter(k){jFilter=k;renderJogos();}
@@ -3324,6 +3553,25 @@ function setResDraft(id,w,v){
   if(!resultDrafts[id]) resultDrafts[id]={s1:0,s2:0};
   const n=parseInt(v,10);
   resultDrafts[id][w===1?"s1":"s2"]=!Number.isNaN(n)&&n>=0?Math.min(30,n):0;
+  updateKoAdvancerControl(id);
+}
+function setResAdvancer(id,value){
+  if(!resultDrafts[id]) resultDrafts[id]={s1:0,s2:0};
+  resultDrafts[id].koWinner=norm(value);
+}
+function updateKoAdvancerControl(id){
+  const game=gameById(id);
+  if(!game?.ko) return;
+  const draft=resultDrafts[id]||{s1:0,s2:0};
+  const tied=Number(draft.s1)===Number(draft.s2);
+  const wrap=document.getElementById(`advwrap_${id}`);
+  const select=document.getElementById(`adv_${id}`);
+  if(wrap) wrap.classList.toggle("muted",!tied);
+  if(select){
+    select.disabled=!tied;
+    if(!tied) select.value="";
+  }
+  if(!tied) delete draft.koWinner;
 }
 function confirmRes(id){
   if(!canEditResults()){toast("Só o administrador altera resultados.");render(activeTab);return;}
@@ -3333,8 +3581,16 @@ function confirmRes(id){
   const s1=parseInt(document.getElementById(`r1_${id}`)?.value,10);
   const s2=parseInt(document.getElementById(`r2_${id}`)?.value,10);
   if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0){toast("Placar inválido.");return;}
-  if(game.ko&&s1===s2){toast("Em mata-mata, informe o placar final com vencedor.");return;}
-  S.results[id]={s1,s2};
+  const result={s1,s2};
+  if(game.ko&&s1===s2){
+    const advancer=norm(document.getElementById(`adv_${id}`)?.value||resultDrafts[id]?.koWinner);
+    if(![teams.t1,teams.t2].includes(advancer)){
+      toast("Escolha qual seleção passou no overtime.");
+      return;
+    }
+    result.koWinner=advancer;
+  }
+  S.results[id]=result;
   delete resultDrafts[id];
   const clearedIds=clearDependentKnockouts(id);
   save();
@@ -3495,7 +3751,7 @@ function renderPalpites(){
 }
 
 function renderPodioBody(){
-  const ap=S.actualPodio||{};
+  const ap=normalizePodio(S.actualPodio||{});
   const pos=[
     {k:"p1",l:"Campeão",sub:"1º lugar",pts:20,cls:"gold",medal:"\u{1F947}"},
     {k:"p2",l:"Vice-campeão",sub:"2º lugar",pts:10,cls:"silver",medal:"\u{1F948}"},
@@ -3504,7 +3760,7 @@ function renderPodioBody(){
   ];
   const officialLocked=!canEditResults();
   const myIdx=myParticipantIndex();
-  const myPodio=(palPi!=null&&S.podio[palPi])||{};
+  const myPodio=normalizePodio((palPi!=null&&S.podio[palPi])||{});
   const myPodioScore=podioScore(myPodio,ap);
   const apFilled=pos.filter(p=>ap[p.k]).length;
   const meCanEditOwn=canEditParticipant(palPi);
@@ -3525,6 +3781,7 @@ function renderPodioBody(){
       <div class="podium-cards" style="margin-top:14px">
         ${pos.map(p=>{
           const v=ap[p.k]||"";
+          const listId=podioDatalistId("official",p.k);
           return `<div class="podium-card ${p.cls} ${officialLocked?"locked":""}">
             <span class="crown">${p.medal}</span>
             <div class="pos-line">
@@ -3538,7 +3795,7 @@ function renderPodioBody(){
             <div class="country-input">
               ${officialLocked
                 ? `<div class="country-display ${v?"":"empty"}">${v?`<span class="flag">${teamFlag(v)}</span><span>${esc(v)}</span>`:"Aguardando definição"}</div>`
-                : `<input type="text" list="countries" placeholder="Selecione o país" value="${esc(v)}" onchange="setAP('${p.k}',this.value)">`
+                : `<input type="text" list="${listId}" placeholder="Selecione o país" value="${esc(v)}" onchange="setAP('${p.k}',this.value)">`
               }
             </div>
           </div>`;
@@ -3564,6 +3821,7 @@ function renderPodioBody(){
         ${pos.map(p=>{
           const v=myPodio[p.k]||"";
           const hit=ap[p.k]&&v===ap[p.k];
+          const listId=podioDatalistId("mine",p.k);
           return `<div class="podium-card ${p.cls} ${meCanEditOwn?"":"locked"}">
             <span class="crown">${p.medal}</span>
             <div class="pos-line">
@@ -3576,7 +3834,7 @@ function renderPodioBody(){
             </div>
             <div class="country-input">
               ${meCanEditOwn
-                ? `<input type="text" list="countries" placeholder="Sua aposta" value="${esc(v)}" onchange="setPodio(${palPi},'${p.k}',this.value)">`
+                ? `<input type="text" list="${listId}" placeholder="Sua aposta" value="${esc(v)}" onchange="setPodio(${palPi},'${p.k}',this.value)">`
                 : `<div class="country-display ${v?"":"empty"}">${v?`<span class="flag">${teamFlag(v)}</span><span>${esc(v)}</span>`:"Sem palpite"}</div>`
               }
             </div>
@@ -3587,7 +3845,7 @@ function renderPodioBody(){
     </div>`;
 
   // Leaderboard ordenada por pontos do pódio (desc)
-  const board=S.participants.map((n,i)=>({n,i,pd:S.podio[i]||{},pts:podioScore(S.podio[i]||{},ap)}))
+  const board=S.participants.map((n,i)=>({n,i,pd:normalizePodio(S.podio[i]||{}),pts:podioScore(S.podio[i]||{},ap)}))
     .sort((a,b)=>b.pts-a.pts||a.i-b.i);
 
   const legend=`
@@ -3637,7 +3895,8 @@ function renderPodioBody(){
   return `<div class="podio-shell">
     ${officialCard}
     ${myPodioCard}
-    ${countryDatalist()}
+    ${podioDatalists("official",ap)}
+    ${podioDatalists("mine",myPodio)}
     ${boardCard}
   </div>`;
 }
@@ -3868,7 +4127,7 @@ function renderPalpiteRow(game){
     const statusNote=gameStarted&&!res
       ? `<div class="pal-card-status live">encerrado · aguardando resultado</div>`
       : res
-        ? `<div class="pal-card-result"><span class="real">Resultado oficial: ${esc(res.s1)} × ${esc(res.s2)}</span></div>`
+        ? `<div class="pal-card-result"><span class="real">Resultado oficial: ${esc(resultLabel(game,res,teams))}</span></div>`
         : "";
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",!teams.ready)}
@@ -3921,13 +4180,15 @@ function renderPodio(){
   palStage="podio";
   renderPalpites();
 }
-function countryDatalist(){
-  const countries=Object.values(GROUPS).flat();
-  return `<datalist id="countries">${countries.map(c=>`<option value="${esc(c)}">${esc(teamFlag(c)+" "+c)}</option>`).join("")}</datalist>`;
-}
 function setAP(k,v){
   if(!canEditResults()){toast("Só o administrador altera o pódio oficial.");renderPodio();return;}
-  S.actualPodio[k]=norm(v);
+  const draft=draftPodio(S.actualPodio,k,v);
+  if(!draft.ok){
+    toast(`${draft.value} já foi escolhido como ${podioLabel(draft.duplicateKey)}.`);
+    renderPodio();
+    return;
+  }
+  S.actualPodio=draft.next;
   save();
   saveActualPodioRemote();
   renderPodio();
@@ -3935,8 +4196,13 @@ function setAP(k,v){
 }
 function setPodio(pi,k,v){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seu próprio pódio.");renderPodio();return;}
-  if(!S.podio[pi]) S.podio[pi]={};
-  S.podio[pi][k]=norm(v);
+  const draft=draftPodio(S.podio[pi]||{},k,v);
+  if(!draft.ok){
+    toast(`${draft.value} já foi escolhido como ${podioLabel(draft.duplicateKey)}.`);
+    renderPodio();
+    return;
+  }
+  S.podio[pi]=draft.next;
   save();
   savePodioRemote(pi);
   renderPodio();
@@ -4040,7 +4306,7 @@ function renderConfig(){
         <div><strong>Erro:</strong> resultado incorreto vale <strong>0 ponto</strong>.</div>
         <hr style="margin:10px 0;border:none;border-top:1px solid var(--border)">
         <div><strong>Pódio:</strong> campeão +20, vice +10, 3º lugar +5 e 4º lugar +3.</div>
-        <div><strong>Mata-mata:</strong> os confrontos são montados automaticamente a partir da classificação da fase de grupos e avançam conforme os resultados preenchidos.</div>
+        <div><strong>Mata-mata:</strong> os confrontos são montados automaticamente a partir da classificação da fase de grupos. Se o placar oficial empatar, o admin escolhe quem passou no overtime para alimentar a próxima fase.</div>
       </div>
     </div>
     <div class="card">
