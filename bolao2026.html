@@ -816,6 +816,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .score-wrap{display:flex;align-items:center;gap:5px;justify-content:center}
 .result-stack{display:flex;flex-direction:column;align-items:center;gap:4px}
 .ko-advancer{display:flex;flex-direction:column;gap:4px;min-width:188px}
+.ko-advancer.hidden{display:none}
 .ko-advancer label,.advancer-badge{font-size:.62rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;color:var(--green);text-align:center}
 .ko-advancer.muted label{color:var(--muted)}
 .ko-advancer .txt-select{height:34px;padding:5px 8px;font-size:.72rem;font-weight:850;text-align:left}
@@ -3537,10 +3538,11 @@ function renderGameRow(game,forPalpite){
 function koAdvancerControl(game,teams,draft,disabled){
   if(!game.ko) return "";
   const tied=Number(draft.s1)===Number(draft.s2);
-  const selectDisabled=disabled||!tied;
+  const visible=koAdvancerVisible(draft);
+  const selectDisabled=disabled||!visible;
   const selected=norm(draft.koWinner);
   const options=[teams.t1,teams.t2].filter(Boolean);
-  return `<div class="ko-advancer ${tied?"":"muted"}" id="advwrap_${game.id}">
+  return `<div class="ko-advancer ${visible?"":"hidden"} ${tied?"":"muted"}" id="advwrap_${game.id}">
     <label for="adv_${game.id}">Empate: quem passa no overtime?</label>
     <select class="txt-select" id="adv_${game.id}" onchange="setResAdvancer('${game.id}',this.value)" ${selectDisabled?"disabled":""}>
       <option value="">Selecione a seleção</option>
@@ -3548,11 +3550,17 @@ function koAdvancerControl(game,teams,draft,disabled){
     </select>
   </div>`;
 }
+function koAdvancerVisible(draft){
+  return Number(draft.s1)===Number(draft.s2)&&Boolean(draft.touched||draft.showKoAdvancer||draft.koWinner);
+}
 function setJFilter(k){jFilter=k;renderJogos();}
 function setResDraft(id,w,v){
   if(!resultDrafts[id]) resultDrafts[id]={s1:0,s2:0};
   const n=parseInt(v,10);
-  resultDrafts[id][w===1?"s1":"s2"]=!Number.isNaN(n)&&n>=0?Math.min(30,n):0;
+  const draft=resultDrafts[id];
+  draft[w===1?"s1":"s2"]=!Number.isNaN(n)&&n>=0?Math.min(30,n):0;
+  draft.touched=true;
+  draft.showKoAdvancer=gameById(id)?.ko&&Number(draft.s1)===Number(draft.s2);
   updateKoAdvancerControl(id);
 }
 function setResAdvancer(id,value){
@@ -3564,11 +3572,15 @@ function updateKoAdvancerControl(id){
   if(!game?.ko) return;
   const draft=resultDrafts[id]||{s1:0,s2:0};
   const tied=Number(draft.s1)===Number(draft.s2);
+  const visible=koAdvancerVisible(draft);
   const wrap=document.getElementById(`advwrap_${id}`);
   const select=document.getElementById(`adv_${id}`);
-  if(wrap) wrap.classList.toggle("muted",!tied);
+  if(wrap){
+    wrap.classList.toggle("hidden",!visible);
+    wrap.classList.toggle("muted",!tied);
+  }
   if(select){
-    select.disabled=!tied;
+    select.disabled=!visible;
     if(!tied) select.value="";
   }
   if(!tied) delete draft.koWinner;
@@ -3585,6 +3597,9 @@ function confirmRes(id){
   if(game.ko&&s1===s2){
     const advancer=norm(document.getElementById(`adv_${id}`)?.value||resultDrafts[id]?.koWinner);
     if(![teams.t1,teams.t2].includes(advancer)){
+      if(!resultDrafts[id]) resultDrafts[id]={s1,s2};
+      Object.assign(resultDrafts[id],{s1,s2,touched:true,showKoAdvancer:true});
+      updateKoAdvancerControl(id);
       toast("Escolha qual seleção passou no overtime.");
       return;
     }
