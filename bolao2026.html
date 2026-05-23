@@ -1418,12 +1418,99 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .sync-pill.err .sync-dot{background:var(--red)}
 .login-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}
 
+/* ==== API-FOOTBALL TEST LAB: remove this block after the Copa integration is ready ==== */
+.api-test-page{display:grid;gap:14px}
+.api-test-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1.18fr) minmax(280px,.82fr);
+  gap:14px;
+  align-items:stretch;
+  padding:16px;
+  color:#fff;
+  background:linear-gradient(135deg,rgba(0,39,118,.96),rgba(0,132,61,.88));
+  border:1px solid rgba(255,255,255,.42);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+}
+.api-test-hero h2{margin:4px 0 7px;font-size:1.45rem;line-height:1.05;font-weight:950;letter-spacing:0}
+.api-test-hero p{margin:0;color:rgba(255,255,255,.88);line-height:1.48;font-size:.86rem}
+.api-test-checklist{display:grid;gap:8px}
+.api-test-check{
+  display:flex;align-items:center;gap:9px;
+  padding:9px 10px;border-radius:8px;
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.16);
+  font-size:.76rem;font-weight:850;color:rgba(255,255,255,.9);
+}
+.api-test-check .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex:0 0 auto}
+.api-test-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.42fr);gap:14px;align-items:start}
+.api-test-form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:end}
+.api-test-form label{font-size:.66rem;text-transform:uppercase;letter-spacing:.65px;color:var(--muted);font-weight:950}
+.api-test-form .txt-inp,.api-test-form .txt-select{text-align:left;height:40px}
+.api-test-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.api-test-actions .action-btn{flex:0 0 auto;min-width:150px;padding:10px 12px}
+.api-test-warning{
+  margin-top:10px;
+  padding:10px 11px;
+  border-radius:8px;
+  border:1px solid #f0d899;
+  background:#fff8d7;
+  color:#6f4c00;
+  font-size:.78rem;
+  line-height:1.45;
+}
+.api-test-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.api-test-metric{border:1px solid var(--border);border-radius:8px;background:#fff;padding:10px}
+.api-test-metric strong{display:block;font-size:1.22rem;line-height:1;color:var(--blue);font-weight:950}
+.api-test-metric span{display:block;margin-top:6px;font-size:.62rem;letter-spacing:.55px;text-transform:uppercase;color:var(--muted);font-weight:900}
+.api-test-filters{display:grid;grid-template-columns:minmax(0,1fr) 170px 180px;gap:8px;margin-bottom:10px}
+.api-test-filters .txt-inp,.api-test-filters .txt-select{text-align:left}
+.api-test-list{display:grid;gap:9px}
+.api-test-game{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  padding:12px;
+  box-shadow:0 7px 18px rgba(0,39,118,.05);
+}
+.api-test-game-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
+.api-test-date{font-size:.78rem;font-weight:950;color:var(--blue)}
+.api-test-round,.api-test-status{font-size:.7rem;font-weight:850;color:var(--muted);line-height:1.35}
+.api-test-status{text-align:right}
+.api-test-teams{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);gap:10px;align-items:center}
+.api-test-team{display:flex;align-items:center;gap:7px;min-width:0;font-weight:950}
+.api-test-team.away{justify-content:flex-end;text-align:right}
+.api-test-team img{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
+.api-test-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.api-test-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--blue)}
+.api-test-score b{min-width:32px;text-align:center;border:1px solid var(--border);border-radius:8px;background:#f8fbf1;padding:6px 5px}
+.api-test-pal{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.api-test-pal-result{font-size:.76rem;font-weight:950;color:var(--muted)}
+.api-test-pal-result.hit{color:var(--green)}
+.api-test-pal-result.ok{color:var(--blue)}
+.api-test-pal-result.bad{color:var(--red)}
+.api-test-pal-controls{display:flex;gap:6px;align-items:end;justify-content:flex-end;flex-wrap:wrap}
+.api-test-score-inp{width:56px;text-align:center}
+.api-test-pal-controls .action-btn{min-width:0;flex:0 0 auto;padding:9px 10px}
+.api-test-ranking{display:grid;gap:8px}
+.api-test-rank-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px}
+.api-test-rank-pos{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#eef5ff;color:var(--blue);font-weight:950}
+.api-test-rank-name{font-weight:950;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.api-test-rank-meta{font-size:.68rem;color:var(--muted);margin-top:2px}
+.api-test-rank-points{text-align:right;font-weight:950;color:var(--green)}
+.api-test-rank-points span{display:block;font-size:.58rem;letter-spacing:.45px;text-transform:uppercase;color:var(--muted)}
+.api-test-debug{max-height:250px;overflow:auto;border-radius:8px;background:#111827;color:#e5e7eb;padding:10px;font-size:.72rem;line-height:1.45;white-space:pre-wrap}
+.api-test-empty{border:1px dashed var(--border);border-radius:8px;background:#fff;padding:16px;text-align:center;color:var(--muted);font-weight:850}
+/* ==== END API-FOOTBALL TEST LAB ==== */
+
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1000;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 @media(max-width:980px){
   .home-spotlight,.home-layout{grid-template-columns:1fr}
+  .api-test-hero,.api-test-grid{grid-template-columns:1fr}
+  .api-test-form{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-prize-board{max-width:none}
   .home-insights{grid-template-columns:1fr}
   .podium-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -1459,6 +1546,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   }
   .tab{padding:12px 10px 28px}
   .panel,.card,.home-section,.ranking-card{padding:12px}
+  .api-test-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .api-test-filters{grid-template-columns:1fr}
   .home-dashboard{gap:12px}
   .home-spotlight{padding:13px}
   .home-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
@@ -1569,6 +1658,12 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   nav button{min-height:38px;padding:7px 4px;font-size:.68rem}
   .tab{padding:10px 8px 26px}
   .home-section,.card,.panel,.ranking-card{padding:10px}
+  .api-test-form,.api-test-metrics{grid-template-columns:1fr}
+  .api-test-teams{grid-template-columns:1fr;gap:8px}
+  .api-test-team.away{justify-content:flex-start;text-align:left}
+  .api-test-score{justify-content:flex-start}
+  .api-test-pal{grid-template-columns:1fr}
+  .api-test-pal-controls{justify-content:flex-start}
   .home-metrics,.home-insights{grid-template-columns:1fr}
   .home-spotlight{width:100%;max-width:100%;gap:12px}
   .home-link-btn,.home-ghost-btn{width:100%;text-align:center}
@@ -1632,6 +1727,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   <button onclick="goTab('grupos')">Grupos</button>
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
+  <!-- API-FOOTBALL TEST LAB: remove this nav item after testing -->
+  <button onclick="goTab('api-test')">Teste API</button>
   <button onclick="goTab('config')">Config</button>
 </nav>
 
@@ -1640,6 +1737,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 <div id="tab-grupos" class="tab"></div>
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
+<!-- API-FOOTBALL TEST LAB: remove this tab after testing -->
+<div id="tab-api-test" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
 
@@ -2777,15 +2876,41 @@ function bumpField(id,delta){
   input.dispatchEvent(new Event("change",{bubbles:true}));
 }
 
-function score(pal,res){
+function predictedAdvancer(game,pal,teams=gameTeams(game)){
+  if(!game?.ko||!pal||!teams.ready) return "";
+  if(+pal.s1>+pal.s2) return teams.t1;
+  if(+pal.s1<+pal.s2) return teams.t2;
+  return koOutcomeComplete(game,pal,teams)?norm(pal.koWinner):"";
+}
+function actualAdvancer(game,res,teams=gameTeams(game)){
+  if(!game?.ko||!res||!teams.ready) return "";
+  if(+res.s1>+res.s2) return teams.t1;
+  if(+res.s1<+res.s2) return teams.t2;
+  return koAdvancerFromResult(game,res,teams);
+}
+function scoreDetails(pal,res,game=null){
   if(!pal||!res||pal.s1==null||pal.s2==null||res.s1==null||res.s2==null) return null;
   const ps1=+pal.s1, ps2=+pal.s2, rs1=+res.s1, rs2=+res.s2;
-  if(ps1===rs1&&ps2===rs2) return 3;
-  if(ps1!==ps2&&ps1===rs2&&ps2===rs1) return -2;
-  const pw=ps1>ps2?1:ps1<ps2?2:0;
-  const rw=rs1>rs2?1:rs1<rs2?2:0;
-  if(pw===rw) return 1;
-  return 0;
+  let base=0;
+  if(ps1===rs1&&ps2===rs2) base=3;
+  else if(ps1!==ps2&&ps1===rs2&&ps2===rs1) base=-2;
+  else{
+    const pw=ps1>ps2?1:ps1<ps2?2:0;
+    const rw=rs1>rs2?1:rs1<rs2?2:0;
+    if(pw===rw) base=1;
+  }
+  let passBonus=0;
+  if(game?.ko){
+    const teams=gameTeams(game);
+    const predicted=predictedAdvancer(game,pal,teams);
+    const actual=actualAdvancer(game,res,teams);
+    if(predicted&&actual&&predicted===actual) passBonus=1;
+  }
+  return {pts:base+passBonus,base,passBonus};
+}
+function score(pal,res,game=null){
+  const details=scoreDetails(pal,res,game);
+  return details?details.pts:null;
 }
 function podioScore(pal,actual){
   if(!pal||!actual) return 0;
@@ -2803,13 +2928,13 @@ function playerStats(pi){
   GAMES.forEach(g=>{
     const res=S.results[g.id];
     const pal=S.palpites[`${pi}_${g.id}`];
-    const sc=score(pal,res);
-    if(sc==null) return;
+    const details=scoreDetails(pal,res,g);
+    if(!details) return;
     played++;
-    pts+=sc;
-    if(sc===3) crav++;
-    if(sc===1) corr++;
-    if(sc===-2) inv++;
+    pts+=details.pts;
+    if(details.base===3) crav++;
+    if(details.base===1) corr++;
+    if(details.base===-2) inv++;
   });
   const pp=podioScore(S.podio[pi]||{},S.actualPodio||{});
   return {pts:pts+pp,crav,corr,inv,played,pp};
@@ -3090,13 +3215,402 @@ let authMode="signin";
 let rankingChartSelection=[];
 let rankingChartTouched=false;
 
+// ==== API-FOOTBALL TEST LAB: remove this block after the Copa integration is ready ====
+const API_TEST_STORAGE_KEY="bolao2026ApiFootballLabV1";
+const API_TEST_FUNCTION_NAME="api-football-test";
+const API_TEST_DEFAULT_CONFIG=Object.freeze({
+  league:71,
+  season:2026,
+  from:"2026-01-01",
+  to:"2026-06-10",
+  timezone:"America/Sao_Paulo"
+});
+const API_TEST_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO"]);
+let apiTestState=loadApiTestState();
+let apiTestPi=0;
+let apiTestSearch="";
+let apiTestStatusFilter="all";
+let apiTestStatus={kind:"warn",text:"Pronto para chamar a Edge Function do Supabase."};
+
+function apiTestDefaultState(){
+  return {
+    config:{...API_TEST_DEFAULT_CONFIG},
+    fixtures:[],
+    predictions:{},
+    lastFetch:null,
+    lastDebug:null
+  };
+}
+function loadApiTestState(){
+  const base=apiTestDefaultState();
+  if(!CAN_USE_LOCAL_STORAGE) return base;
+  try{
+    const raw=localStorage.getItem(API_TEST_STORAGE_KEY);
+    if(!raw) return base;
+    const parsed=JSON.parse(raw);
+    return {
+      ...base,
+      ...parsed,
+      config:{...base.config,...(parsed.config||{})},
+      fixtures:Array.isArray(parsed.fixtures)?parsed.fixtures:[],
+      predictions:parsed.predictions&&typeof parsed.predictions==="object"?parsed.predictions:{}
+    };
+  }catch(e){
+    return base;
+  }
+}
+function saveApiTestState(){
+  if(CAN_USE_LOCAL_STORAGE) localStorage.setItem(API_TEST_STORAGE_KEY,JSON.stringify(apiTestState));
+}
+function apiTestSetStatus(kind,text){
+  apiTestStatus={kind,text};
+}
+function apiTestDateParts(iso){
+  if(!iso) return {date:"Sem data",time:"--:--",key:""};
+  const d=new Date(iso);
+  return {
+    date:new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",timeZone:BR_TIME_ZONE}).format(d).replace(/\./g,""),
+    time:new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:BR_TIME_ZONE}).format(d),
+    key:new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TIME_ZONE}).format(d)
+  };
+}
+function normalizeApiTestFixture(row){
+  if(!row) return null;
+  const rawId=row.id??row.fixture?.id;
+  if(!rawId) return null;
+  const dateIso=row.dateIso||row.fixture?.date||"";
+  const parts=apiTestDateParts(dateIso);
+  return {
+    id:String(rawId),
+    dateIso,
+    dateKey:row.dateKey||parts.key,
+    dateLabel:row.dateLabel||parts.date,
+    timeLabel:row.timeLabel||parts.time,
+    round:row.round||row.league?.round||"Rodada sem nome",
+    venue:row.venue||row.fixture?.venue?.name||"",
+    city:row.city||row.fixture?.venue?.city||"",
+    statusShort:row.statusShort||row.fixture?.status?.short||"",
+    statusLong:row.statusLong||row.fixture?.status?.long||"",
+    elapsed:row.elapsed??row.fixture?.status?.elapsed??null,
+    home:row.home||row.teams?.home?.name||"Mandante",
+    away:row.away||row.teams?.away?.name||"Visitante",
+    homeLogo:row.homeLogo||row.teams?.home?.logo||"",
+    awayLogo:row.awayLogo||row.teams?.away?.logo||"",
+    goalsHome:row.goalsHome??row.goals?.home??null,
+    goalsAway:row.goalsAway??row.goals?.away??null
+  };
+}
+function compareApiTestFixtures(a,b){
+  return `${a.dateIso||""} ${a.id}`.localeCompare(`${b.dateIso||""} ${b.id}`);
+}
+function apiTestIsFinal(fixture){
+  return API_TEST_FINAL_STATUSES.has(fixture.statusShort)&&fixture.goalsHome!=null&&fixture.goalsAway!=null;
+}
+function apiTestPredictionKey(pi,id){
+  return `${pi}_${id}`;
+}
+function apiTestPrediction(pi,id){
+  return apiTestState.predictions[apiTestPredictionKey(pi,id)]||null;
+}
+function apiTestScore(prediction,fixture){
+  if(!prediction||!apiTestIsFinal(fixture)) return null;
+  return score(
+    {s1:prediction.s1,s2:prediction.s2},
+    {s1:fixture.goalsHome,s2:fixture.goalsAway}
+  );
+}
+function apiTestScoreLabel(sc){
+  if(sc===3) return {cls:"hit",text:"+3 cravada"};
+  if(sc===1) return {cls:"ok",text:"+1 resultado"};
+  if(sc===-2) return {cls:"bad",text:"-2 invertida"};
+  if(sc===0) return {cls:"",text:"0 erro"};
+  return {cls:"",text:"Aguardando resultado"};
+}
+function apiTestPlayerStats(pi){
+  let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0;
+  apiTestState.fixtures.forEach(fixture=>{
+    const prediction=apiTestPrediction(pi,fixture.id);
+    if(prediction) predicted++;
+    const sc=apiTestScore(prediction,fixture);
+    if(sc==null) return;
+    played++;
+    pts+=sc;
+    if(sc===3) crav++;
+    if(sc===1) corr++;
+    if(sc===-2) inv++;
+  });
+  return {pts,crav,corr,inv,played,predicted};
+}
+function apiTestRanking(){
+  return S.participants.map((name,i)=>({name,i,...apiTestPlayerStats(i)})).sort((a,b)=>{
+    if(b.pts!==a.pts) return b.pts-a.pts;
+    if(b.crav!==a.crav) return b.crav-a.crav;
+    if(a.inv!==b.inv) return a.inv-b.inv;
+    return a.name.localeCompare(b.name,"pt-BR");
+  });
+}
+function apiTestJs(value){
+  return String(value).replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+}
+function apiTestReadConfig(){
+  const config={
+    league:Number(document.getElementById("apiTestLeague")?.value)||API_TEST_DEFAULT_CONFIG.league,
+    season:Number(document.getElementById("apiTestSeason")?.value)||API_TEST_DEFAULT_CONFIG.season,
+    from:document.getElementById("apiTestFrom")?.value||API_TEST_DEFAULT_CONFIG.from,
+    to:document.getElementById("apiTestTo")?.value||API_TEST_DEFAULT_CONFIG.to,
+    timezone:API_TEST_DEFAULT_CONFIG.timezone
+  };
+  apiTestState.config=config;
+  saveApiTestState();
+  return config;
+}
+async function fetchApiTestFixtures(){
+  const config=apiTestReadConfig();
+  if(!isRemoteConfigured()||!remoteClient){
+    apiTestSetStatus("err","Configure o Supabase primeiro. Esta aba testa a API pelo Supabase, igual ao oficial.");
+    toast("Configure o Supabase antes de testar a API.");
+    renderApiTest();
+    return;
+  }
+  if(!remoteSession){
+    apiTestSetStatus("err","Entre no bolão para chamar a Edge Function.");
+    toast("Entre no bolão antes de testar a API.");
+    renderApiTest();
+    return;
+  }
+  apiTestSetStatus("warn","Chamando Edge Function no Supabase...");
+  renderApiTest();
+  const {data,error}=await remoteClient.functions.invoke(API_TEST_FUNCTION_NAME,{body:config});
+  if(error){
+    apiTestState.lastDebug={error:remoteErrorText(error),hint:`A função ${API_TEST_FUNCTION_NAME} precisa estar criada e publicada no Supabase.`};
+    saveApiTestState();
+    apiTestSetStatus("err",remoteErrorText(error));
+    renderApiTest();
+    toast("A chamada da função falhou.");
+    return;
+  }
+  if(data?.error){
+    apiTestState.lastDebug=data;
+    saveApiTestState();
+    apiTestSetStatus("err",data.error);
+    renderApiTest();
+    toast(data.error);
+    return;
+  }
+  const fixtures=(data?.fixtures||[]).map(normalizeApiTestFixture).filter(Boolean).sort(compareApiTestFixtures);
+  apiTestState.fixtures=fixtures;
+  apiTestState.lastFetch=new Date().toISOString();
+  apiTestState.lastDebug={
+    request:config,
+    api:data?.api||null,
+    rateLimit:data?.rateLimit||null,
+    sample:fixtures.slice(0,3)
+  };
+  saveApiTestState();
+  apiTestSetStatus("ok",`${fixtures.length} jogos recebidos via Supabase Edge Function.`);
+  toast("Jogos recebidos da API-Football.");
+  renderApiTest();
+}
+function loadApiTestSampleFixtures(){
+  const sample=[
+    {id:900001,dateIso:"2026-05-24T19:00:00Z",round:"Regular Season - 10",venue:"Maracanã",statusShort:"NS",statusLong:"Not Started",home:"Flamengo",away:"Palmeiras",goalsHome:null,goalsAway:null},
+    {id:900002,dateIso:"2026-05-25T00:00:00Z",round:"Regular Season - 10",venue:"Morumbis",statusShort:"FT",statusLong:"Match Finished",home:"São Paulo",away:"Corinthians",goalsHome:2,goalsAway:1},
+    {id:900003,dateIso:"2026-06-01T22:30:00Z",round:"Regular Season - 11",venue:"Mineirão",statusShort:"NS",statusLong:"Not Started",home:"Cruzeiro",away:"Internacional",goalsHome:null,goalsAway:null},
+    {id:900004,dateIso:"2026-06-08T23:00:00Z",round:"Regular Season - 12",venue:"Arena Fonte Nova",statusShort:"NS",statusLong:"Not Started",home:"Bahia",away:"Atlético-MG",goalsHome:null,goalsAway:null}
+  ];
+  apiTestState.fixtures=sample.map(normalizeApiTestFixture).filter(Boolean).sort(compareApiTestFixtures);
+  apiTestState.lastFetch=new Date().toISOString();
+  apiTestState.lastDebug={sample:true,fixtures:apiTestState.fixtures};
+  saveApiTestState();
+  apiTestSetStatus("ok","Exemplo local carregado. Use a Edge Function para o teste oficial.");
+  toast("Exemplo local carregado.");
+  renderApiTest();
+}
+function saveApiTestPrediction(id){
+  const s1=parseInt(document.getElementById(`apiTestS1_${id}`)?.value,10);
+  const s2=parseInt(document.getElementById(`apiTestS2_${id}`)?.value,10);
+  if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0){
+    toast("Placar inválido.");
+    return;
+  }
+  apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)]={s1:Math.min(30,s1),s2:Math.min(30,s2)};
+  saveApiTestState();
+  toast("Palpite de teste salvo.");
+  renderApiTest();
+}
+function clearApiTestPrediction(id){
+  delete apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)];
+  saveApiTestState();
+  toast("Palpite de teste removido.");
+  renderApiTest();
+}
+function resetApiTestLab(){
+  if(!confirm("Zerar jogos e palpites do Teste API? O bolão principal não será alterado.")) return;
+  apiTestState=apiTestDefaultState();
+  apiTestPi=0;
+  apiTestSearch="";
+  apiTestStatusFilter="all";
+  saveApiTestState();
+  apiTestSetStatus("ok","Teste API zerado.");
+  renderApiTest();
+}
+function apiTestFilteredFixtures(){
+  const search=apiTestSearch.trim().toLowerCase();
+  return apiTestState.fixtures.filter(fixture=>{
+    if(search&&!`${fixture.home} ${fixture.away}`.toLowerCase().includes(search)) return false;
+    if(apiTestStatusFilter==="finished"&&!apiTestIsFinal(fixture)) return false;
+    if(apiTestStatusFilter==="open"&&apiTestIsFinal(fixture)) return false;
+    if(apiTestStatusFilter==="missing"&&apiTestPrediction(apiTestPi,fixture.id)) return false;
+    return true;
+  });
+}
+function apiTestFixtureStatusText(fixture){
+  if(apiTestIsFinal(fixture)) return "Finalizado";
+  if(fixture.statusShort==="NS") return "Agendado";
+  if(fixture.statusShort==="TBD") return "A definir";
+  return fixture.statusLong||fixture.statusShort||"Sem status";
+}
+function renderApiTestMetrics(){
+  const total=apiTestState.fixtures.length;
+  const finished=apiTestState.fixtures.filter(apiTestIsFinal).length;
+  const predicted=apiTestState.fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
+  const next=apiTestState.fixtures.find(f=>!apiTestIsFinal(f));
+  return `<div class="api-test-metrics">
+    <div class="api-test-metric"><strong>${total}</strong><span>Jogos recebidos</span></div>
+    <div class="api-test-metric"><strong>${finished}</strong><span>Finalizados</span></div>
+    <div class="api-test-metric"><strong>${predicted}</strong><span>Meus palpites</span></div>
+    <div class="api-test-metric"><strong>${next?esc(next.dateLabel):"--"}</strong><span>Próximo jogo</span></div>
+  </div>`;
+}
+function renderApiTestGames(){
+  const fixtures=apiTestFilteredFixtures();
+  if(!apiTestState.fixtures.length){
+    return `<div class="api-test-empty">Nenhum jogo carregado ainda. O teste oficial é clicar em “Buscar via Supabase”.</div>`;
+  }
+  if(!fixtures.length) return `<div class="api-test-empty">Nenhum jogo bate com esse filtro.</div>`;
+  return `<div class="api-test-list">${fixtures.map(fixture=>{
+    const prediction=apiTestPrediction(apiTestPi,fixture.id);
+    const sc=apiTestScore(prediction,fixture);
+    const label=apiTestScoreLabel(sc);
+    const id=apiTestJs(fixture.id);
+    return `<article class="api-test-game">
+      <div class="api-test-game-top">
+        <div>
+          <div class="api-test-date">${esc(fixture.dateLabel)} · ${esc(fixture.timeLabel)}</div>
+          <div class="api-test-round">${esc(fixture.round)}${fixture.venue?` · ${esc(fixture.venue)}`:""}</div>
+        </div>
+        <div class="api-test-status">${esc(apiTestFixtureStatusText(fixture))}${fixture.statusShort?` · ${esc(fixture.statusShort)}`:""}</div>
+      </div>
+      <div class="api-test-teams">
+        <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(fixture.home)}</span></div>
+        <div class="api-test-score"><b>${apiTestIsFinal(fixture)?fixture.goalsHome:"-"}</b><span>x</span><b>${apiTestIsFinal(fixture)?fixture.goalsAway:"-"}</b></div>
+        <div class="api-test-team away"><span>${esc(fixture.away)}</span>${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}</div>
+      </div>
+      <div class="api-test-pal">
+        <div>
+          <div class="api-test-round">Palpite de ${esc(participantName(apiTestPi))}</div>
+          <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
+        </div>
+        <div class="api-test-pal-controls">
+          <label class="api-test-round">Mandante<input class="txt-inp api-test-score-inp" id="apiTestS1_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s1:""}"></label>
+          <label class="api-test-round">Visitante<input class="txt-inp api-test-score-inp" id="apiTestS2_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s2:""}"></label>
+          <button class="action-btn" onclick="saveApiTestPrediction('${id}')">Salvar</button>
+          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')">Limpar</button>
+        </div>
+      </div>
+    </article>`;
+  }).join("")}</div>`;
+}
+function renderApiTestRanking(){
+  return `<div class="api-test-ranking">${apiTestRanking().map((row,i)=>`
+    <div class="api-test-rank-row">
+      <div class="api-test-rank-pos">${i+1}</div>
+      <div>
+        <div class="api-test-rank-name">${esc(row.name)}</div>
+        <div class="api-test-rank-meta">${row.crav} crav. · ${row.corr} acertos · ${row.inv} inv. · ${row.predicted} palpites</div>
+      </div>
+      <div class="api-test-rank-points">${row.pts}<span>pts</span></div>
+    </div>`).join("")}</div>`;
+}
+function renderApiTest(){
+  if(apiTestPi>=S.participants.length) apiTestPi=0;
+  const config={...API_TEST_DEFAULT_CONFIG,...apiTestState.config};
+  const loginHint=!isRemoteConfigured()
+    ?"Configure o Supabase no app antes de chamar a API."
+    :!remoteSession
+      ?"Entre na sua conta do bolão para chamar a função."
+      :`Conectado ao Supabase como ${currentProfile?participantName(currentProfile.participant_index):(remoteSession.user.email||"usuário")}.`;
+  const h=`<div class="api-test-page">
+    <section class="api-test-hero">
+      <div>
+        <div class="home-kicker">Teste removível</div>
+        <h2>API-Football por dentro do bolão</h2>
+        <p>Esta aba chama uma Edge Function do Supabase, que chama a API-Football com a chave escondida. É o mesmo desenho que vamos usar nos resultados oficiais da Copa.</p>
+      </div>
+      <div class="api-test-checklist">
+        <div class="api-test-check"><span class="dot"></span><span>Frontend do bolão chama Supabase.</span></div>
+        <div class="api-test-check"><span class="dot"></span><span>Supabase usa a chave secreta da API.</span></div>
+        <div class="api-test-check"><span class="dot"></span><span>Jogos viram palpites e ranking de treino.</span></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card-title">Buscar jogos do Brasileirão Série A</div>
+      <div class="api-test-form">
+        <label>Liga<input class="txt-inp" id="apiTestLeague" type="number" min="1" value="${esc(config.league)}"></label>
+        <label>Temporada<input class="txt-inp" id="apiTestSeason" type="number" min="2000" max="2100" value="${esc(config.season)}"></label>
+        <label>De<input class="txt-inp" id="apiTestFrom" type="date" value="${esc(config.from)}"></label>
+        <label>Até<input class="txt-inp" id="apiTestTo" type="date" value="${esc(config.to)}"></label>
+        <label>Palpites de
+          <select class="txt-select" onchange="apiTestPi=+this.value;renderApiTest()">
+            ${S.participants.map((name,i)=>`<option value="${i}" ${i===apiTestPi?"selected":""}>${esc(name)}</option>`).join("")}
+          </select>
+        </label>
+      </div>
+      <div class="api-test-actions" style="margin-top:10px">
+        <button class="action-btn" onclick="fetchApiTestFixtures()">Buscar via Supabase</button>
+        <button class="action-btn secondary" onclick="loadApiTestSampleFixtures()">Exemplo local</button>
+        <button class="action-btn secondary" onclick="resetApiTestLab()">Zerar teste</button>
+      </div>
+      <div class="api-test-warning">${esc(loginHint)} A chave da API-Football não aparece nesta tela; ela fica nos Secrets da Edge Function.</div>
+      <div style="margin-top:10px"><span class="sync-pill ${apiTestStatus.kind}"><span class="sync-dot"></span>${esc(apiTestStatus.text)}</span></div>
+    </section>
+
+    <div class="api-test-grid">
+      <section class="panel">
+        ${renderApiTestMetrics()}
+        <div class="api-test-filters" style="margin-top:12px">
+          <input class="txt-inp" type="search" placeholder="Buscar time" value="${esc(apiTestSearch)}" oninput="apiTestSearch=this.value;renderApiTest()">
+          <select class="txt-select" onchange="apiTestStatusFilter=this.value;renderApiTest()">
+            ${[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem meu palpite"]].map(([value,label])=>`<option value="${value}" ${apiTestStatusFilter===value?"selected":""}>${label}</option>`).join("")}
+          </select>
+          <button class="action-btn secondary" onclick="apiTestSearch='';apiTestStatusFilter='all';renderApiTest()">Limpar filtros</button>
+        </div>
+        ${renderApiTestGames()}
+      </section>
+      <aside>
+        <div class="card">
+          <div class="card-title">Ranking do treino</div>
+          ${renderApiTestRanking()}
+        </div>
+        <div class="card">
+          <div class="card-title">Resposta da função</div>
+          <pre class="api-test-debug">${esc(JSON.stringify(apiTestState.lastDebug||{message:"Nenhuma chamada feita ainda."},null,2))}</pre>
+        </div>
+      </aside>
+    </div>
+  </div>`;
+  document.getElementById("tab-api-test").innerHTML=h;
+}
+// ==== END API-FOOTBALL TEST LAB ====
+
 function goTab(t){
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["home","ranking","grupos","jogos","palpites","config"];
+  const tabs=["home","ranking","grupos","jogos","palpites","api-test","config"];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
@@ -3109,6 +3623,7 @@ function render(t){
   if(t==="grupos") renderGrupos();
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
+  if(t==="api-test") renderApiTest();
   if(t==="config") renderConfig();
 }
 
@@ -3218,7 +3733,7 @@ function rankingTimeline(rows){
     series.forEach(line=>{
       const res=S.results[game.id];
       const pal=S.palpites[`${line.i}_${game.id}`];
-      const gain=score(pal,res);
+      const gain=score(pal,res,game);
       totals[line.i]+=gain==null?0:gain;
       line.values.push(totals[line.i]);
     });
@@ -4143,9 +4658,10 @@ function bracketCard(game,opts){
 
   let badge="";
   if(pal.s1!=null&&pal.s2!=null&&res){
-    const sc=score(pal,res);
-    if(sc===3){cls+=" hit";badge=`<span class="bk-badge">+3 cravou</span>`;}
-    else if(sc===1) badge=`<span class="bk-badge">+1</span>`;
+    const details=scoreDetails(pal,res,game);
+    const sc=details?.pts;
+    if(details?.base===3){cls+=" hit";badge=`<span class="bk-badge">+${sc} cravou</span>`;}
+    else if(sc>0) badge=`<span class="bk-badge">+${sc}</span>`;
     else if(sc===-2) badge=`<span class="bk-badge" style="background:linear-gradient(135deg,#ef4444,#991b1b)">-2</span>`;
     else badge=`<span class="bk-badge" style="background:#9ca3af">0</span>`;
   }
@@ -4216,12 +4732,13 @@ function renderPalpiteRow(game){
   let badgeLbl="aguardando";
   let sc=null;
   if(pal.s1!=null&&pal.s2!=null&&res){
-    sc=score(pal,res);
-    const cls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":"b0";
-    const lbl=sc===3?"+3":sc===1?"+1":sc===-2?"−2":"0";
+    const details=scoreDetails(pal,res,game);
+    sc=details?.pts;
+    const cls=details?.base===3?"b3":sc>0?"b1":sc===-2?"bn2":"b0";
+    const lbl=sc>0?`+${sc}`:sc===-2?"−2":"0";
     badgeHTML=`<div class="sbadge ${cls}">${lbl}</div>`;
-    badgeLbl=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":"errou";
-    if(sc===3) cardCls+=" is-hit";
+    badgeLbl=details?.base===3?"cravou":details?.base===1?"acertou":details?.base===-2?"invertido":details?.passBonus?"acertou quem passa":"errou";
+    if(details?.base===3) cardCls+=" is-hit";
   }else if(gameStarted&&canEdit&&(pal.s1==null||pal.s2==null)){
     badgeHTML=`<div class="sbadge b0" title="Jogo encerrado sem palpite">–</div>`;
     badgeLbl="sem palpite";
@@ -4468,7 +4985,7 @@ function renderConfig(){
         <div><strong>Erro:</strong> resultado incorreto vale <strong>0 ponto</strong>.</div>
         <hr style="margin:10px 0;border:none;border-top:1px solid var(--border)">
         <div><strong>Pódio:</strong> campeão +20, vice +10, 3º lugar +5 e 4º lugar +3.</div>
-        <div><strong>Mata-mata:</strong> se o placar empatar, resultados oficiais e palpites guardam quem passou e se foi na prorrogação ou nos pênaltis. Esses detalhes ficam salvos, mas a pontuação extra ainda será decidida depois.</div>
+        <div><strong>Mata-mata:</strong> acertar quem passa soma <strong style="color:#065f46">+1 ponto extra</strong>. Em empate cravado, fica +4 se acertar o classificado ou +3 se errar; em empate não cravado, fica +2 se acertar ou +1 se errar.</div>
       </div>
     </div>
     <div class="card">

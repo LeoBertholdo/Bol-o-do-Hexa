@@ -24,11 +24,18 @@ Repositório oficial: [LeoBertholdo/Bol-o-do-Hexa](https://github.com/LeoBerthol
 .
 ├── index.html            # Redirect para bolao2026.html (entry point)
 ├── bolao2026.html        # Aplicação completa (HTML + CSS + JS em linha)
+├── API_FOOTBALL_TESTE.md # Passo a passo para testar a API-Football via Supabase
+├── supabase/
+│   └── functions/
+│       └── api-football-test/
+│           └── index.ts  # Edge Function de teste da API-Football
 └── assets/
     └── header-hexa-2026.png
 ```
 
 `index.html` existe apenas para garantir que a raiz do repositório redirecione corretamente (útil em GitHub Pages ou qualquer servidor estático). Toda a lógica está em `bolao2026.html`.
+
+O `bolao2026.html` também contém uma aba removível **Teste API**. Ela chama a Edge Function `api-football-test`, busca jogos do Brasileirão Série A antes da Copa, salva palpites de treino no navegador e calcula um ranking separado sem alterar o bolão principal.
 
 ---
 
@@ -93,12 +100,15 @@ Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos
 | Placar exato (cravada) | **+3** |
 | Resultado correto (acertou o vencedor) | **+1** |
 | Invertida (apostou no time errado para ganhar) | **−2** |
+| Mata-mata: acertar quem passa | **+1 extra** |
 | Acertar o campeão (1º lugar no pódio) | **+20** |
 | Acertar o vice-campeão (2º lugar) | **+10** |
 | Acertar o 3º colocado | **+5** |
 | Acertar o 4º colocado | **+3** |
 
 Critérios de desempate no ranking: total de pontos → cravadas → menor número de invertidas → ordem alfabética.
+
+No mata-mata, o bônus de classificação é somado ao que o palpite já marcou no placar. Ex.: empate cravado vale +4 se também acertar quem passa, ou +3 se errar; empate não cravado vale +2 se acertar quem passa, ou +1 se errar.
 
 ---
 

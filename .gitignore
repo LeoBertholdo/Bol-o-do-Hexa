@@ -1,3 +1,5 @@
 .DS_Store
 *.json
 .claude/
+.env
+.env.*
