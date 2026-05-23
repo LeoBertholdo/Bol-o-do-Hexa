@@ -138,6 +138,7 @@ create table if not exists public.results (
   s1 integer not null check (s1 between 0 and 30),
   s2 integer not null check (s2 between 0 and 30),
   ko_winner text,
+  ko_decision text,
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users(id) on delete set null
 );
@@ -145,15 +146,26 @@ create table if not exists public.results (
 alter table public.results
 add column if not exists ko_winner text;
 
+alter table public.results
+add column if not exists ko_decision text;
+
 create table if not exists public.predictions (
   participant_index integer not null check (participant_index >= 0),
   game_id text not null,
   user_id uuid references auth.users(id) on delete set null,
   s1 integer check (s1 between 0 and 30),
   s2 integer check (s2 between 0 and 30),
+  ko_winner text,
+  ko_decision text,
   updated_at timestamptz not null default now(),
   primary key (participant_index, game_id)
 );
+
+alter table public.predictions
+add column if not exists ko_winner text;
+
+alter table public.predictions
+add column if not exists ko_decision text;
 
 create table if not exists public.actual_podium (
   id text primary key default 'main' check (id = 'main'),

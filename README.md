@@ -82,7 +82,7 @@ const KO_DATE_STARTS = { r32: "2026-07-03", r16: "2026-07-07", qf: "2026-07-10",
                          sf: "2026-07-14", p3: "2026-07-18", final: "2026-07-19" }
 ```
 
-Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos das fases eliminatórias são preenchidos manualmente pelo admin conforme os resultados são definidos; em empate no mata-mata, o admin também escolhe a seleção que passou no overtime.
+Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos das fases eliminatórias são preenchidos manualmente pelo admin conforme os resultados são definidos; em empate no mata-mata, resultados oficiais e palpites guardam quem passou e se foi na prorrogação ou nos pênaltis.
 
 ---
 

@@ -820,6 +820,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .ko-advancer label,.advancer-badge{font-size:.62rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;color:var(--green);text-align:center}
 .ko-advancer.muted label{color:var(--muted)}
 .ko-advancer .txt-select{height:34px;padding:5px 8px;font-size:.72rem;font-weight:850;text-align:left}
+.pal-tiebreak{min-width:0;margin-top:6px}
+.bracket-card .pal-tiebreak{margin:8px 0 0;width:100%}
 .advancer-badge{background:#e7f8ed;border:1px solid #b8ebcb;border-radius:999px;padding:3px 8px;text-transform:none;letter-spacing:0}
 .score-control{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;box-shadow:inset 0 1px 0 rgba(0,0,0,.02)}
 .score-control input{width:42px;height:38px;border:0;text-align:center;font-size:.95rem;font-weight:950;color:var(--text);background:#fff}
@@ -1702,6 +1704,11 @@ const PODIO_FIELDS = Object.freeze([
 ]);
 const PODIO_KEYS = PODIO_FIELDS.map(([key])=>key);
 const PODIO_LABELS = Object.fromEntries(PODIO_FIELDS);
+const KO_DECISIONS = Object.freeze([
+  ["extra_time","na prorrogação"],
+  ["penalties","nos pênaltis"]
+]);
+const KO_DECISION_LABELS = Object.fromEntries(KO_DECISIONS);
 const TEAM_CONDUCT_SCORES = Object.freeze({});
 const FIFA_RANKING_ORDER = Object.freeze({});
 const FIFA_RANKING_HISTORY = Object.freeze([FIFA_RANKING_ORDER]);
@@ -1853,7 +1860,9 @@ function migrateState(raw){
   state.results=state.results&&typeof state.results==="object"
     ? Object.fromEntries(Object.entries(state.results).map(([gameId,result])=>[gameId,normalizeResult(gameId,result)]).filter(([,result])=>result))
     : {};
-  state.palpites=state.palpites&&typeof state.palpites==="object"?state.palpites:{};
+  state.palpites=state.palpites&&typeof state.palpites==="object"
+    ? Object.fromEntries(Object.entries(state.palpites).map(([key,prediction])=>[key,normalizePredictionKey(key,prediction)]).filter(([,prediction])=>prediction))
+    : {};
   state.podio=state.podio&&typeof state.podio==="object"
     ? Object.fromEntries(Object.entries(state.podio).map(([participantIndex,podio])=>[participantIndex,normalizePodio(podio)]))
     : {};
@@ -1926,7 +1935,7 @@ function setSyncStatus(kind,text){
 }
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
-  if(msg.includes("ko_winner")) return "Atualize o Supabase com a nova coluna ko_winner para salvar empates no mata-mata.";
+  if(msg.includes("ko_winner")||msg.includes("ko_decision")) return "Atualize o Supabase com as colunas ko_winner e ko_decision para salvar desempates do mata-mata.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
   if(msg.includes("row-level security")) return "Seu login não tem permissão para essa alteração.";
   return msg||"Não consegui conversar com o Supabase.";
@@ -2056,10 +2065,10 @@ function applyRemoteData(payload){
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
   }
   (payload.results||[]).forEach(row=>{
-    next.results[row.game_id]=normalizeResult(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner});
+    next.results[row.game_id]=normalizeResult(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner,koDecision:row.ko_decision});
   });
   (payload.predictions||[]).forEach(row=>{
-    next.palpites[`${row.participant_index}_${row.game_id}`]={s1:row.s1,s2:row.s2};
+    next.palpites[`${row.participant_index}_${row.game_id}`]=normalizePrediction(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner,koDecision:row.ko_decision});
   });
   (payload.podium||[]).forEach(row=>{
     next.podio[row.participant_index]={p1:row.p1||"",p2:row.p2||"",p3:row.p3||"",p4:row.p4||""};
@@ -2077,11 +2086,20 @@ function applyRemoteData(payload){
 }
 
 async function fetchResultsRemote(){
-  const withKoWinner=await remoteClient.from("results").select("game_id,s1,s2,ko_winner");
-  if(!withKoWinner.error) return withKoWinner;
-  const message=remoteErrorText(withKoWinner.error).toLowerCase();
-  if(!message.includes("ko_winner")) return withKoWinner;
+  const full=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision");
+  if(!full.error) return full;
+  const message=remoteErrorText(full.error).toLowerCase();
+  if(!message.includes("ko_")) return full;
+  const withWinner=await remoteClient.from("results").select("game_id,s1,s2,ko_winner");
+  if(!withWinner.error) return withWinner;
   return remoteClient.from("results").select("game_id,s1,s2");
+}
+async function fetchPredictionsRemote(){
+  const full=await remoteClient.from("predictions").select("participant_index,game_id,s1,s2,ko_winner,ko_decision");
+  if(!full.error) return full;
+  const message=remoteErrorText(full.error).toLowerCase();
+  if(!message.includes("ko_")) return full;
+  return remoteClient.from("predictions").select("participant_index,game_id,s1,s2");
 }
 
 async function loadRemoteData(showToast=false){
@@ -2091,7 +2109,7 @@ async function loadRemoteData(showToast=false){
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
     remoteClient.from("settings").select("entry_value,prize_percents").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
-    remoteClient.from("predictions").select("participant_index,game_id,s1,s2"),
+    fetchPredictionsRemote(),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
     remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle()
   ]);
@@ -2302,6 +2320,7 @@ function saveResultRemote(id){
     s1:res.s1,
     s2:res.s2,
     ko_winner:res.koWinner||null,
+    ko_decision:res.koDecision||null,
     updated_by:remoteSession.user.id
   },{onConflict:"game_id"}));
 }
@@ -2320,7 +2339,9 @@ function savePredictionRemote(pi,gid){
     participant_index:pi,
     game_id:gid,
     s1:pal.s1??null,
-    s2:pal.s2??null
+    s2:pal.s2??null,
+    ko_winner:pal.koWinner||null,
+    ko_decision:pal.koDecision||null
   },{onConflict:"participant_index,game_id"}));
 }
 function savePodioRemote(pi){
@@ -2365,7 +2386,7 @@ async function pushLocalStateToRemote(){
   if(!remoteClient||!remoteSession){toast("Entre como administrador primeiro.");return;}
   if(!isAdmin()){toast("Só o administrador pode publicar o backup online.");return;}
   setSyncStatus("warn","Enviando backup para o Supabase...");
-  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,updated_by:remoteSession.user.id}));
+  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,ko_decision:res.koDecision||null,updated_by:remoteSession.user.id}));
   const predictionRows=Object.entries(S.palpites).map(([key,pal])=>{
     const cut=key.indexOf("_");
     return {
@@ -2373,7 +2394,9 @@ async function pushLocalStateToRemote(){
       participant_index:Number(key.slice(0,cut)),
       game_id:key.slice(cut+1),
       s1:pal.s1??null,
-      s2:pal.s2??null
+      s2:pal.s2??null,
+      ko_winner:pal.koWinner||null,
+      ko_decision:pal.koDecision||null
     };
   }).filter(row=>Number.isInteger(row.participant_index)&&row.game_id);
   const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>{
@@ -2645,8 +2668,42 @@ function normalizeResult(id,result){
   const clean={s1:Math.min(30,s1),s2:Math.min(30,s2)};
   const game=gameById(id);
   const koWinner=norm(result.koWinner||result.ko_winner||result.winner||result.advancer);
+  const koDecision=normalizeKoDecision(result.koDecision||result.ko_decision||result.decision);
   if(game?.ko&&koWinner) clean.koWinner=koWinner;
+  if(game?.ko&&koDecision) clean.koDecision=koDecision;
   return clean;
+}
+function normalizePredictionKey(key,prediction){
+  const gid=String(key||"").slice(String(key||"").indexOf("_")+1);
+  return normalizePrediction(gid,prediction);
+}
+function normalizePrediction(id,prediction){
+  if(!prediction||typeof prediction!=="object") return null;
+  const clean={};
+  if(prediction.s1!=null){
+    const s1=parseInt(prediction.s1,10);
+    if(!Number.isNaN(s1)&&s1>=0) clean.s1=Math.min(30,s1);
+  }
+  if(prediction.s2!=null){
+    const s2=parseInt(prediction.s2,10);
+    if(!Number.isNaN(s2)&&s2>=0) clean.s2=Math.min(30,s2);
+  }
+  const game=gameById(id);
+  const koWinner=norm(prediction.koWinner||prediction.ko_winner||prediction.winner||prediction.advancer);
+  const koDecision=normalizeKoDecision(prediction.koDecision||prediction.ko_decision||prediction.decision);
+  if(game?.ko&&koWinner) clean.koWinner=koWinner;
+  if(game?.ko&&koDecision) clean.koDecision=koDecision;
+  return Object.keys(clean).length?clean:null;
+}
+function normalizeKoDecision(value){
+  const key=norm(value).toLowerCase();
+  if(!key) return "";
+  if(key==="extra_time"||key==="prorrogacao"||key==="prorrogação"||key==="overtime"||key==="et") return "extra_time";
+  if(key==="penalties"||key==="penaltis"||key==="pênaltis"||key==="penalty"||key==="pens") return "penalties";
+  return KO_DECISION_LABELS[key]?key:"";
+}
+function koDecisionLabel(key){
+  return KO_DECISION_LABELS[normalizeKoDecision(key)]||"";
 }
 function podioLabel(key){return PODIO_LABELS[key]||key;}
 function normalizePodio(podio){
@@ -2939,10 +2996,21 @@ function koAdvancerFromResult(game,res,teams=gameTeams(game)){
   const advancer=norm(res.koWinner);
   return [teams.t1,teams.t2].includes(advancer)?advancer:"";
 }
+function koOutcomeComplete(game,state,teams=gameTeams(game)){
+  if(!game?.ko||!state||+state.s1!==+state.s2) return false;
+  return [teams.t1,teams.t2].includes(norm(state.koWinner))&&Boolean(koDecisionLabel(state.koDecision));
+}
+function koOutcomeLabel(game,state,teams=gameTeams(game)){
+  if(!game?.ko||!state||+state.s1!==+state.s2) return "";
+  const advancer=norm(state.koWinner);
+  const decision=koDecisionLabel(state.koDecision);
+  if(![teams.t1,teams.t2].includes(advancer)) return "";
+  return decision?`${advancer} passa ${decision}`:`${advancer} passa`;
+}
 function resultLabel(game,res,teams=gameTeams(game)){
   const scoreText=`${res.s1} × ${res.s2}`;
-  const advancer=koAdvancerFromResult(game,res,teams);
-  return advancer?`${scoreText} · ${advancer} passa no OT`:scoreText;
+  const outcome=koOutcomeLabel(game,res,teams);
+  return outcome?`${scoreText} · ${outcome}`:scoreText;
 }
 function seedLabel(seed){
   const direct=String(seed||"").match(/^([12])([A-L])$/);
@@ -3046,8 +3114,18 @@ function render(t){
 
 function predictionProgress(){
   const expected=S.participants.length*GAMES.length;
-  const filled=Object.values(S.palpites||{}).filter(p=>p&&p.s1!=null&&p.s2!=null).length;
+  const filled=S.participants.reduce((total,_,pi)=>{
+    return total+GAMES.filter(game=>isPredictionComplete(game,S.palpites[`${pi}_${game.id}`])).length;
+  },0);
   return {filled,expected,pct:expected?Math.round(filled*100/expected):0};
+}
+function hasScore(entry){
+  return Boolean(entry&&entry.s1!=null&&entry.s2!=null);
+}
+function isPredictionComplete(game,pal){
+  if(!hasScore(pal)) return false;
+  if(!game?.ko||+pal.s1!==+pal.s2) return true;
+  return koOutcomeComplete(game,pal);
 }
 function homeFixtureWindow(){
   const today=todayKey();
@@ -3491,14 +3569,14 @@ function renderGameRow(game,forPalpite){
   const t2=teams.t2;
   const canEdit=canEditResults();
   if(res&&!forPalpite){
-    const advancer=koAdvancerFromResult(game,res,teams);
+    const outcome=koOutcomeLabel(game,res,teams);
     return `<div class="game-row">
       <div class="gid">${esc(game.id)}</div>
       <div class="gteams">
         ${teamHTML(t1,"r",!teams.ready)}
         <div class="result-stack">
           <div class="res"><span class="sc">${res.s1}</span><span>×</span><span class="sc">${res.s2}</span></div>
-          ${advancer?`<div class="advancer-badge">${esc(advancer)} passa no OT</div>`:""}
+          ${outcome?`<div class="advancer-badge">${esc(outcome)}</div>`:""}
         </div>
         ${teamHTML(t2,"",!teams.ready)}
       </div>
@@ -3540,18 +3618,36 @@ function koAdvancerControl(game,teams,draft,disabled){
   const tied=Number(draft.s1)===Number(draft.s2);
   const visible=koAdvancerVisible(draft);
   const selectDisabled=disabled||!visible;
-  const selected=norm(draft.koWinner);
-  const options=[teams.t1,teams.t2].filter(Boolean);
+  const selected=koOutcomeValue(draft.koWinner,draft.koDecision);
   return `<div class="ko-advancer ${visible?"":"hidden"} ${tied?"":"muted"}" id="advwrap_${game.id}">
-    <label for="adv_${game.id}">Empate: quem passa no overtime?</label>
-    <select class="txt-select" id="adv_${game.id}" onchange="setResAdvancer('${game.id}',this.value)" ${selectDisabled?"disabled":""}>
-      <option value="">Selecione a seleção</option>
-      ${options.map(team=>`<option value="${esc(team)}" ${selected===team?"selected":""}>${esc(teamFlag(team)+" "+team)}</option>`).join("")}
+    <label for="adv_${game.id}">Empate: como foi decidido?</label>
+    <select class="txt-select" id="adv_${game.id}" onchange="setResTiebreak('${game.id}',this.value)" ${selectDisabled?"disabled":""}>
+      <option value="">Selecione o desempate</option>
+      ${koOutcomeOptions(teams,selected)}
     </select>
   </div>`;
 }
 function koAdvancerVisible(draft){
-  return Number(draft.s1)===Number(draft.s2)&&Boolean(draft.touched||draft.showKoAdvancer||draft.koWinner);
+  return Number(draft.s1)===Number(draft.s2)&&Boolean(draft.touched||draft.showKoAdvancer||draft.koWinner||draft.koDecision);
+}
+function koOutcomeValue(team,decision){
+  const cleanTeam=norm(team);
+  const cleanDecision=normalizeKoDecision(decision);
+  return cleanTeam&&cleanDecision?`${cleanDecision}::${cleanTeam}`:"";
+}
+function parseKoOutcomeValue(value){
+  const raw=String(value||"");
+  const cut=raw.indexOf("::");
+  if(cut<0) return {koWinner:"",koDecision:""};
+  return {koDecision:normalizeKoDecision(raw.slice(0,cut)),koWinner:norm(raw.slice(cut+2))};
+}
+function koOutcomeOptions(teams,selected){
+  return [teams.t1,teams.t2].filter(Boolean).flatMap(team=>{
+    return KO_DECISIONS.map(([decision,label])=>{
+      const value=koOutcomeValue(team,decision);
+      return `<option value="${esc(value)}" ${selected===value?"selected":""}>${esc(teamFlag(team)+" "+team)} passa ${esc(label)}</option>`;
+    });
+  }).join("");
 }
 function setJFilter(k){jFilter=k;renderJogos();}
 function setResDraft(id,w,v){
@@ -3563,9 +3659,9 @@ function setResDraft(id,w,v){
   draft.showKoAdvancer=gameById(id)?.ko&&Number(draft.s1)===Number(draft.s2);
   updateKoAdvancerControl(id);
 }
-function setResAdvancer(id,value){
+function setResTiebreak(id,value){
   if(!resultDrafts[id]) resultDrafts[id]={s1:0,s2:0};
-  resultDrafts[id].koWinner=norm(value);
+  Object.assign(resultDrafts[id],parseKoOutcomeValue(value));
 }
 function updateKoAdvancerControl(id){
   const game=gameById(id);
@@ -3583,7 +3679,10 @@ function updateKoAdvancerControl(id){
     select.disabled=!visible;
     if(!tied) select.value="";
   }
-  if(!tied) delete draft.koWinner;
+  if(!tied){
+    delete draft.koWinner;
+    delete draft.koDecision;
+  }
 }
 function confirmRes(id){
   if(!canEditResults()){toast("Só o administrador altera resultados.");render(activeTab);return;}
@@ -3595,15 +3694,16 @@ function confirmRes(id){
   if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0){toast("Placar inválido.");return;}
   const result={s1,s2};
   if(game.ko&&s1===s2){
-    const advancer=norm(document.getElementById(`adv_${id}`)?.value||resultDrafts[id]?.koWinner);
-    if(![teams.t1,teams.t2].includes(advancer)){
+    const selected=parseKoOutcomeValue(document.getElementById(`adv_${id}`)?.value||koOutcomeValue(resultDrafts[id]?.koWinner,resultDrafts[id]?.koDecision));
+    if(![teams.t1,teams.t2].includes(selected.koWinner)||!koDecisionLabel(selected.koDecision)){
       if(!resultDrafts[id]) resultDrafts[id]={s1,s2};
       Object.assign(resultDrafts[id],{s1,s2,touched:true,showKoAdvancer:true});
       updateKoAdvancerControl(id);
-      toast("Escolha qual seleção passou no overtime.");
+      toast("Escolha como o empate foi decidido.");
       return;
     }
-    result.koWinner=advancer;
+    result.koWinner=selected.koWinner;
+    result.koDecision=selected.koDecision;
   }
   S.results[id]=result;
   delete resultDrafts[id];
@@ -3677,7 +3777,7 @@ function renderPalpites(){
   const rank=ranking();
   const rankIdx=rank.findIndex(r=>r.i===palPi);
   const rankPos=rankIdx>=0?rankIdx+1:null;
-  const matchPalpites=Object.keys(S.palpites||{}).filter(k=>k.startsWith(`${palPi}_`)&&S.palpites[k]&&S.palpites[k].s1!=null&&S.palpites[k].s2!=null).length;
+  const matchPalpites=GAMES.filter(game=>isPredictionComplete(game,S.palpites[`${palPi}_${game.id}`])).length;
   const totalGames=GAMES.length;
   const filledPct=totalGames?Math.round(matchPalpites*100/totalGames):0;
 
@@ -3699,7 +3799,7 @@ function renderPalpites(){
     if(palFilter!=="all"){
       filtered=filtered.filter(g=>g.phase===palFilter);
     }
-    const filledFiltered=filtered.filter(g=>{const p=S.palpites[`${palPi}_${g.id}`];return p&&p.s1!=null&&p.s2!=null;}).length;
+    const filledFiltered=filtered.filter(g=>isPredictionComplete(g,S.palpites[`${palPi}_${g.id}`])).length;
     let inner=`
       <div class="pal-filters">
         <div class="fbar">${groupFilters.map(p=>`<button class="fbtn ${palFilter===p.k?"active":""}" onclick="setPalFilter('${esc(p.k)}')">${esc(p.l)}</button>`).join("")}</div>
@@ -3932,7 +4032,7 @@ function renderKnockoutBody(){
   const sfLeft=gameById("SF_01");
   const sfRight=gameById("SF_02");
 
-  const filledFiltered=koGames().filter(g=>{const p=S.palpites[`${palPi}_${g.id}`];return p&&p.s1!=null&&p.s2!=null;}).length;
+  const filledFiltered=koGames().filter(g=>isPredictionComplete(g,S.palpites[`${palPi}_${g.id}`])).length;
 
   // R32 grouped by side (matches that feed into left vs right bracket)
   const r32LeftIds=new Set();
@@ -4075,6 +4175,20 @@ function bracketCard(game,opts){
     ${rowHTML(teams.t1,"t1",v1,1)}
     <div class="bk-divider"></div>
     ${rowHTML(teams.t2,"t2",v2,2)}
+    ${palTiebreakControl(palPi,game,teams,pal,disabled||waiting,"bk")}
+  </div>`;
+}
+
+function palTiebreakControl(pi,game,teams,pal,disabled,scope="pal"){
+  if(!game.ko||!hasScore(pal)||+pal.s1!==+pal.s2) return "";
+  const selected=koOutcomeValue(pal.koWinner,pal.koDecision);
+  const id=`${scope}_tb_${pi}_${game.id}`;
+  return `<div class="ko-advancer pal-tiebreak" id="${esc(id)}">
+    <label for="${esc(id)}_select">Desempate do seu palpite</label>
+    <select class="txt-select" id="${esc(id)}_select" onchange="setPalTiebreak(${pi},'${game.id}',this.value)" ${disabled?"disabled":""}>
+      <option value="">Selecione o desempate</option>
+      ${koOutcomeOptions(teams,selected)}
+    </select>
   </div>`;
 }
 
@@ -4152,6 +4266,7 @@ function renderPalpiteRow(game){
           <span class="ssep">×</span>
           ${scoreControl(`p_${palPi}_${game.id}_2`,v2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
         </div>
+        ${palTiebreakControl(palPi,game,teams,pal,disabled)}
         ${statusNote}
       </div>
       ${palTeamHTML(teams.t2,"r",!teams.ready)}
@@ -4184,6 +4299,38 @@ function setPal(pi,gid,w,v){
   }else{
     if(w===1) delete S.palpites[key].s1;
     else delete S.palpites[key].s2;
+  }
+  if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
+    delete S.palpites[key].koWinner;
+    delete S.palpites[key].koDecision;
+  }
+  save();
+  savePredictionRemote(pi,gid);
+  renderPalpites();
+}
+function setPalTiebreak(pi,gid,value){
+  if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");renderPalpites();return;}
+  const game=gameById(gid);
+  if(game&&game.utc&&new Date()>=new Date(game.utc)){
+    toast("Este jogo já começou. Palpites encerrados.");
+    renderPalpites();
+    return;
+  }
+  const key=`${pi}_${gid}`;
+  const pal=S.palpites[key];
+  if(!game?.ko||!hasScore(pal)||+pal.s1!==+pal.s2){
+    toast("O desempate só vale para empate no mata-mata.");
+    renderPalpites();
+    return;
+  }
+  const teams=gameTeams(game);
+  const selected=parseKoOutcomeValue(value);
+  if(![teams.t1,teams.t2].includes(selected.koWinner)||!koDecisionLabel(selected.koDecision)){
+    delete pal.koWinner;
+    delete pal.koDecision;
+  }else{
+    pal.koWinner=selected.koWinner;
+    pal.koDecision=selected.koDecision;
   }
   save();
   savePredictionRemote(pi,gid);
@@ -4321,7 +4468,7 @@ function renderConfig(){
         <div><strong>Erro:</strong> resultado incorreto vale <strong>0 ponto</strong>.</div>
         <hr style="margin:10px 0;border:none;border-top:1px solid var(--border)">
         <div><strong>Pódio:</strong> campeão +20, vice +10, 3º lugar +5 e 4º lugar +3.</div>
-        <div><strong>Mata-mata:</strong> os confrontos são montados automaticamente a partir da classificação da fase de grupos. Se o placar oficial empatar, o admin escolhe quem passou no overtime para alimentar a próxima fase.</div>
+        <div><strong>Mata-mata:</strong> se o placar empatar, resultados oficiais e palpites guardam quem passou e se foi na prorrogação ou nos pênaltis. Esses detalhes ficam salvos, mas a pontuação extra ainda será decidida depois.</div>
       </div>
     </div>
     <div class="card">
