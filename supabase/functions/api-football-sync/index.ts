@@ -25,6 +25,7 @@ const CADENCE_LATE_SECONDS = 45;       // 45s nos minutos finais
 const POLL_MATCH_DETAILS = false;      // plano grátis atual prioriza placar; cartões/escanteios ficam como "desconhecido"
 const MAX_MATCH_DETAIL_CALLS_PER_RUN = 0;
 const LATE_GAME_FROM_MINUTE = 80;
+const SECOND_HALF_FALLBACK_FROM_KICKOFF_MIN = 60;
 const PRE_KICKOFF_WINDOW_MIN = 2;
 const POST_KICKOFF_GIVEUP_MIN = 240;
 
@@ -36,13 +37,13 @@ function json(status: number, body: unknown) {
 }
 
 // football-data status → o que a gente usa no banco
-function mapStatus(fdStatus: string, minute: number | null): string {
+function mapStatus(fdStatus: string, minute: number | null, context: { isSecondHalf?: boolean } = {}): string {
   switch (fdStatus) {
     case "SCHEDULED":
     case "TIMED": return "NS";
     case "IN_PLAY":
     case "LIVE":
-      return (minute ?? 0) > 45 ? "2H" : "1H";
+      return context.isSecondHalf || (minute ?? 0) > 45 ? "2H" : "1H";
     case "PAUSED": return "HT";
     case "FINISHED": return "FT";
     case "AWARDED": return "AWD";
@@ -79,6 +80,24 @@ function isDrawScore(pair: { home: number | null; away: number | null }): boolea
 
 function hasCompleteScorePair(pair: { home: number | null; away: number | null }): boolean {
   return pair.home != null && pair.away != null;
+}
+
+function scoreIncreasedAfterHalfTime(match: any): boolean {
+  const fullTime = scorePair(match?.score?.fullTime);
+  const halfTime = scorePair(match?.score?.halfTime);
+  return (
+    (fullTime.home != null && halfTime.home != null && fullTime.home > halfTime.home) ||
+    (fullTime.away != null && halfTime.away != null && fullTime.away > halfTime.away)
+  );
+}
+
+function isSecondHalfSignal(match: any, live: any, minute: number | null, minutesAfterKickoff: number | null): boolean {
+  if (minute != null && minute > 45) return true;
+  if (["HT", "2H"].includes(String(live?.status_short || ""))) return true;
+  const previousElapsed = numberOrNull(live?.elapsed);
+  if (previousElapsed != null && previousElapsed > 45) return true;
+  if (minutesAfterKickoff != null && minutesAfterKickoff >= SECOND_HALF_FALLBACK_FROM_KICKOFF_MIN) return true;
+  return scoreIncreasedAfterHalfTime(match);
 }
 
 function isCopaKnockoutGame(tournament: unknown, gameId: unknown): boolean {
@@ -281,6 +300,7 @@ Deno.serve(async (req) => {
     competitionId: number;
     cadenceSeconds: number;
     minutesSincePoll: number;
+    minutesAfterKickoff: number;
   };
   const candidates: Cand[] = [];
 
@@ -308,7 +328,8 @@ Deno.serve(async (req) => {
       tournament: row.tournament,
       competitionId: row.league_id,
       cadenceSeconds,
-      minutesSincePoll
+      minutesSincePoll,
+      minutesAfterKickoff
     });
   }
 
@@ -392,7 +413,11 @@ Deno.serve(async (req) => {
       const candidate = apiToCandidate.get(m.id);
       if (!candidate) continue;
       const gameId = candidate.gameId;
-      const statusShort = mapStatus(m.status, m.minute ?? null);
+      const live = liveByGame.get(gameId) || {};
+      const minute = numberOrNull(m.minute);
+      const statusShort = mapStatus(m.status, minute, {
+        isSecondHalf: isSecondHalfSignal(m, live, minute, candidate.minutesAfterKickoff)
+      });
       const rawFinalStatus = FINAL_STATUSES.has(statusShort);
       const decision = detectDecision(m.score, {
         isFinalStatus: rawFinalStatus,
@@ -402,7 +427,6 @@ Deno.serve(async (req) => {
         statusShort === "FT" && decision.pen ? "PEN" :
         statusShort === "FT" && decision.aet ? "AET" :
         statusShort;
-      const live = liveByGame.get(gameId) || {};
       const hadLiveStatus = INTERNAL_LIVE_STATUSES.has(live.status_short || "");
       const isFinalStatus = FINAL_STATUSES.has(finalStatus);
       const shouldStabilizeLiveScore = !isFinalStatus && (LIVE_STATUSES.has(m.status) || INTERNAL_LIVE_STATUSES.has(finalStatus) || hadLiveStatus);
@@ -461,7 +485,7 @@ Deno.serve(async (req) => {
         api_fixture_id: m.id,
         status_short: storedStatus,
         status_long: storedStatusLong,
-        elapsed: stabilizeLiveNumber(m.minute ?? null, live.elapsed, shouldStabilizeLiveScore),
+        elapsed: stabilizeLiveNumber(minute, live.elapsed, shouldStabilizeLiveScore),
         goals_home: stableFullTime.home,
         goals_away: stableFullTime.away,
         regular_goals_home: regularTime.home,

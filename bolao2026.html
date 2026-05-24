@@ -698,6 +698,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   background:linear-gradient(180deg,#fbfdff 0%,#f6fbf8 100%);
 }
 .chart-stage svg{display:block;width:100%;height:auto}
+.chart-shell-compact{padding:12px;gap:10px}
+.chart-shell-compact .chart-stage{padding:8px}
+.chart-shell-compact h3{font-size:.9rem;line-height:1.15}
 .chart-axis{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.68rem;color:var(--muted);font-weight:850}
 .chart-empty{
   padding:18px;
@@ -3644,6 +3647,8 @@ let authPanelOpen=false;
 let authMode="signin";
 let rankingChartSelection=[];
 let rankingChartTouched=false;
+let apiTestChartSelection=[];
+let apiTestChartTouched=false;
 
 // ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ====
 const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
@@ -3652,6 +3657,7 @@ const API_TEST_SYNC_FUNCTION_NAME="api-football-sync-";
 const API_TEST_TOURNAMENT="brasileirao";
 const API_TEST_COPA_START_DATE_KEY="2026-06-11";
 const API_TEST_LIVE_FALLBACK_WINDOW_MIN=170;
+const API_TEST_SECOND_HALF_FALLBACK_MIN=60;
 const API_TEST_DEFAULT_CONFIG=Object.freeze({
   competition:"BSA",
   season:2026,
@@ -4284,9 +4290,18 @@ function apiTestFixtureStatusCode(fixture){
   if(apiTestIsActiveFixture(fixture)&&!apiTestIsLive(fixture)&&fixture.statusShort==="NS") return "";
   return fixture.statusShort||"";
 }
+function apiTestLikelySecondHalf(fixture){
+  const status=fixture?.statusShort||"";
+  if(["2H","ET","P"].includes(status)) return true;
+  if(["HT","BT","PAUSED"].includes(status)) return false;
+  const elapsed=apiTestCardNumber(fixture?.elapsed);
+  if(elapsed!==null&&elapsed>45) return true;
+  const minutes=apiTestMinutesSinceKickoff(fixture);
+  return ["1H","LIVE","IN_PLAY"].includes(status)&&minutes!==null&&minutes>=API_TEST_SECOND_HALF_FALLBACK_MIN;
+}
 function apiTestLiveClockText(fixture){
   if(["HT","BT","PAUSED"].includes(fixture.statusShort)) return "HT";
-  if(["2H","ET","P"].includes(fixture.statusShort)) return "2T";
+  if(apiTestLikelySecondHalf(fixture)) return "2T";
   const elapsed=apiTestCardNumber(fixture?.elapsed);
   if(["LIVE","IN_PLAY"].includes(fixture.statusShort)&&elapsed!==null) return elapsed>45?"2T":"1T";
   return "1T";
@@ -4502,6 +4517,126 @@ function renderApiTestGames(){
       </div>
     </section>`).join("")}</div>`;
 }
+function apiTestChartDefaultSelection(rows){
+  const mine=myParticipantIndex();
+  if(Number.isInteger(mine)&&rows.some(p=>p.i===mine)) return [mine];
+  return rows.slice(0,3).map(p=>p.i);
+}
+function apiTestRankingTimeline(rows){
+  const fixtures=apiTestVisibleFixtures().filter(apiTestCanScoreFixture).sort(compareApiTestFixtures);
+  const totals={};
+  const series=rows.map((p,idx)=>{
+    totals[p.i]=0;
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+  });
+  const states=["start"];
+  let liveCount=0,finalCount=0;
+  fixtures.forEach(fixture=>{
+    const isLive=!apiTestIsFinal(fixture)&&apiTestIsActiveFixture(fixture);
+    if(isLive) liveCount++; else finalCount++;
+    states.push(isLive?"live":"final");
+    series.forEach(line=>{
+      const prediction=apiTestPrediction(line.i,fixture.id);
+      const info=apiTestScoreInfo(prediction,fixture);
+      totals[line.i]+=info?info.value:0;
+      line.values.push(totals[line.i]);
+    });
+  });
+  const allValues=series.flatMap(line=>line.values);
+  const maxVal=Math.max(3,...allValues);
+  const minVal=Math.min(0,...allValues);
+  return {states,series,maxVal,minVal,liveCount,finalCount,fixtureCount:fixtures.length};
+}
+function toggleApiTestChartSeries(participantIndex){
+  apiTestChartTouched=true;
+  if(apiTestChartSelection.includes(participantIndex)) apiTestChartSelection=apiTestChartSelection.filter(id=>id!==participantIndex);
+  else apiTestChartSelection=[...apiTestChartSelection,participantIndex];
+  if(activeTab==="api-test") renderApiTest();
+}
+function setApiTestChartPreset(mode){
+  apiTestChartTouched=true;
+  const rows=apiTestRanking();
+  const presetIds=mode==="top3"?rows.slice(0,3).map(p=>p.i):rows.map(p=>p.i);
+  const hasAll=presetIds.every(id=>apiTestChartSelection.includes(id));
+  apiTestChartSelection=hasAll
+    ?apiTestChartSelection.filter(id=>!presetIds.includes(id))
+    :Array.from(new Set([...apiTestChartSelection,...presetIds]));
+  if(activeTab==="api-test") renderApiTest();
+}
+function renderApiTestRankingChart(rows){
+  if(!apiTestChartTouched&&!apiTestChartSelection.length) apiTestChartSelection=apiTestChartDefaultSelection(rows);
+  const chart=apiTestRankingTimeline(rows);
+  const selected=rows.filter(p=>apiTestChartSelection.includes(p.i));
+  const top3Ids=rows.slice(0,3).map(p=>p.i);
+  const allIds=rows.map(p=>p.i);
+  const top3Active=top3Ids.length>0&&top3Ids.every(id=>apiTestChartSelection.includes(id));
+  const allActive=allIds.length>0&&allIds.every(id=>apiTestChartSelection.includes(id));
+  const lineWidth=720;
+  const lineHeight=230;
+  const padX=32;
+  const padY=18;
+  const tickValues=Array.from(new Set([0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)))));
+  const labels=[
+    chart.fixtureCount?"Início":"Sem jogos com placar ainda",
+    chart.finalCount?`${chart.finalCount} ${chart.finalCount===1?"jogo finalizado":"jogos finalizados"}`:"",
+    chart.liveCount?`${chart.liveCount} ao vivo (parcial)`:""
+  ].filter(Boolean);
+  const hasData=chart.fixtureCount>0&&selected.length>0;
+  return `<section class="chart-shell chart-shell-compact">
+    <div class="chart-toolbar">
+      <div>
+        <div class="section-kicker">Evolução ao vivo</div>
+        <h3 style="margin-top:4px">Pontuação ao longo dos jogos</h3>
+      </div>
+      <div class="chart-presets">
+        <button class="mini-action chart-toggle ${allActive?"active":""}" onclick="setApiTestChartPreset('all')">Todos</button>
+        <button class="mini-action chart-toggle ${top3Active?"active":""}" onclick="setApiTestChartPreset('top3')">Top 3</button>
+      </div>
+    </div>
+    <div class="chart-legend">
+      ${rows.map((p,idx)=>{
+        const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
+        const active=apiTestChartSelection.includes(p.i);
+        return `<button class="chart-chip ${active?"active":""}" onclick="toggleApiTestChartSeries(${p.i})" style="${active?`background:${color}`:""}">
+          <span class="chart-dot" style="background:${color}"></span>
+          <span>${esc(p.name)}</span>
+        </button>`;
+      }).join("")}
+    </div>
+    ${hasData?`<div class="chart-stage">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" role="img" aria-label="Evolução da pontuação do Brasileirão">
+        ${tickValues.map(value=>{
+          const y=lineHeight-padY-((lineHeight-padY*2)*((value-chart.minVal)/Math.max(1,chart.maxVal-chart.minVal)));
+          return `<g>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${lineWidth-padX}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.10)" stroke-width="1"></line>
+            <text x="4" y="${(y+4).toFixed(2)}" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+          </g>`;
+        }).join("")}
+        ${selected.map(line=>{
+          const seriesLine=chart.series.find(s=>s.i===line.i);
+          const color=seriesLine?.color||"#002776";
+          const values=seriesLine?.values||[0];
+          const paths=rankingLinePathSegmented(values,chart.states,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal);
+          const usableWidth=lineWidth-padX*2;
+          const usableHeight=lineHeight-padY*2;
+          const steps=Math.max(1,values.length-1);
+          const range=Math.max(1,chart.maxVal-chart.minVal);
+          return `<g>
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".88"></path>`:""}
+            ${values.map((value,index)=>{
+              const isLive=chart.states[index]==="live";
+              const x=padX+(usableWidth*(index/steps));
+              const y=lineHeight-padY-(usableHeight*((value-chart.minVal)/range));
+              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${isLive?"#fff":color}" stroke="${color}" stroke-width="${isLive?2.2:2}"></circle>`;
+            }).join("")}
+          </g>`;
+        }).join("")}
+      </svg>
+    </div>`:`<div class="chart-empty">${chart.fixtureCount?"Ative pelo menos um participante para desenhar a evolução.":"Quando o primeiro jogo tiver placar a curva aparece aqui."}</div>`}
+    <div class="chart-axis">${labels.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+  </section>`;
+}
 function renderApiTestRanking(){
   return `<div class="api-test-ranking">${apiTestRanking().map((row,i)=>`
     <div class="api-test-rank-row">
@@ -4554,6 +4689,7 @@ function renderApiTest(){
           <div class="card-title">Ranking do treino</div>
           ${renderApiTestRanking()}
         </div>
+        ${renderApiTestRankingChart(apiTestRanking())}
         ${renderApiTestSyncCard()}
         <details class="api-test-debug-box">
           <summary>Resposta da função</summary>
@@ -4759,6 +4895,23 @@ function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
     const y=height-padY-(usableHeight*((value-minVal)/range));
     return `${index===0?"M":"L"} ${x.toFixed(2)} ${y.toFixed(2)}`;
   }).join(" ");
+}
+function rankingLinePathSegmented(values,states,width,height,padX,padY,minVal,maxVal){
+  const usableWidth=width-padX*2;
+  const usableHeight=height-padY*2;
+  const steps=Math.max(1,values.length-1);
+  const range=Math.max(1,maxVal-minVal);
+  const pt=(value,index)=>{
+    const x=padX+(usableWidth*(index/steps));
+    const y=height-padY-(usableHeight*((value-minVal)/range));
+    return `${x.toFixed(2)} ${y.toFixed(2)}`;
+  };
+  const solid=[],dashed=[];
+  for(let i=1;i<values.length;i++){
+    const seg=`M ${pt(values[i-1],i-1)} L ${pt(values[i],i)}`;
+    if(states[i]==="live") dashed.push(seg); else solid.push(seg);
+  }
+  return {solid:solid.join(" "),dashed:dashed.join(" ")};
 }
 function rankingPointDot(value,index,totalPoints,width,height,padX,padY,minVal,maxVal,color){
   const usableWidth=width-padX*2;
