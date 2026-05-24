@@ -17,7 +17,7 @@ bolao2026.html
 As Edge Functions usadas são:
 
 - `api-football-map`: busca a temporada de uma competição e salva o calendário no Supabase.
-- `api-football-sync`: atualiza os placares dos jogos mapeados quando estão perto de começar ou em andamento.
+- `api-football-sync-`: atualiza os placares dos jogos mapeados quando estão perto de começar ou em andamento.
 
 ## Brasileirão Série A
 

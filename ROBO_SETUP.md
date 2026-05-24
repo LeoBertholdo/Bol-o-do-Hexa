@@ -50,7 +50,7 @@ No painel do Supabase → **Edge Functions** → **Manage Secrets** (ou ícone d
 
 Já tava deployado a versão antiga (API-Football). Agora você precisa atualizar pra versão nova (football-data).
 
-**Para cada uma** das funções (`api-football-map` e `api-football-sync`):
+**Para cada uma** das funções (`api-football-map` e `api-football-sync-`):
 
 1. Abre a função no painel → **Edit function** (ou o lápis).
 2. Apaga tudo do editor.
@@ -133,7 +133,7 @@ A resposta vai vir tipo:
 
 ## Passo 7 — Ligar o cron
 
-Antes de ligar o cron, confirme em **Edge Functions → api-football-sync → Settings** que **Verify JWT** está desligado. A função protege a chamada pelo header `x-bolao-cron-secret`.
+Antes de ligar o cron, confirme em **Edge Functions → api-football-sync- → Settings** que **Verify JWT** está desligado. A função protege a chamada pelo header `x-bolao-cron-secret`.
 
 SQL Editor → New query → cola (substituindo `COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET` pela mesma senha cadastrada nos Secrets):
 
@@ -153,7 +153,7 @@ select cron.schedule(
   '* * * * *',
   $$
   select net.http_post(
-    url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync',
+    url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync-',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'x-bolao-cron-secret', 'COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET'

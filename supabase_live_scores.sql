@@ -242,7 +242,7 @@ commit;
 --   '* * * * *',
 --   $$
 --   select net.http_post(
---     url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync',
+--     url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync-',
 --     headers := jsonb_build_object(
 --       'Content-Type', 'application/json',
 --       'x-bolao-cron-secret', 'COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET'
