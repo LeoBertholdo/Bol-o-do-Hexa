@@ -2039,6 +2039,14 @@ let palSelectionTouched=false;
 let syncStatus={kind:"local",text:"Dados salvos neste navegador"};
 const dirtyPredictionKeys=new Set();
 const pendingPredictionWrites=new Set();
+const dirtyResultKeys=new Set();
+const pendingResultWrites=new Set();
+const dirtyPodioKeys=new Set();
+const pendingPodioWrites=new Set();
+let dirtyActualPodio=false;
+let pendingActualPodioWrite=false;
+let dirtyConfig=false;
+let pendingConfigWrite=false;
 const pendingApiTestPredictionWrites=new Set();
 let apiTestPredictionDrafts={};
 let apiTestEditingPredictions={};
@@ -2156,8 +2164,16 @@ function shouldDeferRemoteRender(){
   return authPanelOpen
     || hasFocusedFormControl()
     || dirtyPredictionKeys.size>0
+    || dirtyResultKeys.size>0
+    || dirtyPodioKeys.size>0
+    || dirtyActualPodio
+    || dirtyConfig
     || Object.keys(apiTestPredictionDrafts).length>0
     || pendingPredictionWrites.size>0
+    || pendingResultWrites.size>0
+    || pendingPodioWrites.size>0
+    || pendingActualPodioWrite
+    || pendingConfigWrite
     || pendingApiTestPredictionWrites.size>0;
 }
 function completePredictionVisibleZero(pal){
@@ -2216,6 +2232,7 @@ function trackScoreDraftInput(input){
 }
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
+  if(msg.includes("Palpites encerrados")) return "Este jogo já começou. Palpites encerrados.";
   if(msg.includes("ko_winner")||msg.includes("ko_decision")) return "Atualize o Supabase com as colunas ko_winner e ko_decision para salvar desempates do mata-mata.";
   if(msg.includes("No suitable key")||msg.includes("wrong key type")||error?.code==="PGRST301") return "A chave pública do Supabase parece inválida ou foi trocada. Atualize o anonKey/publishable key no SUPABASE_CONFIG.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
@@ -2369,6 +2386,17 @@ function applyRemoteData(payload){
     if(S.palpites[key]) next.palpites[key]={...S.palpites[key]};
     else delete next.palpites[key];
   });
+  // Preserva edições do admin ainda não confirmadas pelo servidor (#7).
+  new Set([...dirtyResultKeys,...pendingResultWrites]).forEach(id=>{
+    if(S.results[id]) next.results[id]={...S.results[id]};
+    else delete next.results[id];
+  });
+  new Set([...dirtyPodioKeys,...pendingPodioWrites]).forEach(pi=>{
+    if(S.podio[pi]) next.podio[pi]={...S.podio[pi]};
+    else delete next.podio[pi];
+  });
+  if(dirtyActualPodio||pendingActualPodioWrite) next.actualPodio={...(S.actualPodio||{})};
+  if(dirtyConfig||pendingConfigWrite) next.config={...S.config};
   S=migrateState(next);
   save();
 }
@@ -2423,6 +2451,8 @@ async function loadRemoteData(showToast=false,options={}){
   if(currentProfile&&!palSelectionTouched) palPi=currentProfile.participant_index;
   setSyncStatus("ok",currentProfile?`Online como ${participantName(currentProfile.participant_index)}`:"Conta sem participante vinculado.");
   if(showToast&&currentProfile) toast("Bolão online sincronizado.");
+  // Admins sincronizam os horários dos jogos pra o trigger do banco bloquear palpites após o início.
+  if(isAdmin()) syncGameKickoffsRemote();
   if(activeTab==="api-test"){
     await loadApiTestRemote(false,{silent:true,skipRender:true});
   }
@@ -2610,19 +2640,29 @@ function saveResultRemote(id){
   if(!remoteClient) return;
   if(!isAdmin()){toast("Só o administrador altera resultados.");loadRemoteData(false);return;}
   const res=S.results[id];
-  remoteWrite(()=>remoteClient.from("results").upsert({
+  dirtyResultKeys.add(id);
+  pendingResultWrites.add(id);
+  return remoteWrite(()=>remoteClient.from("results").upsert({
     game_id:id,
     s1:res.s1,
     s2:res.s2,
     ko_winner:res.koWinner||null,
     ko_decision:res.koDecision||null,
     updated_by:remoteSession.user.id
-  },{onConflict:"game_id"}));
+  },{onConflict:"game_id"})).then(ok=>{
+    if(ok) dirtyResultKeys.delete(id);
+    return ok;
+  }).finally(()=>pendingResultWrites.delete(id));
 }
 function deleteResultRemote(id){
   if(!remoteClient) return;
   if(!isAdmin()){toast("Só o administrador altera resultados.");loadRemoteData(false);return;}
-  remoteWrite(()=>remoteClient.from("results").delete().eq("game_id",id));
+  dirtyResultKeys.add(id);
+  pendingResultWrites.add(id);
+  return remoteWrite(()=>remoteClient.from("results").delete().eq("game_id",id)).then(ok=>{
+    if(ok) dirtyResultKeys.delete(id);
+    return ok;
+  }).finally(()=>pendingResultWrites.delete(id));
 }
 function savePredictionRemote(pi,gid){
   if(!remoteClient) return;
@@ -2649,37 +2689,69 @@ function savePodioRemote(pi){
   if(!requireOnlineLogin()) return;
   if(!canEditParticipant(pi)){toast("Você só pode alterar seu próprio pódio.");loadRemoteData(false);return;}
   const pd=normalizePodio(S.podio[pi]||{});
-  remoteWrite(()=>remoteClient.from("podium_predictions").upsert({
+  dirtyPodioKeys.add(pi);
+  pendingPodioWrites.add(pi);
+  return remoteWrite(()=>remoteClient.from("podium_predictions").upsert({
     user_id:remoteSession.user.id,
     participant_index:pi,
     p1:pd.p1||null,
     p2:pd.p2||null,
     p3:pd.p3||null,
     p4:pd.p4||null
-  },{onConflict:"participant_index"}));
+  },{onConflict:"participant_index"})).then(ok=>{
+    if(ok) dirtyPodioKeys.delete(pi);
+    return ok;
+  }).finally(()=>pendingPodioWrites.delete(pi));
 }
 function saveActualPodioRemote(){
   if(!remoteClient) return;
   if(!isAdmin()){toast("Só o administrador altera o pódio oficial.");loadRemoteData(false);return;}
   const ap=normalizePodio(S.actualPodio||{});
-  remoteWrite(()=>remoteClient.from("actual_podium").upsert({
+  dirtyActualPodio=true;
+  pendingActualPodioWrite=true;
+  return remoteWrite(()=>remoteClient.from("actual_podium").upsert({
     id:"main",
     p1:ap.p1||null,
     p2:ap.p2||null,
     p3:ap.p3||null,
     p4:ap.p4||null,
     updated_by:remoteSession.user.id
-  },{onConflict:"id"}));
+  },{onConflict:"id"})).then(ok=>{
+    if(ok) dirtyActualPodio=false;
+    return ok;
+  }).finally(()=>{pendingActualPodioWrite=false;});
 }
 function saveConfigRemote(){
   if(!remoteClient) return;
   if(!isAdmin()){toast("Só o administrador altera as configurações.");loadRemoteData(false);return;}
-  remoteWrite(()=>remoteClient.from("settings").upsert({
+  dirtyConfig=true;
+  pendingConfigWrite=true;
+  return remoteWrite(()=>remoteClient.from("settings").upsert({
     id:"main",
     entry_value:S.config.entryValue,
     prize_percents:S.config.prizePercents,
     updated_by:remoteSession.user.id
-  },{onConflict:"id"}));
+  },{onConflict:"id"})).then(ok=>{
+    if(ok) dirtyConfig=false;
+    return ok;
+  }).finally(()=>{pendingConfigWrite=false;});
+}
+
+// Empurra os horários estáticos do calendário pra tabela game_kickoffs.
+// O trigger no banco usa essa tabela pra impedir palpites após o início do jogo.
+// Idempotente — só admins precisam rodar; demais usuários falham por RLS sem problema.
+let gameKickoffsSyncedAt=0;
+async function syncGameKickoffsRemote(){
+  if(!remoteClient||!remoteSession) return;
+  if(Date.now()-gameKickoffsSyncedAt<5*60*1000) return; // no máximo 1x a cada 5 min
+  const rows=GAMES.filter(g=>g.utc).map(g=>({game_id:g.id,kickoff_utc:g.utc}));
+  if(!rows.length) return;
+  gameKickoffsSyncedAt=Date.now();
+  const {error}=await remoteClient.from("game_kickoffs").upsert(rows,{onConflict:"game_id"});
+  if(error){
+    // Se a tabela ainda não existir no projeto, não atrapalha o uso. Apenas registra no console.
+    if(!/game_kickoffs/.test(error.message||"")) console.warn("game_kickoffs upsert:",error.message);
+  }
 }
 
 async function pushLocalStateToRemote(){
@@ -2689,10 +2761,12 @@ async function pushLocalStateToRemote(){
   setSyncStatus("warn","Enviando backup para o Supabase...");
   const adminUserId=remoteSession.user.id;
   const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,ko_decision:res.koDecision||null,updated_by:adminUserId}));
+  // user_id propositalmente em branco: assim cada participante consegue reclamar
+  // a linha como dele na próxima edição (a policy aceita user_id null).
   const predictionRows=Object.entries(S.palpites).map(([key,pal])=>{
     const cut=key.indexOf("_");
     return {
-      user_id:adminUserId,
+      user_id:null,
       participant_index:Number(key.slice(0,cut)),
       game_id:key.slice(cut+1),
       s1:pal.s1??null,
@@ -2704,7 +2778,7 @@ async function pushLocalStateToRemote(){
   const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>{
     const clean=normalizePodio(pd);
     return {
-      user_id:adminUserId,
+      user_id:null,
       participant_index:Number(participant_index),
       p1:clean.p1||null,
       p2:clean.p2||null,

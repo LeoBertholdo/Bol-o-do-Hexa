@@ -91,6 +91,32 @@ Deno.serve(async (req) => {
   }
   if (!supabaseUrl || !serviceKey) return json(500, { error: "Variáveis Supabase ausentes." });
 
+  // Verifica que quem chamou está logado E é admin do bolão.
+  // Sem isso, qualquer pessoa com o anonKey público apaga/recria o mapa de jogos.
+  const authHeader = req.headers.get("Authorization") || "";
+  if (!authHeader.toLowerCase().startsWith("bearer ")) {
+    return json(401, { error: "Login obrigatório." });
+  }
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+  if (!anonKey) return json(500, { error: "SUPABASE_ANON_KEY/PUBLISHABLE_KEY ausente nos secrets." });
+  const userClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: authHeader } }
+  });
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData?.user) {
+    return json(401, { error: "Sessão inválida ou expirada." });
+  }
+  const { data: profile, error: profErr } = await userClient
+    .from("profiles")
+    .select("role")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+  if (profErr) return json(500, { error: "Falha lendo perfil.", detail: profErr.message });
+  if (profile?.role !== "admin") {
+    return json(403, { error: "Só o administrador do bolão pode mapear a temporada." });
+  }
+
   const supa = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
 
   let body: any = {};
