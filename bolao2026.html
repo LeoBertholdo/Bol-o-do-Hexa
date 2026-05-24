@@ -1497,10 +1497,13 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .api-test-game:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
 .api-test-game.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
+.api-test-game.is-live.is-waiting-live{border-color:#a9dfc0;background:linear-gradient(180deg,#f7fff9,#fff)}
 .api-test-game.is-live-only{grid-template-columns:108px minmax(0,1fr)}
 .api-test-game.is-locked{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
 .api-test-game.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
 .api-test-game.is-saved{border-color:#9fc5ff;background:linear-gradient(180deg,#f7fbff,#fff)}
+.api-test-game.is-live.is-saved,.api-test-game.is-live.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
+.api-test-game.is-live.is-waiting-live.is-saved{border-color:#a9dfc0;background:linear-gradient(180deg,#f7fff9,#fff)}
 .api-test-meta{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
 .api-test-date{
   display:inline-flex;align-items:center;gap:6px;
@@ -1538,21 +1541,37 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
-.api-test-score-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;max-width:220px;min-width:0;justify-self:center}
-.api-test-live-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%}
+.api-test-score-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;max-width:236px;min-width:0;justify-self:center}
+.api-test-live-panel{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
+.api-test-live-head{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;width:100%}
+.api-test-live-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid rgba(16,185,129,.32);border-radius:999px;
+  background:#ecfdf5;color:#047857;
+  padding:4px 8px;font-size:.55rem;font-weight:950;text-transform:uppercase;letter-spacing:.65px;line-height:1;
+}
+.api-test-live-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 1.4s ease-in-out infinite}
+.api-test-live-clock{font-size:.55rem;font-weight:950;text-transform:uppercase;letter-spacing:.6px;color:#64748b;line-height:1}
+.api-test-live-block{display:grid;justify-items:center;gap:3px;width:100%}
+.api-test-live-label{font-size:.52rem;font-weight:950;text-transform:uppercase;letter-spacing:.72px;color:#64748b;line-height:1}
 .api-test-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--blue)}
 .api-test-score b{min-width:30px;text-align:center;border:1px solid var(--border);border-radius:8px;background:#f8fbf1;padding:4px 5px;font-size:.76rem}
-.api-test-live-stats{display:grid;gap:4px;width:100%;max-width:188px}
-.api-test-cards{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;width:100%;max-width:188px}
+.api-test-score.is-waiting b{background:#f8fafc;color:#94a3b8}
+.api-test-pick-score b{background:#eef5ff}
+.api-test-live-empty{font-size:.52rem;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;text-align:center;line-height:1.2}
+.api-test-live-stats{display:grid;gap:4px;width:100%;max-width:210px}
+.api-test-cards{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;width:100%;max-width:210px}
 .api-test-card-side{display:flex;align-items:center;gap:4px;min-width:0}
 .api-test-card-side.home{justify-content:flex-end}
 .api-test-card-side.away{justify-content:flex-start}
 .api-test-card-label{font-size:.5rem;font-weight:950;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:center}
 .api-test-card-token{display:inline-flex;align-items:center;gap:3px;padding:2px 5px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:.6rem;font-weight:950;color:var(--text);line-height:1}
+.api-test-card-token.is-unknown{color:#94a3b8;background:#f8fafc}
 .api-test-card-shape{width:7px;height:10px;border-radius:2px;display:inline-block;box-shadow:0 1px 2px rgba(0,0,0,.14);transform:rotate(3deg)}
 .api-test-card-shape.yellow{background:#f6d447}
 .api-test-card-shape.red{background:#d83a34}
 .api-test-corner-token{display:inline-flex;align-items:center;justify-content:center;min-width:24px;padding:2px 6px;border:1px solid var(--border);border-radius:6px;background:#f8fbf1;font-size:.6rem;font-weight:950;color:var(--blue);line-height:1}
+.api-test-corner-token.is-unknown{color:#94a3b8;background:#f8fafc}
 .api-test-pal-controls{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;width:100%}
 .api-test-pal-controls .score-control{box-shadow:0 4px 10px rgba(0,39,118,.08)}
 .api-test-pal-controls .score-control input{width:34px;height:34px;font-size:.86rem}
@@ -3623,6 +3642,9 @@ const API_TEST_MAP_FUNCTION_NAME="api-football-map";
 const API_TEST_SYNC_FUNCTION_NAME="api-football-sync-";
 const API_TEST_TOURNAMENT="brasileirao";
 const API_TEST_COPA_START_DATE_KEY="2026-06-11";
+const API_TEST_LIVE_FALLBACK_WINDOW_MIN=170;
+const API_TEST_LIVE_CLOCK_REFRESH_MS=15000;
+const API_TEST_LIVE_CLOCK_MAX_DRIFT_MIN=12;
 const API_TEST_DEFAULT_CONFIG=Object.freeze({
   competition:"BSA",
   season:2026,
@@ -3658,6 +3680,7 @@ let apiTestSelectionTouched=false;
 let apiTestSearch="";
 let apiTestStatusFilter="all";
 let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."};
+let apiTestClockTimer=null;
 
 function apiTestDefaultState(){
   return {
@@ -3864,11 +3887,22 @@ function apiTestIsFinal(fixture){
 function apiTestIsLive(fixture){
   return API_TEST_LIVE_STATUSES.has(fixture.statusShort)&&!apiTestIsFinal(fixture);
 }
+function apiTestMinutesSinceKickoff(fixture){
+  if(!fixture?.dateIso) return null;
+  const kickoff=new Date(fixture.dateIso).getTime();
+  if(!Number.isFinite(kickoff)) return null;
+  return Math.floor((Date.now()-kickoff)/60000);
+}
+function apiTestIsActiveFixture(fixture){
+  if(apiTestIsFinal(fixture)) return false;
+  if(apiTestIsLive(fixture)) return true;
+  const minutes=apiTestMinutesSinceKickoff(fixture);
+  return minutes!==null&&minutes>=0&&minutes<=API_TEST_LIVE_FALLBACK_WINDOW_MIN;
+}
 function apiTestHasStarted(fixture){
   if(apiTestIsFinal(fixture)||apiTestIsLive(fixture)) return true;
-  if(!fixture?.dateIso) return false;
-  const kickoff=new Date(fixture.dateIso).getTime();
-  return Number.isFinite(kickoff)&&kickoff<=Date.now();
+  const minutes=apiTestMinutesSinceKickoff(fixture);
+  return minutes!==null&&minutes>=0;
 }
 function apiTestPredictionKey(pi,id){
   return `${pi}_${id}`;
@@ -3903,7 +3937,7 @@ function editApiTestPrediction(id){
 function apiTestCanScoreFixture(fixture){
   return Boolean(
     fixture&&
-    (apiTestIsFinal(fixture)||apiTestIsLive(fixture))&&
+    (apiTestIsFinal(fixture)||apiTestIsActiveFixture(fixture))&&
     apiTestBaseGoalsHome(fixture)!=null&&
     apiTestBaseGoalsAway(fixture)!=null
   );
@@ -3921,7 +3955,7 @@ function apiTestScoreInfo(prediction,fixture){
     {s1:prediction.s1,s2:prediction.s2},
     {s1:apiTestBaseGoalsHome(fixture),s2:apiTestBaseGoalsAway(fixture)}
     ),
-    live:apiTestIsLive(fixture),
+    live:apiTestIsActiveFixture(fixture),
     final:apiTestIsFinal(fixture)
   };
 }
@@ -3952,11 +3986,11 @@ function apiTestPlayerStats(pi){
   apiTestVisibleFixtures().forEach(fixture=>{
     const prediction=apiTestPrediction(pi,fixture.id);
     if(prediction) predicted++;
+    if(prediction&&apiTestIsActiveFixture(fixture)) live++;
     const info=apiTestScoreInfo(prediction,fixture);
     if(!info) return;
     const sc=info.value;
     played++;
-    if(info.live) live++;
     if(info.final) finalized++;
     pts+=sc;
     if(sc===3) crav++;
@@ -4042,7 +4076,7 @@ async function loadApiTestRemote(showToast=false,options={}){
     hint:apiTestState.fixtures.length?null:noFixtureHint
   };
   saveApiTestState();
-  const liveCount=apiTestVisibleFixtures().filter(apiTestIsLive).length;
+  const liveCount=apiTestVisibleFixtures().filter(apiTestIsActiveFixture).length;
   const beforeCopaCount=apiTestVisibleFixtures().length;
   if(apiTestState.fixtures.length){
     apiTestSetStatus("ok",`${beforeCopaCount} jogos de hoje até a Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
@@ -4225,10 +4259,44 @@ function apiTestFilteredFixtures(){
 }
 function apiTestFixtureStatusText(fixture){
   if(apiTestIsFinal(fixture)) return "Finalizado";
-  if(apiTestIsLive(fixture)) return fixture.elapsed?`Ao vivo · ${fixture.elapsed}'`:"Ao vivo";
+  if(apiTestIsActiveFixture(fixture)) return `Ao vivo · ${apiTestLiveClockText(fixture)}`;
   if(fixture.statusShort==="NS") return "Agendado";
   if(fixture.statusShort==="TBD") return "A definir";
   return fixture.statusLong||fixture.statusShort||"Sem status";
+}
+function apiTestFixtureStatusCode(fixture){
+  if(apiTestIsActiveFixture(fixture)&&!apiTestIsLive(fixture)&&fixture.statusShort==="NS") return "";
+  return fixture.statusShort||"";
+}
+function apiTestClockCanRun(fixture){
+  return apiTestIsLive(fixture)&&["1H","2H","LIVE","IN_PLAY","ET"].includes(fixture.statusShort);
+}
+function apiTestEstimatedElapsed(fixture){
+  const elapsed=apiTestCardNumber(fixture?.elapsed);
+  if(elapsed===null) return null;
+  if(!apiTestClockCanRun(fixture)) return elapsed;
+  const syncedAt=fixture.lastSyncedAt?new Date(fixture.lastSyncedAt).getTime():NaN;
+  if(!Number.isFinite(syncedAt)) return elapsed;
+  const drift=Math.floor((Date.now()-syncedAt)/60000);
+  if(!Number.isFinite(drift)||drift<=0) return elapsed;
+  return elapsed+Math.min(drift,API_TEST_LIVE_CLOCK_MAX_DRIFT_MIN);
+}
+function apiTestLiveClockText(fixture){
+  const elapsed=apiTestEstimatedElapsed(fixture);
+  if(elapsed!==null) return `${elapsed}'`;
+  const labels={
+    "1H":"1º tempo",
+    "2H":"2º tempo",
+    "HT":"intervalo",
+    "ET":"prorrogação",
+    "BT":"intervalo",
+    "P":"pênaltis",
+    "LIVE":"em andamento",
+    "IN_PLAY":"em andamento",
+    "PAUSED":"intervalo"
+  };
+  if(labels[fixture.statusShort]) return labels[fixture.statusShort];
+  return "aguardando placar";
 }
 function apiTestCardNumber(value){
   const n=Number(value);
@@ -4253,8 +4321,34 @@ function apiTestHasCornerCounts(fixture){
   return counts.cornersHome!==null||counts.cornersAway!==null;
 }
 function apiTestCardToken(type,value){
-  const n=value??0;
-  return `<span class="api-test-card-token"><span class="api-test-card-shape ${type}"></span>${n}</span>`;
+  const unknown=value==null;
+  return `<span class="api-test-card-token ${unknown?"is-unknown":""}"><span class="api-test-card-shape ${type}"></span>${unknown?"--":value}</span>`;
+}
+function apiTestCornerToken(value){
+  const unknown=value==null;
+  return `<span class="api-test-corner-token ${unknown?"is-unknown":""}">${unknown?"--":value}</span>`;
+}
+function apiTestScoreHTML(homeScore,awayScore,extraClass=""){
+  const waiting=homeScore==null||awayScore==null;
+  return `<div class="api-test-score ${extraClass} ${waiting?"is-waiting":""}"><b>${homeScore!=null?homeScore:"-"}</b><span>x</span><b>${awayScore!=null?awayScore:"-"}</b></div>`;
+}
+function apiTestPredictionScoreHTML(prediction){
+  return apiTestScoreHTML(prediction?.s1??null,prediction?.s2??null,"api-test-pick-score");
+}
+function apiTestLiveStatsHTML(fixture){
+  const cards=apiTestCardCounts(fixture);
+  return `<div class="api-test-live-stats">
+    <div class="api-test-cards" title="Cartões ao vivo">
+      <span class="api-test-card-side home">${apiTestCardToken("yellow",cards.yellowHome)}${apiTestCardToken("red",cards.redHome)}</span>
+      <span class="api-test-card-label">cartões</span>
+      <span class="api-test-card-side away">${apiTestCardToken("yellow",cards.yellowAway)}${apiTestCardToken("red",cards.redAway)}</span>
+    </div>
+    <div class="api-test-cards" title="Escanteios ao vivo">
+      <span class="api-test-card-side home">${apiTestCornerToken(cards.cornersHome)}</span>
+      <span class="api-test-card-label">escanteios</span>
+      <span class="api-test-card-side away">${apiTestCornerToken(cards.cornersAway)}</span>
+    </div>
+  </div>`;
 }
 function apiTestScoreBreakdownHTML(fixture){
   const rows=[];
@@ -4275,33 +4369,22 @@ function apiTestScoreBreakdownHTML(fixture){
   }
   return rows.length?`<div class="result-detail">${rows.join("")}</div>`:"";
 }
-function apiTestLiveSnapshotHTML(fixture){
-  if(!(apiTestIsFinal(fixture)||apiTestIsLive(fixture))) return "";
+function apiTestLiveSnapshotHTML(fixture,prediction=null){
+  const active=apiTestIsActiveFixture(fixture);
+  if(!(apiTestIsFinal(fixture)||active)) return "";
   const homeScore=apiTestBaseGoalsHome(fixture);
   const awayScore=apiTestBaseGoalsAway(fixture);
-  const scoreHTML=`<div class="api-test-score"><b>${homeScore!=null?homeScore:"-"}</b><span>x</span><b>${awayScore!=null?awayScore:"-"}</b></div>${apiTestScoreBreakdownHTML(fixture)}`;
-  if(!apiTestIsLive(fixture)||(!apiTestHasCardCounts(fixture)&&!apiTestHasCornerCounts(fixture))){
-    return scoreHTML;
-  }
-  const cards=apiTestCardCounts(fixture);
-  const cardRows=[];
-  if(apiTestHasCardCounts(fixture)){
-    cardRows.push(`<div class="api-test-cards" title="Cartões ao vivo">
-      <span class="api-test-card-side home">${apiTestCardToken("yellow",cards.yellowHome)}${apiTestCardToken("red",cards.redHome)}</span>
-      <span class="api-test-card-label">cartões</span>
-      <span class="api-test-card-side away">${apiTestCardToken("yellow",cards.yellowAway)}${apiTestCardToken("red",cards.redAway)}</span>
-    </div>`);
-  }
-  if(apiTestHasCornerCounts(fixture)){
-    cardRows.push(`<div class="api-test-cards" title="Escanteios ao vivo">
-      <span class="api-test-card-side home"><span class="api-test-corner-token">${cards.cornersHome??0}</span></span>
-      <span class="api-test-card-label">escanteios</span>
-      <span class="api-test-card-side away"><span class="api-test-corner-token">${cards.cornersAway??0}</span></span>
-    </div>`);
-  }
+  const waitingForScore=active&&(homeScore==null||awayScore==null);
   return `<div class="api-test-live-panel">
-    ${scoreHTML}
-    <div class="api-test-live-stats">${cardRows.join("")}</div>
+    ${active?`<div class="api-test-live-head"><span class="api-test-live-pill">Ao vivo</span><span class="api-test-live-clock">${esc(apiTestLiveClockText(fixture))}</span></div>`:""}
+    ${active?`<div class="api-test-live-block"><div class="api-test-live-label">Seu palpite</div>${apiTestPredictionScoreHTML(prediction)}${prediction?"":`<div class="api-test-live-empty">Sem palpite</div>`}</div>`:""}
+    <div class="api-test-live-block">
+      <div class="api-test-live-label">Placar</div>
+      ${apiTestScoreHTML(homeScore,awayScore)}
+      ${waitingForScore?`<div class="api-test-live-empty">Aguardando atualização</div>`:""}
+    </div>
+    ${apiTestScoreBreakdownHTML(fixture)}
+    ${active?apiTestLiveStatsHTML(fixture):""}
   </div>`;
 }
 function apiTestDayTitle(fixture){
@@ -4313,7 +4396,7 @@ function renderApiTestMetrics(){
   const fixtures=apiTestVisibleFixtures();
   const total=fixtures.length;
   const finished=fixtures.filter(apiTestIsFinal).length;
-  const live=fixtures.filter(apiTestIsLive).length;
+  const live=fixtures.filter(apiTestIsActiveFixture).length;
   const predicted=fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   return `<div class="api-test-metrics">
     <div class="api-test-metric"><strong>${total}</strong><span>Até a Copa</span></div>
@@ -4353,6 +4436,7 @@ function renderApiTestGames(){
     const label=apiTestScoreLabel(scoreInfo);
     const id=apiTestJs(fixture.id);
     const closed=apiTestHasStarted(fixture);
+    const active=apiTestIsActiveFixture(fixture);
     const canEditFixture=canEditSelectedApiTest&&!closed;
     const isSaved=Boolean(prediction);
     const isEditing=isSaved&&isApiTestPredictionEditing(apiTestPi,fixture.id);
@@ -4366,8 +4450,9 @@ function renderApiTestGames(){
       : "";
     const cardCls=[
       "api-test-game",
-      apiTestIsLive(fixture)?"is-live":"",
-      apiTestIsLive(fixture)?"is-live-only":"",
+      active?"is-live":"",
+      active&&!apiTestIsLive(fixture)?"is-waiting-live":"",
+      active?"is-live-only":"",
       !canEditFixture&&!closed?"is-locked":"",
       isSaved&&!isEditing?"is-saved":"",
       sc===3?"is-hit":""
@@ -4377,8 +4462,8 @@ function renderApiTestGames(){
     const badgeLabel=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":sc===0?"errou":prediction?"aguardando":"sem palpite";
     const s1=draft.s1??(prediction?prediction.s1:0);
     const s2=draft.s2??(prediction?prediction.s2:0);
-    const resultHTML=apiTestLiveSnapshotHTML(fixture);
-    const scorePanelHTML=apiTestIsLive(fixture)
+    const resultHTML=apiTestLiveSnapshotHTML(fixture,prediction);
+    const scorePanelHTML=active
       ? resultHTML
       : `<div class="api-test-pal-controls">
           ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
@@ -4395,17 +4480,18 @@ function renderApiTestGames(){
         <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
         ${resultHTML}
         <div class="api-test-round">${esc(palHint)}</div>`;
-    const badgeHTML=apiTestIsLive(fixture)?"":`<div class="api-test-badge">
+    const badgeHTML=active?"":`<div class="api-test-badge">
         <div class="sbadge ${badgeCls}">${badgeText}</div>
         <span class="lbl">${esc(badgeLabel)}</span>
       </div>`;
+    const statusCode=apiTestFixtureStatusCode(fixture);
     return `<article class="${cardCls}">
       <div class="api-test-meta">
         <div class="api-test-date">${esc(fixture.dateLabel)}</div>
         <div class="api-test-time">${esc(fixture.timeLabel)}</div>
         <div class="api-test-round">${esc(fixture.round)}</div>
         ${fixture.venue?`<div class="api-test-round">${esc(fixture.venue)}</div>`:""}
-        <div class="api-test-status">${esc(apiTestFixtureStatusText(fixture))}${fixture.statusShort?` · ${esc(fixture.statusShort)}`:""}</div>
+        <div class="api-test-status">${esc(apiTestFixtureStatusText(fixture))}${statusCode?` · ${esc(statusCode)}`:""}</div>
       </div>
       <div class="api-test-body">
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
@@ -4448,6 +4534,7 @@ function renderApiTest(){
   const myIndex=myParticipantIndex();
   if(Number.isInteger(myIndex)&&!apiTestSelectionTouched) apiTestPi=myIndex;
   if(apiTestPi>=S.participants.length) apiTestPi=0;
+  syncApiTestClockTimer();
   const h=`<div class="api-test-page">
     <div class="api-test-grid">
       <section class="panel">
@@ -4480,6 +4567,23 @@ function renderApiTest(){
   </div>`;
   document.getElementById("tab-api-test").innerHTML=h;
 }
+function apiTestNeedsClockRefresh(){
+  return activeTab==="api-test"&&apiTestVisibleFixtures().some(fixture=>
+    apiTestClockCanRun(fixture)&&apiTestEstimatedElapsed(fixture)!==null
+  );
+}
+function syncApiTestClockTimer(){
+  const shouldRun=apiTestNeedsClockRefresh();
+  if(shouldRun&&apiTestClockTimer===null){
+    apiTestClockTimer=setInterval(()=>{
+      if(apiTestNeedsClockRefresh()) renderApiTest();
+      else syncApiTestClockTimer();
+    },API_TEST_LIVE_CLOCK_REFRESH_MS);
+  }else if(!shouldRun&&apiTestClockTimer!==null){
+    clearInterval(apiTestClockTimer);
+    apiTestClockTimer=null;
+  }
+}
 // ==== END BRASILEIRAO TEST LAB ====
 
 function goTab(t){
@@ -4493,6 +4597,7 @@ function goTab(t){
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
+  syncApiTestClockTimer();
   if(t==="api-test"&&remoteClient&&remoteSession){
     loadApiTestRemote(false,{silent:true});
   }
