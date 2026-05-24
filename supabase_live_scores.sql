@@ -46,8 +46,15 @@ create table if not exists public.live_scores (
   elapsed integer,
   goals_home integer,
   goals_away integer,
+  regular_goals_home integer,
+  regular_goals_away integer,
+  extra_time_goals_home integer,
+  extra_time_goals_away integer,
+  after_extra_goals_home integer,
+  after_extra_goals_away integer,
   pens_home integer,
   pens_away integer,
+  penalty_shootout jsonb,
   yellow_cards_home integer,
   yellow_cards_away integer,
   red_cards_home integer,
@@ -59,6 +66,13 @@ create table if not exists public.live_scores (
 );
 
 alter table public.live_scores
+add column if not exists regular_goals_home integer,
+add column if not exists regular_goals_away integer,
+add column if not exists extra_time_goals_home integer,
+add column if not exists extra_time_goals_away integer,
+add column if not exists after_extra_goals_home integer,
+add column if not exists after_extra_goals_away integer,
+add column if not exists penalty_shootout jsonb,
 add column if not exists yellow_cards_home integer,
 add column if not exists yellow_cards_away integer,
 add column if not exists red_cards_home integer,
@@ -208,11 +222,12 @@ on public.api_sync_log for select to authenticated using (true);
 commit;
 
 -- ============================================
--- PASSO SEGUINTE (rodar SEPARADO, depois de pegar seu service_role key):
+-- PASSO SEGUINTE (rodar SEPARADO, depois de criar o secret BOLAO_CRON_SECRET):
 --
--- 1. Vá em Project Settings → API → "service_role" secret. Copie o valor.
--- 2. Substitua SEU_SERVICE_ROLE_KEY_AQUI abaixo e rode no SQL Editor.
--- 3. Isso agenda o robô pra acordar de minuto em minuto.
+-- 1. Vá em Project Settings → Edge Functions → Secrets.
+-- 2. Crie ou copie o valor de BOLAO_CRON_SECRET.
+-- 3. Substitua COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET abaixo e rode no SQL Editor.
+-- 4. Isso agenda o robô pra acordar de minuto em minuto.
 --
 -- (Não cole esse trecho ainda. Termine o setup antes — veja ROBO_SETUP.md)
 -- ============================================
@@ -230,7 +245,7 @@ commit;
 --     url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync',
 --     headers := jsonb_build_object(
 --       'Content-Type', 'application/json',
---       'Authorization', 'Bearer SEU_SERVICE_ROLE_KEY_AQUI'
+--       'x-bolao-cron-secret', 'COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET'
 --     ),
 --     body := '{}'::jsonb,
 --     timeout_milliseconds := 30000

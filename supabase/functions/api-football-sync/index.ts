@@ -51,15 +51,36 @@ function mapStatus(fdStatus: string, minute: number | null): string {
   }
 }
 
+function scoreSide(node: any, side: "home" | "away"): number | null {
+  const legacyKey = side === "home" ? "homeTeam" : "awayTeam";
+  return numberOrNull(node?.[side] ?? node?.[legacyKey]);
+}
+
+function scorePair(node: any): { home: number | null; away: number | null } {
+  return {
+    home: scoreSide(node, "home"),
+    away: scoreSide(node, "away")
+  };
+}
+
+function afterExtraScore(regular: number | null, extra: number | null, full: number | null, hasPenalties: boolean): number | null {
+  if (regular != null && extra != null) return regular + extra;
+  return hasPenalties ? null : full;
+}
+
 // Detecta se o resultado teve prorrogação ou pênaltis
 function detectDecision(score: any): { aet: boolean; pen: boolean } {
+  const duration = String(score?.duration || "").toUpperCase();
+  const extra = scorePair(score?.extraTime);
+  const penalties = scorePair(score?.penalties);
   return {
-    aet: !!score?.extraTime?.home || !!score?.extraTime?.away,
-    pen: score?.penalties?.home != null || score?.penalties?.away != null
+    aet: duration === "EXTRA_TIME" || duration === "PENALTY_SHOOTOUT" || extra.home != null || extra.away != null,
+    pen: duration === "PENALTY_SHOOTOUT" || penalties.home != null || penalties.away != null
   };
 }
 
 function numberOrNull(value: unknown): number | null {
+  if (value == null || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 }
@@ -83,6 +104,15 @@ function bookingSide(match: any, booking: any): "home" | "away" | null {
   if (name === normalizeTeamName(match?.homeTeam?.name) || name === normalizeTeamName(match?.homeTeam?.shortName)) return "home";
   if (name === normalizeTeamName(match?.awayTeam?.name) || name === normalizeTeamName(match?.awayTeam?.shortName)) return "away";
   return null;
+}
+
+function extractPenaltyShootout(match: any): Array<{ side: "home" | "away"; scored: boolean }> | null {
+  if (!Array.isArray(match?.penalties)) return null;
+  const rows = match.penalties.map((penalty: any) => {
+    const side = bookingSide(match, penalty);
+    return side ? { side, scored: !!penalty?.scored } : null;
+  }).filter(Boolean);
+  return rows.length ? (rows as Array<{ side: "home" | "away"; scored: boolean }>) : null;
 }
 
 function extractCardCounts(match: any): {
@@ -314,8 +344,9 @@ Deno.serve(async (req) => {
       const live = liveByGame.get(gameId) || {};
       let cardSource = m;
       let cards = extractCardCounts(cardSource);
+      let penaltyShootout = extractPenaltyShootout(m);
       const shouldFetchDetails =
-        !hasCardCounts(cards) &&
+        (!hasCardCounts(cards) || (decision.pen && !penaltyShootout)) &&
         (LIVE_STATUSES.has(m.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
         detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN;
 
@@ -329,6 +360,7 @@ Deno.serve(async (req) => {
           if (detailResp.ok) {
             cardSource = detailData;
             cards = extractCardCounts(cardSource);
+            penaltyShootout = extractPenaltyShootout(detailData) || penaltyShootout;
           } else {
             errors.push(`match ${m.id}: HTTP ${detailResp.status} ${(detailData?.message || "").slice(0, 120)}`);
           }
@@ -338,16 +370,36 @@ Deno.serve(async (req) => {
         }
       }
 
+      const fullTime = scorePair(m.score?.fullTime);
+      const regularTimeRaw = scorePair(m.score?.regularTime);
+      const extraTime = scorePair(m.score?.extraTime);
+      const penalties = scorePair(m.score?.penalties);
+      const regularTime = {
+        home: regularTimeRaw.home ?? (decision.aet || decision.pen ? null : fullTime.home),
+        away: regularTimeRaw.away ?? (decision.aet || decision.pen ? null : fullTime.away)
+      };
+      const afterExtra = {
+        home: decision.aet || decision.pen ? afterExtraScore(regularTime.home, extraTime.home, fullTime.home, decision.pen) : null,
+        away: decision.aet || decision.pen ? afterExtraScore(regularTime.away, extraTime.away, fullTime.away, decision.pen) : null
+      };
+
       upserts.push({
         game_id: gameId,
         api_fixture_id: m.id,
         status_short: finalStatus,
         status_long: m.status || null,
         elapsed: m.minute ?? null,
-        goals_home: m.score?.fullTime?.home ?? null,
-        goals_away: m.score?.fullTime?.away ?? null,
-        pens_home: m.score?.penalties?.home ?? null,
-        pens_away: m.score?.penalties?.away ?? null,
+        goals_home: fullTime.home,
+        goals_away: fullTime.away,
+        regular_goals_home: regularTime.home,
+        regular_goals_away: regularTime.away,
+        extra_time_goals_home: extraTime.home,
+        extra_time_goals_away: extraTime.away,
+        after_extra_goals_home: afterExtra.home,
+        after_extra_goals_away: afterExtra.away,
+        pens_home: penalties.home,
+        pens_away: penalties.away,
+        penalty_shootout: penaltyShootout,
         yellow_cards_home: cards.yellowHome ?? live.yellow_cards_home ?? null,
         yellow_cards_away: cards.yellowAway ?? live.yellow_cards_away ?? null,
         red_cards_home: cards.redHome ?? live.red_cards_home ?? null,

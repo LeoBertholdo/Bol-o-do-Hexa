@@ -93,7 +93,7 @@ const KO_DATE_STARTS = { r32: "2026-07-03", r16: "2026-07-07", qf: "2026-07-10",
                          sf: "2026-07-14", p3: "2026-07-18", final: "2026-07-19" }
 ```
 
-Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos das fases eliminatórias são preenchidos manualmente pelo admin conforme os resultados são definidos; em empate no mata-mata, resultados oficiais e palpites guardam quem passou e se foi na prorrogação ou nos pênaltis.
+Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos das fases eliminatórias são preenchidos manualmente pelo admin conforme os resultados são definidos. Em empate no mata-mata, o palpite guarda apenas quem passa; o resultado oficial guarda também se foi na prorrogação ou nos pênaltis, incluindo placar após prorrogação e a sequência da disputa quando a API fornecer.
 
 ---
 
@@ -101,7 +101,7 @@ Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos
 
 | Evento | Pontos |
 |---|---|
-| Placar exato (cravada) | **+3** |
+| Placar exato (cravada) | **+3**; empate no mata-mata vale **+2** antes do bônus |
 | Resultado correto (acertou o vencedor) | **+1** |
 | Invertida (apostou no time errado para ganhar) | **−2** |
 | Mata-mata: acertar quem passa | **+1 extra** |
@@ -112,7 +112,7 @@ Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos
 
 Critérios de desempate no ranking: total de pontos → cravadas → menor número de invertidas → ordem alfabética.
 
-No mata-mata, o bônus de classificação é somado ao que o palpite já marcou no placar. Ex.: empate cravado vale +4 se também acertar quem passa, ou +3 se errar; empate não cravado vale +2 se acertar quem passa, ou +1 se errar.
+No mata-mata, acertar quem passa soma +1 ao que o palpite já marcou no placar. Se o resultado oficial empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1. Quem palpitou vitória de uma seleção e o jogo empatou aos 90 minutos faz 0 nesse jogo.
 
 ---
 

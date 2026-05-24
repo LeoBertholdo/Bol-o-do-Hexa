@@ -139,6 +139,11 @@ create table if not exists public.results (
   s2 integer not null check (s2 between 0 and 30),
   ko_winner text,
   ko_decision text,
+  after_et_s1 integer check (after_et_s1 between 0 and 30),
+  after_et_s2 integer check (after_et_s2 between 0 and 30),
+  pens_s1 integer check (pens_s1 between 0 and 30),
+  pens_s2 integer check (pens_s2 between 0 and 30),
+  penalty_shootout jsonb,
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users(id) on delete set null
 );
@@ -148,6 +153,21 @@ add column if not exists ko_winner text;
 
 alter table public.results
 add column if not exists ko_decision text;
+
+alter table public.results
+add column if not exists after_et_s1 integer check (after_et_s1 between 0 and 30);
+
+alter table public.results
+add column if not exists after_et_s2 integer check (after_et_s2 between 0 and 30);
+
+alter table public.results
+add column if not exists pens_s1 integer check (pens_s1 between 0 and 30);
+
+alter table public.results
+add column if not exists pens_s2 integer check (pens_s2 between 0 and 30);
+
+alter table public.results
+add column if not exists penalty_shootout jsonb;
 
 create table if not exists public.predictions (
   participant_index integer not null check (participant_index >= 0),

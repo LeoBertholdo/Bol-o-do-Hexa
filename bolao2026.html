@@ -822,7 +822,24 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .ko-advancer .txt-select{height:34px;padding:5px 8px;font-size:.72rem;font-weight:850;text-align:left}
 .pal-tiebreak{min-width:0;margin-top:6px}
 .bracket-card .pal-tiebreak{margin:8px 0 0;width:100%}
+.pass-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.pass-btn{
+  border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--blue);
+  min-height:34px;padding:5px 7px;font-size:.68rem;font-weight:950;line-height:1.12;
+}
+.pass-btn.active{background:#e7f8ed;border-color:#9be3b8;color:var(--green);box-shadow:0 4px 12px rgba(0,140,74,.08)}
+.pass-btn:disabled{opacity:.55;cursor:not-allowed}
 .advancer-badge{background:#e7f8ed;border:1px solid #b8ebcb;border-radius:999px;padding:3px 8px;text-transform:none;letter-spacing:0}
+.result-detail{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:.62rem;font-weight:900;color:var(--muted)}
+.result-detail-line{background:#f7faf2;border:1px solid var(--border);border-radius:6px;padding:3px 7px;color:var(--text)}
+.penalty-detail{display:flex;flex-direction:column;gap:3px;align-items:center;background:#f7faf2;border:1px solid var(--border);border-radius:6px;padding:4px 7px}
+.penalty-detail strong{font-size:.64rem;color:var(--text)}
+.penalty-row{display:grid;grid-template-columns:minmax(42px,1fr) auto;gap:6px;align-items:center;width:100%}
+.penalty-team{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}
+.penalty-dots{display:flex;gap:3px;align-items:center;justify-content:flex-end}
+.pen-dot{width:7px;height:7px;border-radius:999px;border:1px solid var(--border);background:#fff}
+.pen-dot.made{background:var(--green);border-color:var(--green)}
+.pen-dot.missed{background:var(--red);border-color:var(--red)}
 .score-control{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;background:#fff;box-shadow:inset 0 1px 0 rgba(0,0,0,.02)}
 .score-control input{width:42px;height:38px;border:0;text-align:center;font-size:.95rem;font-weight:950;color:var(--text);background:#fff}
 .score-control input::-webkit-outer-spin-button,.score-control input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -1039,6 +1056,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   display:inline-flex;gap:5px;align-items:center;background:#f7faf2;border:1px solid var(--border);
   padding:3px 7px;border-radius:6px;color:var(--text);font-weight:950;font-size:.7rem;
 }
+.pal-card-result .result-detail{font-size:.58rem}
+.pal-card-result .penalty-detail{max-width:220px}
 
 .pal-card-badge{
   display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:50px;
@@ -2233,7 +2252,7 @@ function trackScoreDraftInput(input){
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
   if(msg.includes("Palpites encerrados")) return "Este jogo já começou. Palpites encerrados.";
-  if(msg.includes("ko_winner")||msg.includes("ko_decision")) return "Atualize o Supabase com as colunas ko_winner e ko_decision para salvar desempates do mata-mata.";
+  if(msg.includes("ko_winner")||msg.includes("ko_decision")||msg.includes("after_et")||msg.includes("pens_s")||msg.includes("penalty_shootout")) return "Atualize o Supabase com as colunas do mata-mata para salvar desempates, prorrogação e pênaltis.";
   if(msg.includes("No suitable key")||msg.includes("wrong key type")||error?.code==="PGRST301") return "A chave pública do Supabase parece inválida ou foi trocada. Atualize o anonKey/publishable key no SUPABASE_CONFIG.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
   if(msg.includes("row-level security")) return "Seu login não tem permissão para essa alteração.";
@@ -2366,10 +2385,20 @@ function applyRemoteData(payload){
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
   }
   (payload.results||[]).forEach(row=>{
-    next.results[row.game_id]=normalizeResult(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner,koDecision:row.ko_decision});
+    next.results[row.game_id]=normalizeResult(row.game_id,{
+      s1:row.s1,
+      s2:row.s2,
+      koWinner:row.ko_winner,
+      koDecision:row.ko_decision,
+      afterEt1:row.after_et_s1,
+      afterEt2:row.after_et_s2,
+      pens1:row.pens_s1,
+      pens2:row.pens_s2,
+      penaltyShootout:row.penalty_shootout
+    });
   });
   (payload.predictions||[]).forEach(row=>{
-    next.palpites[`${row.participant_index}_${row.game_id}`]=normalizePrediction(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner,koDecision:row.ko_decision});
+    next.palpites[`${row.participant_index}_${row.game_id}`]=normalizePrediction(row.game_id,{s1:row.s1,s2:row.s2,koWinner:row.ko_winner});
   });
   (payload.podium||[]).forEach(row=>{
     next.podio[row.participant_index]={p1:row.p1||"",p2:row.p2||"",p3:row.p3||"",p4:row.p4||""};
@@ -2402,6 +2431,8 @@ function applyRemoteData(payload){
 }
 
 async function fetchResultsRemote(){
+  const rich=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision,after_et_s1,after_et_s2,pens_s1,pens_s2,penalty_shootout");
+  if(!rich.error) return rich;
   const full=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision");
   if(!full.error) return full;
   const message=remoteErrorText(full.error).toLowerCase();
@@ -2411,7 +2442,7 @@ async function fetchResultsRemote(){
   return remoteClient.from("results").select("game_id,s1,s2");
 }
 async function fetchPredictionsRemote(){
-  const full=await remoteClient.from("predictions").select("participant_index,game_id,s1,s2,ko_winner,ko_decision");
+  const full=await remoteClient.from("predictions").select("participant_index,game_id,s1,s2,ko_winner");
   if(!full.error) return full;
   const message=remoteErrorText(full.error).toLowerCase();
   if(!message.includes("ko_")) return full;
@@ -2648,6 +2679,11 @@ function saveResultRemote(id){
     s2:res.s2,
     ko_winner:res.koWinner||null,
     ko_decision:res.koDecision||null,
+    after_et_s1:res.afterEt1??null,
+    after_et_s2:res.afterEt2??null,
+    pens_s1:res.pens1??null,
+    pens_s2:res.pens2??null,
+    penalty_shootout:res.penaltyShootout?.length?res.penaltyShootout:null,
     updated_by:remoteSession.user.id
   },{onConflict:"game_id"})).then(ok=>{
     if(ok) dirtyResultKeys.delete(id);
@@ -2678,7 +2714,7 @@ function savePredictionRemote(pi,gid){
     s1:pal.s1??null,
     s2:pal.s2??null,
     ko_winner:pal.koWinner||null,
-    ko_decision:pal.koDecision||null
+    ko_decision:null
   },{onConflict:"participant_index,game_id"})).then(ok=>{
     if(ok) dirtyPredictionKeys.delete(key);
     return ok;
@@ -2760,7 +2796,19 @@ async function pushLocalStateToRemote(){
   if(!window.confirm("Isso vai sobrescrever os dados do Supabase com a cópia deste navegador. Palpites mais recentes feitos por outros participantes podem ser perdidos. Continuar?")) return;
   setSyncStatus("warn","Enviando backup para o Supabase...");
   const adminUserId=remoteSession.user.id;
-  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,ko_decision:res.koDecision||null,updated_by:adminUserId}));
+  const resultRows=Object.entries(S.results).map(([game_id,res])=>({
+    game_id,
+    s1:res.s1,
+    s2:res.s2,
+    ko_winner:res.koWinner||null,
+    ko_decision:res.koDecision||null,
+    after_et_s1:res.afterEt1??null,
+    after_et_s2:res.afterEt2??null,
+    pens_s1:res.pens1??null,
+    pens_s2:res.pens2??null,
+    penalty_shootout:res.penaltyShootout?.length?res.penaltyShootout:null,
+    updated_by:adminUserId
+  }));
   // user_id propositalmente em branco: assim cada participante consegue reclamar
   // a linha como dele na próxima edição (a policy aceita user_id null).
   const predictionRows=Object.entries(S.palpites).map(([key,pal])=>{
@@ -2772,7 +2820,7 @@ async function pushLocalStateToRemote(){
       s1:pal.s1??null,
       s2:pal.s2??null,
       ko_winner:pal.koWinner||null,
-      ko_decision:pal.koDecision||null
+      ko_decision:null
     };
   }).filter(row=>Number.isInteger(row.participant_index)&&row.game_id);
   const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>{
@@ -3035,7 +3083,23 @@ function accountCard(){
 function esc(v){
   return String(v??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
 }
+function jsAttr(v){return esc(JSON.stringify(String(v??"")));}
 function norm(v){return String(v||"").trim();}
+function optionalScore(v){
+  if(v==null||v==="") return null;
+  const n=parseInt(v,10);
+  return !Number.isNaN(n)&&n>=0?Math.min(30,n):null;
+}
+function normalizePenaltyShootout(value){
+  if(!Array.isArray(value)) return [];
+  return value.map(item=>{
+    if(!item||typeof item!=="object") return null;
+    const side=norm(item.side||item.teamSide||item.team||item.homeAway).toLowerCase();
+    const cleanSide=side==="home"||side==="t1"||side==="1"?"t1":side==="away"||side==="t2"||side==="2"?"t2":"";
+    if(!cleanSide) return null;
+    return {side:cleanSide,scored:Boolean(item.scored)};
+  }).filter(Boolean);
+}
 function normalizeResult(id,result){
   if(!result||typeof result!=="object") return null;
   const s1=parseInt(result.s1,10);
@@ -3047,6 +3111,14 @@ function normalizeResult(id,result){
   const koDecision=normalizeKoDecision(result.koDecision||result.ko_decision||result.decision);
   if(game?.ko&&koWinner) clean.koWinner=koWinner;
   if(game?.ko&&koDecision) clean.koDecision=koDecision;
+  const afterEt1=optionalScore(result.afterEt1??result.after_et_s1??result.aet1??result.afterExtra1);
+  const afterEt2=optionalScore(result.afterEt2??result.after_et_s2??result.aet2??result.afterExtra2);
+  const pens1=optionalScore(result.pens1??result.pens_s1??result.penalties1);
+  const pens2=optionalScore(result.pens2??result.pens_s2??result.penalties2);
+  const penaltyShootout=normalizePenaltyShootout(result.penaltyShootout||result.penalty_shootout);
+  if(game?.ko&&afterEt1!=null&&afterEt2!=null){clean.afterEt1=afterEt1;clean.afterEt2=afterEt2;}
+  if(game?.ko&&pens1!=null&&pens2!=null){clean.pens1=pens1;clean.pens2=pens2;}
+  if(game?.ko&&penaltyShootout.length) clean.penaltyShootout=penaltyShootout;
   return clean;
 }
 function normalizePredictionKey(key,prediction){
@@ -3067,9 +3139,7 @@ function normalizePrediction(id,prediction){
   completePredictionVisibleZero(clean);
   const game=gameById(id);
   const koWinner=norm(prediction.koWinner||prediction.ko_winner||prediction.winner||prediction.advancer);
-  const koDecision=normalizeKoDecision(prediction.koDecision||prediction.ko_decision||prediction.decision);
   if(game?.ko&&koWinner) clean.koWinner=koWinner;
-  if(game?.ko&&koDecision) clean.koDecision=koDecision;
   return Object.keys(clean).length?clean:null;
 }
 function normalizeKoDecision(value){
@@ -3168,7 +3238,7 @@ function predictedAdvancer(game,pal,teams=gameTeams(game)){
   if(!game?.ko||!pal||!teams.ready) return "";
   if(+pal.s1>+pal.s2) return teams.t1;
   if(+pal.s1<+pal.s2) return teams.t2;
-  return koOutcomeComplete(game,pal,teams)?norm(pal.koWinner):"";
+  return koAdvancerComplete(game,pal,teams)?norm(pal.koWinner):"";
 }
 function actualAdvancer(game,res,teams=gameTeams(game)){
   if(!game?.ko||!res||!teams.ready) return "";
@@ -3179,8 +3249,20 @@ function actualAdvancer(game,res,teams=gameTeams(game)){
 function scoreDetails(pal,res,game=null){
   if(!pal||!res||pal.s1==null||pal.s2==null||res.s1==null||res.s2==null) return null;
   const ps1=+pal.s1, ps2=+pal.s2, rs1=+res.s1, rs2=+res.s2;
+  if(game?.ko&&rs1===rs2){
+    const teams=gameTeams(game);
+    const predicted=predictedAdvancer(game,pal,teams);
+    const actual=actualAdvancer(game,res,teams);
+    const palDraw=ps1===ps2;
+    if(!palDraw) return {pts:0,base:0,passBonus:0,exact:false,koDraw:true};
+    const exact=ps1===rs1&&ps2===rs2;
+    const base=exact?2:1;
+    const passBonus=predicted&&actual&&predicted===actual?1:0;
+    return {pts:base+passBonus,base,passBonus,exact,koDraw:true};
+  }
   let base=0;
-  if(ps1===rs1&&ps2===rs2) base=3;
+  const exact=ps1===rs1&&ps2===rs2;
+  if(exact) base=3;
   else if(ps1!==ps2&&ps1===rs2&&ps2===rs1) base=-2;
   else{
     const pw=ps1>ps2?1:ps1<ps2?2:0;
@@ -3194,7 +3276,7 @@ function scoreDetails(pal,res,game=null){
     const actual=actualAdvancer(game,res,teams);
     if(predicted&&actual&&predicted===actual) passBonus=1;
   }
-  return {pts:base+passBonus,base,passBonus};
+  return {pts:base+passBonus,base,passBonus,exact,koDraw:false};
 }
 function score(pal,res,game=null){
   const details=scoreDetails(pal,res,game);
@@ -3220,7 +3302,7 @@ function playerStats(pi){
     if(!details) return;
     played++;
     pts+=details.pts;
-    if(details.base===3) crav++;
+    if(details.exact) crav++;
     if(details.base===1) corr++;
     if(details.base===-2) inv++;
   });
@@ -3409,6 +3491,10 @@ function koAdvancerFromResult(game,res,teams=gameTeams(game)){
   const advancer=norm(res.koWinner);
   return [teams.t1,teams.t2].includes(advancer)?advancer:"";
 }
+function koAdvancerComplete(game,state,teams=gameTeams(game)){
+  if(!game?.ko||!state||+state.s1!==+state.s2) return false;
+  return [teams.t1,teams.t2].includes(norm(state.koWinner));
+}
 function koOutcomeComplete(game,state,teams=gameTeams(game)){
   if(!game?.ko||!state||+state.s1!==+state.s2) return false;
   return [teams.t1,teams.t2].includes(norm(state.koWinner))&&Boolean(koDecisionLabel(state.koDecision));
@@ -3424,6 +3510,34 @@ function resultLabel(game,res,teams=gameTeams(game)){
   const scoreText=`${res.s1} × ${res.s2}`;
   const outcome=koOutcomeLabel(game,res,teams);
   return outcome?`${scoreText} · ${outcome}`:scoreText;
+}
+function resultMainHTML(game,res,teams=gameTeams(game)){
+  return `<span class="real">Resultado oficial: ${esc(resultLabel(game,res,teams))}</span>`;
+}
+function penaltyEventsForSide(events,side){
+  return (events||[]).filter(item=>item.side===side);
+}
+function penaltyDotsHTML(events,count){
+  const items=events&&events.length?events:Array.from({length:count||0},()=>({scored:true}));
+  return `<span class="penalty-dots">${items.map(item=>`<span class="pen-dot ${item.scored?"made":"missed"}"></span>`).join("")}</span>`;
+}
+function resultDetailHTML(game,res,teams=gameTeams(game)){
+  if(!game?.ko||!res) return "";
+  const rows=[];
+  if(res.afterEt1!=null&&res.afterEt2!=null){
+    rows.push(`<div class="result-detail-line">Após prorrogação: ${esc(res.afterEt1)} × ${esc(res.afterEt2)}</div>`);
+  }
+  if(res.pens1!=null&&res.pens2!=null){
+    const events=normalizePenaltyShootout(res.penaltyShootout);
+    const t1Events=penaltyEventsForSide(events,"t1");
+    const t2Events=penaltyEventsForSide(events,"t2");
+    rows.push(`<div class="penalty-detail">
+      <strong>Pênaltis: ${esc(res.pens1)} × ${esc(res.pens2)}</strong>
+      <div class="penalty-row"><span class="penalty-team">${esc(teams.t1||"Time 1")}</span>${penaltyDotsHTML(t1Events,res.pens1)}</div>
+      <div class="penalty-row"><span class="penalty-team">${esc(teams.t2||"Time 2")}</span>${penaltyDotsHTML(t2Events,res.pens2)}</div>
+    </div>`);
+  }
+  return rows.length?`<div class="result-detail">${rows.join("")}</div>`:"";
 }
 function seedLabel(seed){
   const direct=String(seed||"").match(/^([12])([A-L])$/);
@@ -3686,6 +3800,16 @@ function apiTestTeamName(name){
 function apiTestTeamLogo(name,fallback=""){
   return API_TEST_TEAM_LOGOS[apiTestTeamName(name)]||fallback||"";
 }
+function normalizeApiPenaltyShootout(value){
+  if(!Array.isArray(value)) return [];
+  return value.map(item=>{
+    if(!item||typeof item!=="object") return null;
+    const side=norm(item.side||item.teamSide||item.team||item.homeAway).toLowerCase();
+    const cleanSide=side==="home"||side==="t1"||side==="1"?"home":side==="away"||side==="t2"||side==="2"?"away":"";
+    if(!cleanSide) return null;
+    return {side:cleanSide,scored:Boolean(item.scored)};
+  }).filter(Boolean);
+}
 function normalizeApiTestFixture(row){
   if(!row) return null;
   const rawId=row.game_id??row.id??row.fixture?.id;
@@ -3712,6 +3836,15 @@ function normalizeApiTestFixture(row){
     awayLogo:apiTestTeamLogo(row.away_team||row.away||row.teams?.away?.name,row.awayLogo||row.teams?.away?.logo||""),
     goalsHome:live.goals_home??row.goals_home??row.goalsHome??row.goals?.home??null,
     goalsAway:live.goals_away??row.goals_away??row.goalsAway??row.goals?.away??null,
+    regularGoalsHome:live.regular_goals_home??row.regular_goals_home??row.regularGoalsHome??null,
+    regularGoalsAway:live.regular_goals_away??row.regular_goals_away??row.regularGoalsAway??null,
+    extraTimeGoalsHome:live.extra_time_goals_home??row.extra_time_goals_home??row.extraTimeGoalsHome??null,
+    extraTimeGoalsAway:live.extra_time_goals_away??row.extra_time_goals_away??row.extraTimeGoalsAway??null,
+    afterExtraGoalsHome:live.after_extra_goals_home??row.after_extra_goals_home??row.afterExtraGoalsHome??null,
+    afterExtraGoalsAway:live.after_extra_goals_away??row.after_extra_goals_away??row.afterExtraGoalsAway??null,
+    pensHome:live.pens_home??row.pens_home??row.pensHome??null,
+    pensAway:live.pens_away??row.pens_away??row.pensAway??null,
+    penaltyShootout:normalizeApiPenaltyShootout(live.penalty_shootout||row.penalty_shootout||row.penaltyShootout),
     yellowCardsHome:live.yellow_cards_home??row.yellow_cards_home??row.yellowCardsHome??null,
     yellowCardsAway:live.yellow_cards_away??row.yellow_cards_away??row.yellowCardsAway??null,
     redCardsHome:live.red_cards_home??row.red_cards_home??row.redCardsHome??null,
@@ -3771,16 +3904,22 @@ function apiTestCanScoreFixture(fixture){
   return Boolean(
     fixture&&
     (apiTestIsFinal(fixture)||apiTestIsLive(fixture))&&
-    fixture.goalsHome!=null&&
-    fixture.goalsAway!=null
+    apiTestBaseGoalsHome(fixture)!=null&&
+    apiTestBaseGoalsAway(fixture)!=null
   );
+}
+function apiTestBaseGoalsHome(fixture){
+  return fixture?.regularGoalsHome??fixture?.goalsHome??null;
+}
+function apiTestBaseGoalsAway(fixture){
+  return fixture?.regularGoalsAway??fixture?.goalsAway??null;
 }
 function apiTestScoreInfo(prediction,fixture){
   if(!prediction||!apiTestCanScoreFixture(fixture)) return null;
   return {
     value:score(
     {s1:prediction.s1,s2:prediction.s2},
-    {s1:fixture.goalsHome,s2:fixture.goalsAway}
+    {s1:apiTestBaseGoalsHome(fixture),s2:apiTestBaseGoalsAway(fixture)}
     ),
     live:apiTestIsLive(fixture),
     final:apiTestIsFinal(fixture)
@@ -3864,7 +4003,7 @@ async function loadApiTestRemote(showToast=false,options={}){
   if(!options.skipRender) render(activeTab);
   const [mapRows,liveRows,predRows,syncToday]=await Promise.all([
     remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,tournament,league_id,season,kickoff_utc,home_team,away_team,round_label").eq("tournament",API_TEST_TOURNAMENT).order("kickoff_utc",{ascending:true}),
-    remoteClient.from("live_scores").select("game_id,api_fixture_id,status_short,status_long,elapsed,goals_home,goals_away,pens_home,pens_away,yellow_cards_home,yellow_cards_away,red_cards_home,red_cards_away,corner_kicks_home,corner_kicks_away,last_synced_at,is_locked_by_admin"),
+    remoteClient.from("live_scores").select("game_id,api_fixture_id,status_short,status_long,elapsed,goals_home,goals_away,regular_goals_home,regular_goals_away,extra_time_goals_home,extra_time_goals_away,after_extra_goals_home,after_extra_goals_away,pens_home,pens_away,penalty_shootout,yellow_cards_home,yellow_cards_away,red_cards_home,red_cards_away,corner_kicks_home,corner_kicks_away,last_synced_at,is_locked_by_admin"),
     remoteClient.from("test_predictions").select("participant_index,game_id,s1,s2").eq("tournament",API_TEST_TOURNAMENT),
     remoteClient.from("api_sync_today").select("*").maybeSingle()
   ]);
@@ -4117,9 +4256,30 @@ function apiTestCardToken(type,value){
   const n=value??0;
   return `<span class="api-test-card-token"><span class="api-test-card-shape ${type}"></span>${n}</span>`;
 }
+function apiTestScoreBreakdownHTML(fixture){
+  const rows=[];
+  const hasAfterExtra=fixture.afterExtraGoalsHome!=null&&fixture.afterExtraGoalsAway!=null;
+  const hasPens=fixture.pensHome!=null&&fixture.pensAway!=null;
+  if(hasAfterExtra){
+    rows.push(`<div class="result-detail-line">Após prorrogação: ${esc(fixture.afterExtraGoalsHome)} × ${esc(fixture.afterExtraGoalsAway)}</div>`);
+  }
+  if(hasPens){
+    const events=normalizeApiPenaltyShootout(fixture.penaltyShootout);
+    const homeEvents=penaltyEventsForSide(events,"home");
+    const awayEvents=penaltyEventsForSide(events,"away");
+    rows.push(`<div class="penalty-detail">
+      <strong>Pênaltis: ${esc(fixture.pensHome)} × ${esc(fixture.pensAway)}</strong>
+      <div class="penalty-row"><span class="penalty-team">${esc(apiTestTeamName(fixture.home))}</span>${penaltyDotsHTML(homeEvents,fixture.pensHome)}</div>
+      <div class="penalty-row"><span class="penalty-team">${esc(apiTestTeamName(fixture.away))}</span>${penaltyDotsHTML(awayEvents,fixture.pensAway)}</div>
+    </div>`);
+  }
+  return rows.length?`<div class="result-detail">${rows.join("")}</div>`:"";
+}
 function apiTestLiveSnapshotHTML(fixture){
   if(!(apiTestIsFinal(fixture)||apiTestIsLive(fixture))) return "";
-  const scoreHTML=`<div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>`;
+  const homeScore=apiTestBaseGoalsHome(fixture);
+  const awayScore=apiTestBaseGoalsAway(fixture);
+  const scoreHTML=`<div class="api-test-score"><b>${homeScore!=null?homeScore:"-"}</b><span>x</span><b>${awayScore!=null?awayScore:"-"}</b></div>${apiTestScoreBreakdownHTML(fixture)}`;
   if(!apiTestIsLive(fixture)||(!apiTestHasCardCounts(fixture)&&!apiTestHasCornerCounts(fixture))){
     return scoreHTML;
   }
@@ -4361,7 +4521,7 @@ function hasScore(entry){
 function isPredictionComplete(game,pal){
   if(!hasScore(pal)) return false;
   if(!game?.ko||+pal.s1!==+pal.s2) return true;
-  return koOutcomeComplete(game,pal);
+  return koAdvancerComplete(game,pal);
 }
 function homeFixtureWindow(){
   const today=todayKey();
@@ -4813,6 +4973,7 @@ function renderGameRow(game,forPalpite){
         <div class="result-stack">
           <div class="res"><span class="sc">${res.s1}</span><span>×</span><span class="sc">${res.s2}</span></div>
           ${outcome?`<div class="advancer-badge">${esc(outcome)}</div>`:""}
+          ${resultDetailHTML(game,res,teams)}
         </div>
         ${teamHTML(t2,"",!teams.ready)}
       </div>
@@ -4870,6 +5031,14 @@ function koOutcomeValue(team,decision){
   const cleanTeam=norm(team);
   const cleanDecision=normalizeKoDecision(decision);
   return cleanTeam&&cleanDecision?`${cleanDecision}::${cleanTeam}`:"";
+}
+function koAdvancerValue(team){
+  return norm(team);
+}
+function parseKoAdvancerValue(value){
+  const raw=String(value||"");
+  const parsed=parseKoOutcomeValue(raw);
+  return parsed.koWinner||norm(raw);
 }
 function parseKoOutcomeValue(value){
   const raw=String(value||"");
@@ -5383,7 +5552,7 @@ function bracketCard(game,opts){
   if(pal.s1!=null&&pal.s2!=null&&res){
     const details=scoreDetails(pal,res,game);
     const sc=details?.pts;
-    if(details?.base===3){cls+=" hit";badge=`<span class="bk-badge">+${sc} cravou</span>`;}
+    if(details?.exact){cls+=" hit";badge=`<span class="bk-badge">+${sc} cravou</span>`;}
     else if(sc>0) badge=`<span class="bk-badge">+${sc}</span>`;
     else if(sc===-2) badge=`<span class="bk-badge" style="background:linear-gradient(135deg,#ef4444,#991b1b)">-2</span>`;
     else badge=`<span class="bk-badge" style="background:#9ca3af">0</span>`;
@@ -5420,14 +5589,15 @@ function bracketCard(game,opts){
 
 function palTiebreakControl(pi,game,teams,pal,disabled,scope="pal"){
   if(!game.ko||!hasScore(pal)||+pal.s1!==+pal.s2) return "";
-  const selected=koOutcomeValue(pal.koWinner,pal.koDecision);
+  const selected=koAdvancerValue(pal.koWinner);
   const id=`${scope}_tb_${pi}_${game.id}`;
+  const buttons=[teams.t1,teams.t2].filter(Boolean).map(team=>{
+    const active=selected===team;
+    return `<button class="pass-btn ${active?"active":""}" type="button" data-team="${esc(team)}" onclick="setPalTiebreak(${pi},${jsAttr(game.id)},this.dataset.team)" ${disabled?"disabled":""}>${esc(teamFlag(team)+" "+team)} passa</button>`;
+  }).join("");
   return `<div class="ko-advancer pal-tiebreak" id="${esc(id)}">
-    <label for="${esc(id)}_select">Desempate do seu palpite</label>
-    <select class="txt-select" id="${esc(id)}_select" onchange="setPalTiebreak(${pi},'${game.id}',this.value)" ${disabled?"disabled":""}>
-      <option value="">Selecione o desempate</option>
-      ${koOutcomeOptions(teams,selected)}
-    </select>
+    <label>Empate: quem passa?</label>
+    <div class="pass-options">${buttons}</div>
   </div>`;
 }
 
@@ -5457,11 +5627,11 @@ function renderPalpiteRow(game){
   if(pal.s1!=null&&pal.s2!=null&&res){
     const details=scoreDetails(pal,res,game);
     sc=details?.pts;
-    const cls=details?.base===3?"b3":sc>0?"b1":sc===-2?"bn2":"b0";
+    const cls=details?.exact?"b3":sc>0?"b1":sc===-2?"bn2":"b0";
     const lbl=sc>0?`+${sc}`:sc===-2?"−2":"0";
     badgeHTML=`<div class="sbadge ${cls}">${lbl}</div>`;
-    badgeLbl=details?.base===3?"cravou":details?.base===1?"acertou":details?.base===-2?"invertido":details?.passBonus?"acertou quem passa":"errou";
-    if(details?.base===3) cardCls+=" is-hit";
+    badgeLbl=details?.exact?"cravou":details?.base===1?"acertou":details?.base===-2?"invertido":details?.passBonus?"acertou quem passa":"errou";
+    if(details?.exact) cardCls+=" is-hit";
   }else if(gameStarted&&canEdit&&(pal.s1==null||pal.s2==null)){
     badgeHTML=`<div class="sbadge b0" title="Jogo encerrado sem palpite">–</div>`;
     badgeLbl="sem palpite";
@@ -5496,7 +5666,7 @@ function renderPalpiteRow(game){
     const statusNote=gameStarted&&!res
       ? `<div class="pal-card-status live">encerrado · aguardando resultado</div>`
       : res
-        ? `<div class="pal-card-result"><span class="real">Resultado oficial: ${esc(resultLabel(game,res,teams))}</span></div>`
+        ? `<div class="pal-card-result">${resultMainHTML(game,res,teams)}${resultDetailHTML(game,res,teams)}</div>`
         : "";
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",!teams.ready)}
@@ -5567,13 +5737,13 @@ function setPalTiebreak(pi,gid,value){
     return;
   }
   const teams=gameTeams(game);
-  const selected=parseKoOutcomeValue(value);
-  if(![teams.t1,teams.t2].includes(selected.koWinner)||!koDecisionLabel(selected.koDecision)){
+  const selected=parseKoAdvancerValue(value);
+  if(![teams.t1,teams.t2].includes(selected)){
     delete pal.koWinner;
     delete pal.koDecision;
   }else{
-    pal.koWinner=selected.koWinner;
-    pal.koDecision=selected.koDecision;
+    pal.koWinner=selected;
+    delete pal.koDecision;
   }
   save();
   savePredictionRemote(pi,gid);
@@ -5705,13 +5875,13 @@ function renderConfig(){
     <div class="card">
       <div class="card-title">Regras de pontuação</div>
       <div class="rules-box">
-        <div><strong>Cravada:</strong> placar exato vale <strong style="color:#065f46">+3 pontos</strong>.</div>
+        <div><strong>Cravada:</strong> placar exato vale <strong style="color:#065f46">+3 pontos</strong>; empate no mata-mata vale 2 antes do bônus de classificado.</div>
         <div><strong>Resultado certo:</strong> vencedor ou empate correto, sem placar exato, vale <strong style="color:#1e40af">+1 ponto</strong>.</div>
         <div><strong>Invertida:</strong> placar exatamente ao contrário vale <strong style="color:#b91c1c">−2 pontos</strong>.</div>
         <div><strong>Erro:</strong> resultado incorreto vale <strong>0 ponto</strong>.</div>
         <hr style="margin:10px 0;border:none;border-top:1px solid var(--border)">
         <div><strong>Pódio:</strong> campeão +20, vice +10, 3º lugar +5 e 4º lugar +3.</div>
-        <div><strong>Mata-mata:</strong> acertar quem passa soma <strong style="color:#065f46">+1 ponto extra</strong>. Em empate cravado, fica +4 se acertar o classificado ou +3 se errar; em empate não cravado, fica +2 se acertar ou +1 se errar.</div>
+        <div><strong>Mata-mata:</strong> acertar quem passa soma <strong style="color:#065f46">+1 ponto extra</strong>. Se o jogo empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1.</div>
       </div>
     </div>
     <div class="card">

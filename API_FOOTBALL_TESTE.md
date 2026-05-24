@@ -38,4 +38,4 @@ Depois disso a página passa a carregar automaticamente os jogos do Supabase. Os
 
 ## Ranking paralelo
 
-Os palpites do teste ficam em `test_predictions`, separados de `predictions`, então não interferem no ranking oficial da Copa. A aba **Ranking BR** recalcula a pontuação conforme `live_scores` recebe placares finalizados.
+Os palpites do teste ficam em `test_predictions`, separados de `predictions`, então não interferem no ranking oficial da Copa. A aba **Ranking BR** recalcula a pontuação conforme `live_scores` recebe placares finalizados. Para mata-mata, `live_scores` também guarda placar no tempo regulamentar, placar após prorrogação, pênaltis e a sequência das cobranças quando a football-data.org fornecer esse detalhe.
