@@ -1480,6 +1480,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-game.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
 .api-test-game.is-locked{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
 .api-test-game.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
+.api-test-game.is-saved{border-color:#9fc5ff;background:linear-gradient(180deg,#f7fbff,#fff)}
 .api-test-meta{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
 .api-test-date{
   display:inline-flex;align-items:center;gap:6px;
@@ -1530,6 +1531,23 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-pal-result.hit{color:var(--green)}
 .api-test-pal-result.ok{color:var(--blue)}
 .api-test-pal-result.bad{color:var(--red)}
+.api-test-save-state{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-height:22px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid transparent;
+  font-size:.58rem;
+  font-weight:950;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  text-align:center;
+}
+.api-test-save-state.saved{background:#eaf4ff;border-color:#bfd8ff;color:var(--blue)}
+.api-test-save-state.editing{background:#fff8d7;border-color:#f0d899;color:#7a5600}
 .api-test-badge{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:50px}
 .api-test-badge .sbadge{
   width:34px;height:34px;border-radius:11px;font-size:.78rem;
@@ -2006,6 +2024,7 @@ const dirtyPredictionKeys=new Set();
 const pendingPredictionWrites=new Set();
 const pendingApiTestPredictionWrites=new Set();
 let apiTestPredictionDrafts={};
+let apiTestEditingPredictions={};
 
 function defaultState(){
   return {
@@ -3617,6 +3636,30 @@ function apiTestPredictionKey(pi,id){
 function apiTestPrediction(pi,id){
   return apiTestState.predictions[apiTestPredictionKey(pi,id)]||null;
 }
+function isApiTestPredictionEditing(pi,id){
+  return Boolean(apiTestEditingPredictions[apiTestPredictionKey(pi,id)]);
+}
+function editApiTestPrediction(id){
+  if(remoteClient&&!remoteSession){
+    toast("Entre no bolão para editar.");
+    return;
+  }
+  if(remoteClient&&remoteSession&&!canEditParticipant(apiTestPi)){
+    toast("Você só pode alterar seus próprios palpites.");
+    loadApiTestRemote(false);
+    return;
+  }
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(fixture&&apiTestHasStarted(fixture)){
+    toast("Palpites encerrados para esse jogo.");
+    render(activeTab);
+    return;
+  }
+  const key=apiTestPredictionKey(apiTestPi,id);
+  if(!apiTestState.predictions[key]) return;
+  apiTestEditingPredictions[key]=true;
+  render(activeTab);
+}
 function apiTestScore(prediction,fixture){
   if(!prediction||!apiTestIsFinal(fixture)) return null;
   return score(
@@ -3848,6 +3891,7 @@ async function saveApiTestPrediction(id){
     if(!ok) return;
   }
   delete apiTestPredictionDrafts[key];
+  delete apiTestEditingPredictions[key];
   saveApiTestState();
   toast("Palpite do Brasileirão salvo.");
   render(activeTab);
@@ -3871,6 +3915,7 @@ function clearApiTestPrediction(id){
   const key=apiTestPredictionKey(apiTestPi,id);
   delete apiTestState.predictions[key];
   delete apiTestPredictionDrafts[key];
+  delete apiTestEditingPredictions[key];
   saveApiTestState();
   if(remoteClient&&remoteSession&&canEditParticipant(apiTestPi)){
     remoteWrite(()=>remoteClient.from("test_predictions")
@@ -3952,18 +3997,28 @@ function renderApiTestGames(){
       <div class="api-test-day-games">
       ${dayFixtures.map(fixture=>{
     const prediction=apiTestPrediction(apiTestPi,fixture.id);
-    const draft=apiTestPredictionDrafts[apiTestPredictionKey(apiTestPi,fixture.id)]||{};
+    const predictionKey=apiTestPredictionKey(apiTestPi,fixture.id);
+    const draft=apiTestPredictionDrafts[predictionKey]||{};
     const sc=apiTestScore(prediction,fixture);
     const label=apiTestScoreLabel(sc);
     const id=apiTestJs(fixture.id);
     const closed=apiTestHasStarted(fixture);
     const canEditFixture=canEditSelectedApiTest&&!closed;
-    const editDisabled=canEditFixture?"":"disabled";
-    const palHint=closed?"Palpites encerrados":canEditSelectedApiTest?"Editar palpite":"Somente leitura";
+    const isSaved=Boolean(prediction);
+    const isEditing=isSaved&&isApiTestPredictionEditing(apiTestPi,fixture.id);
+    const inputsDisabled=!canEditFixture||(isSaved&&!isEditing);
+    const saveDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
+    const editDisabled=canEditFixture&&isSaved&&!isEditing?"":"disabled";
+    const clearDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
+    const palHint=closed?"Palpites encerrados":!canEditSelectedApiTest?"Somente leitura":isSaved&&!isEditing?"Salvo":isSaved?"Editando":"Novo palpite";
+    const saveStateHTML=isSaved
+      ? `<div class="api-test-save-state ${isEditing?"editing":"saved"}">${isEditing?"Editando":"Palpite salvo"}</div>`
+      : "";
     const cardCls=[
       "api-test-game",
       apiTestIsLive(fixture)?"is-live":"",
       !canEditFixture&&!closed?"is-locked":"",
+      isSaved&&!isEditing?"is-saved":"",
       sc===3?"is-hit":""
     ].filter(Boolean).join(" ");
     const badgeCls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":sc===0?"b0":prediction?"bem":"b0";
@@ -3986,14 +4041,17 @@ function renderApiTestGames(){
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
         <div class="api-test-score-panel">
           <div class="api-test-pal-controls">
-            ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",!canEditFixture,{clearZeroOnType:true})}
+            ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
             <span class="ssep">×</span>
-            ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",!canEditFixture,{clearZeroOnType:true})}
+            ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
           </div>
           <div class="api-test-pal-actions">
-            <button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${editDisabled}>Salvar</button>
-            <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${editDisabled}>Limpar</button>
+            ${isSaved&&!isEditing
+              ? `<button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>`
+              : `<button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>`}
+            <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
           </div>
+          ${saveStateHTML}
           <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
           ${resultHTML}
           <div class="api-test-round">${esc(palHint)}</div>
