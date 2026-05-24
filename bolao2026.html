@@ -3652,8 +3652,6 @@ const API_TEST_SYNC_FUNCTION_NAME="api-football-sync-";
 const API_TEST_TOURNAMENT="brasileirao";
 const API_TEST_COPA_START_DATE_KEY="2026-06-11";
 const API_TEST_LIVE_FALLBACK_WINDOW_MIN=170;
-const API_TEST_LIVE_CLOCK_REFRESH_MS=15000;
-const API_TEST_LIVE_CLOCK_MAX_DRIFT_MIN=12;
 const API_TEST_DEFAULT_CONFIG=Object.freeze({
   competition:"BSA",
   season:2026,
@@ -4279,35 +4277,12 @@ function apiTestFixtureStatusCode(fixture){
   if(apiTestIsActiveFixture(fixture)&&!apiTestIsLive(fixture)&&fixture.statusShort==="NS") return "";
   return fixture.statusShort||"";
 }
-function apiTestClockCanRun(fixture){
-  return apiTestIsLive(fixture)&&["1H","2H","LIVE","IN_PLAY","ET"].includes(fixture.statusShort);
-}
-function apiTestEstimatedElapsed(fixture){
-  const elapsed=apiTestCardNumber(fixture?.elapsed);
-  if(elapsed===null) return null;
-  if(!apiTestClockCanRun(fixture)) return elapsed;
-  const syncedAt=fixture.lastSyncedAt?new Date(fixture.lastSyncedAt).getTime():NaN;
-  if(!Number.isFinite(syncedAt)) return elapsed;
-  const drift=Math.floor((Date.now()-syncedAt)/60000);
-  if(!Number.isFinite(drift)||drift<=0) return elapsed;
-  return elapsed+Math.min(drift,API_TEST_LIVE_CLOCK_MAX_DRIFT_MIN);
-}
 function apiTestLiveClockText(fixture){
-  const elapsed=apiTestEstimatedElapsed(fixture);
-  if(elapsed!==null) return `${elapsed}'`;
-  const labels={
-    "1H":"1º tempo",
-    "2H":"2º tempo",
-    "HT":"intervalo",
-    "ET":"prorrogação",
-    "BT":"intervalo",
-    "P":"pênaltis",
-    "LIVE":"em andamento",
-    "IN_PLAY":"em andamento",
-    "PAUSED":"intervalo"
-  };
-  if(labels[fixture.statusShort]) return labels[fixture.statusShort];
-  return "aguardando placar";
+  if(["HT","BT","PAUSED"].includes(fixture.statusShort)) return "HT";
+  if(["2H","ET","P"].includes(fixture.statusShort)) return "2T";
+  const elapsed=apiTestCardNumber(fixture?.elapsed);
+  if(["LIVE","IN_PLAY"].includes(fixture.statusShort)&&elapsed!==null) return elapsed>45?"2T":"1T";
+  return "1T";
 }
 function apiTestCardNumber(value){
   const n=Number(value);
@@ -4581,19 +4556,8 @@ function renderApiTest(){
   </div>`;
   document.getElementById("tab-api-test").innerHTML=h;
 }
-function apiTestNeedsClockRefresh(){
-  return activeTab==="api-test"&&apiTestVisibleFixtures().some(fixture=>
-    apiTestClockCanRun(fixture)&&apiTestEstimatedElapsed(fixture)!==null
-  );
-}
 function syncApiTestClockTimer(){
-  const shouldRun=apiTestNeedsClockRefresh();
-  if(shouldRun&&apiTestClockTimer===null){
-    apiTestClockTimer=setInterval(()=>{
-      if(apiTestNeedsClockRefresh()) renderApiTest();
-      else syncApiTestClockTimer();
-    },API_TEST_LIVE_CLOCK_REFRESH_MS);
-  }else if(!shouldRun&&apiTestClockTimer!==null){
+  if(apiTestClockTimer!==null){
     clearInterval(apiTestClockTimer);
     apiTestClockTimer=null;
   }
