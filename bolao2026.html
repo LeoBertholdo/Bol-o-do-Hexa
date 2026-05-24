@@ -1907,6 +1907,49 @@ body.chart-modal-open{overflow:hidden}
 .api-test-inline-editor .score-control input{width:30px;height:30px;font-size:.78rem}
 .api-test-inline-editor .step-btn{width:24px;height:30px;font-size:.9rem}
 .api-test-inline-editor .ssep{font-size:.76rem}
+.api-test-side-panel.is-editing{justify-items:stretch}
+.api-test-pick-editor{
+  display:grid;
+  gap:5px;
+  justify-items:start;
+  min-width:0;
+}
+.api-test-pick-score-editor{
+  display:inline-grid;
+  grid-template-columns:30px auto 30px;
+  align-items:center;
+  gap:5px;
+}
+.api-test-pick-input{
+  width:30px;
+  height:30px;
+  border:1px solid #bfd8ff;
+  border-radius:8px;
+  background:#fff;
+  color:var(--blue);
+  font-size:.86rem;
+  font-weight:950;
+  line-height:1;
+  text-align:center;
+  box-shadow:0 2px 7px rgba(0,39,118,.06);
+}
+.api-test-pick-input::-webkit-outer-spin-button,.api-test-pick-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.api-test-pick-input[type=number]{appearance:textfield;-moz-appearance:textfield}
+.api-test-pick-x{font-size:.72rem;font-weight:950;color:var(--blue);line-height:1}
+.api-test-pick-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.api-test-pick-actions .api-test-mini-action{font-size:.54rem;letter-spacing:.55px}
+.api-test-pick-actions .api-test-mini-action.primary{
+  padding:5px 8px;
+  border:1px solid #bfd8ff;
+  border-radius:999px;
+  background:#eef5ff;
+  text-decoration:none;
+}
 .api-test-admin-compact{display:grid;gap:5px;justify-items:start}
 .api-test-ranking{display:grid;gap:8px}
 .api-test-rank-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px}
@@ -4953,14 +4996,17 @@ function renderApiTestGames(){
     const sideResultHTML=prediction&&scoreInfo
       ? `<div class="api-test-side-result ${label.cls}">${esc(label.text)}</div>`
       : "";
-    const editorHTML=`<div class="api-test-inline-editor">
-      <div class="api-test-pal-controls">
-        ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
-        <span class="ssep">×</span>
-        ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
+    const editorHTML=`<div class="api-test-pick-editor">
+      <div class="api-test-side-label">Palpite</div>
+      <div class="api-test-pick-score-editor">
+        <input class="api-test-pick-input" id="apiTestS1_${fixture.id}" type="number" min="0" max="30" inputmode="numeric" value="${esc(s1)}" data-clear-zero-on-type="true" aria-label="Gols do mandante" ${inputsDisabled?"disabled":""}>
+        <span class="api-test-pick-x">x</span>
+        <input class="api-test-pick-input" id="apiTestS2_${fixture.id}" type="number" min="0" max="30" inputmode="numeric" value="${esc(s2)}" data-clear-zero-on-type="true" aria-label="Gols do visitante" ${inputsDisabled?"disabled":""}>
       </div>
-      <button class="api-test-mini-action" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>
-      ${isSaved?`<button class="api-test-mini-action" onclick="cancelApiTestPredictionEdit('${id}')">Cancelar</button>`:""}
+      <div class="api-test-pick-actions">
+        <button class="api-test-mini-action primary" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>
+        ${isSaved?`<button class="api-test-mini-action" onclick="cancelApiTestPredictionEdit('${id}')">Cancelar</button>`:""}
+      </div>
     </div>`;
     let sidePanelHTML="";
     if(active){
@@ -4975,7 +5021,7 @@ function renderApiTestGames(){
         ${adminFallbackHTML}
       </div>`;
     }else if(canEditFixture&&(!isSaved||isEditing)){
-      sidePanelHTML=`<div class="api-test-side-panel">${editorHTML}</div>`;
+      sidePanelHTML=`<div class="api-test-side-panel is-editing">${editorHTML}</div>`;
     }else{
       sidePanelHTML=`<div class="api-test-side-panel">
         <div class="api-test-side-row"><span class="api-test-side-label">Palpite</span>${predictionMiniHTML}</div>
