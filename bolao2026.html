@@ -3660,18 +3660,36 @@ function editApiTestPrediction(id){
   apiTestEditingPredictions[key]=true;
   render(activeTab);
 }
-function apiTestScore(prediction,fixture){
-  if(!prediction||!apiTestIsFinal(fixture)) return null;
-  return score(
-    {s1:prediction.s1,s2:prediction.s2},
-    {s1:fixture.goalsHome,s2:fixture.goalsAway}
+function apiTestCanScoreFixture(fixture){
+  return Boolean(
+    fixture&&
+    (apiTestIsFinal(fixture)||apiTestIsLive(fixture))&&
+    fixture.goalsHome!=null&&
+    fixture.goalsAway!=null
   );
 }
-function apiTestScoreLabel(sc){
-  if(sc===3) return {cls:"hit",text:"+3 cravada"};
-  if(sc===1) return {cls:"ok",text:"+1 resultado"};
-  if(sc===-2) return {cls:"bad",text:"-2 invertida"};
-  if(sc===0) return {cls:"",text:"0 erro"};
+function apiTestScoreInfo(prediction,fixture){
+  if(!prediction||!apiTestCanScoreFixture(fixture)) return null;
+  return {
+    value:score(
+    {s1:prediction.s1,s2:prediction.s2},
+    {s1:fixture.goalsHome,s2:fixture.goalsAway}
+    ),
+    live:apiTestIsLive(fixture),
+    final:apiTestIsFinal(fixture)
+  };
+}
+function apiTestScore(prediction,fixture){
+  const info=apiTestScoreInfo(prediction,fixture);
+  return info?info.value:null;
+}
+function apiTestScoreLabel(info){
+  const sc=info?info.value:null;
+  const prefix=info?.live?"parcial ":"";
+  if(sc===3) return {cls:"hit",text:`${prefix}+3 cravada`};
+  if(sc===1) return {cls:"ok",text:`${prefix}+1 resultado`};
+  if(sc===-2) return {cls:"bad",text:`${prefix}-2 invertida`};
+  if(sc===0) return {cls:"",text:`${prefix}0 erro`};
   return {cls:"",text:"Aguardando resultado"};
 }
 function apiTestTodayKey(){
@@ -3684,19 +3702,22 @@ function apiTestVisibleFixtures(){
   return apiTestState.fixtures.filter(apiTestInVisibleWindow);
 }
 function apiTestPlayerStats(pi){
-  let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0;
+  let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0,live=0,finalized=0;
   apiTestVisibleFixtures().forEach(fixture=>{
     const prediction=apiTestPrediction(pi,fixture.id);
     if(prediction) predicted++;
-    const sc=apiTestScore(prediction,fixture);
-    if(sc==null) return;
+    const info=apiTestScoreInfo(prediction,fixture);
+    if(!info) return;
+    const sc=info.value;
     played++;
+    if(info.live) live++;
+    if(info.final) finalized++;
     pts+=sc;
     if(sc===3) crav++;
     if(sc===1) corr++;
     if(sc===-2) inv++;
   });
-  return {pts,crav,corr,inv,played,predicted};
+  return {pts,crav,corr,inv,played,predicted,live,finalized};
 }
 function apiTestRanking(){
   return S.participants.map((name,i)=>({name,i,...apiTestPlayerStats(i)})).sort((a,b)=>{
@@ -3999,8 +4020,9 @@ function renderApiTestGames(){
     const prediction=apiTestPrediction(apiTestPi,fixture.id);
     const predictionKey=apiTestPredictionKey(apiTestPi,fixture.id);
     const draft=apiTestPredictionDrafts[predictionKey]||{};
-    const sc=apiTestScore(prediction,fixture);
-    const label=apiTestScoreLabel(sc);
+    const scoreInfo=apiTestScoreInfo(prediction,fixture);
+    const sc=scoreInfo?scoreInfo.value:null;
+    const label=apiTestScoreLabel(scoreInfo);
     const id=apiTestJs(fixture.id);
     const closed=apiTestHasStarted(fixture);
     const canEditFixture=canEditSelectedApiTest&&!closed;
@@ -4073,7 +4095,7 @@ function renderApiTestRanking(){
       <div class="api-test-rank-pos">${i+1}</div>
       <div>
         <div class="api-test-rank-name">${esc(row.name)}</div>
-        <div class="api-test-rank-meta">${row.crav} crav. · ${row.corr} acertos · ${row.inv} inv. · ${row.predicted} palpites</div>
+        <div class="api-test-rank-meta">${row.crav} crav. · ${row.corr} acertos · ${row.inv} inv. · ${row.predicted} palpites${row.live?` · ${row.live} ao vivo`:""}</div>
       </div>
       <div class="api-test-rank-points">${row.pts}<span>pts</span></div>
     </div>`).join("")}</div>`;
