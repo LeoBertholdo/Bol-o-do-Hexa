@@ -25,6 +25,8 @@ const CADENCE_LATE_SECONDS = 45;       // 45s nos minutos finais
 const CADENCE_FINAL_CORRECTION_SECONDS = 300; // depois do FT, confere mais devagar caso a API corrija placar
 const POLL_MATCH_DETAILS = false;      // plano grátis atual prioriza placar; cartões/escanteios ficam como "desconhecido"
 const MAX_MATCH_DETAIL_CALLS_PER_RUN = 0;
+const POLL_FINAL_MATCH_DETAILS = true; // para jogo finalizado, usa /matches/{id} como fonte mais precisa de correção
+const MAX_FINAL_MATCH_DETAIL_CALLS_PER_RUN = 4;
 const LATE_GAME_FROM_MINUTE = 80;
 const SECOND_HALF_FALLBACK_FROM_KICKOFF_MIN = 60;
 const PRE_KICKOFF_WINDOW_MIN = 2;
@@ -204,6 +206,10 @@ function extractPenaltyShootout(match: any): Array<{ side: "home" | "away"; scor
     return side ? { side, scored: !!penalty?.scored } : null;
   }).filter(Boolean);
   return rows.length ? (rows as Array<{ side: "home" | "away"; scored: boolean }>) : null;
+}
+
+function normalizeMatchDetail(data: any): any {
+  return data?.match || data;
 }
 
 function extractCardCounts(match: any): {
@@ -432,12 +438,39 @@ Deno.serve(async (req) => {
       if (!candidate) continue;
       const gameId = candidate.gameId;
       const live = liveByGame.get(gameId) || {};
-      const minute = numberOrNull(m.minute);
-      const statusShort = mapStatus(m.status, minute, {
-        isSecondHalf: isSecondHalfSignal(m, live, minute, candidate.minutesAfterKickoff)
+      const storedFinalStatus = FINAL_STATUSES.has(live.status_short || "");
+      let match = m;
+      let detailMatch: any = null;
+      const shouldFetchFinalDetails =
+        POLL_FINAL_MATCH_DETAILS &&
+        storedFinalStatus &&
+        detailCalls < MAX_FINAL_MATCH_DETAIL_CALLS_PER_RUN;
+
+      if (shouldFetchFinalDetails) {
+        const detailUrl = new URL(`${FD_BASE_URL}/matches/${m.id}`);
+        try {
+          const detailResp = await fetch(detailUrl, { headers: { "X-Auth-Token": token } });
+          lastRateMinute = detailResp.headers.get("X-Requests-Available-Minute") || lastRateMinute;
+          detailCalls += 1;
+          const detailData = await detailResp.json();
+          if (detailResp.ok) {
+            detailMatch = normalizeMatchDetail(detailData);
+            if (detailMatch?.id != null) match = detailMatch;
+          } else {
+            errors.push(`match ${m.id}: HTTP ${detailResp.status} ${(detailData?.message || "").slice(0, 120)}`);
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          errors.push(`match ${m.id}: ${msg}`);
+        }
+      }
+
+      const minute = numberOrNull(match.minute);
+      const statusShort = mapStatus(match.status, minute, {
+        isSecondHalf: isSecondHalfSignal(match, live, minute, candidate.minutesAfterKickoff)
       });
       const rawFinalStatus = FINAL_STATUSES.has(statusShort);
-      const decision = detectDecision(m.score, {
+      const decision = detectDecision(match.score, {
         isFinalStatus: rawFinalStatus,
         isKnockout: isCopaKnockoutGame(candidate.tournament, gameId)
       });
@@ -447,17 +480,18 @@ Deno.serve(async (req) => {
         statusShort;
       const hadLiveStatus = INTERNAL_LIVE_STATUSES.has(live.status_short || "");
       const isFinalStatus = FINAL_STATUSES.has(finalStatus);
-      const shouldStabilizeLiveScore = !isFinalStatus && (LIVE_STATUSES.has(m.status) || INTERNAL_LIVE_STATUSES.has(finalStatus) || hadLiveStatus);
+      const shouldStabilizeLiveScore = !isFinalStatus && (LIVE_STATUSES.has(match.status) || INTERNAL_LIVE_STATUSES.has(finalStatus) || hadLiveStatus);
       const shouldKeepPreviousStatus = shouldStabilizeLiveScore && hadLiveStatus && finalStatus === "NS";
       const storedStatus = shouldKeepPreviousStatus ? live.status_short : finalStatus;
-      const storedStatusLong = shouldKeepPreviousStatus ? (live.status_long || m.status || null) : (m.status || null);
-      let cardSource = m;
+      const storedStatusLong = shouldKeepPreviousStatus ? (live.status_long || match.status || null) : (match.status || null);
+      let cardSource = detailMatch || match;
       let cards = extractCardCounts(cardSource);
-      let penaltyShootout = extractPenaltyShootout(m);
+      let penaltyShootout = extractPenaltyShootout(cardSource);
       const shouldFetchDetails =
+        !detailMatch &&
         POLL_MATCH_DETAILS &&
         (!hasCardCounts(cards) || (decision.pen && !penaltyShootout)) &&
-        (LIVE_STATUSES.has(m.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
+        (LIVE_STATUSES.has(match.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
         detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN;
 
       if (shouldFetchDetails) {
@@ -468,9 +502,10 @@ Deno.serve(async (req) => {
           detailCalls += 1;
           const detailData = await detailResp.json();
           if (detailResp.ok) {
-            cardSource = detailData;
+            detailMatch = normalizeMatchDetail(detailData);
+            cardSource = detailMatch;
             cards = extractCardCounts(cardSource);
-            penaltyShootout = extractPenaltyShootout(detailData) || penaltyShootout;
+            penaltyShootout = extractPenaltyShootout(cardSource) || penaltyShootout;
           } else {
             errors.push(`match ${m.id}: HTTP ${detailResp.status} ${(detailData?.message || "").slice(0, 120)}`);
           }
@@ -480,10 +515,10 @@ Deno.serve(async (req) => {
         }
       }
 
-      const fullTime = scorePair(m.score?.fullTime);
-      const regularTimeRaw = scorePair(m.score?.regularTime);
-      const extraTimeRaw = scorePair(m.score?.extraTime);
-      const penaltiesRaw = scorePair(m.score?.penalties);
+      const fullTime = scorePair(match.score?.fullTime);
+      const regularTimeRaw = scorePair(match.score?.regularTime);
+      const extraTimeRaw = scorePair(match.score?.extraTime);
+      const penaltiesRaw = scorePair(match.score?.penalties);
       const extraTime = decision.aet || decision.pen ? extraTimeRaw : emptyScorePair();
       const penalties = decision.pen ? penaltiesRaw : emptyScorePair();
       const incomingRegularTime = decision.aet || decision.pen ? regularTimeRaw : fullTime;

@@ -1783,6 +1783,131 @@ body.chart-modal-open{overflow:hidden}
 .api-test-game.is-final .api-test-badge{min-width:40px;gap:2px}
 .api-test-game.is-final .api-test-badge .sbadge{width:30px;height:28px;border-radius:8px;font-size:.7rem;box-shadow:none}
 .api-test-game.is-final .api-test-badge .lbl{font-size:.48rem;letter-spacing:.45px}
+.api-test-game{
+  grid-template-columns:80px minmax(0,1fr) 128px;
+  gap:12px;
+  align-items:center;
+  padding:9px 12px 9px 14px;
+  border-radius:8px;
+  box-shadow:none;
+}
+.api-test-game:hover{transform:none;box-shadow:0 6px 16px rgba(15,23,42,.06)}
+.api-test-game.is-final{
+  grid-template-columns:72px minmax(0,1fr) 112px;
+  gap:10px;
+  min-height:66px;
+  padding:8px 12px 8px 14px;
+}
+.api-test-game.is-upcoming{
+  grid-template-columns:80px minmax(0,1fr) 120px;
+  min-height:82px;
+  background:linear-gradient(180deg,#fbfdff,#fff);
+}
+.api-test-game.is-live{
+  grid-template-columns:82px minmax(0,1fr) 128px;
+  min-height:112px;
+  padding:13px 14px 13px 16px;
+}
+.api-test-game.is-upcoming.is-saved,.api-test-game.is-upcoming.is-hit{border-color:#9fc5ff;background:linear-gradient(180deg,#fbfdff,#fff)}
+.api-test-game.is-final.is-saved,.api-test-game.is-final.is-hit{border-color:var(--border);background:#fff}
+.api-test-game.is-live.is-saved,.api-test-game.is-live.is-hit{border-color:#61c58d;background:linear-gradient(180deg,#f1fff6,#fff)}
+.api-test-meta{padding-left:0;gap:4px}
+.api-test-state-tag{min-height:22px;padding:4px 9px;font-size:.58rem}
+.api-test-time{font-size:.78rem;font-weight:950;color:#64748b}
+.api-test-round{font-size:.6rem;letter-spacing:.65px}
+.api-test-game.is-final .api-test-round{display:none}
+.api-test-matchline{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.api-test-club{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  min-width:0;
+  color:var(--text);
+  font-size:.9rem;
+  font-weight:950;
+  line-height:1.1;
+  text-align:right;
+}
+.api-test-club.away{justify-content:flex-start;text-align:left}
+.api-test-club img{width:32px;height:32px;object-fit:contain;filter:saturate(1.04) drop-shadow(0 2px 5px rgba(0,0,0,.1));flex:0 0 auto}
+.api-test-club span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:normal;overflow-wrap:normal;word-break:normal;hyphens:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.api-test-game.is-final .api-test-club{font-size:.82rem;font-weight:900;gap:6px}
+.api-test-game.is-final .api-test-club img{width:24px;height:24px}
+.api-test-game.is-live .api-test-club{font-size:.96rem}
+.api-test-game.is-live .api-test-club img{width:38px;height:38px}
+.api-test-primary-score{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:62px;
+}
+.api-test-primary-score .api-test-score b{min-width:30px;padding:4px 6px;font-size:.8rem;background:#fff}
+.api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:36px;padding:7px 7px;font-size:1.04rem;border-color:#a9dfc0;background:#f5fff8}
+.api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:26px;padding:3px 5px;font-size:.72rem;background:#fff}
+.api-test-versus{font-size:.76rem;font-weight:950;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase}
+.api-test-side-panel{
+  display:grid;
+  justify-items:start;
+  align-content:center;
+  gap:5px;
+  min-width:0;
+}
+.api-test-side-row{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+.api-test-side-label,.api-test-side-result{
+  font-size:.56rem;
+  font-weight:950;
+  letter-spacing:.62px;
+  line-height:1;
+  text-transform:uppercase;
+  color:#64748b;
+}
+.api-test-side-result.hit,.api-test-side-result.ok{color:var(--blue)}
+.api-test-side-result.bad{color:var(--red)}
+.api-test-mini-score{display:inline-flex;align-items:center;gap:4px;font-weight:950;color:var(--blue);line-height:1}
+.api-test-mini-score b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:20px;
+  min-height:20px;
+  padding:2px 4px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  background:#fff;
+  font-size:.66rem;
+}
+.api-test-mini-action{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:var(--blue);
+  cursor:pointer;
+  font-size:.56rem;
+  font-weight:950;
+  letter-spacing:.62px;
+  line-height:1;
+  padding:2px 0;
+  text-transform:uppercase;
+}
+.api-test-mini-action:hover{text-decoration:underline}
+.api-test-inline-editor{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.api-test-inline-editor .api-test-pal-controls{width:auto;gap:4px}
+.api-test-inline-editor .score-control input{width:30px;height:30px;font-size:.78rem}
+.api-test-inline-editor .step-btn{width:24px;height:30px;font-size:.9rem}
+.api-test-inline-editor .ssep{font-size:.76rem}
+.api-test-admin-compact{display:grid;gap:5px;justify-items:start}
 .api-test-ranking{display:grid;gap:8px}
 .api-test-rank-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px}
 .api-test-rank-pos{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#eef5ff;color:var(--blue);font-weight:950}
@@ -1877,6 +2002,13 @@ body.chart-modal-open{overflow:hidden}
   .api-test-body{grid-template-columns:1fr 1fr;gap:8px;text-align:center;align-items:center}
   .api-test-game.is-final .api-test-body{grid-template-columns:minmax(0,1fr) minmax(76px,auto) minmax(0,1fr);gap:5px}
   .api-test-game.is-live .api-test-body{grid-template-columns:1fr 1fr;gap:10px}
+  .api-test-matchline{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;width:100%}
+  .api-test-club{font-size:.82rem;gap:5px}
+  .api-test-club img{width:28px;height:28px}
+  .api-test-game.is-live .api-test-club{font-size:.92rem}
+  .api-test-game.is-live .api-test-club img{width:34px;height:34px}
+  .api-test-side-panel{justify-items:center;width:100%}
+  .api-test-inline-editor{justify-content:center}
   .api-test-team img{width:34px;height:34px}
   .api-test-score-panel{grid-column:1 / -1;grid-row:2}
   .api-test-game.is-final .api-test-score-panel{grid-column:auto;grid-row:auto}
@@ -4147,6 +4279,12 @@ function editApiTestPrediction(id){
   apiTestEditingPredictions[key]=true;
   render(activeTab);
 }
+function cancelApiTestPredictionEdit(id){
+  const key=apiTestPredictionKey(apiTestPi,id);
+  delete apiTestPredictionDrafts[key];
+  delete apiTestEditingPredictions[key];
+  render(activeTab);
+}
 function apiTestCanScoreFixture(fixture){
   return Boolean(
     fixture&&
@@ -4625,8 +4763,15 @@ function apiTestScoreHTML(homeScore,awayScore,extraClass=""){
   const waiting=homeScore==null||awayScore==null;
   return `<div class="api-test-score ${extraClass} ${waiting?"is-waiting":""}"><b>${homeScore!=null?homeScore:"-"}</b><span>x</span><b>${awayScore!=null?awayScore:"-"}</b></div>`;
 }
+function apiTestMiniScoreHTML(homeScore,awayScore,extraClass=""){
+  const waiting=homeScore==null||awayScore==null;
+  return `<span class="api-test-mini-score ${extraClass} ${waiting?"is-waiting":""}"><b>${homeScore!=null?homeScore:"-"}</b><span>x</span><b>${awayScore!=null?awayScore:"-"}</b></span>`;
+}
 function apiTestPredictionScoreHTML(prediction){
   return apiTestScoreHTML(prediction?.s1??null,prediction?.s2??null,"api-test-pick-score");
+}
+function apiTestPredictionMiniHTML(prediction){
+  return apiTestMiniScoreHTML(prediction?.s1??null,prediction?.s2??null,"api-test-pick-score");
 }
 function apiTestLiveStatsHTML(fixture){
   if(!apiTestHasFinalStatus(fixture)) return "";
@@ -4711,26 +4856,21 @@ function apiTestFinalScoreFallbackHTML(fixture){
   const editing=Boolean(apiTestEditingScores[fixture.id]);
   const busy=pendingApiTestScoreWrites.has(fixture.id);
   if(!editing){
-    return `<div class="api-test-admin-fallback">
-      <button class="action-btn secondary" type="button" onclick="editApiTestFinalScore('${id}')" ${busy?"disabled":""}>Corrigir placar final</button>
-    </div>`;
+    return `<button class="api-test-mini-action" type="button" onclick="editApiTestFinalScore('${id}')" ${busy?"disabled":""}>Corrigir</button>`;
   }
   const draft=apiTestScoreDrafts[fixture.id]||{};
   const home=draft.home??apiTestBaseGoalsHome(fixture)??0;
   const away=draft.away??apiTestBaseGoalsAway(fixture)??0;
-  return `<div class="api-test-admin-fallback">
-    <div class="api-test-admin-tag">Correção manual</div>
-    <div class="api-test-admin-editor">
+  return `<div class="api-test-admin-compact">
+    <div class="api-test-side-label">Correção</div>
+    <div class="api-test-inline-editor">
       <div class="api-test-pal-controls">
         ${scoreControl(`apiTestOverrideHome_${fixture.id}`,home,"","0","onchange",busy,{clearZeroOnType:true})}
         <span class="ssep">×</span>
         ${scoreControl(`apiTestOverrideAway_${fixture.id}`,away,"","0","onchange",busy,{clearZeroOnType:true})}
       </div>
-      <div class="api-test-admin-actions">
-        <button class="action-btn" type="button" onclick="saveApiTestFinalScore('${id}')" ${busy?"disabled":""}>Salvar final</button>
-        <button class="action-btn secondary" type="button" onclick="cancelApiTestFinalScore('${id}')" ${busy?"disabled":""}>Cancelar</button>
-      </div>
-      <div class="api-test-admin-note">Disponível só depois do status finalizado.</div>
+      <button class="api-test-mini-action" type="button" onclick="saveApiTestFinalScore('${id}')" ${busy?"disabled":""}>Salvar</button>
+      <button class="api-test-mini-action" type="button" onclick="cancelApiTestFinalScore('${id}')" ${busy?"disabled":""}>Cancelar</button>
     </div>
   </div>`;
 }
@@ -4792,10 +4932,6 @@ function renderApiTestGames(){
     const inputsDisabled=!canEditFixture||(isSaved&&!isEditing);
     const saveDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
     const editDisabled=canEditFixture&&isSaved&&!isEditing?"":"disabled";
-    const clearDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
-    const saveStateHTML=isSaved
-      ? `<div class="api-test-save-state ${isEditing?"editing":"saved"}">${isEditing?"Editando":"Palpite salvo"}</div>`
-      : "";
     const cardCls=[
       "api-test-game",
       `is-${cardState}`,
@@ -4805,48 +4941,47 @@ function renderApiTestGames(){
       isSaved&&!isEditing?"is-saved":"",
       sc===3?"is-hit":""
     ].filter(Boolean).join(" ");
-    const badgeCls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":sc===0?"b0":prediction?"bem":"b0";
-    const badgeText=sc===3?"+3":sc===1?"+1":sc===-2?"−2":sc===0?"0":"–";
-    const badgeLabel=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":sc===0?"errou":prediction?"aguardando":"sem palpite";
     const s1=draft.s1??(prediction?prediction.s1:0);
     const s2=draft.s2??(prediction?prediction.s2:0);
-    const resultHTML=apiTestLiveSnapshotHTML(fixture,prediction);
+    const officialHome=apiTestBaseGoalsHome(fixture);
+    const officialAway=apiTestBaseGoalsAway(fixture);
     const adminFallbackHTML=apiTestFinalScoreFallbackHTML(fixture);
-    const futureReadonlyHTML=!canEditFixture?`<div class="api-test-readonly-note">${esc(closed?"Palpites encerrados":"Somente leitura")}</div>`:"";
-    const futureSavedPickHTML=prediction
-      ? `<div class="api-test-saved-pick"><span class="api-test-final-label">Palpite</span>${apiTestPredictionScoreHTML(prediction)}</div>`
-      : `<div class="api-test-live-empty">Sem palpite</div>`;
-    const futureEditActionsHTML=canEditFixture&&isSaved&&!isEditing
-      ? `<div class="api-test-pal-actions">
-          <button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>
-          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
-        </div>`
+    const mainScoreHTML=active||finalStatus
+      ? `<div class="api-test-primary-score">${apiTestScoreHTML(officialHome,officialAway)}</div>`
+      : `<div class="api-test-primary-score"><span class="api-test-versus">x</span></div>`;
+    const predictionMiniHTML=prediction?apiTestPredictionMiniHTML(prediction):`<span class="api-test-side-result">Sem palpite</span>`;
+    const sideResultHTML=prediction&&scoreInfo
+      ? `<div class="api-test-side-result ${label.cls}">${esc(label.text)}</div>`
       : "";
-    const futureEditorHTML=canEditFixture&&(!isSaved||isEditing)
-      ? `<div class="api-test-pal-controls">
-          ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
-          <span class="ssep">×</span>
-          ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
-        </div>
-        <div class="api-test-pal-actions">
-          <button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>
-          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
-        </div>`
-      : `${futureSavedPickHTML}${futureEditActionsHTML}`;
-    const upcomingPanelHTML=`<div class="api-test-upcoming-panel">
-        ${futureEditorHTML}
-        ${saveStateHTML}
-        ${futureReadonlyHTML}
+    const editorHTML=`<div class="api-test-inline-editor">
+      <div class="api-test-pal-controls">
+        ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
+        <span class="ssep">×</span>
+        ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
+      </div>
+      <button class="api-test-mini-action" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>
+      ${isSaved?`<button class="api-test-mini-action" onclick="cancelApiTestPredictionEdit('${id}')">Cancelar</button>`:""}
+    </div>`;
+    let sidePanelHTML="";
+    if(active){
+      sidePanelHTML=`<div class="api-test-side-panel">
+        <div class="api-test-side-row"><span class="api-test-side-label">Palpite</span>${predictionMiniHTML}</div>
+        ${sideResultHTML}
       </div>`;
-    const scorePanelHTML=active
-      ? resultHTML
-      : finalStatus
-        ? apiTestFinalSummaryHTML(fixture,prediction,label,adminFallbackHTML)
-        : upcomingPanelHTML;
-    const badgeHTML=active?"":`<div class="api-test-badge">
-        <div class="sbadge ${badgeCls}">${badgeText}</div>
-        <span class="lbl">${esc(badgeLabel)}</span>
+    }else if(finalStatus){
+      sidePanelHTML=`<div class="api-test-side-panel">
+        <div class="api-test-side-row"><span class="api-test-side-label">Palpite</span>${predictionMiniHTML}</div>
+        <div class="api-test-side-result ${prediction?label.cls:""}">${esc(prediction?label.text:"Sem palpite")}</div>
+        ${adminFallbackHTML}
       </div>`;
+    }else if(canEditFixture&&(!isSaved||isEditing)){
+      sidePanelHTML=`<div class="api-test-side-panel">${editorHTML}</div>`;
+    }else{
+      sidePanelHTML=`<div class="api-test-side-panel">
+        <div class="api-test-side-row"><span class="api-test-side-label">Palpite</span>${predictionMiniHTML}</div>
+        ${canEditFixture&&isSaved?`<button class="api-test-mini-action" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>`:""}
+      </div>`;
+    }
     const stateLabel=apiTestFixtureStateLabel(fixture);
     const roundLabel=apiTestRoundLabel(fixture);
     return `<article class="${cardCls}">
@@ -4855,14 +4990,12 @@ function renderApiTestGames(){
         <div class="api-test-time">${esc(fixture.timeLabel)}</div>
         ${roundLabel?`<div class="api-test-round">${esc(roundLabel)}</div>`:""}
       </div>
-      <div class="api-test-body">
-        <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
-        <div class="api-test-score-panel">
-          ${scorePanelHTML}
-        </div>
-        <div class="api-test-team away">${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.away))}</span></div>
+      <div class="api-test-matchline">
+        <div class="api-test-club home"><span>${esc(apiTestTeamName(fixture.home))}</span>${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}</div>
+        ${mainScoreHTML}
+        <div class="api-test-club away">${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.away))}</span></div>
       </div>
-      ${badgeHTML}
+      ${sidePanelHTML}
     </article>`;
   }).join("")}
       </div>
