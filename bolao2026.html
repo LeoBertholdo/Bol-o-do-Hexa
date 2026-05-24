@@ -2162,8 +2162,8 @@ function shouldDeferRemoteRender(){
 }
 function completePredictionVisibleZero(pal){
   if(!pal) return;
-  if(pal.s1!=null&&pal.s2==null) pal.s2=0;
-  if(pal.s2!=null&&pal.s1==null) pal.s1=0;
+  if(pal.s1!=null&&pal.s2==null&&Number(pal.s1)>0) pal.s2=0;
+  if(pal.s2!=null&&pal.s1==null&&Number(pal.s2)>0) pal.s1=0;
 }
 function applyLocalPredictionDraft(pi,gid,w,value){
   if(!canEditParticipant(pi)) return;
@@ -2173,10 +2173,10 @@ function applyLocalPredictionDraft(pi,gid,w,value){
   const n=parseInt(value,10);
   if(!Number.isNaN(n)&&n>=0){
     S.palpites[key][w===1?"s1":"s2"]=Math.min(30,n);
+    completePredictionVisibleZero(S.palpites[key]);
   }else{
     delete S.palpites[key][w===1?"s1":"s2"];
   }
-  completePredictionVisibleZero(S.palpites[key]);
   if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
     delete S.palpites[key].koWinner;
     delete S.palpites[key].koDecision;
@@ -3075,7 +3075,7 @@ function scoreControl(id,value,onChange,placeholder="–",eventName="onchange",d
 function bumpField(id,delta){
   const input=document.getElementById(id);
   if(!input) return;
-  const current=input.value===""?0:parseInt(input.value,10);
+  const current=input.value===""?-1:parseInt(input.value,10);
   input.value=Math.max(0,Math.min(30,(Number.isNaN(current)?0:current)+delta));
   input.dispatchEvent(new Event("input",{bubbles:true}));
   input.dispatchEvent(new Event("change",{bubbles:true}));
@@ -5317,7 +5317,7 @@ function bracketCard(game,opts){
 
   const v1=canEdit&&!gameStarted&&!waiting?(pal.s1??null):pal.s1;
   const v2=canEdit&&!gameStarted&&!waiting?(pal.s2??null):pal.s2;
-  const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="0" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
+  const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="–" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
 
   const rowHTML=(name,side,val,which)=>{
     const flag=teamFlag(name);
@@ -5417,8 +5417,8 @@ function renderPalpiteRow(game){
       ${palTeamHTML(teams.t2,"r",true)}
     </div>`;
   }else{
-    const v1=canEdit&&!gameStarted?(pal.s1??0):pal.s1;
-    const v2=canEdit&&!gameStarted?(pal.s2??0):pal.s2;
+    const v1=canEdit&&!gameStarted?(pal.s1??null):pal.s1;
+    const v2=canEdit&&!gameStarted?(pal.s2??null):pal.s2;
     const statusNote=gameStarted&&!res
       ? `<div class="pal-card-status live">encerrado · aguardando resultado</div>`
       : res
@@ -5463,11 +5463,11 @@ function setPal(pi,gid,w,v){
     const clamped=Math.min(30,n);
     if(w===1) S.palpites[key].s1=clamped;
     else S.palpites[key].s2=clamped;
+    completePredictionVisibleZero(S.palpites[key]);
   }else{
     if(w===1) delete S.palpites[key].s1;
     else delete S.palpites[key].s2;
   }
-  completePredictionVisibleZero(S.palpites[key]);
   if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
     delete S.palpites[key].koWinner;
     delete S.palpites[key].koDecision;
