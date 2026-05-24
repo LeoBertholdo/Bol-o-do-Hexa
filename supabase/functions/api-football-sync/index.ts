@@ -20,9 +20,10 @@ const INTERNAL_LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE
 // Status finalizado (paramos de chamar)
 const FINAL_STATUSES = new Set(["FINISHED", "AWARDED", "FT", "AET", "PEN", "AWD"]);
 
-const CADENCE_NORMAL_SECONDS = 90;     // 90s na maior parte do jogo (10/min é o limite, sobra muito)
+const CADENCE_NORMAL_SECONDS = 55;     // cron roda a cada minuto; 55s evita pular uma rodada por poucos segundos
 const CADENCE_LATE_SECONDS = 45;       // 45s nos minutos finais
-const MAX_MATCH_DETAIL_CALLS_PER_RUN = 6; // deixa folga no limite de 10 chamadas/min da football-data
+const POLL_MATCH_DETAILS = false;      // plano grátis atual prioriza placar; cartões/escanteios ficam como "desconhecido"
+const MAX_MATCH_DETAIL_CALLS_PER_RUN = 0;
 const LATE_GAME_FROM_MINUTE = 80;
 const PRE_KICKOFF_WINDOW_MIN = 2;
 const POST_KICKOFF_GIVEUP_MIN = 240;
@@ -372,6 +373,7 @@ Deno.serve(async (req) => {
       let cards = extractCardCounts(cardSource);
       let penaltyShootout = extractPenaltyShootout(m);
       const shouldFetchDetails =
+        POLL_MATCH_DETAILS &&
         (!hasCardCounts(cards) || (decision.pen && !penaltyShootout)) &&
         (LIVE_STATUSES.has(m.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
         detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN;

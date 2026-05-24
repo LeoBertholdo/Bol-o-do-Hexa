@@ -153,6 +153,21 @@ grant select on public.api_sync_log to authenticated;
 grant select on public.api_sync_today to authenticated;
 grant update on public.live_scores to authenticated;
 
+-- Realtime: permite que a aba Brasileirão receba o placar assim que live_scores muda.
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1
+       from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'live_scores'
+     ) then
+    alter publication supabase_realtime add table public.live_scores;
+  end if;
+end $$;
+
 drop policy if exists "api_fixture_map visible" on public.api_fixture_map;
 create policy "api_fixture_map visible"
 on public.api_fixture_map for select to authenticated using (true);

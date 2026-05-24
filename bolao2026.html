@@ -3690,6 +3690,8 @@ let apiTestSearch="";
 let apiTestStatusFilter="all";
 let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."};
 let apiTestClockTimer=null;
+let apiTestRealtimeChannel=null;
+let apiTestRealtimeReloadTimer=null;
 
 function apiTestDefaultState(){
   return {
@@ -4546,6 +4548,7 @@ function renderApiTest(){
   if(Number.isInteger(myIndex)&&!apiTestSelectionTouched) apiTestPi=myIndex;
   if(apiTestPi>=S.participants.length) apiTestPi=0;
   syncApiTestClockTimer();
+  syncApiTestRealtimeSubscription();
   const h=`<div class="api-test-page">
     <div class="api-test-grid">
       <section class="panel">
@@ -4595,6 +4598,30 @@ function syncApiTestClockTimer(){
     apiTestClockTimer=null;
   }
 }
+function queueApiTestRealtimeRefresh(){
+  if(activeTab!=="api-test"||!remoteClient||!remoteSession) return;
+  if(apiTestRealtimeReloadTimer!==null) clearTimeout(apiTestRealtimeReloadTimer);
+  apiTestRealtimeReloadTimer=setTimeout(()=>{
+    apiTestRealtimeReloadTimer=null;
+    loadApiTestRemote(false,{silent:true});
+  },300);
+}
+function syncApiTestRealtimeSubscription(){
+  const shouldRun=Boolean(activeTab==="api-test"&&remoteClient&&remoteSession);
+  if(shouldRun&&apiTestRealtimeChannel===null){
+    apiTestRealtimeChannel=remoteClient
+      .channel("api-test-live-scores")
+      .on("postgres_changes",{event:"*",schema:"public",table:"live_scores"},queueApiTestRealtimeRefresh)
+      .subscribe();
+  }else if(!shouldRun&&apiTestRealtimeChannel!==null){
+    if(remoteClient) remoteClient.removeChannel(apiTestRealtimeChannel);
+    apiTestRealtimeChannel=null;
+    if(apiTestRealtimeReloadTimer!==null){
+      clearTimeout(apiTestRealtimeReloadTimer);
+      apiTestRealtimeReloadTimer=null;
+    }
+  }
+}
 // ==== END BRASILEIRAO TEST LAB ====
 
 function goTab(t){
@@ -4609,6 +4636,7 @@ function goTab(t){
   activeTab=t;
   render(t);
   syncApiTestClockTimer();
+  syncApiTestRealtimeSubscription();
   if(t==="api-test"&&remoteClient&&remoteSession){
     loadApiTestRemote(false,{silent:true});
   }
