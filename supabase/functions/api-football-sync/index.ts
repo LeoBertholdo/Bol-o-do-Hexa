@@ -73,6 +73,19 @@ function hasNonZeroScore(pair: { home: number | null; away: number | null }): bo
   return (pair.home ?? 0) > 0 || (pair.away ?? 0) > 0;
 }
 
+function isDrawScore(pair: { home: number | null; away: number | null }): boolean {
+  return pair.home != null && pair.away != null && pair.home === pair.away;
+}
+
+function hasCompleteScorePair(pair: { home: number | null; away: number | null }): boolean {
+  return pair.home != null && pair.away != null;
+}
+
+function isCopaKnockoutGame(tournament: unknown, gameId: unknown): boolean {
+  if (String(tournament || "") !== "copa") return false;
+  return !/^G[A-L]\d+$/i.test(String(gameId || ""));
+}
+
 function stabilizeLiveNumber(incoming: number | null, previous: unknown, shouldStabilize: boolean): number | null {
   if (!shouldStabilize) return incoming;
   const prev = numberOrNull(previous);
@@ -97,15 +110,25 @@ function afterExtraScore(regular: number | null, extra: number | null, full: num
   return hasPenalties ? null : full;
 }
 
-// Detecta se o resultado teve prorrogação ou pênaltis
-function detectDecision(score: any): { aet: boolean; pen: boolean } {
+// Detecta se o resultado teve prorrogação ou pênaltis.
+// Campos 0x0 de extraTime/penalties podem aparecer como placeholder antes da hora,
+// então só aceitamos 0x0 de prorrogação com contexto forte de mata-mata finalizado.
+function detectDecision(score: any, context: { isFinalStatus: boolean; isKnockout: boolean }): { aet: boolean; pen: boolean } {
   const duration = String(score?.duration || "").toUpperCase();
+  const fullTime = scorePair(score?.fullTime);
+  const regular = scorePair(score?.regularTime);
   const extra = scorePair(score?.extraTime);
   const penalties = scorePair(score?.penalties);
   const durationHasAet = duration === "EXTRA_TIME" || duration === "PENALTY_SHOOTOUT";
   const durationHasPen = duration === "PENALTY_SHOOTOUT";
+  const finalKnockoutDrawWithExtra =
+    context.isFinalStatus &&
+    context.isKnockout &&
+    hasCompleteScorePair(extra) &&
+    isDrawScore(fullTime) &&
+    (isDrawScore(regular) || regular.home == null || regular.away == null);
   return {
-    aet: durationHasAet || hasNonZeroScore(extra),
+    aet: durationHasAet || hasNonZeroScore(extra) || finalKnockoutDrawWithExtra,
     pen: durationHasPen || hasNonZeroScore(penalties)
   };
 }
@@ -240,7 +263,7 @@ Deno.serve(async (req) => {
   // 1. Lê o mapa
   const { data: mapRows, error: mapErr } = await supa
     .from("api_fixture_map")
-    .select("game_id, api_fixture_id, league_id, kickoff_utc");
+    .select("game_id, api_fixture_id, tournament, league_id, kickoff_utc");
   if (mapErr) return json(500, { error: "Falha lendo api_fixture_map.", detail: mapErr.message });
   if (!mapRows?.length) return json(200, { skipped: "sem_jogos_mapeados" });
 
@@ -254,6 +277,7 @@ Deno.serve(async (req) => {
   type Cand = {
     gameId: string;
     apiId: number;
+    tournament: string;
     competitionId: number;
     cadenceSeconds: number;
     minutesSincePoll: number;
@@ -281,6 +305,7 @@ Deno.serve(async (req) => {
     candidates.push({
       gameId: row.game_id,
       apiId: row.api_fixture_id,
+      tournament: row.tournament,
       competitionId: row.league_id,
       cadenceSeconds,
       minutesSincePoll
@@ -360,14 +385,19 @@ Deno.serve(async (req) => {
     }
 
     const matches: any[] = Array.isArray(apiData?.matches) ? apiData.matches : [];
-    const apiToGame = new Map(group.map(c => [c.apiId, c.gameId]));
+    const apiToCandidate = new Map(group.map(c => [c.apiId, c]));
     const upserts: any[] = [];
 
     for (const m of matches) {
-      const gameId = apiToGame.get(m.id);
-      if (!gameId) continue;
+      const candidate = apiToCandidate.get(m.id);
+      if (!candidate) continue;
+      const gameId = candidate.gameId;
       const statusShort = mapStatus(m.status, m.minute ?? null);
-      const decision = detectDecision(m.score);
+      const rawFinalStatus = FINAL_STATUSES.has(statusShort);
+      const decision = detectDecision(m.score, {
+        isFinalStatus: rawFinalStatus,
+        isKnockout: isCopaKnockoutGame(candidate.tournament, gameId)
+      });
       const finalStatus =
         statusShort === "FT" && decision.pen ? "PEN" :
         statusShort === "FT" && decision.aet ? "AET" :
