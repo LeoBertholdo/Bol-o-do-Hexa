@@ -21,6 +21,7 @@ const FINAL_STATUSES = new Set(["FINISHED", "AWARDED", "FT", "AET", "PEN", "AWD"
 
 const CADENCE_NORMAL_SECONDS = 90;     // 90s na maior parte do jogo (10/min é o limite, sobra muito)
 const CADENCE_LATE_SECONDS = 45;       // 45s nos minutos finais
+const MAX_MATCH_DETAIL_CALLS_PER_RUN = 6; // deixa folga no limite de 10 chamadas/min da football-data
 const LATE_GAME_FROM_MINUTE = 80;
 const PRE_KICKOFF_WINDOW_MIN = 2;
 const POST_KICKOFF_GIVEUP_MIN = 240;
@@ -56,6 +57,86 @@ function detectDecision(score: any): { aet: boolean; pen: boolean } {
     aet: !!score?.extraTime?.home || !!score?.extraTime?.away,
     pen: score?.penalties?.home != null || score?.penalties?.away != null
   };
+}
+
+function numberOrNull(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeTeamName(name: unknown): string {
+  return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
+function bookingSide(match: any, booking: any): "home" | "away" | null {
+  const team = booking?.team || {};
+  if (team.id != null) {
+    if (String(team.id) === String(match?.homeTeam?.id)) return "home";
+    if (String(team.id) === String(match?.awayTeam?.id)) return "away";
+  }
+  const name = normalizeTeamName(team.name);
+  if (!name) return null;
+  if (name === normalizeTeamName(match?.homeTeam?.name) || name === normalizeTeamName(match?.homeTeam?.shortName)) return "home";
+  if (name === normalizeTeamName(match?.awayTeam?.name) || name === normalizeTeamName(match?.awayTeam?.shortName)) return "away";
+  return null;
+}
+
+function extractCardCounts(match: any): {
+  yellowHome: number | null;
+  yellowAway: number | null;
+  redHome: number | null;
+  redAway: number | null;
+  cornersHome: number | null;
+  cornersAway: number | null;
+} {
+  const homeStats = match?.homeTeam?.statistics;
+  const awayStats = match?.awayTeam?.statistics;
+  if (homeStats || awayStats) {
+    const homeYellow = numberOrNull(homeStats?.yellow_cards);
+    const awayYellow = numberOrNull(awayStats?.yellow_cards);
+    const homeRed = numberOrNull(homeStats?.red_cards);
+    const awayRed = numberOrNull(awayStats?.red_cards);
+    const homeYellowRed = numberOrNull(homeStats?.yellow_red_cards);
+    const awayYellowRed = numberOrNull(awayStats?.yellow_red_cards);
+    return {
+      yellowHome: homeYellow,
+      yellowAway: awayYellow,
+      redHome: homeRed == null && homeYellowRed == null ? null : (homeRed || 0) + (homeYellowRed || 0),
+      redAway: awayRed == null && awayYellowRed == null ? null : (awayRed || 0) + (awayYellowRed || 0),
+      cornersHome: numberOrNull(homeStats?.corner_kicks),
+      cornersAway: numberOrNull(awayStats?.corner_kicks)
+    };
+  }
+
+  if (!Array.isArray(match?.bookings)) {
+    return { yellowHome: null, yellowAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
+  }
+
+  const counts = { yellowHome: 0, yellowAway: 0, redHome: 0, redAway: 0, cornersHome: null, cornersAway: null };
+  let found = false;
+  for (const booking of match.bookings) {
+    const side = bookingSide(match, booking);
+    if (!side) continue;
+    const card = String(booking.card || "").toUpperCase();
+    found = true;
+    if (card.includes("RED")) {
+      if (side === "home") counts.redHome += 1;
+      else counts.redAway += 1;
+    } else if (card.includes("YELLOW")) {
+      if (side === "home") counts.yellowHome += 1;
+      else counts.yellowAway += 1;
+    }
+  }
+
+  return found ? counts : { yellowHome: null, yellowAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
+}
+
+function hasCardCounts(cards: ReturnType<typeof extractCardCounts>): boolean {
+  return Object.values(cards).some(v => v != null);
 }
 
 function toIsoDate(d: Date) {
@@ -105,7 +186,7 @@ Deno.serve(async (req) => {
   // 2. Lê estado conhecido
   const { data: liveRows } = await supa
     .from("live_scores")
-    .select("game_id, status_short, elapsed, last_synced_at, is_locked_by_admin");
+    .select("game_id, status_short, elapsed, last_synced_at, is_locked_by_admin, yellow_cards_home, yellow_cards_away, red_cards_home, red_cards_away, corner_kicks_home, corner_kicks_away");
   const liveByGame = new Map((liveRows || []).map((r: any) => [r.game_id, r]));
 
   // 3. Filtra candidatos
@@ -162,10 +243,12 @@ Deno.serve(async (req) => {
 
   let totalUpdated = 0;
   let lastRateMinute: string | null = null;
+  let detailCalls = 0;
   const calls: any[] = [];
   const errors: string[] = [];
 
   for (const [competitionId, group] of byComp) {
+    const detailCallsBeforeCompetition = detailCalls;
     const cadenceSec = Math.min(...group.map(c => c.cadenceSeconds));
     const minSincePoll = Math.min(...group.map(c => c.minutesSincePoll));
 
@@ -228,6 +311,32 @@ Deno.serve(async (req) => {
         statusShort === "FT" && decision.pen ? "PEN" :
         statusShort === "FT" && decision.aet ? "AET" :
         statusShort;
+      const live = liveByGame.get(gameId) || {};
+      let cardSource = m;
+      let cards = extractCardCounts(cardSource);
+      const shouldFetchDetails =
+        !hasCardCounts(cards) &&
+        (LIVE_STATUSES.has(m.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
+        detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN;
+
+      if (shouldFetchDetails) {
+        const detailUrl = new URL(`${FD_BASE_URL}/matches/${m.id}`);
+        try {
+          const detailResp = await fetch(detailUrl, { headers: { "X-Auth-Token": token } });
+          lastRateMinute = detailResp.headers.get("X-Requests-Available-Minute") || lastRateMinute;
+          detailCalls += 1;
+          const detailData = await detailResp.json();
+          if (detailResp.ok) {
+            cardSource = detailData;
+            cards = extractCardCounts(cardSource);
+          } else {
+            errors.push(`match ${m.id}: HTTP ${detailResp.status} ${(detailData?.message || "").slice(0, 120)}`);
+          }
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : String(e);
+          errors.push(`match ${m.id}: ${msg}`);
+        }
+      }
 
       upserts.push({
         game_id: gameId,
@@ -239,6 +348,12 @@ Deno.serve(async (req) => {
         goals_away: m.score?.fullTime?.away ?? null,
         pens_home: m.score?.penalties?.home ?? null,
         pens_away: m.score?.penalties?.away ?? null,
+        yellow_cards_home: cards.yellowHome ?? live.yellow_cards_home ?? null,
+        yellow_cards_away: cards.yellowAway ?? live.yellow_cards_away ?? null,
+        red_cards_home: cards.redHome ?? live.red_cards_home ?? null,
+        red_cards_away: cards.redAway ?? live.red_cards_away ?? null,
+        corner_kicks_home: cards.cornersHome ?? live.corner_kicks_home ?? null,
+        corner_kicks_away: cards.cornersAway ?? live.corner_kicks_away ?? null,
         last_synced_at: new Date().toISOString()
       });
     }
@@ -256,7 +371,8 @@ Deno.serve(async (req) => {
     calls.push({
       competition: competitionId,
       matches_returned: matches.length,
-      fixtures_updated: updated
+      fixtures_updated: updated,
+      match_details_polled: detailCalls - detailCallsBeforeCompetition
     });
 
     await supa.from("api_sync_log").insert({

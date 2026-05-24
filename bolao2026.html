@@ -1478,6 +1478,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .api-test-game:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
 .api-test-game.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
+.api-test-game.is-live-only{grid-template-columns:108px minmax(0,1fr)}
 .api-test-game.is-locked{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
 .api-test-game.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
 .api-test-game.is-saved{border-color:#9fc5ff;background:linear-gradient(180deg,#f7fbff,#fff)}
@@ -1519,8 +1520,20 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   overflow:hidden;
 }
 .api-test-score-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;max-width:220px;min-width:0;justify-self:center}
+.api-test-live-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%}
 .api-test-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--blue)}
 .api-test-score b{min-width:30px;text-align:center;border:1px solid var(--border);border-radius:8px;background:#f8fbf1;padding:4px 5px;font-size:.76rem}
+.api-test-live-stats{display:grid;gap:4px;width:100%;max-width:188px}
+.api-test-cards{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;width:100%;max-width:188px}
+.api-test-card-side{display:flex;align-items:center;gap:4px;min-width:0}
+.api-test-card-side.home{justify-content:flex-end}
+.api-test-card-side.away{justify-content:flex-start}
+.api-test-card-label{font-size:.5rem;font-weight:950;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:center}
+.api-test-card-token{display:inline-flex;align-items:center;gap:3px;padding:2px 5px;border:1px solid var(--border);border-radius:6px;background:#fff;font-size:.6rem;font-weight:950;color:var(--text);line-height:1}
+.api-test-card-shape{width:7px;height:10px;border-radius:2px;display:inline-block;box-shadow:0 1px 2px rgba(0,0,0,.14);transform:rotate(3deg)}
+.api-test-card-shape.yellow{background:#f6d447}
+.api-test-card-shape.red{background:#d83a34}
+.api-test-corner-token{display:inline-flex;align-items:center;justify-content:center;min-width:24px;padding:2px 6px;border:1px solid var(--border);border-radius:6px;background:#f8fbf1;font-size:.6rem;font-weight:950;color:var(--blue);line-height:1}
 .api-test-pal-controls{display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:nowrap;width:100%}
 .api-test-pal-controls .score-control{box-shadow:0 4px 10px rgba(0,39,118,.08)}
 .api-test-pal-controls .score-control input{width:34px;height:34px;font-size:.86rem}
@@ -3611,6 +3624,12 @@ function normalizeApiTestFixture(row){
     awayLogo:apiTestTeamLogo(row.away_team||row.away||row.teams?.away?.name,row.awayLogo||row.teams?.away?.logo||""),
     goalsHome:live.goals_home??row.goals_home??row.goalsHome??row.goals?.home??null,
     goalsAway:live.goals_away??row.goals_away??row.goalsAway??row.goals?.away??null,
+    yellowCardsHome:live.yellow_cards_home??row.yellow_cards_home??row.yellowCardsHome??null,
+    yellowCardsAway:live.yellow_cards_away??row.yellow_cards_away??row.yellowCardsAway??null,
+    redCardsHome:live.red_cards_home??row.red_cards_home??row.redCardsHome??null,
+    redCardsAway:live.red_cards_away??row.red_cards_away??row.redCardsAway??null,
+    cornerKicksHome:live.corner_kicks_home??row.corner_kicks_home??row.cornerKicksHome??null,
+    cornerKicksAway:live.corner_kicks_away??row.corner_kicks_away??row.cornerKicksAway??null,
     lastSyncedAt:live.last_synced_at||row.last_synced_at||null,
     isLockedByAdmin:Boolean(live.is_locked_by_admin||row.is_locked_by_admin)
   };
@@ -3757,7 +3776,7 @@ async function loadApiTestRemote(showToast=false,options={}){
   if(!options.skipRender) render(activeTab);
   const [mapRows,liveRows,predRows,syncToday]=await Promise.all([
     remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,tournament,league_id,season,kickoff_utc,home_team,away_team,round_label").eq("tournament",API_TEST_TOURNAMENT).order("kickoff_utc",{ascending:true}),
-    remoteClient.from("live_scores").select("game_id,api_fixture_id,status_short,status_long,elapsed,goals_home,goals_away,pens_home,pens_away,last_synced_at,is_locked_by_admin"),
+    remoteClient.from("live_scores").select("game_id,api_fixture_id,status_short,status_long,elapsed,goals_home,goals_away,pens_home,pens_away,yellow_cards_home,yellow_cards_away,red_cards_home,red_cards_away,corner_kicks_home,corner_kicks_away,last_synced_at,is_locked_by_admin"),
     remoteClient.from("test_predictions").select("participant_index,game_id,s1,s2").eq("tournament",API_TEST_TOURNAMENT),
     remoteClient.from("api_sync_today").select("*").maybeSingle()
   ]);
@@ -3859,7 +3878,7 @@ async function runApiTestSyncNow(){
 }
 function loadApiTestSampleFixtures(){
   const sample=[
-    {id:900001,dateIso:"2026-05-24T19:00:00Z",round:"Regular Season - 10",venue:"Maracanã",statusShort:"NS",statusLong:"Not Started",home:"Flamengo",away:"Palmeiras",goalsHome:null,goalsAway:null},
+    {id:900001,dateIso:"2026-05-24T19:00:00Z",round:"Regular Season - 10",venue:"Maracanã",statusShort:"1H",statusLong:"IN_PLAY",elapsed:34,home:"Flamengo",away:"Palmeiras",goalsHome:1,goalsAway:0,yellowCardsHome:2,yellowCardsAway:1,redCardsHome:0,redCardsAway:0,cornerKicksHome:4,cornerKicksAway:2},
     {id:900002,dateIso:"2026-05-25T00:00:00Z",round:"Regular Season - 10",venue:"Morumbis",statusShort:"FT",statusLong:"Match Finished",home:"São Paulo",away:"Corinthians",goalsHome:2,goalsAway:1},
     {id:900003,dateIso:"2026-06-01T22:30:00Z",round:"Regular Season - 11",venue:"Mineirão",statusShort:"NS",statusLong:"Not Started",home:"Cruzeiro",away:"Internacional",goalsHome:null,goalsAway:null},
     {id:900004,dateIso:"2026-06-08T23:00:00Z",round:"Regular Season - 12",venue:"Arena Fonte Nova",statusShort:"NS",statusLong:"Not Started",home:"Bahia",away:"Atlético-MG",goalsHome:null,goalsAway:null}
@@ -3976,6 +3995,59 @@ function apiTestFixtureStatusText(fixture){
   if(fixture.statusShort==="TBD") return "A definir";
   return fixture.statusLong||fixture.statusShort||"Sem status";
 }
+function apiTestCardNumber(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n:null;
+}
+function apiTestCardCounts(fixture){
+  return {
+    yellowHome:apiTestCardNumber(fixture.yellowCardsHome),
+    yellowAway:apiTestCardNumber(fixture.yellowCardsAway),
+    redHome:apiTestCardNumber(fixture.redCardsHome),
+    redAway:apiTestCardNumber(fixture.redCardsAway),
+    cornersHome:apiTestCardNumber(fixture.cornerKicksHome),
+    cornersAway:apiTestCardNumber(fixture.cornerKicksAway)
+  };
+}
+function apiTestHasCardCounts(fixture){
+  const counts=apiTestCardCounts(fixture);
+  return counts.yellowHome!==null||counts.yellowAway!==null||counts.redHome!==null||counts.redAway!==null;
+}
+function apiTestHasCornerCounts(fixture){
+  const counts=apiTestCardCounts(fixture);
+  return counts.cornersHome!==null||counts.cornersAway!==null;
+}
+function apiTestCardToken(type,value){
+  const n=value??0;
+  return `<span class="api-test-card-token"><span class="api-test-card-shape ${type}"></span>${n}</span>`;
+}
+function apiTestLiveSnapshotHTML(fixture){
+  if(!(apiTestIsFinal(fixture)||apiTestIsLive(fixture))) return "";
+  const scoreHTML=`<div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>`;
+  if(!apiTestIsLive(fixture)||(!apiTestHasCardCounts(fixture)&&!apiTestHasCornerCounts(fixture))){
+    return scoreHTML;
+  }
+  const cards=apiTestCardCounts(fixture);
+  const cardRows=[];
+  if(apiTestHasCardCounts(fixture)){
+    cardRows.push(`<div class="api-test-cards" title="Cartões ao vivo">
+      <span class="api-test-card-side home">${apiTestCardToken("yellow",cards.yellowHome)}${apiTestCardToken("red",cards.redHome)}</span>
+      <span class="api-test-card-label">cartões</span>
+      <span class="api-test-card-side away">${apiTestCardToken("yellow",cards.yellowAway)}${apiTestCardToken("red",cards.redAway)}</span>
+    </div>`);
+  }
+  if(apiTestHasCornerCounts(fixture)){
+    cardRows.push(`<div class="api-test-cards" title="Escanteios ao vivo">
+      <span class="api-test-card-side home"><span class="api-test-corner-token">${cards.cornersHome??0}</span></span>
+      <span class="api-test-card-label">escanteios</span>
+      <span class="api-test-card-side away"><span class="api-test-corner-token">${cards.cornersAway??0}</span></span>
+    </div>`);
+  }
+  return `<div class="api-test-live-panel">
+    ${scoreHTML}
+    <div class="api-test-live-stats">${cardRows.join("")}</div>
+  </div>`;
+}
 function apiTestDayTitle(fixture){
   const d=fixture.dateIso?new Date(fixture.dateIso):null;
   if(!d||Number.isNaN(d.getTime())) return fixture.dateLabel||"Sem data";
@@ -4039,6 +4111,7 @@ function renderApiTestGames(){
     const cardCls=[
       "api-test-game",
       apiTestIsLive(fixture)?"is-live":"",
+      apiTestIsLive(fixture)?"is-live-only":"",
       !canEditFixture&&!closed?"is-locked":"",
       isSaved&&!isEditing?"is-saved":"",
       sc===3?"is-hit":""
@@ -4048,9 +4121,28 @@ function renderApiTestGames(){
     const badgeLabel=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":sc===0?"errou":prediction?"aguardando":"sem palpite";
     const s1=draft.s1??(prediction?prediction.s1:0);
     const s2=draft.s2??(prediction?prediction.s2:0);
-    const resultHTML=apiTestIsFinal(fixture)||apiTestIsLive(fixture)
-      ? `<div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>`
-      : "";
+    const resultHTML=apiTestLiveSnapshotHTML(fixture);
+    const scorePanelHTML=apiTestIsLive(fixture)
+      ? resultHTML
+      : `<div class="api-test-pal-controls">
+          ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
+          <span class="ssep">×</span>
+          ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
+        </div>
+        <div class="api-test-pal-actions">
+          ${isSaved&&!isEditing
+            ? `<button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>`
+            : `<button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>`}
+          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
+        </div>
+        ${saveStateHTML}
+        <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
+        ${resultHTML}
+        <div class="api-test-round">${esc(palHint)}</div>`;
+    const badgeHTML=apiTestIsLive(fixture)?"":`<div class="api-test-badge">
+        <div class="sbadge ${badgeCls}">${badgeText}</div>
+        <span class="lbl">${esc(badgeLabel)}</span>
+      </div>`;
     return `<article class="${cardCls}">
       <div class="api-test-meta">
         <div class="api-test-date">${esc(fixture.dateLabel)}</div>
@@ -4062,28 +4154,11 @@ function renderApiTestGames(){
       <div class="api-test-body">
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
         <div class="api-test-score-panel">
-          <div class="api-test-pal-controls">
-            ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
-            <span class="ssep">×</span>
-            ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
-          </div>
-          <div class="api-test-pal-actions">
-            ${isSaved&&!isEditing
-              ? `<button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>`
-              : `<button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>`}
-            <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
-          </div>
-          ${saveStateHTML}
-          <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
-          ${resultHTML}
-          <div class="api-test-round">${esc(palHint)}</div>
+          ${scorePanelHTML}
         </div>
         <div class="api-test-team away">${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.away))}</span></div>
       </div>
-      <div class="api-test-badge">
-        <div class="sbadge ${badgeCls}">${badgeText}</div>
-        <span class="lbl">${esc(badgeLabel)}</span>
-      </div>
+      ${badgeHTML}
     </article>`;
   }).join("")}
       </div>
