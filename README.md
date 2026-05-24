@@ -24,18 +24,22 @@ Repositório oficial: [LeoBertholdo/Bol-o-do-Hexa](https://github.com/LeoBerthol
 .
 ├── index.html            # Redirect para bolao2026.html (entry point)
 ├── bolao2026.html        # Aplicação completa (HTML + CSS + JS em linha)
-├── API_FOOTBALL_TESTE.md # Passo a passo para testar a API-Football via Supabase
+├── API_FOOTBALL_TESTE.md # Passo a passo do teste de placares via Supabase
 ├── supabase/
 │   └── functions/
+│       ├── api-football-map/
+│       │   └── index.ts  # Mapeia jogos da football-data.org no Supabase
+│       ├── api-football-sync/
+│       │   └── index.ts  # Robô de placares ao vivo via football-data.org
 │       └── api-football-test/
-│           └── index.ts  # Edge Function de teste da API-Football
+│           └── index.ts  # Função legada desativada
 └── assets/
     └── header-hexa-2026.png
 ```
 
 `index.html` existe apenas para garantir que a raiz do repositório redirecione corretamente (útil em GitHub Pages ou qualquer servidor estático). Toda a lógica está em `bolao2026.html`.
 
-O `bolao2026.html` também contém uma aba removível **Teste API**. Ela chama a Edge Function `api-football-test`, busca jogos do Brasileirão Série A antes da Copa, salva palpites de treino no navegador e calcula um ranking separado sem alterar o bolão principal.
+O `bolao2026.html` também contém abas removíveis **Brasileirão** e **Ranking BR**. Elas usam as tabelas `api_fixture_map`, `live_scores` e `test_predictions` para testar o desenho de placares automáticos antes da Copa, com ranking separado sem alterar o bolão principal.
 
 ---
 

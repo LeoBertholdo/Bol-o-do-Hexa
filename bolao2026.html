@@ -1418,7 +1418,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .sync-pill.err .sync-dot{background:var(--red)}
 .login-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}
 
-/* ==== API-FOOTBALL TEST LAB: remove this block after the Copa integration is ready ==== */
+/* ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ==== */
 .api-test-page{display:grid;gap:14px}
 .api-test-hero{
   display:grid;
@@ -1444,7 +1444,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .api-test-check .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex:0 0 auto}
 .api-test-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.42fr);gap:14px;align-items:start}
-.api-test-form{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;align-items:end}
+.api-test-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
 .api-test-form label{font-size:.66rem;text-transform:uppercase;letter-spacing:.65px;color:var(--muted);font-weight:950}
 .api-test-form .txt-inp,.api-test-form .txt-select{text-align:left;height:40px}
 .api-test-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -1473,6 +1473,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   padding:12px;
   box-shadow:0 7px 18px rgba(0,39,118,.05);
 }
+.api-test-game.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
 .api-test-game-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
 .api-test-date{font-size:.78rem;font-weight:950;color:var(--blue)}
 .api-test-round,.api-test-status{font-size:.7rem;font-weight:850;color:var(--muted);line-height:1.35}
@@ -1501,7 +1502,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-rank-points span{display:block;font-size:.58rem;letter-spacing:.45px;text-transform:uppercase;color:var(--muted)}
 .api-test-debug{max-height:250px;overflow:auto;border-radius:8px;background:#111827;color:#e5e7eb;padding:10px;font-size:.72rem;line-height:1.45;white-space:pre-wrap}
 .api-test-empty{border:1px dashed var(--border);border-radius:8px;background:#fff;padding:16px;text-align:center;color:var(--muted);font-weight:850}
-/* ==== END API-FOOTBALL TEST LAB ==== */
+/* ==== END BRASILEIRAO TEST LAB ==== */
 
 /* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1000;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
@@ -1727,8 +1728,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   <button onclick="goTab('grupos')">Grupos</button>
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
-  <!-- API-FOOTBALL TEST LAB: remove this nav item after testing -->
-  <button onclick="goTab('api-test')">Teste API</button>
+  <button onclick="goTab('api-test')">Brasileirão</button>
+  <button onclick="goTab('ranking-brasileirao')">Ranking BR</button>
   <button onclick="goTab('config')">Config</button>
 </nav>
 
@@ -1737,8 +1738,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 <div id="tab-grupos" class="tab"></div>
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
-<!-- API-FOOTBALL TEST LAB: remove this tab after testing -->
 <div id="tab-api-test" class="tab"></div>
+<div id="tab-ranking-brasileirao" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
 
@@ -2233,6 +2234,9 @@ async function loadRemoteData(showToast=false){
   if(currentProfile&&!palSelectionTouched) palPi=currentProfile.participant_index;
   setSyncStatus("ok",currentProfile?`Online como ${participantName(currentProfile.participant_index)}`:"Conta sem participante vinculado.");
   if(showToast&&currentProfile) toast("Bolão online sincronizado.");
+  if(activeTab==="api-test"||activeTab==="ranking-brasileirao"){
+    await loadApiTestRemote(false,{silent:true,skipRender:true});
+  }
   render(activeTab);
 }
 
@@ -3215,22 +3219,23 @@ let authMode="signin";
 let rankingChartSelection=[];
 let rankingChartTouched=false;
 
-// ==== API-FOOTBALL TEST LAB: remove this block after the Copa integration is ready ====
-const API_TEST_STORAGE_KEY="bolao2026ApiFootballLabV1";
-const API_TEST_FUNCTION_NAME="api-football-test";
+// ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ====
+const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
+const API_TEST_MAP_FUNCTION_NAME="api-football-map";
+const API_TEST_SYNC_FUNCTION_NAME="api-football-sync";
+const API_TEST_TOURNAMENT="brasileirao";
 const API_TEST_DEFAULT_CONFIG=Object.freeze({
-  league:71,
+  competition:"BSA",
   season:2026,
-  from:"2026-01-01",
-  to:"2026-06-10",
-  timezone:"America/Sao_Paulo"
+  idPrefix:"BR_"
 });
-const API_TEST_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO"]);
+const API_TEST_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO","FINISHED","AWARDED"]);
+const API_TEST_LIVE_STATUSES=new Set(["1H","2H","HT","ET","BT","P","LIVE","IN_PLAY","PAUSED"]);
 let apiTestState=loadApiTestState();
 let apiTestPi=0;
 let apiTestSearch="";
 let apiTestStatusFilter="all";
-let apiTestStatus={kind:"warn",text:"Pronto para chamar a Edge Function do Supabase."};
+let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."};
 
 function apiTestDefaultState(){
   return {
@@ -3238,6 +3243,7 @@ function apiTestDefaultState(){
     fixtures:[],
     predictions:{},
     lastFetch:null,
+    syncToday:null,
     lastDebug:null
   };
 }
@@ -3253,7 +3259,8 @@ function loadApiTestState(){
       ...parsed,
       config:{...base.config,...(parsed.config||{})},
       fixtures:Array.isArray(parsed.fixtures)?parsed.fixtures:[],
-      predictions:parsed.predictions&&typeof parsed.predictions==="object"?parsed.predictions:{}
+      predictions:parsed.predictions&&typeof parsed.predictions==="object"?parsed.predictions:{},
+      syncToday:parsed.syncToday||null
     };
   }catch(e){
     return base;
@@ -3276,28 +3283,32 @@ function apiTestDateParts(iso){
 }
 function normalizeApiTestFixture(row){
   if(!row) return null;
-  const rawId=row.id??row.fixture?.id;
+  const rawId=row.game_id??row.id??row.fixture?.id;
   if(!rawId) return null;
-  const dateIso=row.dateIso||row.fixture?.date||"";
+  const live=row.live||{};
+  const dateIso=row.kickoff_utc||row.dateIso||row.fixture?.date||"";
   const parts=apiTestDateParts(dateIso);
   return {
     id:String(rawId),
+    apiFixtureId:row.api_fixture_id??row.apiFixtureId??null,
     dateIso,
     dateKey:row.dateKey||parts.key,
     dateLabel:row.dateLabel||parts.date,
     timeLabel:row.timeLabel||parts.time,
-    round:row.round||row.league?.round||"Rodada sem nome",
+    round:row.round_label||row.round||row.league?.round||"Rodada sem nome",
     venue:row.venue||row.fixture?.venue?.name||"",
     city:row.city||row.fixture?.venue?.city||"",
-    statusShort:row.statusShort||row.fixture?.status?.short||"",
-    statusLong:row.statusLong||row.fixture?.status?.long||"",
-    elapsed:row.elapsed??row.fixture?.status?.elapsed??null,
-    home:row.home||row.teams?.home?.name||"Mandante",
-    away:row.away||row.teams?.away?.name||"Visitante",
+    statusShort:live.status_short||row.status_short||row.statusShort||row.fixture?.status?.short||"NS",
+    statusLong:live.status_long||row.status_long||row.statusLong||"",
+    elapsed:live.elapsed??row.elapsed??row.fixture?.status?.elapsed??null,
+    home:row.home_team||row.home||row.teams?.home?.name||"Mandante",
+    away:row.away_team||row.away||row.teams?.away?.name||"Visitante",
     homeLogo:row.homeLogo||row.teams?.home?.logo||"",
     awayLogo:row.awayLogo||row.teams?.away?.logo||"",
-    goalsHome:row.goalsHome??row.goals?.home??null,
-    goalsAway:row.goalsAway??row.goals?.away??null
+    goalsHome:live.goals_home??row.goals_home??row.goalsHome??row.goals?.home??null,
+    goalsAway:live.goals_away??row.goals_away??row.goalsAway??row.goals?.away??null,
+    lastSyncedAt:live.last_synced_at||row.last_synced_at||null,
+    isLockedByAdmin:Boolean(live.is_locked_by_admin||row.is_locked_by_admin)
   };
 }
 function compareApiTestFixtures(a,b){
@@ -3305,6 +3316,9 @@ function compareApiTestFixtures(a,b){
 }
 function apiTestIsFinal(fixture){
   return API_TEST_FINAL_STATUSES.has(fixture.statusShort)&&fixture.goalsHome!=null&&fixture.goalsAway!=null;
+}
+function apiTestIsLive(fixture){
+  return API_TEST_LIVE_STATUSES.has(fixture.statusShort)&&!apiTestIsFinal(fixture);
 }
 function apiTestPredictionKey(pi,id){
   return `${pi}_${id}`;
@@ -3354,35 +3368,91 @@ function apiTestJs(value){
 }
 function apiTestReadConfig(){
   const config={
-    league:Number(document.getElementById("apiTestLeague")?.value)||API_TEST_DEFAULT_CONFIG.league,
+    competition:document.getElementById("apiTestCompetition")?.value||API_TEST_DEFAULT_CONFIG.competition,
     season:Number(document.getElementById("apiTestSeason")?.value)||API_TEST_DEFAULT_CONFIG.season,
-    from:document.getElementById("apiTestFrom")?.value||API_TEST_DEFAULT_CONFIG.from,
-    to:document.getElementById("apiTestTo")?.value||API_TEST_DEFAULT_CONFIG.to,
-    timezone:API_TEST_DEFAULT_CONFIG.timezone
+    idPrefix:API_TEST_DEFAULT_CONFIG.idPrefix
   };
   apiTestState.config=config;
   saveApiTestState();
   return config;
 }
-async function fetchApiTestFixtures(){
+async function loadApiTestRemote(showToast=false,options={}){
+  if(!isRemoteConfigured()||!remoteClient){
+    apiTestSetStatus("err","Configure o Supabase primeiro para ler os jogos do Brasileirão.");
+    if(!options.silent) toast("Configure o Supabase antes de testar a API.");
+    if(!options.skipRender) renderApiTest();
+    return;
+  }
+  if(!remoteSession){
+    apiTestSetStatus("err","Entre no bolão para carregar jogos, resultados e ranking de teste.");
+    if(!options.silent) toast("Entre no bolão antes de testar.");
+    if(!options.skipRender) renderApiTest();
+    return;
+  }
+  apiTestSetStatus("warn","Atualizando Brasileirão pelo Supabase...");
+  if(!options.skipRender) render(activeTab);
+  const [mapRows,liveRows,predRows,syncToday]=await Promise.all([
+    remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,tournament,league_id,season,kickoff_utc,home_team,away_team,round_label").eq("tournament",API_TEST_TOURNAMENT).order("kickoff_utc",{ascending:true}),
+    remoteClient.from("live_scores").select("game_id,api_fixture_id,status_short,status_long,elapsed,goals_home,goals_away,pens_home,pens_away,last_synced_at,is_locked_by_admin"),
+    remoteClient.from("test_predictions").select("participant_index,game_id,s1,s2").eq("tournament",API_TEST_TOURNAMENT),
+    remoteClient.from("api_sync_today").select("*").maybeSingle()
+  ]);
+  const failed=[mapRows,liveRows,predRows].find(r=>r.error);
+  if(failed){
+    apiTestSetStatus("err",remoteErrorText(failed.error));
+    apiTestState.lastDebug={error:remoteErrorText(failed.error),hint:"Rode o supabase_live_scores.sql atualizado para criar as tabelas do teste."};
+    saveApiTestState();
+    if(!options.skipRender) render(activeTab);
+    return;
+  }
+  const liveByGame=Object.fromEntries((liveRows.data||[]).map(row=>[row.game_id,row]));
+  apiTestState.fixtures=(mapRows.data||[])
+    .map(row=>normalizeApiTestFixture({...row,live:liveByGame[row.game_id]||{}}))
+    .filter(Boolean)
+    .sort(compareApiTestFixtures);
+  apiTestState.predictions=Object.fromEntries((predRows.data||[]).map(row=>[
+    apiTestPredictionKey(row.participant_index,row.game_id),
+    {s1:row.s1,s2:row.s2}
+  ]));
+  apiTestState.syncToday=syncToday.error?null:syncToday.data;
+  apiTestState.lastFetch=new Date().toISOString();
+  apiTestState.lastDebug={
+    source:"Supabase",
+    tournament:API_TEST_TOURNAMENT,
+    fixtures:apiTestState.fixtures.length,
+    predictions:Object.keys(apiTestState.predictions).length,
+    syncToday:apiTestState.syncToday
+  };
+  saveApiTestState();
+  const liveCount=apiTestState.fixtures.filter(apiTestIsLive).length;
+  apiTestSetStatus("ok",`${apiTestState.fixtures.length} jogos carregados${liveCount?`, ${liveCount} ao vivo`:""}.`);
+  if(showToast) toast("Brasileirão atualizado.");
+  if(!options.skipRender) render(activeTab);
+}
+async function mapApiTestFixtures(){
   const config=apiTestReadConfig();
   if(!isRemoteConfigured()||!remoteClient){
-    apiTestSetStatus("err","Configure o Supabase primeiro. Esta aba testa a API pelo Supabase, igual ao oficial.");
-    toast("Configure o Supabase antes de testar a API.");
+    apiTestSetStatus("err","Configure o Supabase primeiro.");
+    toast("Configure o Supabase antes de mapear.");
     renderApiTest();
     return;
   }
   if(!remoteSession){
     apiTestSetStatus("err","Entre no bolão para chamar a Edge Function.");
-    toast("Entre no bolão antes de testar a API.");
+    toast("Entre no bolão antes de mapear.");
     renderApiTest();
     return;
   }
-  apiTestSetStatus("warn","Chamando Edge Function no Supabase...");
+  apiTestSetStatus("warn","Mapeando a temporada no Supabase...");
   renderApiTest();
-  const {data,error}=await remoteClient.functions.invoke(API_TEST_FUNCTION_NAME,{body:config});
+  const {data,error}=await remoteClient.functions.invoke(API_TEST_MAP_FUNCTION_NAME,{body:{
+    competition:config.competition,
+    season:config.season,
+    tournament:API_TEST_TOURNAMENT,
+    id_prefix:config.idPrefix
+  }});
   if(error){
-    apiTestState.lastDebug={error:remoteErrorText(error),hint:`A função ${API_TEST_FUNCTION_NAME} precisa estar criada e publicada no Supabase.`};
+    apiTestState.lastDebug={error:remoteErrorText(error),hint:`A função ${API_TEST_MAP_FUNCTION_NAME} precisa estar criada e publicada no Supabase.`};
     saveApiTestState();
     apiTestSetStatus("err",remoteErrorText(error));
     renderApiTest();
@@ -3397,19 +3467,26 @@ async function fetchApiTestFixtures(){
     toast(data.error);
     return;
   }
-  const fixtures=(data?.fixtures||[]).map(normalizeApiTestFixture).filter(Boolean).sort(compareApiTestFixtures);
-  apiTestState.fixtures=fixtures;
-  apiTestState.lastFetch=new Date().toISOString();
-  apiTestState.lastDebug={
-    request:config,
-    api:data?.api||null,
-    rateLimit:data?.rateLimit||null,
-    sample:fixtures.slice(0,3)
-  };
+  apiTestState.lastDebug=data;
   saveApiTestState();
-  apiTestSetStatus("ok",`${fixtures.length} jogos recebidos via Supabase Edge Function.`);
-  toast("Jogos recebidos da API-Football.");
-  renderApiTest();
+  apiTestSetStatus("ok",`${data.inserted||0} jogos mapeados. Carregando tabela...`);
+  toast("Calendário do Brasileirão mapeado.");
+  await loadApiTestRemote(false);
+}
+async function runApiTestSyncNow(){
+  if(!remoteClient||!remoteSession){toast("Entre no bolão antes de atualizar.");return;}
+  apiTestSetStatus("warn","Pedindo uma atualização do robô...");
+  render(activeTab);
+  const {data,error}=await remoteClient.functions.invoke(API_TEST_SYNC_FUNCTION_NAME,{body:{}});
+  apiTestState.lastDebug=error?{error:remoteErrorText(error)}:data;
+  saveApiTestState();
+  if(error){
+    apiTestSetStatus("err",remoteErrorText(error));
+    render(activeTab);
+    return;
+  }
+  toast("Robô acionado.");
+  await loadApiTestRemote(false);
 }
 function loadApiTestSampleFixtures(){
   const sample=[
@@ -3433,25 +3510,45 @@ function saveApiTestPrediction(id){
     toast("Placar inválido.");
     return;
   }
-  apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)]={s1:Math.min(30,s1),s2:Math.min(30,s2)};
+  const prediction={s1:Math.min(30,s1),s2:Math.min(30,s2)};
+  apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)]=prediction;
   saveApiTestState();
-  toast("Palpite de teste salvo.");
-  renderApiTest();
+  if(remoteClient&&remoteSession){
+    if(!requireOnlineLogin()) return;
+    if(!canEditParticipant(apiTestPi)){toast("Você só pode alterar seus próprios palpites.");loadApiTestRemote(false);return;}
+    remoteWrite(()=>remoteClient.from("test_predictions").upsert({
+      tournament:API_TEST_TOURNAMENT,
+      participant_index:apiTestPi,
+      game_id:id,
+      user_id:remoteSession.user.id,
+      s1:prediction.s1,
+      s2:prediction.s2
+    },{onConflict:"tournament,participant_index,game_id"}));
+  }
+  toast("Palpite do Brasileirão salvo.");
+  render(activeTab);
 }
 function clearApiTestPrediction(id){
   delete apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)];
   saveApiTestState();
-  toast("Palpite de teste removido.");
-  renderApiTest();
+  if(remoteClient&&remoteSession&&canEditParticipant(apiTestPi)){
+    remoteWrite(()=>remoteClient.from("test_predictions")
+      .delete()
+      .eq("tournament",API_TEST_TOURNAMENT)
+      .eq("participant_index",apiTestPi)
+      .eq("game_id",id));
+  }
+  toast("Palpite do Brasileirão removido.");
+  render(activeTab);
 }
 function resetApiTestLab(){
-  if(!confirm("Zerar jogos e palpites do Teste API? O bolão principal não será alterado.")) return;
+  if(!confirm("Zerar os dados locais do teste? O bolão principal não será alterado.")) return;
   apiTestState=apiTestDefaultState();
   apiTestPi=0;
   apiTestSearch="";
   apiTestStatusFilter="all";
   saveApiTestState();
-  apiTestSetStatus("ok","Teste API zerado.");
+  apiTestSetStatus("ok","Teste local zerado.");
   renderApiTest();
 }
 function apiTestFilteredFixtures(){
@@ -3466,6 +3563,7 @@ function apiTestFilteredFixtures(){
 }
 function apiTestFixtureStatusText(fixture){
   if(apiTestIsFinal(fixture)) return "Finalizado";
+  if(apiTestIsLive(fixture)) return fixture.elapsed?`Ao vivo · ${fixture.elapsed}'`:"Ao vivo";
   if(fixture.statusShort==="NS") return "Agendado";
   if(fixture.statusShort==="TBD") return "A definir";
   return fixture.statusLong||fixture.statusShort||"Sem status";
@@ -3473,19 +3571,20 @@ function apiTestFixtureStatusText(fixture){
 function renderApiTestMetrics(){
   const total=apiTestState.fixtures.length;
   const finished=apiTestState.fixtures.filter(apiTestIsFinal).length;
+  const live=apiTestState.fixtures.filter(apiTestIsLive).length;
   const predicted=apiTestState.fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   const next=apiTestState.fixtures.find(f=>!apiTestIsFinal(f));
   return `<div class="api-test-metrics">
-    <div class="api-test-metric"><strong>${total}</strong><span>Jogos recebidos</span></div>
+    <div class="api-test-metric"><strong>${total}</strong><span>Jogos mapeados</span></div>
+    <div class="api-test-metric"><strong>${live}</strong><span>Ao vivo</span></div>
     <div class="api-test-metric"><strong>${finished}</strong><span>Finalizados</span></div>
     <div class="api-test-metric"><strong>${predicted}</strong><span>Meus palpites</span></div>
-    <div class="api-test-metric"><strong>${next?esc(next.dateLabel):"--"}</strong><span>Próximo jogo</span></div>
   </div>`;
 }
 function renderApiTestGames(){
   const fixtures=apiTestFilteredFixtures();
   if(!apiTestState.fixtures.length){
-    return `<div class="api-test-empty">Nenhum jogo carregado ainda. O teste oficial é clicar em “Buscar via Supabase”.</div>`;
+    return `<div class="api-test-empty">Nenhum jogo do Brasileirão mapeado ainda. Rode o mapeamento no Supabase uma vez; depois a tela passa a atualizar sozinha.</div>`;
   }
   if(!fixtures.length) return `<div class="api-test-empty">Nenhum jogo bate com esse filtro.</div>`;
   return `<div class="api-test-list">${fixtures.map(fixture=>{
@@ -3493,7 +3592,7 @@ function renderApiTestGames(){
     const sc=apiTestScore(prediction,fixture);
     const label=apiTestScoreLabel(sc);
     const id=apiTestJs(fixture.id);
-    return `<article class="api-test-game">
+    return `<article class="api-test-game ${apiTestIsLive(fixture)?"is-live":""}">
       <div class="api-test-game-top">
         <div>
           <div class="api-test-date">${esc(fixture.dateLabel)} · ${esc(fixture.timeLabel)}</div>
@@ -3503,7 +3602,7 @@ function renderApiTestGames(){
       </div>
       <div class="api-test-teams">
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(fixture.home)}</span></div>
-        <div class="api-test-score"><b>${apiTestIsFinal(fixture)?fixture.goalsHome:"-"}</b><span>x</span><b>${apiTestIsFinal(fixture)?fixture.goalsAway:"-"}</b></div>
+        <div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>
         <div class="api-test-team away"><span>${esc(fixture.away)}</span>${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}</div>
       </div>
       <div class="api-test-pal">
@@ -3532,35 +3631,46 @@ function renderApiTestRanking(){
       <div class="api-test-rank-points">${row.pts}<span>pts</span></div>
     </div>`).join("")}</div>`;
 }
+function renderApiTestSyncCard(){
+  const sync=apiTestState.syncToday;
+  const last=apiTestState.lastFetch?new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"}).format(new Date(apiTestState.lastFetch)):"--";
+  return `<div class="card">
+    <div class="card-title">Sincronização</div>
+    <div class="sync-grid">
+      <div class="microcopy"><strong>Última leitura</strong><br>${esc(last)}</div>
+      <div class="microcopy"><strong>Chamadas hoje</strong><br>${esc(sync?.chamadas_hoje??"--")}</div>
+      <div class="microcopy"><strong>Atualizados</strong><br>${esc(sync?.placares_atualizados??"--")}</div>
+      <div class="microcopy"><strong>Erros</strong><br>${esc(sync?.erros??"--")}</div>
+    </div>
+  </div>`;
+}
 function renderApiTest(){
   if(apiTestPi>=S.participants.length) apiTestPi=0;
   const config={...API_TEST_DEFAULT_CONFIG,...apiTestState.config};
   const loginHint=!isRemoteConfigured()
-    ?"Configure o Supabase no app antes de chamar a API."
+      ?"Configure o Supabase no app antes de carregar o Brasileirão."
     :!remoteSession
-      ?"Entre na sua conta do bolão para chamar a função."
+      ?"Entre na sua conta do bolão para carregar a tabela."
       :`Conectado ao Supabase como ${currentProfile?participantName(currentProfile.participant_index):(remoteSession.user.email||"usuário")}.`;
   const h=`<div class="api-test-page">
     <section class="api-test-hero">
       <div>
-        <div class="home-kicker">Teste removível</div>
-        <h2>API-Football por dentro do bolão</h2>
-        <p>Esta aba chama uma Edge Function do Supabase, que chama a API-Football com a chave escondida. É o mesmo desenho que vamos usar nos resultados oficiais da Copa.</p>
+        <div class="home-kicker">Teste ao vivo</div>
+        <h2>Brasileirão como laboratório da Copa</h2>
+        <p>Esta tela usa o mesmo desenho do robô oficial: Supabase guarda o calendário, busca placares na football-data.org e recalcula o ranking de treino conforme os jogos acabam.</p>
       </div>
       <div class="api-test-checklist">
-        <div class="api-test-check"><span class="dot"></span><span>Frontend do bolão chama Supabase.</span></div>
-        <div class="api-test-check"><span class="dot"></span><span>Supabase usa a chave secreta da API.</span></div>
-        <div class="api-test-check"><span class="dot"></span><span>Jogos viram palpites e ranking de treino.</span></div>
+        <div class="api-test-check"><span class="dot"></span><span>Jogos vêm de api_fixture_map.</span></div>
+        <div class="api-test-check"><span class="dot"></span><span>Resultados vêm de live_scores.</span></div>
+        <div class="api-test-check"><span class="dot"></span><span>Ranking paralelo não altera a Copa.</span></div>
       </div>
     </section>
 
     <section class="panel">
-      <div class="card-title">Buscar jogos do Brasileirão Série A</div>
+      <div class="card-title">Brasileirão Série A</div>
       <div class="api-test-form">
-        <label>Liga<input class="txt-inp" id="apiTestLeague" type="number" min="1" value="${esc(config.league)}"></label>
+        <label>Competição<input class="txt-inp" id="apiTestCompetition" value="${esc(config.competition)}"></label>
         <label>Temporada<input class="txt-inp" id="apiTestSeason" type="number" min="2000" max="2100" value="${esc(config.season)}"></label>
-        <label>De<input class="txt-inp" id="apiTestFrom" type="date" value="${esc(config.from)}"></label>
-        <label>Até<input class="txt-inp" id="apiTestTo" type="date" value="${esc(config.to)}"></label>
         <label>Palpites de
           <select class="txt-select" onchange="apiTestPi=+this.value;renderApiTest()">
             ${S.participants.map((name,i)=>`<option value="${i}" ${i===apiTestPi?"selected":""}>${esc(name)}</option>`).join("")}
@@ -3568,11 +3678,12 @@ function renderApiTest(){
         </label>
       </div>
       <div class="api-test-actions" style="margin-top:10px">
-        <button class="action-btn" onclick="fetchApiTestFixtures()">Buscar via Supabase</button>
+        <button class="action-btn" onclick="loadApiTestRemote(true)">Atualizar tela</button>
+        <button class="action-btn secondary" onclick="goTab('ranking-brasileirao')">Ranking BR</button>
         <button class="action-btn secondary" onclick="loadApiTestSampleFixtures()">Exemplo local</button>
         <button class="action-btn secondary" onclick="resetApiTestLab()">Zerar teste</button>
       </div>
-      <div class="api-test-warning">${esc(loginHint)} A chave da API-Football não aparece nesta tela; ela fica nos Secrets da Edge Function.</div>
+      <div class="api-test-warning">${esc(loginHint)} O token da football-data.org fica nos Secrets das Edge Functions, nunca no HTML.</div>
       <div style="margin-top:10px"><span class="sync-pill ${apiTestStatus.kind}"><span class="sync-dot"></span>${esc(apiTestStatus.text)}</span></div>
     </section>
 
@@ -3593,6 +3704,7 @@ function renderApiTest(){
           <div class="card-title">Ranking do treino</div>
           ${renderApiTestRanking()}
         </div>
+        ${renderApiTestSyncCard()}
         <div class="card">
           <div class="card-title">Resposta da função</div>
           <pre class="api-test-debug">${esc(JSON.stringify(apiTestState.lastDebug||{message:"Nenhuma chamada feita ainda."},null,2))}</pre>
@@ -3602,7 +3714,53 @@ function renderApiTest(){
   </div>`;
   document.getElementById("tab-api-test").innerHTML=h;
 }
-// ==== END API-FOOTBALL TEST LAB ====
+function renderApiTestRankingPage(){
+  const r=apiTestRanking();
+  const finished=apiTestState.fixtures.filter(apiTestIsFinal).length;
+  const live=apiTestState.fixtures.filter(apiTestIsLive).length;
+  const h=`<div class="ranking-page">
+    <div class="ranking-grid">
+      <section class="ranking-card">
+        <div class="section-head">
+          <div>
+            <div class="section-kicker">Ranking paralelo</div>
+            <h3>Brasileirão de teste</h3>
+            <p>${finished} jogos finalizados, ${live} ao vivo e ${apiTestState.fixtures.length} jogos mapeados. A pontuação usa as mesmas regras de placar da Copa.</p>
+          </div>
+          <button class="mini-action" onclick="loadApiTestRemote(true)">Atualizar</button>
+        </div>
+        <div class="full-ranking-list">
+          ${r.map((p,ri)=>{
+            const rankCls=ri===0?"r1":ri===1?"r2":ri===2?"r3":"ro";
+            const rowCls=ri===0?"podium-row top-1":ri===1?"podium-row top-2":ri===2?"podium-row top-3":"";
+            return `<div class="lb-row ${rowCls}">
+              <div class="rank ${rankCls}">${ri+1}</div>
+              <div class="pname">${esc(p.name)}</div>
+              <div class="pstats">
+                <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
+                <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
+                <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
+                <div class="stat"><div class="sv">${p.predicted}</div><div class="sl">Palpites</div></div>
+              </div>
+              <div class="pts">${p.pts}</div>
+            </div>`;
+          }).join("")}
+        </div>
+      </section>
+      <div class="ranking-side">
+        ${renderApiTestSyncCard()}
+        <div class="card">
+          <div class="card-title">Atalhos</div>
+          <div class="action-row" style="margin-top:10px">
+            <button class="action-btn" onclick="goTab('api-test')">Ver jogos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  document.getElementById("tab-ranking-brasileirao").innerHTML=h;
+}
+// ==== END BRASILEIRAO TEST LAB ====
 
 function goTab(t){
   // Pódio foi integrado à página de Palpites como um estágio adicional
@@ -3610,11 +3768,14 @@ function goTab(t){
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["home","ranking","grupos","jogos","palpites","api-test","config"];
+  const tabs=["home","ranking","grupos","jogos","palpites","api-test","ranking-brasileirao","config"];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
+  if((t==="api-test"||t==="ranking-brasileirao")&&remoteClient&&remoteSession){
+    loadApiTestRemote(false,{silent:true});
+  }
 }
 function render(t){
   renderAuthControls();
@@ -3624,6 +3785,7 @@ function render(t){
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
   if(t==="api-test") renderApiTest();
+  if(t==="ranking-brasileirao") renderApiTestRankingPage();
   if(t==="config") renderConfig();
 }
 

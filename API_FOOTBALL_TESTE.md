@@ -1,89 +1,41 @@
-# Teste da API-Football pelo Supabase
+# Teste de placares pelo Supabase
 
-Este teste aparece dentro do bolão na aba **Teste API**.
+O teste aparece dentro do bolão nas abas **Brasileirão** e **Ranking BR**.
 
-Ele foi feito para simular o desenho oficial:
+Apesar do nome histórico do arquivo, o teste atual usa **football-data.org**, não API-Football. A chave fica escondida nos Secrets do Supabase, e o HTML lê apenas as tabelas públicas protegidas por login.
+
+## Fluxo atual
 
 ```txt
 bolao2026.html
-  -> Supabase Edge Function
-  -> API-Football
-  -> volta para o bolão
+  -> Supabase
+  -> api_fixture_map      calendário mapeado
+  -> live_scores          placares atualizados pelo robô
+  -> test_predictions     palpites do ranking paralelo
 ```
 
-Assim a chave da API-Football fica escondida no Supabase e não aparece no HTML.
+As Edge Functions usadas são:
 
-## 1. Criar a chave da API-Football
+- `api-football-map`: busca a temporada de uma competição e salva o calendário no Supabase.
+- `api-football-sync`: atualiza os placares dos jogos mapeados quando estão perto de começar ou em andamento.
 
-1. Entre em https://www.api-football.com.
-2. Crie sua conta.
-3. Copie a sua API key.
+## Brasileirão Série A
 
-## 2. Instalar ou entrar na Supabase CLI
+Para preparar o teste, publique as funções e rode o SQL de `supabase_live_scores.sql`.
 
-No terminal:
+Depois, no painel do Supabase, invoque a função `api-football-map` uma vez com:
 
-```bash
-supabase login
+```json
+{
+  "competition": "BSA",
+  "season": 2026,
+  "tournament": "brasileirao",
+  "id_prefix": "BR_"
+}
 ```
 
-Se a CLI não estiver instalada, instale primeiro seguindo a documentação oficial da Supabase.
+Depois disso a página passa a carregar automaticamente os jogos do Supabase. Os resultados ao vivo são alimentados pelo cron descrito em `ROBO_SETUP.md`.
 
-## 3. Ligar este projeto ao seu Supabase
+## Ranking paralelo
 
-Use o ref do seu projeto Supabase:
-
-```bash
-supabase link --project-ref SEU_PROJECT_REF
-```
-
-O project ref é o começo da URL do Supabase.
-
-Exemplo:
-
-```txt
-https://kbsjriixpqddgvwshucn.supabase.co
-         ^ este trecho é o project ref
-```
-
-## 4. Salvar a chave como segredo
-
-Não coloque a chave no HTML.
-
-Rode:
-
-```bash
-supabase secrets set API_FOOTBALL_KEY=SUA_CHAVE_AQUI
-```
-
-## 5. Publicar a função de teste
-
-Rode:
-
-```bash
-supabase functions deploy api-football-test
-```
-
-## 6. Testar dentro do bolão
-
-1. Abra `bolao2026.html`.
-2. Entre na sua conta do bolão.
-3. Abra a aba **Teste API**.
-4. Deixe os campos assim:
-   - Liga: `71`
-   - Temporada: `2026`
-   - De: `2026-01-01`
-   - Até: `2026-06-10`
-5. Clique em **Buscar via Supabase**.
-
-Se funcionar, os jogos do Brasileirão aparecem na tela.
-
-## 7. Como apagar depois
-
-Quando não precisar mais do teste:
-
-1. Apague a pasta `supabase/functions/api-football-test`.
-2. No `bolao2026.html`, procure por `API-FOOTBALL TEST LAB`.
-3. Apague os blocos marcados.
-4. Apague este arquivo `API_FOOTBALL_TESTE.md`.
-
+Os palpites do teste ficam em `test_predictions`, separados de `predictions`, então não interferem no ranking oficial da Copa. A aba **Ranking BR** recalcula a pontuação conforme `live_scores` recebe placares finalizados.
