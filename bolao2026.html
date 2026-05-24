@@ -1419,30 +1419,16 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .login-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:10px}
 
 /* ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ==== */
-.api-test-page{display:grid;gap:14px}
-.api-test-hero{
+.api-test-page{display:grid;gap:12px}
+.api-test-toolbar{
   display:grid;
-  grid-template-columns:minmax(0,1.18fr) minmax(280px,.82fr);
-  gap:14px;
-  align-items:stretch;
-  padding:16px;
-  color:#fff;
-  background:linear-gradient(135deg,rgba(0,39,118,.96),rgba(0,132,61,.88));
-  border:1px solid rgba(255,255,255,.42);
-  border-radius:8px;
-  box-shadow:var(--shadow);
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:start;
+  margin-bottom:12px;
 }
-.api-test-hero h2{margin:4px 0 7px;font-size:1.45rem;line-height:1.05;font-weight:950;letter-spacing:0}
-.api-test-hero p{margin:0;color:rgba(255,255,255,.88);line-height:1.48;font-size:.86rem}
-.api-test-checklist{display:grid;gap:8px}
-.api-test-check{
-  display:flex;align-items:center;gap:9px;
-  padding:9px 10px;border-radius:8px;
-  background:rgba(255,255,255,.1);
-  border:1px solid rgba(255,255,255,.16);
-  font-size:.76rem;font-weight:850;color:rgba(255,255,255,.9);
-}
-.api-test-check .dot{width:10px;height:10px;border-radius:50%;background:var(--yellow);flex:0 0 auto}
+.api-test-title h2{font-size:1rem;line-height:1.12;font-weight:950;color:var(--text)}
+.api-test-title p{margin-top:5px;color:var(--muted);font-size:.76rem;line-height:1.4;font-weight:750}
 .api-test-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.42fr);gap:14px;align-items:start}
 .api-test-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
 .api-test-form label{font-size:.66rem;text-transform:uppercase;letter-spacing:.65px;color:var(--muted);font-weight:950}
@@ -1465,7 +1451,25 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-metric span{display:block;margin-top:6px;font-size:.62rem;letter-spacing:.55px;text-transform:uppercase;color:var(--muted);font-weight:900}
 .api-test-filters{display:grid;grid-template-columns:minmax(0,1fr) 170px 180px;gap:8px;margin-bottom:10px}
 .api-test-filters .txt-inp,.api-test-filters .txt-select{text-align:left}
-.api-test-list{display:grid;gap:9px}
+.api-test-list{display:grid;gap:14px}
+.api-test-day{
+  display:grid;
+  gap:8px;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#f8fbf1;
+}
+.api-test-day-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 2px 2px;
+}
+.api-test-day-title{font-size:.78rem;font-weight:950;color:var(--blue)}
+.api-test-day-count{font-size:.64rem;font-weight:950;text-transform:uppercase;letter-spacing:.55px;color:var(--muted)}
+.api-test-day-games{display:grid;gap:8px}
 .api-test-game{
   border:1px solid var(--border);
   border-radius:8px;
@@ -1478,7 +1482,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-date{font-size:.78rem;font-weight:950;color:var(--blue)}
 .api-test-round,.api-test-status{font-size:.7rem;font-weight:850;color:var(--muted);line-height:1.35}
 .api-test-status{text-align:right}
-.api-test-teams{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1fr);gap:10px;align-items:center}
+.api-test-teams{display:grid;grid-template-columns:minmax(0,1fr) 90px minmax(0,1fr);gap:10px;align-items:center}
 .api-test-team{display:flex;align-items:center;gap:7px;min-width:0;font-weight:950}
 .api-test-team.away{justify-content:flex-end;text-align:right}
 .api-test-team img{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
@@ -1510,7 +1514,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 
 @media(max-width:980px){
   .home-spotlight,.home-layout{grid-template-columns:1fr}
-  .api-test-hero,.api-test-grid{grid-template-columns:1fr}
+  .api-test-toolbar,.api-test-grid{grid-template-columns:1fr}
   .api-test-form{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-prize-board{max-width:none}
   .home-insights{grid-template-columns:1fr}
@@ -3224,6 +3228,7 @@ const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
 const API_TEST_MAP_FUNCTION_NAME="api-football-map";
 const API_TEST_SYNC_FUNCTION_NAME="api-football-sync";
 const API_TEST_TOURNAMENT="brasileirao";
+const API_TEST_COPA_START_DATE_KEY="2026-06-11";
 const API_TEST_DEFAULT_CONFIG=Object.freeze({
   competition:"BSA",
   season:2026,
@@ -3340,9 +3345,15 @@ function apiTestScoreLabel(sc){
   if(sc===0) return {cls:"",text:"0 erro"};
   return {cls:"",text:"Aguardando resultado"};
 }
+function apiTestBeforeCopa(fixture){
+  return Boolean(fixture.dateKey&&fixture.dateKey<API_TEST_COPA_START_DATE_KEY);
+}
+function apiTestVisibleFixtures(){
+  return apiTestState.fixtures.filter(apiTestBeforeCopa);
+}
 function apiTestPlayerStats(pi){
   let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0;
-  apiTestState.fixtures.forEach(fixture=>{
+  apiTestVisibleFixtures().forEach(fixture=>{
     const prediction=apiTestPrediction(pi,fixture.id);
     if(prediction) predicted++;
     const sc=apiTestScore(prediction,fixture);
@@ -3424,8 +3435,9 @@ async function loadApiTestRemote(showToast=false,options={}){
     syncToday:apiTestState.syncToday
   };
   saveApiTestState();
-  const liveCount=apiTestState.fixtures.filter(apiTestIsLive).length;
-  apiTestSetStatus("ok",`${apiTestState.fixtures.length} jogos carregados${liveCount?`, ${liveCount} ao vivo`:""}.`);
+  const liveCount=apiTestVisibleFixtures().filter(apiTestIsLive).length;
+  const beforeCopaCount=apiTestVisibleFixtures().length;
+  apiTestSetStatus("ok",`${beforeCopaCount} jogos antes da Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
   if(showToast) toast("Brasileirão atualizado.");
   if(!options.skipRender) render(activeTab);
 }
@@ -3553,7 +3565,7 @@ function resetApiTestLab(){
 }
 function apiTestFilteredFixtures(){
   const search=apiTestSearch.trim().toLowerCase();
-  return apiTestState.fixtures.filter(fixture=>{
+  return apiTestVisibleFixtures().filter(fixture=>{
     if(search&&!`${fixture.home} ${fixture.away}`.toLowerCase().includes(search)) return false;
     if(apiTestStatusFilter==="finished"&&!apiTestIsFinal(fixture)) return false;
     if(apiTestStatusFilter==="open"&&apiTestIsFinal(fixture)) return false;
@@ -3568,14 +3580,19 @@ function apiTestFixtureStatusText(fixture){
   if(fixture.statusShort==="TBD") return "A definir";
   return fixture.statusLong||fixture.statusShort||"Sem status";
 }
+function apiTestDayTitle(fixture){
+  const d=fixture.dateIso?new Date(fixture.dateIso):null;
+  if(!d||Number.isNaN(d.getTime())) return fixture.dateLabel||"Sem data";
+  return new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long",timeZone:BR_TIME_ZONE}).format(d);
+}
 function renderApiTestMetrics(){
-  const total=apiTestState.fixtures.length;
-  const finished=apiTestState.fixtures.filter(apiTestIsFinal).length;
-  const live=apiTestState.fixtures.filter(apiTestIsLive).length;
-  const predicted=apiTestState.fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
-  const next=apiTestState.fixtures.find(f=>!apiTestIsFinal(f));
+  const fixtures=apiTestVisibleFixtures();
+  const total=fixtures.length;
+  const finished=fixtures.filter(apiTestIsFinal).length;
+  const live=fixtures.filter(apiTestIsLive).length;
+  const predicted=fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   return `<div class="api-test-metrics">
-    <div class="api-test-metric"><strong>${total}</strong><span>Jogos mapeados</span></div>
+    <div class="api-test-metric"><strong>${total}</strong><span>Antes da Copa</span></div>
     <div class="api-test-metric"><strong>${live}</strong><span>Ao vivo</span></div>
     <div class="api-test-metric"><strong>${finished}</strong><span>Finalizados</span></div>
     <div class="api-test-metric"><strong>${predicted}</strong><span>Meus palpites</span></div>
@@ -3583,11 +3600,26 @@ function renderApiTestMetrics(){
 }
 function renderApiTestGames(){
   const fixtures=apiTestFilteredFixtures();
+  const visibleFixtures=apiTestVisibleFixtures();
   if(!apiTestState.fixtures.length){
     return `<div class="api-test-empty">Nenhum jogo do Brasileirão mapeado ainda. Rode o mapeamento no Supabase uma vez; depois a tela passa a atualizar sozinha.</div>`;
   }
+  if(!visibleFixtures.length) return `<div class="api-test-empty">Nenhum jogo do Brasileirão antes do início da Copa foi encontrado no calendário mapeado.</div>`;
   if(!fixtures.length) return `<div class="api-test-empty">Nenhum jogo bate com esse filtro.</div>`;
-  return `<div class="api-test-list">${fixtures.map(fixture=>{
+  const groups=fixtures.reduce((acc,fixture)=>{
+    const key=fixture.dateKey||"sem-data";
+    if(!acc[key]) acc[key]=[];
+    acc[key].push(fixture);
+    return acc;
+  },{});
+  return `<div class="api-test-list">${Object.entries(groups).map(([key,dayFixtures])=>`
+    <section class="api-test-day">
+      <div class="api-test-day-head">
+        <div class="api-test-day-title">${esc(apiTestDayTitle(dayFixtures[0]))}</div>
+        <div class="api-test-day-count">${dayFixtures.length} ${dayFixtures.length===1?"jogo":"jogos"}</div>
+      </div>
+      <div class="api-test-day-games">
+      ${dayFixtures.map(fixture=>{
     const prediction=apiTestPrediction(apiTestPi,fixture.id);
     const sc=apiTestScore(prediction,fixture);
     const label=apiTestScoreLabel(sc);
@@ -3618,7 +3650,9 @@ function renderApiTestGames(){
         </div>
       </div>
     </article>`;
-  }).join("")}</div>`;
+  }).join("")}
+      </div>
+    </section>`).join("")}</div>`;
 }
 function renderApiTestRanking(){
   return `<div class="api-test-ranking">${apiTestRanking().map((row,i)=>`
@@ -3653,21 +3687,15 @@ function renderApiTest(){
       ?"Entre na sua conta do bolão para carregar a tabela."
       :`Conectado ao Supabase como ${currentProfile?participantName(currentProfile.participant_index):(remoteSession.user.email||"usuário")}.`;
   const h=`<div class="api-test-page">
-    <section class="api-test-hero">
-      <div>
-        <div class="home-kicker">Teste ao vivo</div>
-        <h2>Brasileirão como laboratório da Copa</h2>
-        <p>Esta tela usa o mesmo desenho do robô oficial: Supabase guarda o calendário, busca placares na football-data.org e recalcula o ranking de treino conforme os jogos acabam.</p>
-      </div>
-      <div class="api-test-checklist">
-        <div class="api-test-check"><span class="dot"></span><span>Jogos vêm de api_fixture_map.</span></div>
-        <div class="api-test-check"><span class="dot"></span><span>Resultados vêm de live_scores.</span></div>
-        <div class="api-test-check"><span class="dot"></span><span>Ranking paralelo não altera a Copa.</span></div>
-      </div>
-    </section>
-
     <section class="panel">
-      <div class="card-title">Brasileirão Série A</div>
+      <div class="api-test-toolbar">
+        <div class="api-test-title">
+          <div class="card-title">Brasileirão Série A</div>
+          <h2>Jogos de teste até o início da Copa</h2>
+          <p>Mostrando apenas partidas antes de 11/06/2026, separadas por dia.</p>
+        </div>
+        <span class="sync-pill ${apiTestStatus.kind}"><span class="sync-dot"></span>${esc(apiTestStatus.text)}</span>
+      </div>
       <div class="api-test-form">
         <label>Competição<input class="txt-inp" id="apiTestCompetition" value="${esc(config.competition)}"></label>
         <label>Temporada<input class="txt-inp" id="apiTestSeason" type="number" min="2000" max="2100" value="${esc(config.season)}"></label>
@@ -3684,7 +3712,6 @@ function renderApiTest(){
         <button class="action-btn secondary" onclick="resetApiTestLab()">Zerar teste</button>
       </div>
       <div class="api-test-warning">${esc(loginHint)} O token da football-data.org fica nos Secrets das Edge Functions, nunca no HTML.</div>
-      <div style="margin-top:10px"><span class="sync-pill ${apiTestStatus.kind}"><span class="sync-dot"></span>${esc(apiTestStatus.text)}</span></div>
     </section>
 
     <div class="api-test-grid">
@@ -3716,8 +3743,9 @@ function renderApiTest(){
 }
 function renderApiTestRankingPage(){
   const r=apiTestRanking();
-  const finished=apiTestState.fixtures.filter(apiTestIsFinal).length;
-  const live=apiTestState.fixtures.filter(apiTestIsLive).length;
+  const fixtures=apiTestVisibleFixtures();
+  const finished=fixtures.filter(apiTestIsFinal).length;
+  const live=fixtures.filter(apiTestIsLive).length;
   const h=`<div class="ranking-page">
     <div class="ranking-grid">
       <section class="ranking-card">
@@ -3725,7 +3753,7 @@ function renderApiTestRankingPage(){
           <div>
             <div class="section-kicker">Ranking paralelo</div>
             <h3>Brasileirão de teste</h3>
-            <p>${finished} jogos finalizados, ${live} ao vivo e ${apiTestState.fixtures.length} jogos mapeados. A pontuação usa as mesmas regras de placar da Copa.</p>
+            <p>${finished} jogos finalizados, ${live} ao vivo e ${fixtures.length} jogos antes da Copa. A pontuação usa as mesmas regras de placar da Copa.</p>
           </div>
           <button class="mini-action" onclick="loadApiTestRemote(true)">Atualizar</button>
         </div>
