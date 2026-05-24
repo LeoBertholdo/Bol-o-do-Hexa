@@ -17,17 +17,19 @@ const FD_BASE_URL = "https://api.football-data.org/v4";
 // Status em jogo (continuamos chamando rápido)
 const LIVE_STATUSES = new Set(["IN_PLAY", "PAUSED", "LIVE"]);
 const INTERNAL_LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE", "IN_PLAY", "PAUSED"]);
-// Status finalizado (paramos de chamar)
+// Status finalizado (ainda conferimos por uma janela curta para pegar correções da API)
 const FINAL_STATUSES = new Set(["FINISHED", "AWARDED", "FT", "AET", "PEN", "AWD"]);
 
 const CADENCE_NORMAL_SECONDS = 55;     // cron roda a cada minuto; 55s evita pular uma rodada por poucos segundos
 const CADENCE_LATE_SECONDS = 45;       // 45s nos minutos finais
+const CADENCE_FINAL_CORRECTION_SECONDS = 300; // depois do FT, confere mais devagar caso a API corrija placar
 const POLL_MATCH_DETAILS = false;      // plano grátis atual prioriza placar; cartões/escanteios ficam como "desconhecido"
 const MAX_MATCH_DETAIL_CALLS_PER_RUN = 0;
 const LATE_GAME_FROM_MINUTE = 80;
 const SECOND_HALF_FALLBACK_FROM_KICKOFF_MIN = 60;
 const PRE_KICKOFF_WINDOW_MIN = 2;
 const POST_KICKOFF_GIVEUP_MIN = 240;
+const POST_FINAL_CORRECTION_WINDOW_MIN = 24 * 60;
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
@@ -111,6 +113,22 @@ function stabilizeLiveNumber(incoming: number | null, previous: unknown, shouldS
   if (incoming == null) return prev;
   if (prev == null) return incoming;
   return Math.max(incoming, prev);
+}
+
+function officialNumber(incoming: number | null, previous: unknown, isFinalStatus: boolean): number | null {
+  if (!isFinalStatus || incoming != null) return incoming;
+  return numberOrNull(previous);
+}
+
+function officialScorePair(
+  incoming: { home: number | null; away: number | null },
+  previous: { home: unknown; away: unknown },
+  isFinalStatus: boolean
+): { home: number | null; away: number | null } {
+  return {
+    home: officialNumber(incoming.home, previous.home, isFinalStatus),
+    away: officialNumber(incoming.away, previous.away, isFinalStatus)
+  };
 }
 
 function stabilizeLiveScorePair(
@@ -309,15 +327,21 @@ Deno.serve(async (req) => {
     const minutesUntilKickoff = (kickoff - now) / 60000;
     const minutesAfterKickoff = -minutesUntilKickoff;
     const live = liveByGame.get(row.game_id);
+    const storedFinalStatus = FINAL_STATUSES.has(live?.status_short || "");
 
     if (live?.is_locked_by_admin) continue;
-    if (FINAL_STATUSES.has(live?.status_short || "")) continue;
     if (minutesUntilKickoff > PRE_KICKOFF_WINDOW_MIN) continue;
-    if (minutesAfterKickoff > POST_KICKOFF_GIVEUP_MIN) continue;
+    if (storedFinalStatus) {
+      if (minutesAfterKickoff > POST_FINAL_CORRECTION_WINDOW_MIN) continue;
+    } else if (minutesAfterKickoff > POST_KICKOFF_GIVEUP_MIN) {
+      continue;
+    }
 
-    const cadenceSeconds = (live?.elapsed ?? 0) >= LATE_GAME_FROM_MINUTE
-      ? CADENCE_LATE_SECONDS
-      : CADENCE_NORMAL_SECONDS;
+    const cadenceSeconds = storedFinalStatus
+      ? CADENCE_FINAL_CORRECTION_SECONDS
+      : ((live?.elapsed ?? 0) >= LATE_GAME_FROM_MINUTE
+        ? CADENCE_LATE_SECONDS
+        : CADENCE_NORMAL_SECONDS);
     const minutesSincePoll = live?.last_synced_at
       ? (now - new Date(live.last_synced_at).getTime()) / 60000
       : Infinity;
@@ -469,15 +493,25 @@ Deno.serve(async (req) => {
       const extraTime = decision.aet || decision.pen ? extraTimeRaw : emptyScorePair();
       const penalties = decision.pen ? penaltiesRaw : emptyScorePair();
       const incomingRegularTime = decision.aet || decision.pen ? regularTimeRaw : fullTime;
-      const stableFullTime = stabilizeLiveScorePair(fullTime, { home: live.goals_home, away: live.goals_away }, shouldStabilizeLiveScore);
-      const regularTime = stabilizeLiveScorePair(
+      const incomingFullTime = officialScorePair(fullTime, { home: live.goals_home, away: live.goals_away }, isFinalStatus);
+      const incomingOfficialRegularTime = officialScorePair(
         incomingRegularTime,
+        { home: live.regular_goals_home, away: live.regular_goals_away },
+        isFinalStatus
+      );
+      const stableFullTime = stabilizeLiveScorePair(
+        incomingFullTime,
+        { home: live.goals_home, away: live.goals_away },
+        shouldStabilizeLiveScore
+      );
+      const regularTime = stabilizeLiveScorePair(
+        incomingOfficialRegularTime,
         { home: live.regular_goals_home, away: live.regular_goals_away },
         shouldStabilizeLiveScore
       );
       const afterExtra = {
-        home: decision.aet || decision.pen ? afterExtraScore(regularTime.home, extraTime.home, fullTime.home, decision.pen) : null,
-        away: decision.aet || decision.pen ? afterExtraScore(regularTime.away, extraTime.away, fullTime.away, decision.pen) : null
+        home: decision.aet || decision.pen ? afterExtraScore(regularTime.home, extraTime.home, stableFullTime.home, decision.pen) : null,
+        away: decision.aet || decision.pen ? afterExtraScore(regularTime.away, extraTime.away, stableFullTime.away, decision.pen) : null
       };
 
       upserts.push({

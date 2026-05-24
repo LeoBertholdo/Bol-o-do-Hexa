@@ -4378,7 +4378,7 @@ async function saveApiTestFinalScore(id){
     pens_away:null,
     penalty_shootout:null,
     last_synced_at:syncedAt,
-    is_locked_by_admin:false
+    is_locked_by_admin:true
   };
   const ok=await remoteWrite(()=>remoteClient.from("live_scores").update(payload).eq("game_id",id))
     .finally(()=>pendingApiTestScoreWrites.delete(id));
