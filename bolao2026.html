@@ -2002,6 +2002,10 @@ let invitedEmailsList=null;
 let passwordResetMode=false;
 let palSelectionTouched=false;
 let syncStatus={kind:"local",text:"Dados salvos neste navegador"};
+const dirtyPredictionKeys=new Set();
+const pendingPredictionWrites=new Set();
+const pendingApiTestPredictionWrites=new Set();
+let apiTestPredictionDrafts={};
 
 function defaultState(){
   return {
@@ -2105,6 +2109,69 @@ function setSyncStatus(kind,text){
   if(topPill) topPill.className=`sync-pill ${kind}`;
   if(topLabel) topLabel.textContent=text;
 }
+function predictionKeysToKeepLocal(){
+  return new Set([...dirtyPredictionKeys,...pendingPredictionWrites]);
+}
+function hasFocusedFormControl(){
+  const el=document.activeElement;
+  return Boolean(el&&el.matches&&el.matches("input, textarea, select"));
+}
+function shouldDeferRemoteRender(){
+  return authPanelOpen
+    || hasFocusedFormControl()
+    || dirtyPredictionKeys.size>0
+    || Object.keys(apiTestPredictionDrafts).length>0
+    || pendingPredictionWrites.size>0
+    || pendingApiTestPredictionWrites.size>0;
+}
+function applyLocalPredictionDraft(pi,gid,w,value){
+  if(!canEditParticipant(pi)) return;
+  const game=gameById(gid);
+  const key=`${pi}_${gid}`;
+  if(!S.palpites[key]) S.palpites[key]={};
+  const n=parseInt(value,10);
+  if(!Number.isNaN(n)&&n>=0){
+    S.palpites[key][w===1?"s1":"s2"]=Math.min(30,n);
+  }else{
+    delete S.palpites[key][w===1?"s1":"s2"];
+  }
+  if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
+    delete S.palpites[key].koWinner;
+    delete S.palpites[key].koDecision;
+  }
+  if(!Object.keys(S.palpites[key]).length) delete S.palpites[key];
+  dirtyPredictionKeys.add(key);
+  save();
+}
+function readPredictionInputId(id){
+  const main=String(id||"").match(/^(?:p|bk)_(\d+)_(.+)_([12])$/);
+  if(!main) return null;
+  return {pi:Number(main[1]),gid:main[2],which:Number(main[3])};
+}
+function readApiTestInputId(id){
+  const raw=String(id||"");
+  if(raw.startsWith("apiTestS1_")) return {which:1,id:raw.slice("apiTestS1_".length)};
+  if(raw.startsWith("apiTestS2_")) return {which:2,id:raw.slice("apiTestS2_".length)};
+  return null;
+}
+function trackScoreDraftInput(input){
+  const predictionInfo=readPredictionInputId(input.id);
+  if(predictionInfo){
+    applyLocalPredictionDraft(predictionInfo.pi,predictionInfo.gid,predictionInfo.which,input.value);
+    return;
+  }
+  const apiInfo=readApiTestInputId(input.id);
+  if(apiInfo){
+    const key=apiTestPredictionKey(apiTestPi,apiInfo.id);
+    const draft={...(apiTestPredictionDrafts[key]||{})};
+    const n=parseInt(input.value,10);
+    if(!Number.isNaN(n)&&n>=0) draft[apiInfo.which===1?"s1":"s2"]=Math.min(30,n);
+    else delete draft[apiInfo.which===1?"s1":"s2"];
+    if(Object.keys(draft).length) apiTestPredictionDrafts[key]=draft;
+    else delete apiTestPredictionDrafts[key];
+    saveApiTestState();
+  }
+}
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
   if(msg.includes("ko_winner")||msg.includes("ko_decision")) return "Atualize o Supabase com as colunas ko_winner e ko_decision para salvar desempates do mata-mata.";
@@ -2194,7 +2261,7 @@ async function initRemote(){
         return;
       }
       loadRemoteData(true);
-      remotePollTimer=setInterval(()=>loadRemoteData(false),REMOTE_POLL_MS);
+      remotePollTimer=setInterval(()=>loadRemoteData(false,{source:"poll"}),REMOTE_POLL_MS);
     }else{
       passwordResetMode=false;
       setSyncStatus("warn","Entre para carregar o bolão online.");
@@ -2216,7 +2283,7 @@ async function initRemote(){
   authReady=true;
   if(remoteSession&&!passwordResetMode){
     await loadRemoteData(false);
-    remotePollTimer=setInterval(()=>loadRemoteData(false),REMOTE_POLL_MS);
+    remotePollTimer=setInterval(()=>loadRemoteData(false,{source:"poll"}),REMOTE_POLL_MS);
   }else if(!remoteSession){
     setSyncStatus("warn","Entre para carregar o bolão online.");
     render(activeTab);
@@ -2253,6 +2320,10 @@ function applyRemoteData(payload){
       p4:payload.actualPodio.p4||""
     };
   }
+  predictionKeysToKeepLocal().forEach(key=>{
+    if(S.palpites[key]) next.palpites[key]={...S.palpites[key]};
+    else delete next.palpites[key];
+  });
   S=migrateState(next);
   save();
 }
@@ -2274,8 +2345,9 @@ async function fetchPredictionsRemote(){
   return remoteClient.from("predictions").select("participant_index,game_id,s1,s2");
 }
 
-async function loadRemoteData(showToast=false){
+async function loadRemoteData(showToast=false,options={}){
   if(!remoteClient||!remoteSession) return;
+  const deferRender=options.source==="poll"&&shouldDeferRemoteRender();
   setSyncStatus("warn","Sincronizando...");
   const [profiles,settings,results,predictions,podium,actualPodio]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
@@ -2288,7 +2360,7 @@ async function loadRemoteData(showToast=false){
   const failed=[profiles,settings,results,predictions,podium,actualPodio].find(r=>r.error);
   if(failed){
     setSyncStatus("err",remoteErrorText(failed.error));
-    render(activeTab);
+    if(!deferRender) render(activeTab);
     return;
   }
   remoteProfiles=profiles.data||[];
@@ -2309,7 +2381,7 @@ async function loadRemoteData(showToast=false){
   if(activeTab==="api-test"){
     await loadApiTestRemote(false,{silent:true,skipRender:true});
   }
-  render(activeTab);
+  if(!deferRender) render(activeTab);
 }
 
 function authValue(source,field){
@@ -2392,15 +2464,18 @@ async function signOut(){
 async function fetchInviteSlot(){
   if(!remoteClient||!remoteSession){inviteSlot=null;return;}
   inviteSlot='loading';
-  renderAuthControls();
+  const deferRender=hasFocusedFormControl();
+  if(!deferRender) renderAuthControls();
   const email=remoteSession.user.email||'';
   const {data,error}=await remoteClient.from('invited_emails')
     .select('participant_index')
     .eq('email',email)
     .maybeSingle();
   inviteSlot=(error||!data)?'not_invited':data.participant_index;
-  renderAuthControls();
-  if(activeTab==='config') renderConfig();
+  if(!deferRender){
+    renderAuthControls();
+    if(activeTab==='config') renderConfig();
+  }
 }
 
 // Usado apenas no setup inicial (sem admin): adiciona o próprio e-mail à lista de convidados.
@@ -2508,8 +2583,10 @@ function savePredictionRemote(pi,gid){
   if(!remoteClient) return;
   if(!requireOnlineLogin()) return;
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");loadRemoteData(false);return;}
+  const key=`${pi}_${gid}`;
   const pal=S.palpites[`${pi}_${gid}`]||{};
-  remoteWrite(()=>remoteClient.from("predictions").upsert({
+  pendingPredictionWrites.add(key);
+  return remoteWrite(()=>remoteClient.from("predictions").upsert({
     user_id:remoteSession.user.id,
     participant_index:pi,
     game_id:gid,
@@ -2517,7 +2594,10 @@ function savePredictionRemote(pi,gid){
     s2:pal.s2??null,
     ko_winner:pal.koWinner||null,
     ko_decision:pal.koDecision||null
-  },{onConflict:"participant_index,game_id"}));
+  },{onConflict:"participant_index,game_id"})).then(ok=>{
+    if(ok) dirtyPredictionKeys.delete(key);
+    return ok;
+  }).finally(()=>pendingPredictionWrites.delete(key));
 }
 function savePodioRemote(pi){
   if(!remoteClient) return;
@@ -3402,10 +3482,17 @@ function apiTestTeamName(name){
     cearasc:"Ceará",
     ceara:"Ceará",
     chapecoense:"Chapecoense",
+    chapecoenseaf:"Chapecoense",
     chapecoensesc:"Chapecoense",
+    chapecoensefutebol:"Chapecoense",
+    afchapecoense:"Chapecoense",
     associacaochapecoensedefutebol:"Chapecoense",
     associacaochapecoensedefutebolsaf:"Chapecoense",
     corinthians:"Corinthians",
+    corinthianspaulista:"Corinthians",
+    sccorinthians:"Corinthians",
+    sccorinthianspaulista:"Corinthians",
+    sportclubcorinthians:"Corinthians",
     sportclubcorinthianspaulista:"Corinthians",
     corinthianssp:"Corinthians",
     coritibafbc:"Coritiba",
@@ -3457,6 +3544,8 @@ function apiTestTeamName(name){
     .replace(/\s+/g," ")
     .trim();
   const cleanedCompact=cleaned.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  if(cleanedCompact.includes("chapecoense")) return "Chapecoense";
+  if(cleanedCompact.includes("corinthians")) return "Corinthians";
   return aliases[cleanedCompact]||cleaned||raw;
 }
 function apiTestTeamLogo(name,fallback=""){
@@ -3606,10 +3695,14 @@ async function loadApiTestRemote(showToast=false,options={}){
     .map(row=>normalizeApiTestFixture({...row,live:liveByGame[row.game_id]||{}}))
     .filter(Boolean)
     .sort(compareApiTestFixtures);
-  apiTestState.predictions=Object.fromEntries((predRows.data||[]).map(row=>[
+  const nextPredictions=Object.fromEntries((predRows.data||[]).map(row=>[
     apiTestPredictionKey(row.participant_index,row.game_id),
     {s1:row.s1,s2:row.s2}
   ]));
+  pendingApiTestPredictionWrites.forEach(key=>{
+    if(apiTestState.predictions[key]) nextPredictions[key]={...apiTestState.predictions[key]};
+  });
+  apiTestState.predictions=nextPredictions;
   apiTestState.syncToday=syncToday.error?null:syncToday.data;
   apiTestState.lastFetch=new Date().toISOString();
   apiTestState.lastDebug={
@@ -3700,7 +3793,7 @@ function loadApiTestSampleFixtures(){
   toast("Exemplo local carregado.");
   renderApiTest();
 }
-function saveApiTestPrediction(id){
+async function saveApiTestPrediction(id){
   if(remoteClient&&!remoteSession){
     toast("Entre no bolão para salvar.");
     return;
@@ -3723,19 +3816,24 @@ function saveApiTestPrediction(id){
     return;
   }
   const prediction={s1:Math.min(30,s1),s2:Math.min(30,s2)};
-  apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)]=prediction;
+  const key=apiTestPredictionKey(apiTestPi,id);
+  apiTestState.predictions[key]=prediction;
   saveApiTestState();
   if(remoteClient&&remoteSession){
     if(!requireOnlineLogin()) return;
-    remoteWrite(()=>remoteClient.from("test_predictions").upsert({
+    pendingApiTestPredictionWrites.add(key);
+    const ok=await remoteWrite(()=>remoteClient.from("test_predictions").upsert({
       tournament:API_TEST_TOURNAMENT,
       participant_index:apiTestPi,
       game_id:id,
       user_id:remoteSession.user.id,
       s1:prediction.s1,
       s2:prediction.s2
-    },{onConflict:"tournament,participant_index,game_id"}));
+    },{onConflict:"tournament,participant_index,game_id"})).finally(()=>pendingApiTestPredictionWrites.delete(key));
+    if(!ok) return;
   }
+  delete apiTestPredictionDrafts[key];
+  saveApiTestState();
   toast("Palpite do Brasileirão salvo.");
   render(activeTab);
 }
@@ -3755,7 +3853,9 @@ function clearApiTestPrediction(id){
     render(activeTab);
     return;
   }
-  delete apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)];
+  const key=apiTestPredictionKey(apiTestPi,id);
+  delete apiTestState.predictions[key];
+  delete apiTestPredictionDrafts[key];
   saveApiTestState();
   if(remoteClient&&remoteSession&&canEditParticipant(apiTestPi)){
     remoteWrite(()=>remoteClient.from("test_predictions")
@@ -3837,6 +3937,7 @@ function renderApiTestGames(){
       <div class="api-test-day-games">
       ${dayFixtures.map(fixture=>{
     const prediction=apiTestPrediction(apiTestPi,fixture.id);
+    const draft=apiTestPredictionDrafts[apiTestPredictionKey(apiTestPi,fixture.id)]||{};
     const sc=apiTestScore(prediction,fixture);
     const label=apiTestScoreLabel(sc);
     const id=apiTestJs(fixture.id);
@@ -3853,8 +3954,8 @@ function renderApiTestGames(){
     const badgeCls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":sc===0?"b0":prediction?"bem":"b0";
     const badgeText=sc===3?"+3":sc===1?"+1":sc===-2?"−2":sc===0?"0":"–";
     const badgeLabel=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":sc===0?"errou":prediction?"aguardando":"sem palpite";
-    const s1=prediction?prediction.s1:null;
-    const s2=prediction?prediction.s2:null;
+    const s1=draft.s1??(prediction?prediction.s1:null);
+    const s2=draft.s2??(prediction?prediction.s2:null);
     const resultHTML=apiTestIsFinal(fixture)||apiTestIsLive(fixture)
       ? `<div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>`
       : "";
@@ -4557,9 +4658,11 @@ function confirmRes(id){
   const game=gameById(id);
   const teams=gameTeams(game);
   if(game.ko&&!teams.ready){toast("Complete os jogos anteriores para liberar este confronto.");return;}
-  const s1=parseInt(document.getElementById(`r1_${id}`)?.value,10);
-  const s2=parseInt(document.getElementById(`r2_${id}`)?.value,10);
-  if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0){toast("Placar inválido.");return;}
+  const rawS1=parseInt(document.getElementById(`r1_${id}`)?.value,10);
+  const rawS2=parseInt(document.getElementById(`r2_${id}`)?.value,10);
+  if(Number.isNaN(rawS1)||Number.isNaN(rawS2)||rawS1<0||rawS2<0){toast("Placar inválido.");return;}
+  const s1=Math.min(30,rawS1);
+  const s2=Math.min(30,rawS2);
   const result={s1,s2};
   if(game.ko&&s1===s2){
     const selected=parseKoOutcomeValue(document.getElementById(`adv_${id}`)?.value||koOutcomeValue(resultDrafts[id]?.koWinner,resultDrafts[id]?.koDecision));
@@ -5164,8 +5267,9 @@ function setPal(pi,gid,w,v){
   if(!S.palpites[key]) S.palpites[key]={};
   const n=parseInt(v,10);
   if(!Number.isNaN(n)&&n>=0){
-    if(w===1) S.palpites[key].s1=n;
-    else S.palpites[key].s2=n;
+    const clamped=Math.min(30,n);
+    if(w===1) S.palpites[key].s1=clamped;
+    else S.palpites[key].s2=clamped;
   }else{
     if(w===1) delete S.palpites[key].s1;
     else delete S.palpites[key].s2;
@@ -5175,7 +5279,8 @@ function setPal(pi,gid,w,v){
     delete S.palpites[key].koDecision;
   }
   save();
-  savePredictionRemote(pi,gid);
+  if(remoteClient) savePredictionRemote(pi,gid);
+  else dirtyPredictionKeys.delete(key);
   renderPalpites();
 }
 function setPalTiebreak(pi,gid,value){
@@ -5478,6 +5583,9 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
+});
+document.addEventListener("input",event=>{
+  if(event.target&&event.target.matches&&event.target.matches("input")) trackScoreDraftInput(event.target);
 });
 
 render("home");
