@@ -1501,31 +1501,80 @@ body.chart-modal-open{overflow:hidden}
 }
 .api-test-day-title{font-size:.78rem;font-weight:950;color:var(--blue)}
 .api-test-day-count{font-size:.64rem;font-weight:950;text-transform:uppercase;letter-spacing:.55px;color:var(--muted)}
-.api-test-day-games{display:grid;gap:8px}
+.api-test-day-games{display:grid;gap:10px}
 .api-test-game{
   position:relative;
   display:grid;
-  grid-template-columns:108px minmax(0,1fr) 50px;
+  grid-template-columns:96px minmax(0,1fr) 50px;
   gap:10px;
   align-items:center;
   border:1px solid var(--border);
-  border-radius:12px;
+  border-radius:10px;
   background:linear-gradient(180deg,#fff,#fbfdf8);
   padding:10px 12px;
   box-shadow:0 6px 18px rgba(0,39,118,.05);
   transition:transform .15s,box-shadow .2s,border-color .2s;
   min-width:0;
+  overflow:hidden;
+}
+.api-test-game:before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:4px;
+  background:#9fc5ff;
 }
 .api-test-game:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,39,118,.08);border-color:#cbd9eb}
-.api-test-game.is-live{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
+.api-test-game.is-upcoming{min-height:96px;border-color:#cbd9eb;background:linear-gradient(180deg,#f8fbff,#fff)}
+.api-test-game.is-upcoming:before{background:#3b82f6}
+.api-test-game.is-live{
+  grid-template-columns:104px minmax(0,1fr);
+  gap:12px;
+  padding:14px 14px;
+  border-color:#61c58d;
+  background:linear-gradient(180deg,#f1fff6,#fff);
+  box-shadow:0 10px 28px rgba(0,132,61,.12);
+}
+.api-test-game.is-live:before{background:var(--green)}
 .api-test-game.is-live.is-waiting-live{border-color:#a9dfc0;background:linear-gradient(180deg,#f7fff9,#fff)}
-.api-test-game.is-live-only{grid-template-columns:108px minmax(0,1fr)}
+.api-test-game.is-live-only{grid-template-columns:104px minmax(0,1fr)}
+.api-test-game.is-final{
+  grid-template-columns:76px minmax(0,1fr) 44px;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:8px;
+  background:#fff;
+  box-shadow:0 3px 10px rgba(15,23,42,.04);
+}
+.api-test-game.is-final:before{background:#94a3b8}
+.api-test-game.is-final:hover{box-shadow:0 7px 16px rgba(15,23,42,.07)}
 .api-test-game.is-locked{background:linear-gradient(180deg,#fbfcfe,#f5f7fa)}
 .api-test-game.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
 .api-test-game.is-saved{border-color:#9fc5ff;background:linear-gradient(180deg,#f7fbff,#fff)}
 .api-test-game.is-live.is-saved,.api-test-game.is-live.is-hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f4fff7,#fff)}
 .api-test-game.is-live.is-waiting-live.is-saved{border-color:#a9dfc0;background:linear-gradient(180deg,#f7fff9,#fff)}
-.api-test-meta{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0}
+.api-test-game.is-final.is-saved,.api-test-game.is-final.is-hit{border-color:var(--border);background:#fff}
+.api-test-meta{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-width:0;padding-left:2px}
+.api-test-state-tag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:20px;
+  padding:3px 8px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background:#eef5ff;
+  color:var(--blue);
+  font-size:.54rem;
+  font-weight:950;
+  letter-spacing:.55px;
+  line-height:1;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.api-test-state-tag.live{border-color:rgba(16,185,129,.32);background:#ecfdf5;color:#047857}
+.api-test-state-tag.final{border-color:#d9e0ea;background:#f8fafc;color:#64748b}
+.api-test-state-tag.upcoming{border-color:#bfd8ff;background:#eef5ff;color:#174ea6}
 .api-test-date{
   display:inline-flex;align-items:center;gap:6px;
   padding:5px 9px;border-radius:8px;
@@ -1543,11 +1592,14 @@ body.chart-modal-open{overflow:hidden}
 .api-test-round,.api-test-status{font-size:.58rem;font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:var(--muted);line-height:1.25}
 .api-test-round{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .api-test-status{color:#a3aab6}
+.api-test-game.is-final .api-test-round{display:none}
 .api-test-body{
   display:grid;
-  grid-template-columns:minmax(88px,1fr) minmax(160px,220px) minmax(88px,1fr);
+  grid-template-columns:minmax(94px,1fr) minmax(150px,216px) minmax(94px,1fr);
   align-items:center;gap:8px;min-width:0;
 }
+.api-test-game.is-live .api-test-body{grid-template-columns:minmax(110px,1fr) minmax(180px,256px) minmax(110px,1fr);gap:12px}
+.api-test-game.is-final .api-test-body{grid-template-columns:minmax(90px,1fr) minmax(78px,124px) minmax(90px,1fr);gap:6px}
 .api-test-team{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:100%;min-width:0;font-size:.8rem;font-weight:850;color:var(--text);text-align:center;padding:2px 3px}
 .api-test-team.away{justify-content:center;text-align:center}
 .api-test-team img{width:38px;height:38px;object-fit:contain;flex:0 0 auto;filter:saturate(1.08) drop-shadow(0 3px 6px rgba(0,0,0,.12))}
@@ -1562,7 +1614,23 @@ body.chart-modal-open{overflow:hidden}
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
+.api-test-game.is-live .api-test-team{font-size:.9rem;font-weight:950}
+.api-test-game.is-live .api-test-team img{width:46px;height:46px}
+.api-test-game.is-final .api-test-team{
+  flex-direction:row;
+  justify-content:flex-end;
+  gap:5px;
+  padding:0;
+  font-size:.74rem;
+  line-height:1.1;
+  text-align:right;
+}
+.api-test-game.is-final .api-test-team:first-child{flex-direction:row-reverse}
+.api-test-game.is-final .api-test-team.away{justify-content:flex-start;text-align:left}
+.api-test-game.is-final .api-test-team img{width:24px;height:24px;filter:saturate(1.02) drop-shadow(0 2px 4px rgba(0,0,0,.08))}
+.api-test-game.is-final .api-test-team span{max-width:116px;-webkit-line-clamp:1}
 .api-test-score-panel{display:flex;flex-direction:column;align-items:center;gap:5px;width:100%;max-width:236px;min-width:0;justify-self:center}
+.api-test-game.is-live .api-test-score-panel{max-width:280px}
 .api-test-live-panel{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%}
 .api-test-live-head{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;width:100%}
 .api-test-live-pill{
@@ -1572,13 +1640,67 @@ body.chart-modal-open{overflow:hidden}
   padding:4px 8px;font-size:.55rem;font-weight:950;text-transform:uppercase;letter-spacing:.65px;line-height:1;
 }
 .api-test-live-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);animation:livePulse 1.4s ease-in-out infinite}
-.api-test-live-clock{font-size:.55rem;font-weight:950;text-transform:uppercase;letter-spacing:.6px;color:#64748b;line-height:1}
+.api-test-live-clock{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:20px;
+  padding:4px 8px;
+  border:1px solid rgba(16,185,129,.24);
+  border-radius:999px;
+  background:#fff;
+  font-size:.55rem;
+  font-weight:950;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  color:#047857;
+  line-height:1;
+}
 .api-test-live-block{display:grid;justify-items:center;gap:3px;width:100%}
 .api-test-live-label{font-size:.52rem;font-weight:950;text-transform:uppercase;letter-spacing:.72px;color:#64748b;line-height:1}
 .api-test-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--blue)}
 .api-test-score b{min-width:30px;text-align:center;border:1px solid var(--border);border-radius:8px;background:#f8fbf1;padding:4px 5px;font-size:.76rem}
 .api-test-score.is-waiting b{background:#f8fafc;color:#94a3b8}
 .api-test-pick-score b{background:#eef5ff}
+.api-test-game.is-live .api-test-score b{min-width:38px;padding:6px 7px;font-size:1rem;border-color:#b7e7c9;background:#f3fff6}
+.api-test-game.is-final .api-test-score{gap:4px}
+.api-test-game.is-final .api-test-score b{min-width:24px;padding:3px 4px;border-radius:7px;font-size:.68rem;background:#f8fafc}
+.api-test-final-panel,.api-test-upcoming-panel{
+  display:grid;
+  justify-items:center;
+  gap:5px;
+  width:100%;
+  min-width:0;
+}
+.api-test-final-pick{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.api-test-saved-pick{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.api-test-saved-pick .api-test-score b{min-width:26px;padding:3px 4px;font-size:.68rem;border-radius:7px}
+.api-test-final-label{
+  font-size:.5rem;
+  font-weight:950;
+  letter-spacing:.5px;
+  line-height:1;
+  color:var(--muted);
+  text-transform:uppercase;
+}
+.api-test-final-pick .api-test-score{gap:3px}
+.api-test-final-pick .api-test-score b{min-width:20px;padding:2px 3px;font-size:.58rem;border-radius:6px}
+.api-test-final-panel .api-test-pal-result{font-size:.5rem;letter-spacing:.45px;line-height:1.15}
+.api-test-readonly-note{font-size:.54rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);line-height:1}
 .api-test-live-empty{font-size:.52rem;font-weight:900;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;text-align:center;line-height:1.2}
 .api-test-live-stats{display:grid;gap:4px;width:100%;max-width:210px}
 .api-test-cards{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;width:100%;max-width:210px}
@@ -1658,6 +1780,9 @@ body.chart-modal-open{overflow:hidden}
   box-shadow:0 4px 10px rgba(0,0,0,.08);
 }
 .api-test-badge .lbl{font-size:.5rem;font-weight:900;letter-spacing:.55px;text-transform:uppercase;color:var(--muted)}
+.api-test-game.is-final .api-test-badge{min-width:40px;gap:2px}
+.api-test-game.is-final .api-test-badge .sbadge{width:30px;height:28px;border-radius:8px;font-size:.7rem;box-shadow:none}
+.api-test-game.is-final .api-test-badge .lbl{font-size:.48rem;letter-spacing:.45px}
 .api-test-ranking{display:grid;gap:8px}
 .api-test-rank-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:9px;align-items:center;border:1px solid var(--border);border-radius:8px;background:#fff;padding:9px}
 .api-test-rank-pos{width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:#eef5ff;color:var(--blue);font-weight:950}
@@ -1745,11 +1870,17 @@ body.chart-modal-open{overflow:hidden}
   .api-test-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .api-test-filters{grid-template-columns:1fr}
   .api-test-game{grid-template-columns:1fr;gap:8px;padding:10px 12px}
+  .api-test-game.is-live,.api-test-game.is-live-only{grid-template-columns:1fr;padding:12px}
+  .api-test-game.is-final{grid-template-columns:1fr;gap:7px;padding:8px 9px}
   .api-test-meta{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;width:100%;flex-wrap:wrap}
   .api-test-round,.api-test-status{max-width:100%}
   .api-test-body{grid-template-columns:1fr 1fr;gap:8px;text-align:center;align-items:center}
+  .api-test-game.is-final .api-test-body{grid-template-columns:minmax(0,1fr) minmax(76px,auto) minmax(0,1fr);gap:5px}
+  .api-test-game.is-live .api-test-body{grid-template-columns:1fr 1fr;gap:10px}
   .api-test-team img{width:34px;height:34px}
   .api-test-score-panel{grid-column:1 / -1;grid-row:2}
+  .api-test-game.is-final .api-test-score-panel{grid-column:auto;grid-row:auto}
+  .api-test-game.is-live .api-test-score-panel{grid-column:1 / -1;grid-row:2}
   .api-test-pal-controls{justify-content:center}
   .api-test-badge{flex-direction:row;align-self:flex-end}
   .home-dashboard{gap:12px}
@@ -3963,8 +4094,11 @@ function compareApiTestFixtures(a,b){
 function apiTestIsFinal(fixture){
   return API_TEST_FINAL_STATUSES.has(fixture.statusShort)&&fixture.goalsHome!=null&&fixture.goalsAway!=null;
 }
+function apiTestHasFinalStatus(fixture){
+  return API_TEST_FINAL_STATUSES.has(fixture?.statusShort||"");
+}
 function apiTestIsLive(fixture){
-  return API_TEST_LIVE_STATUSES.has(fixture.statusShort)&&!apiTestIsFinal(fixture);
+  return API_TEST_LIVE_STATUSES.has(fixture.statusShort)&&!apiTestHasFinalStatus(fixture);
 }
 function apiTestMinutesSinceKickoff(fixture){
   if(!fixture?.dateIso) return null;
@@ -3973,13 +4107,13 @@ function apiTestMinutesSinceKickoff(fixture){
   return Math.floor((Date.now()-kickoff)/60000);
 }
 function apiTestIsActiveFixture(fixture){
-  if(apiTestIsFinal(fixture)) return false;
+  if(apiTestHasFinalStatus(fixture)) return false;
   if(apiTestIsLive(fixture)) return true;
   const minutes=apiTestMinutesSinceKickoff(fixture);
   return minutes!==null&&minutes>=0&&minutes<=API_TEST_LIVE_FALLBACK_WINDOW_MIN;
 }
 function apiTestHasStarted(fixture){
-  if(apiTestIsFinal(fixture)||apiTestIsLive(fixture)) return true;
+  if(apiTestHasFinalStatus(fixture)||apiTestIsLive(fixture)) return true;
   const minutes=apiTestMinutesSinceKickoff(fixture);
   return minutes!==null&&minutes>=0;
 }
@@ -4016,19 +4150,19 @@ function editApiTestPrediction(id){
 function apiTestCanScoreFixture(fixture){
   return Boolean(
     fixture&&
-    (apiTestIsFinal(fixture)||apiTestIsActiveFixture(fixture))&&
+    (apiTestHasFinalStatus(fixture)||apiTestIsActiveFixture(fixture))&&
     apiTestBaseGoalsHome(fixture)!=null&&
     apiTestBaseGoalsAway(fixture)!=null
   );
 }
 function apiTestBaseGoalsHome(fixture){
   if(apiTestHasExtendedDecision(fixture)) return fixture?.regularGoalsHome??fixture?.goalsHome??null;
-  if(apiTestIsFinal(fixture)) return fixture?.goalsHome??fixture?.regularGoalsHome??null;
+  if(apiTestHasFinalStatus(fixture)) return fixture?.goalsHome??fixture?.regularGoalsHome??null;
   return fixture?.goalsHome??null;
 }
 function apiTestBaseGoalsAway(fixture){
   if(apiTestHasExtendedDecision(fixture)) return fixture?.regularGoalsAway??fixture?.goalsAway??null;
-  if(apiTestIsFinal(fixture)) return fixture?.goalsAway??fixture?.regularGoalsAway??null;
+  if(apiTestHasFinalStatus(fixture)) return fixture?.goalsAway??fixture?.regularGoalsAway??null;
   return fixture?.goalsAway??null;
 }
 function apiTestHasExtendedDecision(fixture){
@@ -4042,7 +4176,7 @@ function apiTestScoreInfo(prediction,fixture){
     {s1:apiTestBaseGoalsHome(fixture),s2:apiTestBaseGoalsAway(fixture)}
     ),
     live:apiTestIsActiveFixture(fixture),
-    final:apiTestIsFinal(fixture)
+    final:apiTestHasFinalStatus(fixture)
   };
 }
 function apiTestScore(prediction,fixture){
@@ -4326,7 +4460,7 @@ function editApiTestFinalScore(id){
   if(!remoteClient||!remoteSession){toast("Entre no bolão para corrigir placares.");return;}
   if(!isAdmin()){toast("Só o administrador corrige placares.");return;}
   const fixture=apiTestState.fixtures.find(f=>f.id===id);
-  if(!fixture||!apiTestIsFinal(fixture)){
+  if(!fixture||!apiTestHasFinalStatus(fixture)){
     toast("A correção manual só abre depois do jogo finalizado.");
     render(activeTab);
     return;
@@ -4347,7 +4481,7 @@ async function saveApiTestFinalScore(id){
   if(!remoteClient||!remoteSession){toast("Entre no bolão para salvar.");return;}
   if(!isAdmin()){toast("Só o administrador corrige placares.");return;}
   const fixture=apiTestState.fixtures.find(f=>f.id===id);
-  if(!fixture||!apiTestIsFinal(fixture)){
+  if(!fixture||!apiTestHasFinalStatus(fixture)){
     toast("A correção manual só abre depois do jogo finalizado.");
     render(activeTab);
     return;
@@ -4406,14 +4540,14 @@ function apiTestFilteredFixtures(){
   const search=apiTestSearch.trim().toLowerCase();
   return apiTestVisibleFixtures().filter(fixture=>{
     if(search&&!`${apiTestTeamName(fixture.home)} ${apiTestTeamName(fixture.away)}`.toLowerCase().includes(search)) return false;
-    if(apiTestStatusFilter==="finished"&&!apiTestIsFinal(fixture)) return false;
-    if(apiTestStatusFilter==="open"&&apiTestIsFinal(fixture)) return false;
+    if(apiTestStatusFilter==="finished"&&!apiTestHasFinalStatus(fixture)) return false;
+    if(apiTestStatusFilter==="open"&&apiTestHasFinalStatus(fixture)) return false;
     if(apiTestStatusFilter==="missing"&&apiTestPrediction(apiTestPi,fixture.id)) return false;
     return true;
   });
 }
 function apiTestFixtureStatusText(fixture){
-  if(apiTestIsFinal(fixture)) return "Finalizado";
+  if(apiTestHasFinalStatus(fixture)) return "Finalizado";
   if(apiTestIsActiveFixture(fixture)) return `Ao vivo · ${apiTestLiveClockText(fixture)}`;
   if(fixture.statusShort==="NS") return "Agendado";
   if(fixture.statusShort==="TBD") return "A definir";
@@ -4422,6 +4556,24 @@ function apiTestFixtureStatusText(fixture){
 function apiTestFixtureStatusCode(fixture){
   if(apiTestIsActiveFixture(fixture)&&!apiTestIsLive(fixture)&&fixture.statusShort==="NS") return "";
   return fixture.statusShort||"";
+}
+function apiTestFixtureCardState(fixture){
+  if(apiTestHasFinalStatus(fixture)) return "final";
+  if(apiTestIsActiveFixture(fixture)) return "live";
+  return "upcoming";
+}
+function apiTestFixtureStateLabel(fixture){
+  const state=apiTestFixtureCardState(fixture);
+  if(state==="final") return "Final";
+  if(state==="live") return apiTestIsLive(fixture)?"Ao vivo":"Atualizando";
+  return apiTestHasStarted(fixture)?"Fechado":"Aberto";
+}
+function apiTestRoundLabel(fixture){
+  const raw=String(fixture?.round||"").trim();
+  if(!raw) return "";
+  const match=raw.match(/(?:rodada|regular season|matchday)\s*[- ]\s*(\d+)/i);
+  if(match) return `Rodada ${match[1]}`;
+  return raw;
 }
 function apiTestLikelySecondHalf(fixture){
   const status=fixture?.statusShort||"";
@@ -4477,18 +4629,22 @@ function apiTestPredictionScoreHTML(prediction){
   return apiTestScoreHTML(prediction?.s1??null,prediction?.s2??null,"api-test-pick-score");
 }
 function apiTestLiveStatsHTML(fixture){
+  if(!apiTestHasFinalStatus(fixture)) return "";
+  const showCards=apiTestHasCardCounts(fixture);
+  const showCorners=apiTestHasCornerCounts(fixture);
+  if(!showCards&&!showCorners) return "";
   const cards=apiTestCardCounts(fixture);
   return `<div class="api-test-live-stats">
-    <div class="api-test-cards" title="Cartões ao vivo">
+    ${showCards?`<div class="api-test-cards" title="Cartões">
       <span class="api-test-card-side home">${apiTestCardToken("yellow",cards.yellowHome)}${apiTestCardToken("red",cards.redHome)}</span>
       <span class="api-test-card-label">cartões</span>
       <span class="api-test-card-side away">${apiTestCardToken("yellow",cards.yellowAway)}${apiTestCardToken("red",cards.redAway)}</span>
-    </div>
-    <div class="api-test-cards" title="Escanteios ao vivo">
+    </div>`:""}
+    ${showCorners?`<div class="api-test-cards" title="Escanteios">
       <span class="api-test-card-side home">${apiTestCornerToken(cards.cornersHome)}</span>
       <span class="api-test-card-label">escanteios</span>
       <span class="api-test-card-side away">${apiTestCornerToken(cards.cornersAway)}</span>
-    </div>
+    </div>`:""}
   </div>`;
 }
 function apiTestScoreBreakdownHTML(fixture){
@@ -4513,26 +4669,44 @@ function apiTestScoreBreakdownHTML(fixture){
   }
   return rows.length?`<div class="result-detail">${rows.join("")}</div>`:"";
 }
+function apiTestFinalSummaryHTML(fixture,prediction,label,adminFallbackHTML=""){
+  const homeScore=apiTestBaseGoalsHome(fixture);
+  const awayScore=apiTestBaseGoalsAway(fixture);
+  const resultText=prediction?label.text:"Sem palpite";
+  const predictionHTML=prediction
+    ? `<div class="api-test-final-pick"><span class="api-test-final-label">Palpite</span>${apiTestPredictionScoreHTML(prediction)}</div>`
+    : `<div class="api-test-live-empty">Sem palpite</div>`;
+  return `<div class="api-test-final-panel">
+    ${apiTestScoreHTML(homeScore,awayScore)}
+    ${predictionHTML}
+    <div class="api-test-pal-result ${prediction?label.cls:""}">${esc(resultText)}</div>
+    ${apiTestScoreBreakdownHTML(fixture)}
+    ${adminFallbackHTML}
+  </div>`;
+}
 function apiTestLiveSnapshotHTML(fixture,prediction=null){
   const active=apiTestIsActiveFixture(fixture);
-  if(!(apiTestIsFinal(fixture)||active)) return "";
+  const finalStatus=apiTestHasFinalStatus(fixture);
+  if(!(apiTestIsFinal(fixture)||active||finalStatus)) return "";
   const homeScore=apiTestBaseGoalsHome(fixture);
   const awayScore=apiTestBaseGoalsAway(fixture);
   const waitingForScore=active&&(homeScore==null||awayScore==null);
+  const scoreInfo=apiTestScoreInfo(prediction,fixture);
+  const label=apiTestScoreLabel(scoreInfo);
   return `<div class="api-test-live-panel">
-    ${active?`<div class="api-test-live-head"><span class="api-test-live-pill">Ao vivo</span><span class="api-test-live-clock">${esc(apiTestLiveClockText(fixture))}</span></div>`:""}
+    ${active?`<div class="api-test-live-head"><span class="api-test-live-clock">${esc(apiTestLiveClockText(fixture))}</span></div>`:""}
     ${active?`<div class="api-test-live-block"><div class="api-test-live-label">Seu palpite</div>${apiTestPredictionScoreHTML(prediction)}${prediction?"":`<div class="api-test-live-empty">Sem palpite</div>`}</div>`:""}
     <div class="api-test-live-block">
       <div class="api-test-live-label">Placar</div>
       ${apiTestScoreHTML(homeScore,awayScore)}
       ${waitingForScore?`<div class="api-test-live-empty">Aguardando atualização</div>`:""}
     </div>
+    ${active&&scoreInfo?`<div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>`:""}
     ${apiTestScoreBreakdownHTML(fixture)}
-    ${active?apiTestLiveStatsHTML(fixture):""}
   </div>`;
 }
 function apiTestFinalScoreFallbackHTML(fixture){
-  if(!remoteClient||!remoteSession||!isAdmin()||!apiTestIsFinal(fixture)) return "";
+  if(!remoteClient||!remoteSession||!isAdmin()||!apiTestHasFinalStatus(fixture)) return "";
   const id=apiTestJs(fixture.id);
   const editing=Boolean(apiTestEditingScores[fixture.id]);
   const busy=pendingApiTestScoreWrites.has(fixture.id);
@@ -4568,7 +4742,7 @@ function apiTestDayTitle(fixture){
 function renderApiTestMetrics(){
   const fixtures=apiTestVisibleFixtures();
   const total=fixtures.length;
-  const finished=fixtures.filter(apiTestIsFinal).length;
+  const finished=fixtures.filter(apiTestHasFinalStatus).length;
   const live=fixtures.filter(apiTestIsActiveFixture).length;
   const predicted=fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   return `<div class="api-test-metrics">
@@ -4610,6 +4784,8 @@ function renderApiTestGames(){
     const id=apiTestJs(fixture.id);
     const closed=apiTestHasStarted(fixture);
     const active=apiTestIsActiveFixture(fixture);
+    const cardState=apiTestFixtureCardState(fixture);
+    const finalStatus=cardState==="final";
     const canEditFixture=canEditSelectedApiTest&&!closed;
     const isSaved=Boolean(prediction);
     const isEditing=isSaved&&isApiTestPredictionEditing(apiTestPi,fixture.id);
@@ -4617,13 +4793,12 @@ function renderApiTestGames(){
     const saveDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
     const editDisabled=canEditFixture&&isSaved&&!isEditing?"":"disabled";
     const clearDisabled=canEditFixture&&(!isSaved||isEditing)?"":"disabled";
-    const palHint=closed?"Palpites encerrados":!canEditSelectedApiTest?"Somente leitura":isSaved&&!isEditing?"Salvo":isSaved?"Editando":"Novo palpite";
     const saveStateHTML=isSaved
       ? `<div class="api-test-save-state ${isEditing?"editing":"saved"}">${isEditing?"Editando":"Palpite salvo"}</div>`
       : "";
     const cardCls=[
       "api-test-game",
-      active?"is-live":"",
+      `is-${cardState}`,
       active&&!apiTestIsLive(fixture)?"is-waiting-live":"",
       active?"is-live-only":"",
       !canEditFixture&&!closed?"is-locked":"",
@@ -4637,36 +4812,48 @@ function renderApiTestGames(){
     const s2=draft.s2??(prediction?prediction.s2:0);
     const resultHTML=apiTestLiveSnapshotHTML(fixture,prediction);
     const adminFallbackHTML=apiTestFinalScoreFallbackHTML(fixture);
-    const scorePanelHTML=active
-      ? resultHTML
-      : `<div class="api-test-pal-controls">
+    const futureReadonlyHTML=!canEditFixture?`<div class="api-test-readonly-note">${esc(closed?"Palpites encerrados":"Somente leitura")}</div>`:"";
+    const futureSavedPickHTML=prediction
+      ? `<div class="api-test-saved-pick"><span class="api-test-final-label">Palpite</span>${apiTestPredictionScoreHTML(prediction)}</div>`
+      : `<div class="api-test-live-empty">Sem palpite</div>`;
+    const futureEditActionsHTML=canEditFixture&&isSaved&&!isEditing
+      ? `<div class="api-test-pal-actions">
+          <button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>
+          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
+        </div>`
+      : "";
+    const futureEditorHTML=canEditFixture&&(!isSaved||isEditing)
+      ? `<div class="api-test-pal-controls">
           ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
           <span class="ssep">×</span>
           ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",inputsDisabled,{clearZeroOnType:true})}
         </div>
         <div class="api-test-pal-actions">
-          ${isSaved&&!isEditing
-            ? `<button class="action-btn secondary" onclick="editApiTestPrediction('${id}')" ${editDisabled}>Editar</button>`
-            : `<button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>`}
+          <button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${saveDisabled}>Salvar</button>
           <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${clearDisabled}>Limpar</button>
-        </div>
+        </div>`
+      : `${futureSavedPickHTML}${futureEditActionsHTML}`;
+    const upcomingPanelHTML=`<div class="api-test-upcoming-panel">
+        ${futureEditorHTML}
         ${saveStateHTML}
-        <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
-        ${resultHTML}
-        ${adminFallbackHTML}
-        <div class="api-test-round">${esc(palHint)}</div>`;
+        ${futureReadonlyHTML}
+      </div>`;
+    const scorePanelHTML=active
+      ? resultHTML
+      : finalStatus
+        ? apiTestFinalSummaryHTML(fixture,prediction,label,adminFallbackHTML)
+        : upcomingPanelHTML;
     const badgeHTML=active?"":`<div class="api-test-badge">
         <div class="sbadge ${badgeCls}">${badgeText}</div>
         <span class="lbl">${esc(badgeLabel)}</span>
       </div>`;
-    const statusCode=apiTestFixtureStatusCode(fixture);
+    const stateLabel=apiTestFixtureStateLabel(fixture);
+    const roundLabel=apiTestRoundLabel(fixture);
     return `<article class="${cardCls}">
       <div class="api-test-meta">
-        <div class="api-test-date">${esc(fixture.dateLabel)}</div>
+        <div class="api-test-state-tag ${cardState}">${esc(stateLabel)}</div>
         <div class="api-test-time">${esc(fixture.timeLabel)}</div>
-        <div class="api-test-round">${esc(fixture.round)}</div>
-        ${fixture.venue?`<div class="api-test-round">${esc(fixture.venue)}</div>`:""}
-        <div class="api-test-status">${esc(apiTestFixtureStatusText(fixture))}${statusCode?` · ${esc(statusCode)}`:""}</div>
+        ${roundLabel?`<div class="api-test-round">${esc(roundLabel)}</div>`:""}
       </div>
       <div class="api-test-body">
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>

@@ -321,6 +321,7 @@ Deno.serve(async (req) => {
     minutesAfterKickoff: number;
   };
   const candidates: Cand[] = [];
+  let skippedByCadence = 0;
 
   for (const row of mapRows) {
     const kickoff = new Date(row.kickoff_utc).getTime();
@@ -345,6 +346,11 @@ Deno.serve(async (req) => {
     const minutesSincePoll = live?.last_synced_at
       ? (now - new Date(live.last_synced_at).getTime()) / 60000
       : Infinity;
+
+    if (minutesSincePoll * 60 < cadenceSeconds) {
+      skippedByCadence += 1;
+      continue;
+    }
 
     candidates.push({
       gameId: row.game_id,
@@ -380,18 +386,6 @@ Deno.serve(async (req) => {
 
   for (const [competitionId, group] of byComp) {
     const detailCallsBeforeCompetition = detailCalls;
-    const cadenceSec = Math.min(...group.map(c => c.cadenceSeconds));
-    const minSincePoll = Math.min(...group.map(c => c.minutesSincePoll));
-
-    if (minSincePoll * 60 < cadenceSec) {
-      calls.push({
-        competition: competitionId,
-        skipped: "cadencia_aguardando",
-        cadenceSec,
-        minSincePoll: Number(minSincePoll.toFixed(2))
-      });
-      continue;
-    }
 
     const url = new URL(`${FD_BASE_URL}/competitions/${competitionId}/matches`);
     url.searchParams.set("dateFrom", dateFrom);
@@ -572,6 +566,7 @@ Deno.serve(async (req) => {
   return json(200, {
     ok: true,
     candidates: candidates.length,
+    skipped_by_cadence: skippedByCadence,
     competitions_processed: byComp.size,
     fixtures_updated: totalUpdated,
     requests_available_minute: lastRateMinute,
