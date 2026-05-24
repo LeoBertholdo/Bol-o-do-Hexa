@@ -3540,13 +3540,22 @@ function penaltyDotsHTML(events,count){
   const items=events&&events.length?events:Array.from({length:count||0},()=>({scored:true}));
   return `<span class="penalty-dots">${items.map(item=>`<span class="pen-dot ${item.scored?"made":"missed"}"></span>`).join("")}</span>`;
 }
+function isDrawScore(s1,s2){
+  return s1!=null&&s2!=null&&+s1===+s2;
+}
+function shouldShowExtraTimeScore(base1,base2,after1,after2){
+  return isDrawScore(base1,base2)&&after1!=null&&after2!=null;
+}
+function shouldShowPenaltyScore(after1,after2,pens1,pens2){
+  return isDrawScore(after1,after2)&&pens1!=null&&pens2!=null;
+}
 function resultDetailHTML(game,res,teams=gameTeams(game)){
   if(!game?.ko||!res) return "";
   const rows=[];
-  if(res.afterEt1!=null&&res.afterEt2!=null){
+  if(shouldShowExtraTimeScore(res.s1,res.s2,res.afterEt1,res.afterEt2)){
     rows.push(`<div class="result-detail-line">Após prorrogação: ${esc(res.afterEt1)} × ${esc(res.afterEt2)}</div>`);
   }
-  if(res.pens1!=null&&res.pens2!=null){
+  if(shouldShowPenaltyScore(res.afterEt1,res.afterEt2,res.pens1,res.pens2)){
     const events=normalizePenaltyShootout(res.penaltyShootout);
     const t1Events=penaltyEventsForSide(events,"t1");
     const t2Events=penaltyEventsForSide(events,"t2");
@@ -4352,12 +4361,14 @@ function apiTestLiveStatsHTML(fixture){
 }
 function apiTestScoreBreakdownHTML(fixture){
   const rows=[];
-  const hasAfterExtra=fixture.afterExtraGoalsHome!=null&&fixture.afterExtraGoalsAway!=null;
-  const hasPens=fixture.pensHome!=null&&fixture.pensAway!=null;
-  if(hasAfterExtra){
+  const baseHome=apiTestBaseGoalsHome(fixture);
+  const baseAway=apiTestBaseGoalsAway(fixture);
+  const showAfterExtra=shouldShowExtraTimeScore(baseHome,baseAway,fixture.afterExtraGoalsHome,fixture.afterExtraGoalsAway);
+  const showPens=shouldShowPenaltyScore(fixture.afterExtraGoalsHome,fixture.afterExtraGoalsAway,fixture.pensHome,fixture.pensAway);
+  if(showAfterExtra){
     rows.push(`<div class="result-detail-line">Após prorrogação: ${esc(fixture.afterExtraGoalsHome)} × ${esc(fixture.afterExtraGoalsAway)}</div>`);
   }
-  if(hasPens){
+  if(showPens){
     const events=normalizeApiPenaltyShootout(fixture.penaltyShootout);
     const homeEvents=penaltyEventsForSide(events,"home");
     const awayEvents=penaltyEventsForSide(events,"away");

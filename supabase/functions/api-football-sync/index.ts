@@ -16,6 +16,7 @@ const FD_BASE_URL = "https://api.football-data.org/v4";
 
 // Status em jogo (continuamos chamando rápido)
 const LIVE_STATUSES = new Set(["IN_PLAY", "PAUSED", "LIVE"]);
+const INTERNAL_LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE", "IN_PLAY", "PAUSED"]);
 // Status finalizado (paramos de chamar)
 const FINAL_STATUSES = new Set(["FINISHED", "AWARDED", "FT", "AET", "PEN", "AWD"]);
 
@@ -60,6 +61,25 @@ function scorePair(node: any): { home: number | null; away: number | null } {
   return {
     home: scoreSide(node, "home"),
     away: scoreSide(node, "away")
+  };
+}
+
+function stabilizeLiveNumber(incoming: number | null, previous: unknown, shouldStabilize: boolean): number | null {
+  if (!shouldStabilize) return incoming;
+  const prev = numberOrNull(previous);
+  if (incoming == null) return prev;
+  if (prev == null) return incoming;
+  return Math.max(incoming, prev);
+}
+
+function stabilizeLiveScorePair(
+  incoming: { home: number | null; away: number | null },
+  previous: { home: unknown; away: unknown },
+  shouldStabilize: boolean
+): { home: number | null; away: number | null } {
+  return {
+    home: stabilizeLiveNumber(incoming.home, previous.home, shouldStabilize),
+    away: stabilizeLiveNumber(incoming.away, previous.away, shouldStabilize)
   };
 }
 
@@ -216,7 +236,7 @@ Deno.serve(async (req) => {
   // 2. Lê estado conhecido
   const { data: liveRows } = await supa
     .from("live_scores")
-    .select("game_id, status_short, elapsed, last_synced_at, is_locked_by_admin, yellow_cards_home, yellow_cards_away, red_cards_home, red_cards_away, corner_kicks_home, corner_kicks_away");
+    .select("game_id, status_short, status_long, elapsed, goals_home, goals_away, regular_goals_home, regular_goals_away, extra_time_goals_home, extra_time_goals_away, after_extra_goals_home, after_extra_goals_away, pens_home, pens_away, last_synced_at, is_locked_by_admin, yellow_cards_home, yellow_cards_away, red_cards_home, red_cards_away, corner_kicks_home, corner_kicks_away");
   const liveByGame = new Map((liveRows || []).map((r: any) => [r.game_id, r]));
 
   // 3. Filtra candidatos
@@ -342,6 +362,12 @@ Deno.serve(async (req) => {
         statusShort === "FT" && decision.aet ? "AET" :
         statusShort;
       const live = liveByGame.get(gameId) || {};
+      const hadLiveStatus = INTERNAL_LIVE_STATUSES.has(live.status_short || "");
+      const isFinalStatus = FINAL_STATUSES.has(finalStatus);
+      const shouldStabilizeLiveScore = !isFinalStatus && (LIVE_STATUSES.has(m.status) || INTERNAL_LIVE_STATUSES.has(finalStatus) || hadLiveStatus);
+      const shouldKeepPreviousStatus = shouldStabilizeLiveScore && hadLiveStatus && finalStatus === "NS";
+      const storedStatus = shouldKeepPreviousStatus ? live.status_short : finalStatus;
+      const storedStatusLong = shouldKeepPreviousStatus ? (live.status_long || m.status || null) : (m.status || null);
       let cardSource = m;
       let cards = extractCardCounts(cardSource);
       let penaltyShootout = extractPenaltyShootout(m);
@@ -374,10 +400,16 @@ Deno.serve(async (req) => {
       const regularTimeRaw = scorePair(m.score?.regularTime);
       const extraTime = scorePair(m.score?.extraTime);
       const penalties = scorePair(m.score?.penalties);
-      const regularTime = {
+      const incomingRegularTime = {
         home: regularTimeRaw.home ?? (decision.aet || decision.pen ? null : fullTime.home),
         away: regularTimeRaw.away ?? (decision.aet || decision.pen ? null : fullTime.away)
       };
+      const stableFullTime = stabilizeLiveScorePair(fullTime, { home: live.goals_home, away: live.goals_away }, shouldStabilizeLiveScore);
+      const regularTime = stabilizeLiveScorePair(
+        incomingRegularTime,
+        { home: live.regular_goals_home, away: live.regular_goals_away },
+        shouldStabilizeLiveScore
+      );
       const afterExtra = {
         home: decision.aet || decision.pen ? afterExtraScore(regularTime.home, extraTime.home, fullTime.home, decision.pen) : null,
         away: decision.aet || decision.pen ? afterExtraScore(regularTime.away, extraTime.away, fullTime.away, decision.pen) : null
@@ -386,11 +418,11 @@ Deno.serve(async (req) => {
       upserts.push({
         game_id: gameId,
         api_fixture_id: m.id,
-        status_short: finalStatus,
-        status_long: m.status || null,
-        elapsed: m.minute ?? null,
-        goals_home: fullTime.home,
-        goals_away: fullTime.away,
+        status_short: storedStatus,
+        status_long: storedStatusLong,
+        elapsed: stabilizeLiveNumber(m.minute ?? null, live.elapsed, shouldStabilizeLiveScore),
+        goals_home: stableFullTime.home,
+        goals_away: stableFullTime.away,
         regular_goals_home: regularTime.home,
         regular_goals_away: regularTime.away,
         extra_time_goals_home: extraTime.home,
@@ -420,11 +452,12 @@ Deno.serve(async (req) => {
     }
 
     totalUpdated += updated;
+    const detailCallsUsed = detailCalls - detailCallsBeforeCompetition;
     calls.push({
       competition: competitionId,
       matches_returned: matches.length,
       fixtures_updated: updated,
-      match_details_polled: detailCalls - detailCallsBeforeCompetition
+      match_details_polled: detailCallsUsed
     });
 
     await supa.from("api_sync_log").insert({
