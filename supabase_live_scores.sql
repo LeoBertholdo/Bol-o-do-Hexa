@@ -96,8 +96,10 @@ create table if not exists public.api_sync_log (
 
 create index if not exists api_sync_log_ran_at_idx on public.api_sync_log(ran_at desc);
 
--- View pra ver consumo do dia (em horário de São Paulo)
-create or replace view public.api_sync_today as
+-- View pra ver consumo do dia (em horário de São Paulo).
+-- security_invoker faz a view respeitar as permissões/RLS de quem consulta.
+create or replace view public.api_sync_today
+with (security_invoker = true) as
   select
     count(*) as chamadas_hoje,
     min(requests_remaining_day) as restando_hoje,
