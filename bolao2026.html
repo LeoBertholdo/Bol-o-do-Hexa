@@ -2295,12 +2295,14 @@ function applyRemoteData(payload){
   (payload.profiles||[]).forEach(profile=>{
     const idx=profile.participant_index;
     if(Number.isInteger(idx)&&idx>=0){
-      next.participants[idx]=profile.participant_name||next.participants[idx]||participantName(idx);
+      // Ignora profile.participant_name (não é validado pelo RLS) — usa o nome canônico do DEFAULT_PARTICIPANTS
+      next.participants[idx]=DEFAULT_PARTICIPANTS[idx]||next.participants[idx]||participantName(idx);
     }
   });
   const settings=payload.settings;
   if(settings){
-    next.config.entryValue=Number(settings.entry_value)||next.config.entryValue;
+    const parsedEntry=Number(settings.entry_value);
+    next.config.entryValue=Number.isFinite(parsedEntry)?parsedEntry:next.config.entryValue;
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
   }
   (payload.results||[]).forEach(row=>{
@@ -2640,12 +2642,14 @@ function saveConfigRemote(){
 async function pushLocalStateToRemote(){
   if(!remoteClient||!remoteSession){toast("Entre como administrador primeiro.");return;}
   if(!isAdmin()){toast("Só o administrador pode publicar o backup online.");return;}
+  if(!window.confirm("Isso vai sobrescrever os dados do Supabase com a cópia deste navegador. Palpites mais recentes feitos por outros participantes podem ser perdidos. Continuar?")) return;
   setSyncStatus("warn","Enviando backup para o Supabase...");
-  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,ko_decision:res.koDecision||null,updated_by:remoteSession.user.id}));
+  const adminUserId=remoteSession.user.id;
+  const resultRows=Object.entries(S.results).map(([game_id,res])=>({game_id,s1:res.s1,s2:res.s2,ko_winner:res.koWinner||null,ko_decision:res.koDecision||null,updated_by:adminUserId}));
   const predictionRows=Object.entries(S.palpites).map(([key,pal])=>{
     const cut=key.indexOf("_");
     return {
-      user_id:null,
+      user_id:adminUserId,
       participant_index:Number(key.slice(0,cut)),
       game_id:key.slice(cut+1),
       s1:pal.s1??null,
@@ -2657,7 +2661,7 @@ async function pushLocalStateToRemote(){
   const podiumRows=Object.entries(S.podio).map(([participant_index,pd])=>{
     const clean=normalizePodio(pd);
     return {
-      user_id:null,
+      user_id:adminUserId,
       participant_index:Number(participant_index),
       p1:clean.p1||null,
       p2:clean.p2||null,
