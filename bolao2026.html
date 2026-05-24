@@ -2160,6 +2160,11 @@ function shouldDeferRemoteRender(){
     || pendingPredictionWrites.size>0
     || pendingApiTestPredictionWrites.size>0;
 }
+function completePredictionVisibleZero(pal){
+  if(!pal) return;
+  if(pal.s1!=null&&pal.s2==null) pal.s2=0;
+  if(pal.s2!=null&&pal.s1==null) pal.s1=0;
+}
 function applyLocalPredictionDraft(pi,gid,w,value){
   if(!canEditParticipant(pi)) return;
   const game=gameById(gid);
@@ -2171,6 +2176,7 @@ function applyLocalPredictionDraft(pi,gid,w,value){
   }else{
     delete S.palpites[key][w===1?"s1":"s2"];
   }
+  completePredictionVisibleZero(S.palpites[key]);
   if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
     delete S.palpites[key].koWinner;
     delete S.palpites[key].koDecision;
@@ -2984,6 +2990,7 @@ function normalizePrediction(id,prediction){
     const s2=parseInt(prediction.s2,10);
     if(!Number.isNaN(s2)&&s2>=0) clean.s2=Math.min(30,s2);
   }
+  completePredictionVisibleZero(clean);
   const game=gameById(id);
   const koWinner=norm(prediction.koWinner||prediction.ko_winner||prediction.winner||prediction.advancer);
   const koDecision=normalizeKoDecision(prediction.koDecision||prediction.ko_decision||prediction.decision);
@@ -5460,6 +5467,7 @@ function setPal(pi,gid,w,v){
     if(w===1) delete S.palpites[key].s1;
     else delete S.palpites[key].s2;
   }
+  completePredictionVisibleZero(S.palpites[key]);
   if(!game?.ko||!hasScore(S.palpites[key])||+S.palpites[key].s1!==+S.palpites[key].s2){
     delete S.palpites[key].koWinner;
     delete S.palpites[key].koDecision;
