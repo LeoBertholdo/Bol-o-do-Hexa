@@ -3952,10 +3952,17 @@ function apiTestCanScoreFixture(fixture){
   );
 }
 function apiTestBaseGoalsHome(fixture){
-  return fixture?.regularGoalsHome??fixture?.goalsHome??null;
+  if(apiTestHasExtendedDecision(fixture)) return fixture?.regularGoalsHome??fixture?.goalsHome??null;
+  if(apiTestIsFinal(fixture)) return fixture?.goalsHome??fixture?.regularGoalsHome??null;
+  return fixture?.goalsHome??null;
 }
 function apiTestBaseGoalsAway(fixture){
-  return fixture?.regularGoalsAway??fixture?.goalsAway??null;
+  if(apiTestHasExtendedDecision(fixture)) return fixture?.regularGoalsAway??fixture?.goalsAway??null;
+  if(apiTestIsFinal(fixture)) return fixture?.goalsAway??fixture?.regularGoalsAway??null;
+  return fixture?.goalsAway??null;
+}
+function apiTestHasExtendedDecision(fixture){
+  return ["AET","PEN"].includes(fixture?.statusShort);
 }
 function apiTestScoreInfo(prediction,fixture){
   if(!prediction||!apiTestCanScoreFixture(fixture)) return null;
@@ -4337,6 +4344,7 @@ function apiTestLiveStatsHTML(fixture){
   </div>`;
 }
 function apiTestScoreBreakdownHTML(fixture){
+  if(!apiTestHasExtendedDecision(fixture)) return "";
   const rows=[];
   const baseHome=apiTestBaseGoalsHome(fixture);
   const baseAway=apiTestBaseGoalsAway(fixture);

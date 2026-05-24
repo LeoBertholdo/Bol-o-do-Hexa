@@ -65,6 +65,14 @@ function scorePair(node: any): { home: number | null; away: number | null } {
   };
 }
 
+function emptyScorePair(): { home: null; away: null } {
+  return { home: null, away: null };
+}
+
+function hasNonZeroScore(pair: { home: number | null; away: number | null }): boolean {
+  return (pair.home ?? 0) > 0 || (pair.away ?? 0) > 0;
+}
+
 function stabilizeLiveNumber(incoming: number | null, previous: unknown, shouldStabilize: boolean): number | null {
   if (!shouldStabilize) return incoming;
   const prev = numberOrNull(previous);
@@ -94,9 +102,11 @@ function detectDecision(score: any): { aet: boolean; pen: boolean } {
   const duration = String(score?.duration || "").toUpperCase();
   const extra = scorePair(score?.extraTime);
   const penalties = scorePair(score?.penalties);
+  const durationHasAet = duration === "EXTRA_TIME" || duration === "PENALTY_SHOOTOUT";
+  const durationHasPen = duration === "PENALTY_SHOOTOUT";
   return {
-    aet: duration === "EXTRA_TIME" || duration === "PENALTY_SHOOTOUT" || extra.home != null || extra.away != null,
-    pen: duration === "PENALTY_SHOOTOUT" || penalties.home != null || penalties.away != null
+    aet: durationHasAet || hasNonZeroScore(extra),
+    pen: durationHasPen || hasNonZeroScore(penalties)
   };
 }
 
@@ -400,12 +410,11 @@ Deno.serve(async (req) => {
 
       const fullTime = scorePair(m.score?.fullTime);
       const regularTimeRaw = scorePair(m.score?.regularTime);
-      const extraTime = scorePair(m.score?.extraTime);
-      const penalties = scorePair(m.score?.penalties);
-      const incomingRegularTime = {
-        home: regularTimeRaw.home ?? (decision.aet || decision.pen ? null : fullTime.home),
-        away: regularTimeRaw.away ?? (decision.aet || decision.pen ? null : fullTime.away)
-      };
+      const extraTimeRaw = scorePair(m.score?.extraTime);
+      const penaltiesRaw = scorePair(m.score?.penalties);
+      const extraTime = decision.aet || decision.pen ? extraTimeRaw : emptyScorePair();
+      const penalties = decision.pen ? penaltiesRaw : emptyScorePair();
+      const incomingRegularTime = decision.aet || decision.pen ? regularTimeRaw : fullTime;
       const stableFullTime = stabilizeLiveScorePair(fullTime, { home: live.goals_home, away: live.goals_away }, shouldStabilizeLiveScore);
       const regularTime = stabilizeLiveScorePair(
         incomingRegularTime,
