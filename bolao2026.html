@@ -1599,6 +1599,36 @@ body.chart-modal-open{overflow:hidden}
 .api-test-pal-controls .step-btn{width:27px;height:34px;font-size:1rem}
 .api-test-pal-actions{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap;width:100%}
 .api-test-pal-actions .action-btn{min-width:0;flex:1 1 0;padding:8px 9px;font-size:.72rem;line-height:1;white-space:nowrap}
+.api-test-admin-fallback{
+  display:grid;
+  gap:6px;
+  width:100%;
+  margin-top:4px;
+  padding-top:7px;
+  border-top:1px dashed var(--border);
+}
+.api-test-admin-tag{
+  justify-self:center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid #f0d899;
+  background:#fff8d7;
+  color:#7a5600;
+  font-size:.54rem;
+  font-weight:950;
+  letter-spacing:.55px;
+  text-transform:uppercase;
+  line-height:1;
+}
+.api-test-admin-actions{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;width:100%}
+.api-test-admin-actions .action-btn{min-width:0;flex:1 1 auto;padding:7px 8px;font-size:.64rem;line-height:1;white-space:nowrap}
+.api-test-admin-editor{display:grid;gap:6px;justify-items:center;width:100%}
+.api-test-admin-editor .api-test-pal-controls .score-control input{width:32px;height:32px}
+.api-test-admin-editor .api-test-pal-controls .step-btn{width:25px;height:32px}
+.api-test-admin-note{font-size:.52rem;font-weight:850;line-height:1.25;color:var(--muted);text-align:center}
 .api-test-pal-result{font-size:.58rem;font-weight:900;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);text-align:center}
 .api-test-pal-result.hit{color:var(--green)}
 .api-test-pal-result.ok{color:var(--blue)}
@@ -2229,12 +2259,14 @@ function shouldDeferRemoteRender(){
     || dirtyActualPodio
     || dirtyConfig
     || Object.keys(apiTestPredictionDrafts).length>0
+    || Object.keys(apiTestScoreDrafts).length>0
     || pendingPredictionWrites.size>0
     || pendingResultWrites.size>0
     || pendingPodioWrites.size>0
     || pendingActualPodioWrite
     || pendingConfigWrite
-    || pendingApiTestPredictionWrites.size>0;
+    || pendingApiTestPredictionWrites.size>0
+    || pendingApiTestScoreWrites.size>0;
 }
 function completePredictionVisibleZero(pal){
   if(!pal) return;
@@ -2268,8 +2300,10 @@ function readPredictionInputId(id){
 }
 function readApiTestInputId(id){
   const raw=String(id||"");
-  if(raw.startsWith("apiTestS1_")) return {which:1,id:raw.slice("apiTestS1_".length)};
-  if(raw.startsWith("apiTestS2_")) return {which:2,id:raw.slice("apiTestS2_".length)};
+  if(raw.startsWith("apiTestOverrideHome_")) return {type:"scoreOverride",side:"home",id:raw.slice("apiTestOverrideHome_".length)};
+  if(raw.startsWith("apiTestOverrideAway_")) return {type:"scoreOverride",side:"away",id:raw.slice("apiTestOverrideAway_".length)};
+  if(raw.startsWith("apiTestS1_")) return {type:"prediction",which:1,id:raw.slice("apiTestS1_".length)};
+  if(raw.startsWith("apiTestS2_")) return {type:"prediction",which:2,id:raw.slice("apiTestS2_".length)};
   return null;
 }
 function trackScoreDraftInput(input){
@@ -2279,7 +2313,7 @@ function trackScoreDraftInput(input){
     return;
   }
   const apiInfo=readApiTestInputId(input.id);
-  if(apiInfo){
+  if(apiInfo?.type==="prediction"){
     const key=apiTestPredictionKey(apiTestPi,apiInfo.id);
     const draft={...(apiTestPredictionDrafts[key]||{})};
     const n=parseInt(input.value,10);
@@ -2288,6 +2322,13 @@ function trackScoreDraftInput(input){
     if(Object.keys(draft).length) apiTestPredictionDrafts[key]=draft;
     else delete apiTestPredictionDrafts[key];
     saveApiTestState();
+  }else if(apiInfo?.type==="scoreOverride"){
+    const draft={...(apiTestScoreDrafts[apiInfo.id]||{})};
+    const n=parseInt(input.value,10);
+    if(!Number.isNaN(n)&&n>=0) draft[apiInfo.side]=Math.min(30,n);
+    else delete draft[apiInfo.side];
+    if(Object.keys(draft).length) apiTestScoreDrafts[apiInfo.id]=draft;
+    else delete apiTestScoreDrafts[apiInfo.id];
   }
 }
 function remoteErrorText(error){
@@ -3716,6 +3757,9 @@ let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."
 let apiTestClockTimer=null;
 let apiTestRealtimeChannel=null;
 let apiTestRealtimeReloadTimer=null;
+let apiTestScoreDrafts={};
+let apiTestEditingScores={};
+const pendingApiTestScoreWrites=new Set();
 
 function apiTestDefaultState(){
   return {
@@ -4278,6 +4322,73 @@ function clearApiTestPrediction(id){
   toast("Palpite do Brasileirão removido.");
   render(activeTab);
 }
+function editApiTestFinalScore(id){
+  if(!remoteClient||!remoteSession){toast("Entre no bolão para corrigir placares.");return;}
+  if(!isAdmin()){toast("Só o administrador corrige placares.");return;}
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(!fixture||!apiTestIsFinal(fixture)){
+    toast("A correção manual só abre depois do jogo finalizado.");
+    render(activeTab);
+    return;
+  }
+  apiTestScoreDrafts[id]={
+    home:apiTestBaseGoalsHome(fixture)??0,
+    away:apiTestBaseGoalsAway(fixture)??0
+  };
+  apiTestEditingScores[id]=true;
+  render(activeTab);
+}
+function cancelApiTestFinalScore(id){
+  delete apiTestScoreDrafts[id];
+  delete apiTestEditingScores[id];
+  render(activeTab);
+}
+async function saveApiTestFinalScore(id){
+  if(!remoteClient||!remoteSession){toast("Entre no bolão para salvar.");return;}
+  if(!isAdmin()){toast("Só o administrador corrige placares.");return;}
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(!fixture||!apiTestIsFinal(fixture)){
+    toast("A correção manual só abre depois do jogo finalizado.");
+    render(activeTab);
+    return;
+  }
+  const home=parseInt(document.getElementById(`apiTestOverrideHome_${id}`)?.value,10);
+  const away=parseInt(document.getElementById(`apiTestOverrideAway_${id}`)?.value,10);
+  if(Number.isNaN(home)||Number.isNaN(away)||home<0||away<0){
+    toast("Placar final inválido.");
+    return;
+  }
+  const finalHome=Math.min(30,home);
+  const finalAway=Math.min(30,away);
+  const syncedAt=new Date().toISOString();
+  pendingApiTestScoreWrites.add(id);
+  const payload={
+    status_short:"FT",
+    status_long:"Corrigido manualmente",
+    elapsed:null,
+    goals_home:finalHome,
+    goals_away:finalAway,
+    regular_goals_home:finalHome,
+    regular_goals_away:finalAway,
+    extra_time_goals_home:null,
+    extra_time_goals_away:null,
+    after_extra_goals_home:null,
+    after_extra_goals_away:null,
+    pens_home:null,
+    pens_away:null,
+    penalty_shootout:null,
+    last_synced_at:syncedAt,
+    is_locked_by_admin:false
+  };
+  const ok=await remoteWrite(()=>remoteClient.from("live_scores").update(payload).eq("game_id",id))
+    .finally(()=>pendingApiTestScoreWrites.delete(id));
+  if(!ok) return;
+  delete apiTestScoreDrafts[id];
+  delete apiTestEditingScores[id];
+  saveApiTestState();
+  toast("Placar final corrigido.");
+  await loadApiTestRemote(false,{silent:true});
+}
 function resetApiTestLab(){
   if(!confirm("Zerar os dados locais do teste? O bolão principal não será alterado.")) return;
   apiTestState=apiTestDefaultState();
@@ -4285,6 +4396,8 @@ function resetApiTestLab(){
   apiTestSelectionTouched=false;
   apiTestSearch="";
   apiTestStatusFilter="all";
+  apiTestScoreDrafts={};
+  apiTestEditingScores={};
   saveApiTestState();
   apiTestSetStatus("ok","Teste local zerado.");
   renderApiTest();
@@ -4418,6 +4531,35 @@ function apiTestLiveSnapshotHTML(fixture,prediction=null){
     ${active?apiTestLiveStatsHTML(fixture):""}
   </div>`;
 }
+function apiTestFinalScoreFallbackHTML(fixture){
+  if(!remoteClient||!remoteSession||!isAdmin()||!apiTestIsFinal(fixture)) return "";
+  const id=apiTestJs(fixture.id);
+  const editing=Boolean(apiTestEditingScores[fixture.id]);
+  const busy=pendingApiTestScoreWrites.has(fixture.id);
+  if(!editing){
+    return `<div class="api-test-admin-fallback">
+      <button class="action-btn secondary" type="button" onclick="editApiTestFinalScore('${id}')" ${busy?"disabled":""}>Corrigir placar final</button>
+    </div>`;
+  }
+  const draft=apiTestScoreDrafts[fixture.id]||{};
+  const home=draft.home??apiTestBaseGoalsHome(fixture)??0;
+  const away=draft.away??apiTestBaseGoalsAway(fixture)??0;
+  return `<div class="api-test-admin-fallback">
+    <div class="api-test-admin-tag">Correção manual</div>
+    <div class="api-test-admin-editor">
+      <div class="api-test-pal-controls">
+        ${scoreControl(`apiTestOverrideHome_${fixture.id}`,home,"","0","onchange",busy,{clearZeroOnType:true})}
+        <span class="ssep">×</span>
+        ${scoreControl(`apiTestOverrideAway_${fixture.id}`,away,"","0","onchange",busy,{clearZeroOnType:true})}
+      </div>
+      <div class="api-test-admin-actions">
+        <button class="action-btn" type="button" onclick="saveApiTestFinalScore('${id}')" ${busy?"disabled":""}>Salvar final</button>
+        <button class="action-btn secondary" type="button" onclick="cancelApiTestFinalScore('${id}')" ${busy?"disabled":""}>Cancelar</button>
+      </div>
+      <div class="api-test-admin-note">Disponível só depois do status finalizado.</div>
+    </div>
+  </div>`;
+}
 function apiTestDayTitle(fixture){
   const d=fixture.dateIso?new Date(fixture.dateIso):null;
   if(!d||Number.isNaN(d.getTime())) return fixture.dateLabel||"Sem data";
@@ -4494,6 +4636,7 @@ function renderApiTestGames(){
     const s1=draft.s1??(prediction?prediction.s1:0);
     const s2=draft.s2??(prediction?prediction.s2:0);
     const resultHTML=apiTestLiveSnapshotHTML(fixture,prediction);
+    const adminFallbackHTML=apiTestFinalScoreFallbackHTML(fixture);
     const scorePanelHTML=active
       ? resultHTML
       : `<div class="api-test-pal-controls">
@@ -4510,6 +4653,7 @@ function renderApiTestGames(){
         ${saveStateHTML}
         <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
         ${resultHTML}
+        ${adminFallbackHTML}
         <div class="api-test-round">${esc(palHint)}</div>`;
     const badgeHTML=active?"":`<div class="api-test-badge">
         <div class="sbadge ${badgeCls}">${badgeText}</div>
