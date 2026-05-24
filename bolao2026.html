@@ -1862,7 +1862,7 @@ const CAN_USE_LOCAL_STORAGE = (() => {
 })();
 const SUPABASE_CONFIG = {
   url: "https://kbsjriixpqddgvwshucn.supabase.co",
-  anonKey: "sb_publishable_jmOjfW2H2_yIaw09jpbuag_HbWwgS4p"
+  anonKey: "sb_publishable_aB4iqbsLVcOL_j8-IwbqtQ_43cqrxfy"
 };
 const REMOTE_STATE_ID = "main";
 const REMOTE_POLL_MS = 30000;
@@ -2175,6 +2175,7 @@ function trackScoreDraftInput(input){
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
   if(msg.includes("ko_winner")||msg.includes("ko_decision")) return "Atualize o Supabase com as colunas ko_winner e ko_decision para salvar desempates do mata-mata.";
+  if(msg.includes("No suitable key")||msg.includes("wrong key type")||error?.code==="PGRST301") return "A chave pública do Supabase parece inválida ou foi trocada. Atualize o anonKey/publishable key no SUPABASE_CONFIG.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
   if(msg.includes("row-level security")) return "Seu login não tem permissão para essa alteração.";
   return msg||"Não consegui conversar com o Supabase.";

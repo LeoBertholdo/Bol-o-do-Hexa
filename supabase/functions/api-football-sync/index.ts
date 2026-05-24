@@ -62,12 +62,33 @@ function toIsoDate(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
+function getSupabaseAdminKey(): string | null {
+  const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacyKey) return legacyKey;
+
+  const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (!secretKeys) return null;
+
+  try {
+    const parsed = JSON.parse(secretKeys) as Record<string, string>;
+    return parsed.default || Object.values(parsed)[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return json(405, { error: "Use POST." });
 
+  const cronSecret = Deno.env.get("BOLAO_CRON_SECRET");
+  if (!cronSecret) return json(500, { error: "BOLAO_CRON_SECRET não configurado." });
+  if (req.headers.get("x-bolao-cron-secret") !== cronSecret) {
+    return json(401, { error: "Não autorizado." });
+  }
+
   const token = Deno.env.get("FOOTBALL_DATA_TOKEN");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = getSupabaseAdminKey();
   if (!token) return json(500, { error: "FOOTBALL_DATA_TOKEN não configurada." });
   if (!supabaseUrl || !serviceKey) return json(500, { error: "SUPABASE env vars ausentes." });
 

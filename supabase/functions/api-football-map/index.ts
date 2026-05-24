@@ -53,6 +53,21 @@ function resolveCompetition(input: unknown): { id: number; code: string; name: s
   return null;
 }
 
+function getSupabaseAdminKey(): string | null {
+  const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (legacyKey) return legacyKey;
+
+  const secretKeys = Deno.env.get("SUPABASE_SECRET_KEYS");
+  if (!secretKeys) return null;
+
+  try {
+    const parsed = JSON.parse(secretKeys) as Record<string, string>;
+    return parsed.default || Object.values(parsed)[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -67,7 +82,7 @@ Deno.serve(async (req) => {
 
   const token = Deno.env.get("FOOTBALL_DATA_TOKEN");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const serviceKey = getSupabaseAdminKey();
   if (!token) {
     return json(500, {
       error: "FOOTBALL_DATA_TOKEN não configurada.",

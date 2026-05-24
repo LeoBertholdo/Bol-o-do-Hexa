@@ -119,18 +119,23 @@ A resposta vai vir tipo:
 
 ---
 
-## Passo 6 — Pegar o service_role key
+## Passo 6 — Criar as chaves seguras do robô
 
-1. Supabase → **Project Settings** → **API**.
-2. Em "Project API keys" tem `anon` e `service_role`. Pega o **service_role** (botão "Reveal").
+1. Supabase → **Project Settings** → **API Keys**.
+2. Na aba **Publishable and secret API keys**, crie uma **Secret API key** para o backend/robô.
+3. Em **Edge Functions → Manage Secrets**, crie também um segredo:
+   - Name: `BOLAO_CRON_SECRET`
+   - Value: uma senha longa qualquer, criada por você
 
-> Essa chave dá poder total. **Nunca** cole no HTML, GitHub, lugar público. Só no SQL Editor.
+> Não use mais `service_role` legacy no cron. Secret keys e segredos do robô nunca devem ir no HTML, GitHub ou chat.
 
 ---
 
 ## Passo 7 — Ligar o cron
 
-SQL Editor → New query → cola (substituindo `COLE_AQUI_O_SERVICE_ROLE`):
+Antes de ligar o cron, confirme em **Edge Functions → api-football-sync → Settings** que **Verify JWT** está desligado. A função protege a chamada pelo header `x-bolao-cron-secret`.
+
+SQL Editor → New query → cola (substituindo `COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET` pela mesma senha cadastrada nos Secrets):
 
 ```sql
 create extension if not exists pg_cron;
@@ -151,7 +156,7 @@ select cron.schedule(
     url := 'https://kbsjriixpqddgvwshucn.supabase.co/functions/v1/api-football-sync',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer COLE_AQUI_O_SERVICE_ROLE'
+      'x-bolao-cron-secret', 'COLE_AQUI_A_SENHA_DO_BOLAO_CRON_SECRET'
     ),
     body := '{}'::jsonb,
     timeout_milliseconds := 30000
