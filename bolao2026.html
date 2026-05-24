@@ -1604,6 +1604,10 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-debug-box[open] summary:after{content:"-"}
 .api-test-debug-box .api-test-debug{margin:0;border-radius:0;max-height:260px}
 .api-test-empty{border:1px dashed var(--border);border-radius:8px;background:#fff;padding:16px;text-align:center;color:var(--muted);font-weight:850}
+.api-test-status-banner{margin-top:12px;border:1px solid var(--border);border-radius:8px;background:#fff;padding:10px 12px;color:var(--muted);font-size:.78rem;font-weight:850;line-height:1.35}
+.api-test-status-banner.ok{border-color:rgba(16,185,129,.28);background:#ecfdf5;color:#047857}
+.api-test-status-banner.warn{border-color:rgba(245,158,11,.34);background:#fffbeb;color:#92400e}
+.api-test-status-banner.err{border-color:rgba(239,68,68,.28);background:#fef2f2;color:#b91c1c}
 /* ==== END BRASILEIRAO TEST LAB ==== */
 
 /* TOAST */
@@ -3495,6 +3499,9 @@ function saveApiTestState(){
 function apiTestSetStatus(kind,text){
   apiTestStatus={kind,text};
 }
+function renderApiTestStatus(){
+  return `<div class="api-test-status-banner ${esc(apiTestStatus.kind)}">${esc(apiTestStatus.text)}</div>`;
+}
 function apiTestDateParts(iso){
   if(!iso) return {date:"Sem data",time:"--:--",key:""};
   const d=new Date(iso);
@@ -3803,17 +3810,25 @@ async function loadApiTestRemote(showToast=false,options={}){
   apiTestState.predictions=nextPredictions;
   apiTestState.syncToday=syncToday.error?null:syncToday.data;
   apiTestState.lastFetch=new Date().toISOString();
+  const noFixtureHint=isAdmin()
+    ? "Nenhum jogo foi encontrado no mapa do Brasileirão. Rode o mapeamento da temporada."
+    : "Nenhum jogo chegou para esta conta. Se uma conta admin vê jogos, rode novamente o supabase_live_scores.sql para recriar as políticas de leitura.";
   apiTestState.lastDebug={
     source:"Supabase",
     tournament:API_TEST_TOURNAMENT,
     fixtures:apiTestState.fixtures.length,
     predictions:Object.keys(apiTestState.predictions).length,
-    syncToday:apiTestState.syncToday
+    syncToday:apiTestState.syncToday,
+    hint:apiTestState.fixtures.length?null:noFixtureHint
   };
   saveApiTestState();
   const liveCount=apiTestVisibleFixtures().filter(apiTestIsLive).length;
   const beforeCopaCount=apiTestVisibleFixtures().length;
-  apiTestSetStatus("ok",`${beforeCopaCount} jogos de hoje até a Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
+  if(apiTestState.fixtures.length){
+    apiTestSetStatus("ok",`${beforeCopaCount} jogos de hoje até a Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
+  }else{
+    apiTestSetStatus("warn",noFixtureHint);
+  }
   if(showToast) toast("Brasileirão atualizado.");
   if(!options.skipRender) render(activeTab);
 }
@@ -4196,6 +4211,7 @@ function renderApiTest(){
     <div class="api-test-grid">
       <section class="panel">
         ${renderApiTestMetrics()}
+        ${renderApiTestStatus()}
         <div class="api-test-filters" style="margin-top:12px">
           <input class="txt-inp" type="search" placeholder="Buscar time" value="${esc(apiTestSearch)}" oninput="apiTestSearch=this.value;renderApiTest()">
           <select class="txt-select" onchange="apiTestStatusFilter=this.value;renderApiTest()">

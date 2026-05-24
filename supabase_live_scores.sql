@@ -144,9 +144,20 @@ create policy "api_fixture_map visible"
 on public.api_fixture_map for select to authenticated using (true);
 
 drop policy if exists "api_fixture_map admin write" on public.api_fixture_map;
-create policy "api_fixture_map admin write"
-on public.api_fixture_map for all to authenticated
+drop policy if exists "api_fixture_map admin insert" on public.api_fixture_map;
+drop policy if exists "api_fixture_map admin update" on public.api_fixture_map;
+drop policy if exists "api_fixture_map admin delete" on public.api_fixture_map;
+create policy "api_fixture_map admin insert"
+on public.api_fixture_map for insert to authenticated
+with check (app_private.is_admin());
+
+create policy "api_fixture_map admin update"
+on public.api_fixture_map for update to authenticated
 using (app_private.is_admin()) with check (app_private.is_admin());
+
+create policy "api_fixture_map admin delete"
+on public.api_fixture_map for delete to authenticated
+using (app_private.is_admin());
 
 drop policy if exists "live_scores visible" on public.live_scores;
 create policy "live_scores visible"
