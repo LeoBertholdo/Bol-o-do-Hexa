@@ -1420,15 +1420,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 
 /* ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ==== */
 .api-test-page{display:grid;gap:12px}
-.api-test-toolbar{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:12px;
-  align-items:start;
-  margin-bottom:12px;
-}
-.api-test-title h2{font-size:1rem;line-height:1.12;font-weight:950;color:var(--text)}
-.api-test-title p{margin-top:5px;color:var(--muted);font-size:.76rem;line-height:1.4;font-weight:750}
 .api-test-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(330px,.42fr);gap:14px;align-items:start}
 .api-test-form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;align-items:end}
 .api-test-form label{font-size:.66rem;text-transform:uppercase;letter-spacing:.65px;color:var(--muted);font-weight:950}
@@ -1449,8 +1440,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-metric{border:1px solid var(--border);border-radius:8px;background:#fff;padding:10px}
 .api-test-metric strong{display:block;font-size:1.22rem;line-height:1;color:var(--blue);font-weight:950}
 .api-test-metric span{display:block;margin-top:6px;font-size:.62rem;letter-spacing:.55px;text-transform:uppercase;color:var(--muted);font-weight:900}
-.api-test-filters{display:grid;grid-template-columns:minmax(0,1fr) 170px 180px;gap:8px;margin-bottom:10px}
+.api-test-filters{display:grid;grid-template-columns:minmax(0,1fr) 150px 170px auto;gap:8px;margin-bottom:10px;align-items:center}
 .api-test-filters .txt-inp,.api-test-filters .txt-select{text-align:left}
+.api-test-filters .action-btn{min-width:0;flex:0 0 auto;width:max-content;padding:9px 11px;font-size:.72rem;white-space:nowrap}
 .api-test-list{display:grid;gap:14px}
 .api-test-day{
   display:grid;
@@ -1486,7 +1478,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-team{display:flex;align-items:center;gap:7px;min-width:0;font-weight:950}
 .api-test-team.away{justify-content:flex-end;text-align:right}
 .api-test-team img{width:28px;height:28px;object-fit:contain;flex:0 0 auto}
-.api-test-team span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.api-test-team span{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.15}
 .api-test-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--blue)}
 .api-test-score b{min-width:32px;text-align:center;border:1px solid var(--border);border-radius:8px;background:#f8fbf1;padding:6px 5px}
 .api-test-pal{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
@@ -1505,6 +1497,32 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .api-test-rank-points{text-align:right;font-weight:950;color:var(--green)}
 .api-test-rank-points span{display:block;font-size:.58rem;letter-spacing:.45px;text-transform:uppercase;color:var(--muted)}
 .api-test-debug{max-height:250px;overflow:auto;border-radius:8px;background:#111827;color:#e5e7eb;padding:10px;font-size:.72rem;line-height:1.45;white-space:pre-wrap}
+.api-test-debug-box{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  overflow:hidden;
+}
+.api-test-debug-box summary{
+  cursor:pointer;
+  list-style:none;
+  padding:12px;
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--blue);
+  font-weight:950;
+}
+.api-test-debug-box summary::-webkit-details-marker{display:none}
+.api-test-debug-box summary:after{
+  content:"+";
+  float:right;
+  color:var(--muted);
+  font-size:.9rem;
+  line-height:1;
+}
+.api-test-debug-box[open] summary:after{content:"-"}
+.api-test-debug-box .api-test-debug{margin:0;border-radius:0;max-height:260px}
 .api-test-empty{border:1px dashed var(--border);border-radius:8px;background:#fff;padding:16px;text-align:center;color:var(--muted);font-weight:850}
 /* ==== END BRASILEIRAO TEST LAB ==== */
 
@@ -1514,7 +1532,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 
 @media(max-width:980px){
   .home-spotlight,.home-layout{grid-template-columns:1fr}
-  .api-test-toolbar,.api-test-grid{grid-template-columns:1fr}
+  .api-test-grid{grid-template-columns:1fr}
   .api-test-form{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-prize-board{max-width:none}
   .home-insights{grid-template-columns:1fr}
@@ -1733,7 +1751,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
   <button onclick="goTab('api-test')">Brasileirão</button>
-  <button onclick="goTab('ranking-brasileirao')">Ranking BR</button>
   <button onclick="goTab('config')">Config</button>
 </nav>
 
@@ -1743,7 +1760,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
 <div id="tab-api-test" class="tab"></div>
-<div id="tab-ranking-brasileirao" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
 
@@ -2238,7 +2254,7 @@ async function loadRemoteData(showToast=false){
   if(currentProfile&&!palSelectionTouched) palPi=currentProfile.participant_index;
   setSyncStatus("ok",currentProfile?`Online como ${participantName(currentProfile.participant_index)}`:"Conta sem participante vinculado.");
   if(showToast&&currentProfile) toast("Bolão online sincronizado.");
-  if(activeTab==="api-test"||activeTab==="ranking-brasileirao"){
+  if(activeTab==="api-test"){
     await loadApiTestRemote(false,{silent:true,skipRender:true});
   }
   render(activeTab);
@@ -3238,6 +3254,7 @@ const API_TEST_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO","FINISHED","A
 const API_TEST_LIVE_STATUSES=new Set(["1H","2H","HT","ET","BT","P","LIVE","IN_PLAY","PAUSED"]);
 let apiTestState=loadApiTestState();
 let apiTestPi=0;
+let apiTestSelectionTouched=false;
 let apiTestSearch="";
 let apiTestStatusFilter="all";
 let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."};
@@ -3286,6 +3303,88 @@ function apiTestDateParts(iso){
     key:new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TIME_ZONE}).format(d)
   };
 }
+function apiTestTeamName(name){
+  const raw=String(name||"").trim();
+  const normalized=raw.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+  const compact=normalized.replace(/[^a-z0-9]/g,"");
+  const aliases={
+    atleticomg:"Atlético-MG",
+    atleticomineiro:"Atlético-MG",
+    camineiro:"Atlético-MG",
+    atletico:"Atlético-MG",
+    caparanaense:"Athletico-PR",
+    cap:"Athletico-PR",
+    clubeathleticoparanaense:"Athletico-PR",
+    clubathleticoparanaense:"Athletico-PR",
+    athleticoparanaense:"Athletico-PR",
+    athleticopr:"Athletico-PR",
+    athletico:"Athletico-PR",
+    athleticoparanense:"Athletico-PR",
+    bahiaba:"Bahia",
+    ecbahia:"Bahia",
+    bahiasaf:"Bahia",
+    botafogofr:"Botafogo",
+    botafogo:"Botafogo",
+    cearasc:"Ceará",
+    ceara:"Ceará",
+    chapecoense:"Chapecoense",
+    chapecoensesc:"Chapecoense",
+    associacaochapecoensedefutebol:"Chapecoense",
+    associacaochapecoensedefutebolsaf:"Chapecoense",
+    corinthians:"Corinthians",
+    sportclubcorinthianspaulista:"Corinthians",
+    corinthianssp:"Corinthians",
+    coritibafbc:"Coritiba",
+    coritiba:"Coritiba",
+    coritibasaf:"Coritiba",
+    cruzeiroec:"Cruzeiro",
+    cruzeiro:"Cruzeiro",
+    crflamengo:"Flamengo",
+    flamengo:"Flamengo",
+    fluminensefc:"Fluminense",
+    fluminense:"Fluminense",
+    fortalezaec:"Fortaleza",
+    fortaleza:"Fortaleza",
+    gremiofbpa:"Grêmio",
+    gremio:"Grêmio",
+    internacional:"Internacional",
+    scinternacional:"Internacional",
+    mirassolfc:"Mirassol",
+    mirassol:"Mirassol",
+    palmeiras:"Palmeiras",
+    sepalmeiras:"Palmeiras",
+    redbullbragantino:"Bragantino",
+    redbullbragantinosaf:"Bragantino",
+    rbbragantino:"Bragantino",
+    bragantino:"Bragantino",
+    remopa:"Remo",
+    clubedoremo:"Remo",
+    remo:"Remo",
+    santosfc:"Santos",
+    santos:"Santos",
+    saopaulofc:"São Paulo",
+    saopaulo:"São Paulo",
+    sportclubdorecife:"Sport",
+    sportrecife:"Sport",
+    sport:"Sport",
+    vasco:"Vasco da Gama",
+    vascodagama:"Vasco da Gama",
+    crvascodagama:"Vasco da Gama",
+    vitoria:"EC Vitória",
+    ecvitoria:"EC Vitória",
+    ecvitoriasaf:"EC Vitória",
+    juventude:"Juventude",
+    ecjuventude:"Juventude"
+  };
+  if(aliases[compact]) return aliases[compact];
+  const cleaned=raw
+    .replace(/\b(SAF|SAD|FBC|FC|EC|SC|AC|CR|SE|SA|PA|SP|PR|MG|RJ|BA|RS|CE)\b\.?/gi,"")
+    .replace(/\s*[-/]\s*(PA|SP|PR|MG|RJ|BA|RS|CE)\b/gi,"")
+    .replace(/\s+/g," ")
+    .trim();
+  const cleanedCompact=cleaned.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  return aliases[cleanedCompact]||cleaned||raw;
+}
 function normalizeApiTestFixture(row){
   if(!row) return null;
   const rawId=row.game_id??row.id??row.fixture?.id;
@@ -3306,8 +3405,8 @@ function normalizeApiTestFixture(row){
     statusShort:live.status_short||row.status_short||row.statusShort||row.fixture?.status?.short||"NS",
     statusLong:live.status_long||row.status_long||row.statusLong||"",
     elapsed:live.elapsed??row.elapsed??row.fixture?.status?.elapsed??null,
-    home:row.home_team||row.home||row.teams?.home?.name||"Mandante",
-    away:row.away_team||row.away||row.teams?.away?.name||"Visitante",
+    home:apiTestTeamName(row.home_team||row.home||row.teams?.home?.name||"Mandante"),
+    away:apiTestTeamName(row.away_team||row.away||row.teams?.away?.name||"Visitante"),
     homeLogo:row.homeLogo||row.teams?.home?.logo||"",
     awayLogo:row.awayLogo||row.teams?.away?.logo||"",
     goalsHome:live.goals_home??row.goals_home??row.goalsHome??row.goals?.home??null,
@@ -3324,6 +3423,12 @@ function apiTestIsFinal(fixture){
 }
 function apiTestIsLive(fixture){
   return API_TEST_LIVE_STATUSES.has(fixture.statusShort)&&!apiTestIsFinal(fixture);
+}
+function apiTestHasStarted(fixture){
+  if(apiTestIsFinal(fixture)||apiTestIsLive(fixture)) return true;
+  if(!fixture?.dateIso) return false;
+  const kickoff=new Date(fixture.dateIso).getTime();
+  return Number.isFinite(kickoff)&&kickoff<=Date.now();
 }
 function apiTestPredictionKey(pi,id){
   return `${pi}_${id}`;
@@ -3345,11 +3450,14 @@ function apiTestScoreLabel(sc){
   if(sc===0) return {cls:"",text:"0 erro"};
   return {cls:"",text:"Aguardando resultado"};
 }
-function apiTestBeforeCopa(fixture){
-  return Boolean(fixture.dateKey&&fixture.dateKey<API_TEST_COPA_START_DATE_KEY);
+function apiTestTodayKey(){
+  return new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TIME_ZONE}).format(new Date());
+}
+function apiTestInVisibleWindow(fixture){
+  return Boolean(fixture.dateKey&&fixture.dateKey>=apiTestTodayKey()&&fixture.dateKey<API_TEST_COPA_START_DATE_KEY);
 }
 function apiTestVisibleFixtures(){
-  return apiTestState.fixtures.filter(apiTestBeforeCopa);
+  return apiTestState.fixtures.filter(apiTestInVisibleWindow);
 }
 function apiTestPlayerStats(pi){
   let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0;
@@ -3437,7 +3545,7 @@ async function loadApiTestRemote(showToast=false,options={}){
   saveApiTestState();
   const liveCount=apiTestVisibleFixtures().filter(apiTestIsLive).length;
   const beforeCopaCount=apiTestVisibleFixtures().length;
-  apiTestSetStatus("ok",`${beforeCopaCount} jogos antes da Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
+  apiTestSetStatus("ok",`${beforeCopaCount} jogos de hoje até a Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
   if(showToast) toast("Brasileirão atualizado.");
   if(!options.skipRender) render(activeTab);
 }
@@ -3516,6 +3624,21 @@ function loadApiTestSampleFixtures(){
   renderApiTest();
 }
 function saveApiTestPrediction(id){
+  if(remoteClient&&!remoteSession){
+    toast("Entre no bolão para salvar.");
+    return;
+  }
+  if(remoteClient&&remoteSession&&!canEditParticipant(apiTestPi)){
+    toast("Você só pode alterar seus próprios palpites.");
+    loadApiTestRemote(false);
+    return;
+  }
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(fixture&&apiTestHasStarted(fixture)){
+    toast("Palpites encerrados para esse jogo.");
+    render(activeTab);
+    return;
+  }
   const s1=parseInt(document.getElementById(`apiTestS1_${id}`)?.value,10);
   const s2=parseInt(document.getElementById(`apiTestS2_${id}`)?.value,10);
   if(Number.isNaN(s1)||Number.isNaN(s2)||s1<0||s2<0){
@@ -3527,7 +3650,6 @@ function saveApiTestPrediction(id){
   saveApiTestState();
   if(remoteClient&&remoteSession){
     if(!requireOnlineLogin()) return;
-    if(!canEditParticipant(apiTestPi)){toast("Você só pode alterar seus próprios palpites.");loadApiTestRemote(false);return;}
     remoteWrite(()=>remoteClient.from("test_predictions").upsert({
       tournament:API_TEST_TOURNAMENT,
       participant_index:apiTestPi,
@@ -3541,6 +3663,21 @@ function saveApiTestPrediction(id){
   render(activeTab);
 }
 function clearApiTestPrediction(id){
+  if(remoteClient&&!remoteSession){
+    toast("Entre no bolão para alterar.");
+    return;
+  }
+  if(remoteClient&&remoteSession&&!canEditParticipant(apiTestPi)){
+    toast("Você só pode alterar seus próprios palpites.");
+    loadApiTestRemote(false);
+    return;
+  }
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(fixture&&apiTestHasStarted(fixture)){
+    toast("Palpites encerrados para esse jogo.");
+    render(activeTab);
+    return;
+  }
   delete apiTestState.predictions[apiTestPredictionKey(apiTestPi,id)];
   saveApiTestState();
   if(remoteClient&&remoteSession&&canEditParticipant(apiTestPi)){
@@ -3557,6 +3694,7 @@ function resetApiTestLab(){
   if(!confirm("Zerar os dados locais do teste? O bolão principal não será alterado.")) return;
   apiTestState=apiTestDefaultState();
   apiTestPi=0;
+  apiTestSelectionTouched=false;
   apiTestSearch="";
   apiTestStatusFilter="all";
   saveApiTestState();
@@ -3566,7 +3704,7 @@ function resetApiTestLab(){
 function apiTestFilteredFixtures(){
   const search=apiTestSearch.trim().toLowerCase();
   return apiTestVisibleFixtures().filter(fixture=>{
-    if(search&&!`${fixture.home} ${fixture.away}`.toLowerCase().includes(search)) return false;
+    if(search&&!`${apiTestTeamName(fixture.home)} ${apiTestTeamName(fixture.away)}`.toLowerCase().includes(search)) return false;
     if(apiTestStatusFilter==="finished"&&!apiTestIsFinal(fixture)) return false;
     if(apiTestStatusFilter==="open"&&apiTestIsFinal(fixture)) return false;
     if(apiTestStatusFilter==="missing"&&apiTestPrediction(apiTestPi,fixture.id)) return false;
@@ -3592,19 +3730,20 @@ function renderApiTestMetrics(){
   const live=fixtures.filter(apiTestIsLive).length;
   const predicted=fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   return `<div class="api-test-metrics">
-    <div class="api-test-metric"><strong>${total}</strong><span>Antes da Copa</span></div>
+    <div class="api-test-metric"><strong>${total}</strong><span>Até a Copa</span></div>
     <div class="api-test-metric"><strong>${live}</strong><span>Ao vivo</span></div>
     <div class="api-test-metric"><strong>${finished}</strong><span>Finalizados</span></div>
-    <div class="api-test-metric"><strong>${predicted}</strong><span>Meus palpites</span></div>
+    <div class="api-test-metric"><strong>${predicted}</strong><span>Palpites vistos</span></div>
   </div>`;
 }
 function renderApiTestGames(){
   const fixtures=apiTestFilteredFixtures();
   const visibleFixtures=apiTestVisibleFixtures();
+  const canEditSelectedApiTest=!remoteClient||(remoteSession&&canEditParticipant(apiTestPi));
   if(!apiTestState.fixtures.length){
     return `<div class="api-test-empty">Nenhum jogo do Brasileirão mapeado ainda. Rode o mapeamento no Supabase uma vez; depois a tela passa a atualizar sozinha.</div>`;
   }
-  if(!visibleFixtures.length) return `<div class="api-test-empty">Nenhum jogo do Brasileirão antes do início da Copa foi encontrado no calendário mapeado.</div>`;
+  if(!visibleFixtures.length) return `<div class="api-test-empty">Nenhum jogo do Brasileirão de hoje até o início da Copa foi encontrado no calendário mapeado.</div>`;
   if(!fixtures.length) return `<div class="api-test-empty">Nenhum jogo bate com esse filtro.</div>`;
   const groups=fixtures.reduce((acc,fixture)=>{
     const key=fixture.dateKey||"sem-data";
@@ -3624,6 +3763,10 @@ function renderApiTestGames(){
     const sc=apiTestScore(prediction,fixture);
     const label=apiTestScoreLabel(sc);
     const id=apiTestJs(fixture.id);
+    const closed=apiTestHasStarted(fixture);
+    const canEditFixture=canEditSelectedApiTest&&!closed;
+    const editDisabled=canEditFixture?"":"disabled";
+    const palHint=closed?"Palpites encerrados":canEditSelectedApiTest?"Editar palpite":"Somente leitura";
     return `<article class="api-test-game ${apiTestIsLive(fixture)?"is-live":""}">
       <div class="api-test-game-top">
         <div>
@@ -3633,20 +3776,21 @@ function renderApiTestGames(){
         <div class="api-test-status">${esc(apiTestFixtureStatusText(fixture))}${fixture.statusShort?` · ${esc(fixture.statusShort)}`:""}</div>
       </div>
       <div class="api-test-teams">
-        <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(fixture.home)}</span></div>
+        <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
         <div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>
-        <div class="api-test-team away"><span>${esc(fixture.away)}</span>${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}</div>
+        <div class="api-test-team away"><span>${esc(apiTestTeamName(fixture.away))}</span>${fixture.awayLogo?`<img src="${esc(fixture.awayLogo)}" alt="">`:""}</div>
       </div>
       <div class="api-test-pal">
         <div>
           <div class="api-test-round">Palpite de ${esc(participantName(apiTestPi))}</div>
           <div class="api-test-pal-result ${label.cls}">${esc(label.text)}</div>
+          <div class="api-test-round">${esc(palHint)}</div>
         </div>
         <div class="api-test-pal-controls">
-          <label class="api-test-round">Mandante<input class="txt-inp api-test-score-inp" id="apiTestS1_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s1:""}"></label>
-          <label class="api-test-round">Visitante<input class="txt-inp api-test-score-inp" id="apiTestS2_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s2:""}"></label>
-          <button class="action-btn" onclick="saveApiTestPrediction('${id}')">Salvar</button>
-          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')">Limpar</button>
+          <label class="api-test-round">Mandante<input class="txt-inp api-test-score-inp" id="apiTestS1_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s1:""}" ${editDisabled}></label>
+          <label class="api-test-round">Visitante<input class="txt-inp api-test-score-inp" id="apiTestS2_${esc(fixture.id)}" type="number" min="0" max="30" value="${prediction?prediction.s2:""}" ${editDisabled}></label>
+          <button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${editDisabled}>Salvar</button>
+          <button class="action-btn secondary" onclick="clearApiTestPrediction('${id}')" ${editDisabled}>Limpar</button>
         </div>
       </div>
     </article>`;
@@ -3679,48 +3823,20 @@ function renderApiTestSyncCard(){
   </div>`;
 }
 function renderApiTest(){
+  const myIndex=myParticipantIndex();
+  if(Number.isInteger(myIndex)&&!apiTestSelectionTouched) apiTestPi=myIndex;
   if(apiTestPi>=S.participants.length) apiTestPi=0;
-  const config={...API_TEST_DEFAULT_CONFIG,...apiTestState.config};
-  const loginHint=!isRemoteConfigured()
-      ?"Configure o Supabase no app antes de carregar o Brasileirão."
-    :!remoteSession
-      ?"Entre na sua conta do bolão para carregar a tabela."
-      :`Conectado ao Supabase como ${currentProfile?participantName(currentProfile.participant_index):(remoteSession.user.email||"usuário")}.`;
   const h=`<div class="api-test-page">
-    <section class="panel">
-      <div class="api-test-toolbar">
-        <div class="api-test-title">
-          <div class="card-title">Brasileirão Série A</div>
-          <h2>Jogos de teste até o início da Copa</h2>
-          <p>Mostrando apenas partidas antes de 11/06/2026, separadas por dia.</p>
-        </div>
-        <span class="sync-pill ${apiTestStatus.kind}"><span class="sync-dot"></span>${esc(apiTestStatus.text)}</span>
-      </div>
-      <div class="api-test-form">
-        <label>Competição<input class="txt-inp" id="apiTestCompetition" value="${esc(config.competition)}"></label>
-        <label>Temporada<input class="txt-inp" id="apiTestSeason" type="number" min="2000" max="2100" value="${esc(config.season)}"></label>
-        <label>Palpites de
-          <select class="txt-select" onchange="apiTestPi=+this.value;renderApiTest()">
-            ${S.participants.map((name,i)=>`<option value="${i}" ${i===apiTestPi?"selected":""}>${esc(name)}</option>`).join("")}
-          </select>
-        </label>
-      </div>
-      <div class="api-test-actions" style="margin-top:10px">
-        <button class="action-btn" onclick="loadApiTestRemote(true)">Atualizar tela</button>
-        <button class="action-btn secondary" onclick="goTab('ranking-brasileirao')">Ranking BR</button>
-        <button class="action-btn secondary" onclick="loadApiTestSampleFixtures()">Exemplo local</button>
-        <button class="action-btn secondary" onclick="resetApiTestLab()">Zerar teste</button>
-      </div>
-      <div class="api-test-warning">${esc(loginHint)} O token da football-data.org fica nos Secrets das Edge Functions, nunca no HTML.</div>
-    </section>
-
     <div class="api-test-grid">
       <section class="panel">
         ${renderApiTestMetrics()}
         <div class="api-test-filters" style="margin-top:12px">
           <input class="txt-inp" type="search" placeholder="Buscar time" value="${esc(apiTestSearch)}" oninput="apiTestSearch=this.value;renderApiTest()">
           <select class="txt-select" onchange="apiTestStatusFilter=this.value;renderApiTest()">
-            ${[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem meu palpite"]].map(([value,label])=>`<option value="${value}" ${apiTestStatusFilter===value?"selected":""}>${label}</option>`).join("")}
+            ${[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem palpite"]].map(([value,label])=>`<option value="${value}" ${apiTestStatusFilter===value?"selected":""}>${label}</option>`).join("")}
+          </select>
+          <select class="txt-select" onchange="apiTestPi=+this.value;apiTestSelectionTouched=true;renderApiTest()">
+            ${S.participants.map((name,i)=>`<option value="${i}" ${i===apiTestPi?"selected":""}>${esc(name)}</option>`).join("")}
           </select>
           <button class="action-btn secondary" onclick="apiTestSearch='';apiTestStatusFilter='all';renderApiTest()">Limpar filtros</button>
         </div>
@@ -3732,61 +3848,14 @@ function renderApiTest(){
           ${renderApiTestRanking()}
         </div>
         ${renderApiTestSyncCard()}
-        <div class="card">
-          <div class="card-title">Resposta da função</div>
+        <details class="api-test-debug-box">
+          <summary>Resposta da função</summary>
           <pre class="api-test-debug">${esc(JSON.stringify(apiTestState.lastDebug||{message:"Nenhuma chamada feita ainda."},null,2))}</pre>
-        </div>
+        </details>
       </aside>
     </div>
   </div>`;
   document.getElementById("tab-api-test").innerHTML=h;
-}
-function renderApiTestRankingPage(){
-  const r=apiTestRanking();
-  const fixtures=apiTestVisibleFixtures();
-  const finished=fixtures.filter(apiTestIsFinal).length;
-  const live=fixtures.filter(apiTestIsLive).length;
-  const h=`<div class="ranking-page">
-    <div class="ranking-grid">
-      <section class="ranking-card">
-        <div class="section-head">
-          <div>
-            <div class="section-kicker">Ranking paralelo</div>
-            <h3>Brasileirão de teste</h3>
-            <p>${finished} jogos finalizados, ${live} ao vivo e ${fixtures.length} jogos antes da Copa. A pontuação usa as mesmas regras de placar da Copa.</p>
-          </div>
-          <button class="mini-action" onclick="loadApiTestRemote(true)">Atualizar</button>
-        </div>
-        <div class="full-ranking-list">
-          ${r.map((p,ri)=>{
-            const rankCls=ri===0?"r1":ri===1?"r2":ri===2?"r3":"ro";
-            const rowCls=ri===0?"podium-row top-1":ri===1?"podium-row top-2":ri===2?"podium-row top-3":"";
-            return `<div class="lb-row ${rowCls}">
-              <div class="rank ${rankCls}">${ri+1}</div>
-              <div class="pname">${esc(p.name)}</div>
-              <div class="pstats">
-                <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
-                <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
-                <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
-                <div class="stat"><div class="sv">${p.predicted}</div><div class="sl">Palpites</div></div>
-              </div>
-              <div class="pts">${p.pts}</div>
-            </div>`;
-          }).join("")}
-        </div>
-      </section>
-      <div class="ranking-side">
-        ${renderApiTestSyncCard()}
-        <div class="card">
-          <div class="card-title">Atalhos</div>
-          <div class="action-row" style="margin-top:10px">
-            <button class="action-btn" onclick="goTab('api-test')">Ver jogos</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-  document.getElementById("tab-ranking-brasileirao").innerHTML=h;
 }
 // ==== END BRASILEIRAO TEST LAB ====
 
@@ -3796,12 +3865,12 @@ function goTab(t){
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["home","ranking","grupos","jogos","palpites","api-test","ranking-brasileirao","config"];
+  const tabs=["home","ranking","grupos","jogos","palpites","api-test","config"];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
-  if((t==="api-test"||t==="ranking-brasileirao")&&remoteClient&&remoteSession){
+  if(t==="api-test"&&remoteClient&&remoteSession){
     loadApiTestRemote(false,{silent:true});
   }
 }
@@ -3813,7 +3882,6 @@ function render(t){
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
   if(t==="api-test") renderApiTest();
-  if(t==="ranking-brasileirao") renderApiTestRankingPage();
   if(t==="config") renderConfig();
 }
 
