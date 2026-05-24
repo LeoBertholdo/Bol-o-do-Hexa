@@ -3018,12 +3018,13 @@ function teamHTML(name,side="",muted=false){
     ${side==="r"?`<span class="team-name">${esc(name)}</span>${flag?`<span class="flag">${flag}</span>`:""}`:`${flag?`<span class="flag">${flag}</span>`:""}<span class="team-name">${esc(name)}</span>`}
   </span>`;
 }
-function scoreControl(id,value,onChange,placeholder="–",eventName="onchange",disabled=false){
+function scoreControl(id,value,onChange,placeholder="–",eventName="onchange",disabled=false,options={}){
   const v=value==null?"":value;
   const dis=disabled?"disabled":"";
+  const attrs=options.clearZeroOnType?` data-clear-zero-on-type="true"`:"";
   return `<div class="score-control">
     <button class="step-btn" type="button" onclick="bumpField('${id}',-1)" ${dis}>−</button>
-    <input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${esc(v)}" placeholder="${esc(placeholder)}" ${onChange?`${eventName}="${onChange}"`:""} ${dis}>
+    <input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${esc(v)}" placeholder="${esc(placeholder)}"${attrs} ${onChange?`${eventName}="${onChange}"`:""} ${dis}>
     <button class="step-btn" type="button" onclick="bumpField('${id}',1)" ${dis}>+</button>
   </div>`;
 }
@@ -3034,6 +3035,15 @@ function bumpField(id,delta){
   input.value=Math.max(0,Math.min(30,(Number.isNaN(current)?0:current)+delta));
   input.dispatchEvent(new Event("input",{bubbles:true}));
   input.dispatchEvent(new Event("change",{bubbles:true}));
+}
+function handleScoreZeroTyping(event){
+  const input=event.target;
+  if(!input||!input.matches||!input.matches("input[data-clear-zero-on-type='true']")) return;
+  if(event.metaKey||event.ctrlKey||event.altKey||event.isComposing) return;
+  if(!/^\d$/.test(event.key)||input.value!=="0") return;
+  event.preventDefault();
+  input.value=event.key;
+  input.dispatchEvent(new Event("input",{bubbles:true}));
 }
 
 function predictedAdvancer(game,pal,teams=gameTeams(game)){
@@ -3958,8 +3968,8 @@ function renderApiTestGames(){
     const badgeCls=sc===3?"b3":sc===1?"b1":sc===-2?"bn2":sc===0?"b0":prediction?"bem":"b0";
     const badgeText=sc===3?"+3":sc===1?"+1":sc===-2?"−2":sc===0?"0":"–";
     const badgeLabel=sc===3?"cravou":sc===1?"acertou":sc===-2?"invertido":sc===0?"errou":prediction?"aguardando":"sem palpite";
-    const s1=draft.s1??(prediction?prediction.s1:null);
-    const s2=draft.s2??(prediction?prediction.s2:null);
+    const s1=draft.s1??(prediction?prediction.s1:0);
+    const s2=draft.s2??(prediction?prediction.s2:0);
     const resultHTML=apiTestIsFinal(fixture)||apiTestIsLive(fixture)
       ? `<div class="api-test-score"><b>${fixture.goalsHome!=null?fixture.goalsHome:"-"}</b><span>x</span><b>${fixture.goalsAway!=null?fixture.goalsAway:"-"}</b></div>`
       : "";
@@ -3975,9 +3985,9 @@ function renderApiTestGames(){
         <div class="api-test-team">${fixture.homeLogo?`<img src="${esc(fixture.homeLogo)}" alt="">`:""}<span>${esc(apiTestTeamName(fixture.home))}</span></div>
         <div class="api-test-score-panel">
           <div class="api-test-pal-controls">
-            ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",!canEditFixture)}
+            ${scoreControl(`apiTestS1_${fixture.id}`,s1,"","0","onchange",!canEditFixture,{clearZeroOnType:true})}
             <span class="ssep">×</span>
-            ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",!canEditFixture)}
+            ${scoreControl(`apiTestS2_${fixture.id}`,s2,"","0","onchange",!canEditFixture,{clearZeroOnType:true})}
           </div>
           <div class="api-test-pal-actions">
             <button class="action-btn" onclick="saveApiTestPrediction('${id}')" ${editDisabled}>Salvar</button>
@@ -5587,6 +5597,7 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
+  handleScoreZeroTyping(event);
 });
 document.addEventListener("input",event=>{
   if(event.target&&event.target.matches&&event.target.matches("input")) trackScoreDraftInput(event.target);
