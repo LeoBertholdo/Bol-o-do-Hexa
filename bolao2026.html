@@ -680,17 +680,19 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-chip{
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  gap:6px;
   border:1px solid var(--border);
   border-radius:999px;
-  padding:8px 11px;
+  padding:4px 10px;
   background:#fff;
   color:var(--muted);
-  font-size:.74rem;
+  font-size:.7rem;
   font-weight:900;
+  line-height:1.15;
 }
-.chart-chip.active{border-color:transparent;color:#fff;box-shadow:0 10px 20px rgba(0,39,118,.16)}
-.chart-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.chart-chip.active{border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(0,39,118,.14);padding:4px 11px}
+.chart-chip.active .chart-dot{display:none}
+.chart-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .chart-stage{
   border:1px solid #e5edf8;
   border-radius:8px;
@@ -701,6 +703,22 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-shell-compact{padding:12px;gap:10px}
 .chart-shell-compact .chart-stage{padding:8px}
 .chart-shell-compact h3{font-size:.9rem;line-height:1.15}
+.chart-expand-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  border:1px solid var(--border);background:#fff;color:var(--blue);
+  border-radius:8px;padding:6px 10px;font-size:.68rem;font-weight:950;
+  text-transform:uppercase;letter-spacing:.55px;cursor:pointer;
+}
+.chart-expand-btn:hover{background:#eef5ff;border-color:#cbd9eb}
+.chart-modal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:18px}
+.chart-modal.open{display:flex}
+.chart-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px)}
+.chart-modal-frame{position:relative;background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 90px rgba(0,39,118,.35);padding:18px}
+.chart-modal-close{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--blue);font-size:1.2rem;font-weight:950;cursor:pointer;display:grid;place-items:center;z-index:2}
+.chart-modal-close:hover{background:#eef5ff}
+.chart-modal .chart-shell{box-shadow:none;border:0;padding:8px 4px}
+.chart-modal .chart-stage{padding:16px}
+body.chart-modal-open{overflow:hidden}
 .chart-axis{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.68rem;color:var(--muted);font-weight:850}
 .chart-empty{
   padding:18px;
@@ -1890,6 +1908,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 <div id="tab-api-test" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
+<div id="chartModal" class="chart-modal"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -3649,6 +3668,7 @@ let rankingChartSelection=[];
 let rankingChartTouched=false;
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
+let chartExpanded=null;
 
 // ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ====
 const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
@@ -4552,6 +4572,7 @@ function toggleApiTestChartSeries(participantIndex){
   if(apiTestChartSelection.includes(participantIndex)) apiTestChartSelection=apiTestChartSelection.filter(id=>id!==participantIndex);
   else apiTestChartSelection=[...apiTestChartSelection,participantIndex];
   if(activeTab==="api-test") renderApiTest();
+  if(chartExpanded==="apiTest") renderChartModal();
 }
 function setApiTestChartPreset(mode){
   apiTestChartTouched=true;
@@ -4562,8 +4583,9 @@ function setApiTestChartPreset(mode){
     ?apiTestChartSelection.filter(id=>!presetIds.includes(id))
     :Array.from(new Set([...apiTestChartSelection,...presetIds]));
   if(activeTab==="api-test") renderApiTest();
+  if(chartExpanded==="apiTest") renderChartModal();
 }
-function renderApiTestRankingChart(rows){
+function renderApiTestRankingChart(rows,isExpanded=false){
   if(!apiTestChartTouched&&!apiTestChartSelection.length) apiTestChartSelection=apiTestChartDefaultSelection(rows);
   const chart=apiTestRankingTimeline(rows);
   const selected=rows.filter(p=>apiTestChartSelection.includes(p.i));
@@ -4591,6 +4613,7 @@ function renderApiTestRankingChart(rows){
       <div class="chart-presets">
         <button class="mini-action chart-toggle ${allActive?"active":""}" onclick="setApiTestChartPreset('all')">Todos</button>
         <button class="mini-action chart-toggle ${top3Active?"active":""}" onclick="setApiTestChartPreset('top3')">Top 3</button>
+        ${!isExpanded?`<button class="chart-expand-btn" onclick="openChartModal('apiTest')" aria-label="Expandir gráfico">⤢ Expandir</button>`:""}
       </div>
     </div>
     <div class="chart-legend">
@@ -4927,6 +4950,7 @@ function toggleRankingSeries(participantIndex){
   if(rankingChartSelection.includes(participantIndex)) rankingChartSelection=rankingChartSelection.filter(id=>id!==participantIndex);
   else rankingChartSelection=[...rankingChartSelection,participantIndex];
   if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
 }
 function setRankingChartPreset(mode){
   rankingChartTouched=true;
@@ -4937,8 +4961,31 @@ function setRankingChartPreset(mode){
     ?rankingChartSelection.filter(id=>!presetIds.includes(id))
     :Array.from(new Set([...rankingChartSelection,...presetIds]));
   if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
 }
-function renderRankingChart(rows){
+function openChartModal(type){chartExpanded=type;renderChartModal();}
+function closeChartModal(){chartExpanded=null;renderChartModal();}
+function renderChartModal(){
+  const el=document.getElementById("chartModal");
+  if(!el) return;
+  if(!chartExpanded){
+    el.classList.remove("open");
+    el.innerHTML="";
+    document.body.classList.remove("chart-modal-open");
+    return;
+  }
+  const inner=chartExpanded==="ranking"
+    ?renderRankingChart(ranking(),true)
+    :renderApiTestRankingChart(apiTestRanking(),true);
+  el.innerHTML=`<div class="chart-modal-backdrop" onclick="closeChartModal()"></div>
+    <div class="chart-modal-frame" role="dialog" aria-modal="true" aria-label="Gráfico expandido">
+      <button class="chart-modal-close" onclick="closeChartModal()" aria-label="Fechar">×</button>
+      ${inner}
+    </div>`;
+  el.classList.add("open");
+  document.body.classList.add("chart-modal-open");
+}
+function renderRankingChart(rows,isExpanded=false){
   if(!rankingChartTouched&&!rankingChartSelection.length) rankingChartSelection=rankingChartDefaultSelection(rows);
   const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
   const top3Ids=rows.slice(0,3).map(p=>p.i);
@@ -4965,6 +5012,7 @@ function renderRankingChart(rows){
       <div class="chart-presets">
         <button class="mini-action chart-toggle ${allActive?"active":""}" onclick="setRankingChartPreset('all')">Todos</button>
         <button class="mini-action chart-toggle ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')">Top 3</button>
+        ${!isExpanded?`<button class="chart-expand-btn" onclick="openChartModal('ranking')" aria-label="Expandir gráfico">⤢ Expandir</button>`:""}
       </div>
     </div>
     <div class="chart-legend">
@@ -6290,6 +6338,7 @@ document.addEventListener("click",event=>{
 });
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
+  if(event.key==="Escape"&&chartExpanded) closeChartModal();
   handleScoreZeroTyping(event);
 });
 document.addEventListener("input",event=>{
