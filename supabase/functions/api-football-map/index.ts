@@ -187,7 +187,9 @@ Deno.serve(async (req) => {
       kickoff_utc: m.utcDate || null,
       home_team: m.homeTeam?.name || m.homeTeam?.shortName || null,
       away_team: m.awayTeam?.name || m.awayTeam?.shortName || null,
-      round_label: m.matchday ? `Matchday ${m.matchday}` : (m.stage || null),
+      round_label: m.matchday
+        ? `${tournament === "brasileirao" ? "Rodada" : "Matchday"} ${m.matchday}`
+        : (m.stage || null),
       updated_at: new Date().toISOString()
     };
   }).filter(Boolean);
