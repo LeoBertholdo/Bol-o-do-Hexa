@@ -1576,6 +1576,8 @@ body.chart-modal-open{overflow:hidden}
 .api-test-state-tag.live{border-color:rgba(16,185,129,.4);background:#ecfdf5;color:#047857}
 .api-test-state-tag.final{border-color:#94a3b8;background:#e2e8f0;color:#334155}
 .api-test-state-tag.final:before{content:"\2713";margin-right:4px;font-weight:950;color:#475569}
+.api-test-state-tag.final.unconfirmed{border-color:#fcd34d;background:#fef9c3;color:#92400e}
+.api-test-state-tag.final.unconfirmed:before{content:"\26A0";color:#b45309}
 .api-test-state-tag.upcoming{border-color:#93b8f0;background:#dbeafe;color:#174ea6}
 .api-test-date{
   display:inline-flex;align-items:center;gap:6px;
@@ -4742,6 +4744,25 @@ async function saveApiTestFinalScore(id){
   toast("Placar final corrigido.");
   await loadApiTestRemote(false,{silent:true});
 }
+async function confirmApiTestFinalScore(id){
+  if(!remoteClient||!remoteSession){toast("Entre no bolão para confirmar.");return;}
+  if(!isAdmin()){toast("Só o administrador trava placares.");return;}
+  const fixture=apiTestState.fixtures.find(f=>f.id===id);
+  if(!fixture||!apiTestHasFinalStatus(fixture)){
+    toast("Só dá pra travar jogo finalizado.");
+    render(activeTab);
+    return;
+  }
+  pendingApiTestScoreWrites.add(id);
+  const ok=await remoteWrite(()=>remoteClient.from("live_scores").update({
+    is_locked_by_admin:true,
+    last_synced_at:new Date().toISOString()
+  }).eq("game_id",id))
+    .finally(()=>pendingApiTestScoreWrites.delete(id));
+  if(!ok) return;
+  toast("Placar travado.");
+  await loadApiTestRemote(false,{silent:true});
+}
 function resetApiTestLab(){
   if(!confirm("Zerar os dados locais do teste? O bolão principal não será alterado.")) return;
   apiTestState=apiTestDefaultState();
@@ -4755,6 +4776,9 @@ function resetApiTestLab(){
   apiTestSetStatus("ok","Teste local zerado.");
   renderApiTest();
 }
+function apiTestIsUnconfirmedFinal(fixture){
+  return apiTestHasFinalStatus(fixture)&&!fixture.isLockedByAdmin;
+}
 function apiTestFilteredFixtures(){
   const search=apiTestSearch.trim().toLowerCase();
   return apiTestVisibleFixtures().filter(fixture=>{
@@ -4762,6 +4786,7 @@ function apiTestFilteredFixtures(){
     if(apiTestStatusFilter==="finished"&&!apiTestHasFinalStatus(fixture)) return false;
     if(apiTestStatusFilter==="open"&&apiTestHasFinalStatus(fixture)) return false;
     if(apiTestStatusFilter==="missing"&&apiTestPrediction(apiTestPi,fixture.id)) return false;
+    if(apiTestStatusFilter==="unconfirmed"&&isAdmin()&&!apiTestIsUnconfirmedFinal(fixture)) return false;
     return true;
   });
 }
@@ -4937,7 +4962,8 @@ function apiTestFinalScoreFallbackHTML(fixture){
   const editing=Boolean(apiTestEditingScores[fixture.id]);
   const busy=pendingApiTestScoreWrites.has(fixture.id);
   if(!editing){
-    return `<button class="api-test-mini-action" type="button" onclick="editApiTestFinalScore('${id}')" ${busy?"disabled":""}>Corrigir</button>`;
+    const confirmBtn=fixture.isLockedByAdmin?"":`<button class="api-test-mini-action" type="button" onclick="confirmApiTestFinalScore('${id}')" ${busy?"disabled":""} title="Trava o placar atual; robô para de mexer.">Travar</button>`;
+    return `${confirmBtn}<button class="api-test-mini-action" type="button" onclick="editApiTestFinalScore('${id}')" ${busy?"disabled":""}>Corrigir</button>`;
   }
   const draft=apiTestScoreDrafts[fixture.id]||{};
   const home=draft.home??apiTestBaseGoalsHome(fixture)??0;
@@ -5071,9 +5097,11 @@ function renderApiTestGames(){
     }
     const stateLabel=apiTestFixtureStateLabel(fixture);
     const roundLabel=apiTestRoundLabel(fixture);
+    const stateTagCls=finalStatus&&isAdmin()&&!fixture.isLockedByAdmin?`${cardState} unconfirmed`:cardState;
+    const stateTagTitle=finalStatus&&isAdmin()&&!fixture.isLockedByAdmin?' title="Placar não confirmado — robô ainda pode sobrescrever"':"";
     return `<article class="${cardCls}">
       <div class="api-test-meta">
-        <div class="api-test-state-tag ${cardState}">${esc(stateLabel)}</div>
+        <div class="api-test-state-tag ${stateTagCls}"${stateTagTitle}>${esc(stateLabel)}</div>
         <div class="api-test-time">${esc(fixture.timeLabel)}</div>
         ${roundLabel?`<div class="api-test-round">${esc(roundLabel)}</div>`:""}
       </div>
@@ -5249,7 +5277,7 @@ function renderApiTest(){
         <div class="api-test-filters" style="margin-top:12px">
           <input class="txt-inp" type="search" placeholder="Buscar time" value="${esc(apiTestSearch)}" oninput="apiTestSearch=this.value;renderApiTest()">
           <select class="txt-select" onchange="apiTestStatusFilter=this.value;renderApiTest()">
-            ${[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem palpite"]].map(([value,label])=>`<option value="${value}" ${apiTestStatusFilter===value?"selected":""}>${label}</option>`).join("")}
+            ${(isAdmin()?[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem palpite"],["unconfirmed","Não confirmados"]]:[["all","Todos"],["open","Abertos"],["finished","Finalizados"],["missing","Sem palpite"]]).map(([value,label])=>`<option value="${value}" ${apiTestStatusFilter===value?"selected":""}>${label}</option>`).join("")}
           </select>
           <select class="txt-select" onchange="apiTestPi=+this.value;apiTestSelectionTouched=true;renderApiTest()">
             ${S.participants.map((name,i)=>`<option value="${i}" ${i===apiTestPi?"selected":""}>${esc(name)}</option>`).join("")}
