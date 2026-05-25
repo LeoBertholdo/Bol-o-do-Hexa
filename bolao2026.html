@@ -4103,6 +4103,8 @@ let apiTestStatus={kind:"warn",text:"Carregando jogos mapeados do Brasileirão."
 let apiTestClockTimer=null;
 let apiTestRealtimeChannel=null;
 let apiTestRealtimeReloadTimer=null;
+let apiTestPollTimer=null;
+const API_TEST_POLL_MS=30000;
 let apiTestScoreDrafts={};
 let apiTestEditingScores={};
 const pendingApiTestScoreWrites=new Set();
@@ -5331,6 +5333,21 @@ function syncApiTestRealtimeSubscription(){
       apiTestRealtimeReloadTimer=null;
     }
   }
+  if(shouldRun&&apiTestPollTimer===null){
+    apiTestPollTimer=setInterval(()=>{
+      if(activeTab!=="api-test"||!remoteClient||!remoteSession) return;
+      if(document.hidden) return;
+      loadApiTestRemote(false,{silent:true});
+    },API_TEST_POLL_MS);
+  }else if(!shouldRun&&apiTestPollTimer!==null){
+    clearInterval(apiTestPollTimer);
+    apiTestPollTimer=null;
+  }
+}
+function handleApiTestVisibilityChange(){
+  if(document.hidden) return;
+  if(activeTab!=="api-test"||!remoteClient||!remoteSession) return;
+  loadApiTestRemote(false,{silent:true});
 }
 // ==== END BRASILEIRAO TEST LAB ====
 
@@ -6923,6 +6940,7 @@ document.addEventListener("keydown",event=>{
 document.addEventListener("input",event=>{
   if(event.target&&event.target.matches&&event.target.matches("input")) trackScoreDraftInput(event.target);
 });
+document.addEventListener("visibilitychange",handleApiTestVisibilityChange);
 
 render("home");
 initRemote();
