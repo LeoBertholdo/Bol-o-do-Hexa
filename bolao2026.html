@@ -4418,15 +4418,28 @@ function apiTestScoreLabel(info){
 function apiTestTodayKey(){
   return new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TIME_ZONE}).format(new Date());
 }
+function apiTestIsBeforeCopa(fixture){
+  return Boolean(fixture?.dateKey&&fixture.dateKey<API_TEST_COPA_START_DATE_KEY);
+}
+function apiTestFixturesBeforeCopa(){
+  return apiTestState.fixtures.filter(apiTestIsBeforeCopa);
+}
+function apiTestFixtureHasAnyPrediction(fixture){
+  if(!fixture) return false;
+  const suffix=`_${fixture.id}`;
+  return Object.keys(apiTestState.predictions).some(key=>key.endsWith(suffix));
+}
 function apiTestInVisibleWindow(fixture){
-  return Boolean(fixture.dateKey&&fixture.dateKey>=apiTestTodayKey()&&fixture.dateKey<API_TEST_COPA_START_DATE_KEY);
+  if(!apiTestIsBeforeCopa(fixture)) return false;
+  if(fixture.dateKey>=apiTestTodayKey()) return true;
+  return apiTestHasFinalStatus(fixture)||apiTestIsActiveFixture(fixture)||apiTestFixtureHasAnyPrediction(fixture);
 }
 function apiTestVisibleFixtures(){
   return apiTestState.fixtures.filter(apiTestInVisibleWindow);
 }
 function apiTestPlayerStats(pi){
   let pts=0,crav=0,corr=0,inv=0,played=0,predicted=0,live=0,finalized=0;
-  apiTestVisibleFixtures().forEach(fixture=>{
+  apiTestFixturesBeforeCopa().forEach(fixture=>{
     const prediction=apiTestPrediction(pi,fixture.id);
     if(prediction) predicted++;
     if(prediction&&apiTestIsActiveFixture(fixture)) live++;
@@ -4519,10 +4532,10 @@ async function loadApiTestRemote(showToast=false,options={}){
     hint:apiTestState.fixtures.length?null:noFixtureHint
   };
   saveApiTestState();
-  const liveCount=apiTestVisibleFixtures().filter(apiTestIsActiveFixture).length;
-  const beforeCopaCount=apiTestVisibleFixtures().length;
+  const liveCount=apiTestFixturesBeforeCopa().filter(apiTestIsActiveFixture).length;
+  const beforeCopaCount=apiTestFixturesBeforeCopa().length;
   if(apiTestState.fixtures.length){
-    apiTestSetStatus("ok",`${beforeCopaCount} jogos de hoje até a Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
+    apiTestSetStatus("ok",`${beforeCopaCount} jogos do Brasileirão antes da Copa${liveCount?`, ${liveCount} ao vivo`:""}.`);
   }else{
     apiTestSetStatus("warn",noFixtureHint);
   }
@@ -4990,15 +5003,16 @@ function apiTestDayTitle(fixture){
 }
 function renderApiTestMetrics(){
   const fixtures=apiTestVisibleFixtures();
+  const rankingFixtures=apiTestFixturesBeforeCopa();
   const total=fixtures.length;
   const finished=fixtures.filter(apiTestHasFinalStatus).length;
   const live=fixtures.filter(apiTestIsActiveFixture).length;
-  const predicted=fixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
+  const predicted=rankingFixtures.filter(f=>apiTestPrediction(apiTestPi,f.id)).length;
   return `<div class="api-test-metrics">
-    <div class="api-test-metric"><strong>${total}</strong><span>Até a Copa</span></div>
+    <div class="api-test-metric"><strong>${total}</strong><span>Na tela</span></div>
     <div class="api-test-metric"><strong>${live}</strong><span>Ao vivo</span></div>
     <div class="api-test-metric"><strong>${finished}</strong><span>Finalizados</span></div>
-    <div class="api-test-metric"><strong>${predicted}</strong><span>Palpites vistos</span></div>
+    <div class="api-test-metric"><strong>${predicted}</strong><span>Palpites</span></div>
   </div>`;
 }
 function renderApiTestGames(){
@@ -5008,7 +5022,7 @@ function renderApiTestGames(){
   if(!apiTestState.fixtures.length){
     return `<div class="api-test-empty">Nenhum jogo do Brasileirão mapeado ainda. Rode o mapeamento no Supabase uma vez; depois a tela passa a atualizar sozinha.</div>`;
   }
-  if(!visibleFixtures.length) return `<div class="api-test-empty">Nenhum jogo do Brasileirão de hoje até o início da Copa foi encontrado no calendário mapeado.</div>`;
+  if(!visibleFixtures.length) return `<div class="api-test-empty">Nenhum jogo do Brasileirão antes da Copa foi encontrado no calendário mapeado.</div>`;
   if(!fixtures.length) return `<div class="api-test-empty">Nenhum jogo bate com esse filtro.</div>`;
   const groups=fixtures.reduce((acc,fixture)=>{
     const key=fixture.dateKey||"sem-data";
@@ -5124,7 +5138,9 @@ function apiTestChartDefaultSelection(rows){
   return rows.slice(0,3).map(p=>p.i);
 }
 function apiTestRankingTimeline(rows){
-  const fixtures=apiTestVisibleFixtures().filter(apiTestCanScoreFixture).sort(compareApiTestFixtures);
+  const fixtures=apiTestFixturesBeforeCopa()
+    .filter(fixture=>apiTestCanScoreFixture(fixture)&&apiTestFixtureHasAnyPrediction(fixture))
+    .sort(compareApiTestFixtures);
   const totals={};
   const series=rows.map((p,idx)=>{
     totals[p.i]=0;
