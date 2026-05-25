@@ -26,12 +26,12 @@ const CADENCE_FINAL_CORRECTION_SECONDS = 300; // depois do FT, confere mais deva
 const POLL_MATCH_DETAILS = false;      // plano grátis atual prioriza placar; cartões/escanteios ficam como "desconhecido"
 const MAX_MATCH_DETAIL_CALLS_PER_RUN = 0;
 const POLL_FINAL_MATCH_DETAILS = true; // para jogo finalizado, usa /matches/{id} como fonte mais precisa de correção
-const MAX_FINAL_MATCH_DETAIL_CALLS_PER_RUN = 4;
+const MAX_FINAL_MATCH_DETAIL_CALLS_PER_RUN = 8;
 const LATE_GAME_FROM_MINUTE = 80;
 const SECOND_HALF_FALLBACK_FROM_KICKOFF_MIN = 60;
 const PRE_KICKOFF_WINDOW_MIN = 2;
 const POST_KICKOFF_GIVEUP_MIN = 240;
-const POST_FINAL_CORRECTION_WINDOW_MIN = 24 * 60;
+const POST_FINAL_CORRECTION_WINDOW_MIN = 48 * 60;
 
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
