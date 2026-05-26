@@ -728,11 +728,12 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-modal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;padding:18px}
 .chart-modal.open{display:flex}
 .chart-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(2px)}
-.chart-modal-frame{position:relative;background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 90px rgba(0,39,118,.35);padding:18px}
-.chart-modal-close{position:absolute;top:10px;right:12px;width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--blue);font-size:1.2rem;font-weight:950;cursor:pointer;display:grid;place-items:center;z-index:2}
-.chart-modal-close:hover{background:#eef5ff}
+.chart-modal-frame{position:relative;background:#fff;border-radius:14px;max-width:1100px;width:100%;max-height:92vh;overflow:auto;box-shadow:0 30px 90px rgba(0,39,118,.35);padding:18px 18px 18px}
+.chart-modal-close{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--blue);font-size:1.25rem;font-weight:950;cursor:pointer;display:grid;place-items:center;z-index:3;box-shadow:0 4px 10px rgba(0,39,118,.12)}
+.chart-modal-close:hover{background:#eef5ff;border-color:#cbd9eb}
 .chart-modal .chart-shell{box-shadow:none;border:0;padding:8px 4px}
-.chart-modal .chart-stage{padding:16px}
+.chart-modal .chart-shell .chart-toolbar{padding-right:52px}
+.chart-modal .chart-stage{padding:16px 14px 12px}
 body.chart-modal-open{overflow:hidden}
 .chart-axis{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:.68rem;color:var(--muted);font-weight:850}
 .chart-empty{
@@ -5451,6 +5452,38 @@ function chartShortPlayerLabel(name){
   const firstWord=trimmed.split(/\s+/)[0];
   return firstWord.length>10?firstWord.slice(0,10)+"…":firstWord;
 }
+function chartUniqueLabels(names){
+  const labels=names.map(n=>chartShortPlayerLabel(n));
+  const counts={};
+  labels.forEach(l=>{counts[l]=(counts[l]||0)+1;});
+  return labels.map((label,idx)=>{
+    if(counts[label]<=1) return label;
+    const parts=String(names[idx]||"").trim().split(/\s+/);
+    const suffix=(parts[1]||parts[0].slice(1,2)||"").trim();
+    const initial=suffix?suffix[0].toUpperCase():"";
+    return initial?`${label} ${initial}.`:label;
+  });
+}
+function chartNiceTicks(minVal,maxVal,targetCount){
+  const range=Math.max(1,maxVal-minVal);
+  const rough=range/Math.max(1,targetCount-1);
+  const mag=Math.pow(10,Math.floor(Math.log10(rough)));
+  const norm=rough/mag;
+  let step;
+  if(norm<1.5) step=1*mag;
+  else if(norm<3) step=2*mag;
+  else if(norm<7) step=5*mag;
+  else step=10*mag;
+  step=Math.max(1,Math.round(step));
+  const start=Math.floor(minVal/step)*step;
+  const end=Math.ceil(maxVal/step)*step;
+  const ticks=[];
+  for(let v=start;v<=end+1e-9;v+=step){
+    if(v>=minVal-1e-9&&v<=maxVal+1e-9) ticks.push(Math.round(v));
+  }
+  if(!ticks.length) ticks.push(Math.round(minVal),Math.round(maxVal));
+  return Array.from(new Set(ticks));
+}
 function chartAxisIndexes(count,maxLabels){
   if(count<=0) return [];
   if(count===1) return [0];
@@ -5548,13 +5581,13 @@ function renderApiTestRankingChart(rows,isExpanded=false){
   const allActive=allIds.length>0&&allIds.every(id=>apiTestChartSelection.includes(id));
   const padX=36;
   const padY=20;
-  const padRight=isExpanded?108:88;
-  const padBottom=isExpanded?42:36;
+  const padRight=isExpanded?132:96;
+  const padBottom=isExpanded?44:38;
   const lineHeight=isExpanded?280:240;
   const lineWidth=720;
   const usableWidth=lineWidth-padX-padRight;
   const usableHeight=lineHeight-padY-padBottom;
-  const tickValues=Array.from(new Set([0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)))));
+  const tickValues=chartNiceTicks(chart.minVal,chart.maxVal,5);
   const range=Math.max(1,chart.maxVal-chart.minVal);
   const points=chart.labels.length;
   const steps=Math.max(1,points-1);
@@ -5568,11 +5601,12 @@ function renderApiTestRankingChart(rows,isExpanded=false){
   const hasData=chart.fixtureCount>0&&selected.length>0;
   const axisMax=isExpanded?14:10;
   const axisIdx=chartAxisIndexes(points,axisMax);
-  const endpointItems=selected.map(line=>{
+  const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
+  const endpointItems=selected.map((line,idx)=>{
     const s=chart.series.find(ss=>ss.i===line.i);
     const values=s?.values||[0];
     const v=values[values.length-1]||0;
-    return {color:s?.color||"#002776",name:chartShortPlayerLabel(line.name),value:v,y:yFor(v)};
+    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};
   });
   const endpointLayout=chartEndpointLayout(endpointItems,15,padY+4,padY+usableHeight-2);
   return `<section class="chart-shell chart-shell-compact">
@@ -5613,9 +5647,13 @@ function renderApiTestRankingChart(rows,isExpanded=false){
           const lbl=chart.labels[i]||"";
           const isLive=chart.states[i]==="live";
           const isStart=i===0;
+          const tx=isStart?x+4:x;
+          const ty=padY+usableHeight+(isStart?14:16);
+          const anchor=isStart?"start":"middle";
+          const rot=isStart?0:-32;
           return `<g>
             <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+5).toFixed(2)}" stroke="rgba(0,39,118,.25)" stroke-width="1"></line>
-            <text class="chart-axis-tick ${isLive?"is-live":""} ${isStart?"is-start":""}" x="${x.toFixed(2)}" y="${(padY+usableHeight+16).toFixed(2)}" text-anchor="middle" font-size="10" fill="#41516d" font-weight="800" transform="rotate(-32 ${x.toFixed(2)} ${(padY+usableHeight+16).toFixed(2)})">${esc(lbl)}</text>
+            <text class="chart-axis-tick ${isLive?"is-live":""} ${isStart?"is-start":""}" x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" text-anchor="${anchor}" font-size="10" fill="#41516d" font-weight="800"${rot?` transform="rotate(${rot} ${tx.toFixed(2)} ${ty.toFixed(2)})"`:""}>${esc(lbl)}</text>
           </g>`;
         }).join("")}
         ${selected.map(line=>{
@@ -5639,15 +5677,13 @@ function renderApiTestRankingChart(rows,isExpanded=false){
         ${endpointLayout.map((item,idx)=>{
           const lastIdx=points-1;
           const baseX=xFor(lastIdx);
-          const dotX=baseX+10;
-          const labelX=baseX+18;
+          const labelX=baseX+12;
           const trueY=yFor(endpointItems[idx].value);
           const labelY=item.y;
-          const connector=Math.abs(labelY-trueY)>2?`<line x1="${baseX.toFixed(2)}" y1="${trueY.toFixed(2)}" x2="${dotX.toFixed(2)}" y2="${labelY.toFixed(2)}" stroke="${item.color}" stroke-width="1" opacity=".45"></line>`:"";
+          const connector=Math.abs(labelY-trueY)>2?`<path d="M ${(baseX+5).toFixed(2)} ${trueY.toFixed(2)} L ${(baseX+10).toFixed(2)} ${labelY.toFixed(2)}" fill="none" stroke="${item.color}" stroke-width="1" opacity=".45"></path>`:"";
           return `<g class="chart-endpoint-label">
             ${connector}
-            <circle cx="${dotX.toFixed(2)}" cy="${labelY.toFixed(2)}" r="3" fill="${item.color}"></circle>
-            <text x="${labelX.toFixed(2)}" y="${(labelY+3.5).toFixed(2)}" font-size="11" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
+            <text x="${labelX.toFixed(2)}" y="${(labelY+3.8).toFixed(2)}" font-size="11" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
           </g>`;
         }).join("")}
       </svg>
@@ -6020,13 +6056,13 @@ function renderRankingChart(rows,isExpanded=false){
   const chart=rankingTimeline(rows);
   const padX=42;
   const padY=22;
-  const padRight=isExpanded?120:96;
-  const padBottom=isExpanded?48:42;
+  const padRight=isExpanded?140:104;
+  const padBottom=isExpanded?50:44;
   const lineHeight=isExpanded?320:300;
   const lineWidth=760;
   const usableWidth=lineWidth-padX-padRight;
   const usableHeight=lineHeight-padY-padBottom;
-  const tickValues=Array.from(new Set([0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)))));
+  const tickValues=chartNiceTicks(chart.minVal,chart.maxVal,5);
   const range=Math.max(1,chart.maxVal-chart.minVal);
   const points=chart.labels.length;
   const steps=Math.max(1,points-1);
@@ -6039,11 +6075,12 @@ function renderRankingChart(rows,isExpanded=false){
   ].filter(Boolean);
   const axisMax=isExpanded?16:11;
   const axisIdx=chartAxisIndexes(points,axisMax);
-  const endpointItems=selected.map(line=>{
+  const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
+  const endpointItems=selected.map((line,idx)=>{
     const s=chart.series.find(ss=>ss.i===line.i);
     const values=s?.values||[0];
     const v=values[values.length-1]||0;
-    return {color:s?.color||"#002776",name:chartShortPlayerLabel(line.name),value:v,y:yFor(v)};
+    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};
   });
   const endpointLayout=chartEndpointLayout(endpointItems,16,padY+4,padY+usableHeight-2);
   return `<section class="chart-shell">
@@ -6084,9 +6121,13 @@ function renderRankingChart(rows,isExpanded=false){
           const lbl=chart.labels[i]||"";
           const isStart=i===0;
           const isPodio=chart.includePodio&&i===points-1;
+          const tx=isStart?x+4:x;
+          const ty=padY+usableHeight+(isStart?15:17);
+          const anchor=isStart?"start":"middle";
+          const rot=isStart?0:-32;
           return `<g>
             <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+5).toFixed(2)}" stroke="rgba(0,39,118,.25)" stroke-width="1"></line>
-            <text class="chart-axis-tick ${isStart?"is-start":""} ${isPodio?"is-podio":""}" x="${x.toFixed(2)}" y="${(padY+usableHeight+17).toFixed(2)}" text-anchor="middle" font-size="11" fill="#41516d" font-weight="850" transform="rotate(-32 ${x.toFixed(2)} ${(padY+usableHeight+17).toFixed(2)})">${esc(lbl)}</text>
+            <text class="chart-axis-tick ${isStart?"is-start":""} ${isPodio?"is-podio":""}" x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" text-anchor="${anchor}" font-size="11" fill="#41516d" font-weight="850"${rot?` transform="rotate(${rot} ${tx.toFixed(2)} ${ty.toFixed(2)})"`:""}>${esc(lbl)}</text>
           </g>`;
         }).join("")}
         ${selected.map(line=>{
@@ -6107,15 +6148,13 @@ function renderRankingChart(rows,isExpanded=false){
         ${endpointLayout.map((item,idx)=>{
           const lastIdx=points-1;
           const baseX=xFor(lastIdx);
-          const dotX=baseX+12;
-          const labelX=baseX+20;
+          const labelX=baseX+13;
           const trueY=yFor(endpointItems[idx].value);
           const labelY=item.y;
-          const connector=Math.abs(labelY-trueY)>2?`<line x1="${baseX.toFixed(2)}" y1="${trueY.toFixed(2)}" x2="${dotX.toFixed(2)}" y2="${labelY.toFixed(2)}" stroke="${item.color}" stroke-width="1" opacity=".45"></line>`:"";
+          const connector=Math.abs(labelY-trueY)>2?`<path d="M ${(baseX+5).toFixed(2)} ${trueY.toFixed(2)} L ${(baseX+11).toFixed(2)} ${labelY.toFixed(2)}" fill="none" stroke="${item.color}" stroke-width="1" opacity=".45"></path>`:"";
           return `<g class="chart-endpoint-label">
             ${connector}
-            <circle cx="${dotX.toFixed(2)}" cy="${labelY.toFixed(2)}" r="3.2" fill="${item.color}"></circle>
-            <text x="${labelX.toFixed(2)}" y="${(labelY+3.8).toFixed(2)}" font-size="11.5" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
+            <text x="${labelX.toFixed(2)}" y="${(labelY+4).toFixed(2)}" font-size="11.5" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
           </g>`;
         }).join("")}
       </svg>
