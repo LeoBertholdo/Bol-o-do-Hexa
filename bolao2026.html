@@ -695,13 +695,28 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .chart-stage{
   border:1px solid #e5edf8;
-  border-radius:8px;
-  padding:12px;
-  background:linear-gradient(180deg,#fbfdff 0%,#f6fbf8 100%);
+  border-radius:10px;
+  padding:14px 12px 10px;
+  background:
+    radial-gradient(circle at 0% 0%,rgba(47,124,246,.05),transparent 55%),
+    radial-gradient(circle at 100% 100%,rgba(21,163,107,.05),transparent 55%),
+    linear-gradient(180deg,#fcfdff 0%,#f6fbf8 100%);
+  overflow:hidden;
 }
-.chart-stage svg{display:block;width:100%;height:auto}
+.chart-stage svg{display:block;width:100%;height:auto;overflow:visible}
+.chart-axis-tick{letter-spacing:.02em}
+.chart-axis-tick.is-start{fill:#002776;font-weight:950}
+.chart-axis-tick.is-podio{fill:#d4a017;font-weight:950}
+.chart-axis-tick.is-live{fill:#d83a34}
+.chart-endpoint-label text{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
+.chart-endpoint-dot{filter:drop-shadow(0 2px 4px rgba(0,39,118,.18))}
+.chart-endpoint-dot.is-live,.chart-live-dot{animation:chart-live-pulse 1.6s ease-in-out infinite}
+@keyframes chart-live-pulse{
+  0%,100%{opacity:1;transform:scale(1);transform-origin:center;transform-box:fill-box}
+  50%{opacity:.55;transform:scale(1.25);transform-origin:center;transform-box:fill-box}
+}
 .chart-shell-compact{padding:12px;gap:10px}
-.chart-shell-compact .chart-stage{padding:8px}
+.chart-shell-compact .chart-stage{padding:10px 8px 6px}
 .chart-shell-compact h3{font-size:.9rem;line-height:1.15}
 .chart-expand-btn{
   display:inline-flex;align-items:center;gap:5px;
@@ -2073,21 +2088,21 @@ body.chart-modal-open{overflow:hidden}
 .api-test-page.v2 .api-test-day-games{gap:12px}
 
 /* ----- GAME CARD BASE ----------------------------------------------------- */
-.api-test-page.v2 .api-test-game{position:relative;border-radius:14px;border:1px solid var(--v2-line);background:#fff;padding:14px 16px 14px 20px;gap:14px;box-shadow:var(--v2-shadow-sm);transition:transform .18s ease,box-shadow .2s ease,border-color .2s ease;overflow:visible;grid-template-columns:96px minmax(0,1fr) 158px;align-items:center;min-height:84px}
+.api-test-page.v2 .api-test-game{position:relative;border-radius:14px;border:1px solid var(--v2-line);background:#fff;padding:14px 16px 14px 18px;gap:14px;box-shadow:var(--v2-shadow-sm);transition:transform .18s ease,box-shadow .2s ease,border-color .2s ease;overflow:visible;grid-template-columns:92px minmax(0,1fr) 160px;align-items:center;min-height:84px}
 .api-test-page.v2 .api-test-game::before{width:4px;border-radius:14px 0 0 14px;background:linear-gradient(180deg,#cbd5e1,#94a3b8)}
 .api-test-page.v2 .api-test-game:hover{transform:translateY(-2px);box-shadow:var(--v2-shadow-md);border-color:rgba(10,42,138,.22)}
 .api-test-page.v2 .api-test-game:hover::before{filter:brightness(1.08)}
 
 /* upcoming */
-.api-test-page.v2 .api-test-game.is-upcoming{background:linear-gradient(180deg,#fff 0%,#f6faff 100%);border-color:rgba(10,42,138,.14);grid-template-columns:96px minmax(0,1fr) 168px;min-height:90px}
+.api-test-page.v2 .api-test-game.is-upcoming{background:linear-gradient(180deg,#fff 0%,#f6faff 100%);border-color:rgba(10,42,138,.14);grid-template-columns:92px minmax(0,1fr) 170px;min-height:90px}
 .api-test-page.v2 .api-test-game.is-upcoming::before{background:linear-gradient(180deg,var(--v2-blue),#1e40af)}
 
 /* final */
-.api-test-page.v2 .api-test-game.is-final{background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border-color:var(--v2-line);padding:12px 14px 12px 18px;border-radius:12px;grid-template-columns:76px minmax(0,1fr) 148px;min-height:72px;gap:12px}
+.api-test-page.v2 .api-test-game.is-final{background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border-color:var(--v2-line);padding:12px 14px 12px 18px;border-radius:12px;grid-template-columns:76px minmax(0,1fr) 150px;min-height:72px;gap:12px}
 .api-test-page.v2 .api-test-game.is-final::before{background:linear-gradient(180deg,#475569,#0f172a)}
 
 /* live — animated gradient border + soft outer glow */
-.api-test-page.v2 .api-test-game.is-live{border-color:transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,#10b981 0%,#34d399 50%,#10b981 100%) border-box;border:2px solid transparent;box-shadow:0 0 0 4px rgba(16,185,129,.10),0 18px 38px -18px rgba(0,132,61,.30);animation:v2LiveGlow 2.4s ease-in-out infinite;grid-template-columns:102px minmax(0,1fr) 168px;min-height:120px;padding:14px 16px 14px 18px}
+.api-test-page.v2 .api-test-game.is-live{border-color:transparent;background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,#10b981 0%,#34d399 50%,#10b981 100%) border-box;border:2px solid transparent;box-shadow:0 0 0 4px rgba(16,185,129,.10),0 18px 38px -18px rgba(0,132,61,.30);animation:v2LiveGlow 2.4s ease-in-out infinite;grid-template-columns:98px minmax(0,1fr) 170px;min-height:120px;padding:14px 16px 14px 16px}
 .api-test-page.v2 .api-test-game.is-live::before{display:none}
 @keyframes v2LiveGlow{0%,100%{box-shadow:0 0 0 4px rgba(16,185,129,.10),0 18px 38px -18px rgba(0,132,61,.30)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.18),0 22px 42px -16px rgba(0,132,61,.45)}}
 
@@ -2134,35 +2149,63 @@ body.chart-modal-open{overflow:hidden}
 .api-test-page.v2 .api-test-versus{font-size:.72rem;color:rgba(10,42,138,.32);font-weight:950;letter-spacing:2.5px}
 
 /* ----- SIDE PANEL (prediction vs official — STAR FEATURE) ----------------- */
-.api-test-page.v2 .api-test-side-panel{gap:9px;padding:11px 13px;border-radius:12px;border:1px solid var(--v2-line);background:linear-gradient(180deg,#fbfdff 0%,#fff 100%);justify-items:stretch;min-width:140px;box-shadow:inset 0 1px 0 rgba(255,255,255,1)}
+.api-test-page.v2 .api-test-side-panel{gap:9px;padding:11px 13px;border-radius:12px;border:1px solid var(--v2-line);background:linear-gradient(180deg,#fbfdff 0%,#fff 100%);justify-items:center;min-width:0;box-shadow:inset 0 1px 0 rgba(255,255,255,1);width:100%}
 .api-test-page.v2 .api-test-game.is-saved .api-test-side-panel{border-color:rgba(10,42,138,.22);background:linear-gradient(180deg,#f5f9ff,#fff)}
 .api-test-page.v2 .api-test-game.is-hit .api-test-side-panel{border-color:rgba(16,185,129,.32);background:linear-gradient(180deg,#f1fff6,#fff)}
+.api-test-page.v2 .api-test-side-panel .api-test-side-row,
+.api-test-page.v2 .api-test-side-panel .api-test-side-result{justify-self:stretch;width:100%}
 .api-test-page.v2 .api-test-side-label{font-size:.5rem;font-weight:950;letter-spacing:.95px;color:var(--v2-blue);text-transform:uppercase}
-.api-test-page.v2 .api-test-side-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;flex-wrap:nowrap}
+.api-test-page.v2 .api-test-side-row{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:nowrap}
 .api-test-page.v2 .api-test-mini-score{gap:5px}
 .api-test-page.v2 .api-test-mini-score b{min-width:26px;padding:5px 7px;font-size:.82rem;background:linear-gradient(180deg,#fff,var(--v2-surface-3));border:1.5px solid rgba(10,42,138,.22);color:var(--v2-blue);border-radius:8px;font-weight:950;letter-spacing:-.02em;box-shadow:0 2px 6px -2px rgba(10,42,138,.15)}
 .api-test-page.v2 .api-test-mini-score span{color:rgba(10,42,138,.35);font-size:.7rem;font-weight:950}
 
 /* RESULT CHIPS — the punchy outcome tags */
-.api-test-page.v2 .api-test-side-result{width:100%;padding:7px 11px;border-radius:8px;font-size:.6rem;letter-spacing:.85px;font-weight:950;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;text-align:center;text-transform:uppercase;line-height:1}
+.api-test-page.v2 .api-test-side-result{padding:7px 11px;border-radius:8px;font-size:.6rem;letter-spacing:.85px;font-weight:950;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;text-align:center;text-transform:uppercase;line-height:1}
 .api-test-page.v2 .api-test-side-result.hit{background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-color:#059669;color:#fff;box-shadow:0 4px 14px -4px rgba(16,185,129,.5)}
 .api-test-page.v2 .api-test-side-result.ok{background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%);border-color:#1e40af;color:#fff;box-shadow:0 4px 12px -4px rgba(59,130,246,.4)}
 .api-test-page.v2 .api-test-side-result.bad{background:linear-gradient(135deg,#ef4444 0%,#b91c1c 100%);border-color:#b91c1c;color:#fff;box-shadow:0 4px 12px -4px rgba(239,68,68,.4)}
-.api-test-page.v2 .api-test-side-result.is-empty{background:transparent;border:1.5px dashed rgba(10,42,138,.22);color:#94a3b8;font-style:normal}
+.api-test-page.v2 .api-test-side-result.is-empty{background:transparent;border:1.5px dashed rgba(10,42,138,.18);color:#94a3b8;font-style:normal}
+/* "Sem palpite" inline (substitui o mini-score na side-row) — fica pílula sutil */
+.api-test-page.v2 .api-test-side-row .api-test-side-result.is-empty{width:auto;padding:4px 10px;font-size:.55rem;border-radius:999px;letter-spacing:.7px}
 
-/* ----- PICK EDITOR (inputs for predictions) ------------------------------- */
-.api-test-page.v2 .api-test-pick-editor{gap:8px}
-.api-test-page.v2 .api-test-pick-score-editor{gap:6px}
+/* ----- PICK EDITOR (inputs for predictions) — centralizado ---------------- */
+.api-test-page.v2 .api-test-pick-editor{gap:8px;width:100%;display:grid;justify-items:center}
+.api-test-page.v2 .api-test-pick-score-editor{gap:6px;justify-content:center}
 .api-test-page.v2 .api-test-pick-input{width:38px;height:38px;border:1.5px solid rgba(10,42,138,.28);background:#fff;border-radius:10px;font-size:1.05rem;font-weight:950;color:var(--v2-blue);box-shadow:0 4px 10px -4px rgba(10,42,138,.18);transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
 .api-test-page.v2 .api-test-pick-input:focus{outline:none;border-color:var(--v2-blue);box-shadow:0 0 0 3px rgba(10,42,138,.18);transform:translateY(-1px)}
 .api-test-page.v2 .api-test-pick-input:disabled{opacity:.55;background:#f8fafc}
 .api-test-page.v2 .api-test-pick-x{font-size:.9rem;color:rgba(10,42,138,.4);font-weight:950;letter-spacing:2px}
-.api-test-page.v2 .api-test-pick-actions{gap:8px}
-.api-test-page.v2 .api-test-mini-action{font-size:.56rem;font-weight:950;letter-spacing:.7px;color:var(--v2-blue);transition:all .15s ease}
+.api-test-page.v2 .api-test-pick-actions{gap:8px;justify-content:center;width:100%;flex-wrap:wrap}
+
+/* MINI-ACTION — unified pill-style button system */
+.api-test-page.v2 .api-test-mini-action{font-size:.58rem;font-weight:950;letter-spacing:.7px;color:var(--v2-blue);transition:all .15s ease;line-height:1;cursor:pointer}
 .api-test-page.v2 .api-test-mini-action:hover{color:var(--v2-blue-deep);text-decoration:none;opacity:.85}
-.api-test-page.v2 .api-test-mini-action.primary{padding:8px 14px;background:linear-gradient(135deg,var(--v2-blue) 0%,var(--v2-blue-deep) 100%);color:#fff;border:1px solid var(--v2-blue);border-radius:999px;letter-spacing:.65px;box-shadow:0 4px 14px -4px rgba(10,42,138,.4);text-decoration:none}
-.api-test-page.v2 .api-test-mini-action.primary:hover{transform:translateY(-1px);text-decoration:none;opacity:1;color:#fff;box-shadow:0 6px 18px -4px rgba(10,42,138,.55)}
-.api-test-page.v2 .api-test-mini-action.primary:disabled{opacity:.55;transform:none;cursor:not-allowed}
+/* Standalone mini-action (Editar/Cancelar/Travar/Corrigir) ganha look de pílula ghost */
+.api-test-page.v2 .api-test-side-panel > .api-test-mini-action,
+.api-test-page.v2 .api-test-pick-actions .api-test-mini-action:not(.primary),
+.api-test-page.v2 .api-test-correction .api-test-mini-action,
+.api-test-page.v2 .api-test-inline-editor .api-test-mini-action,
+.api-test-page.v2 .api-test-admin-actions .api-test-mini-action{display:inline-flex;align-items:center;justify-content:center;padding:6px 13px;background:rgba(10,42,138,.06);border:1px solid rgba(10,42,138,.18);border-radius:999px;color:var(--v2-blue);text-decoration:none;white-space:nowrap;justify-self:center}
+.api-test-page.v2 .api-test-side-panel > .api-test-mini-action:hover,
+.api-test-page.v2 .api-test-pick-actions .api-test-mini-action:not(.primary):hover,
+.api-test-page.v2 .api-test-correction .api-test-mini-action:hover,
+.api-test-page.v2 .api-test-inline-editor .api-test-mini-action:hover,
+.api-test-page.v2 .api-test-admin-actions .api-test-mini-action:hover{background:rgba(10,42,138,.12);border-color:var(--v2-blue);color:var(--v2-blue);transform:translateY(-1px);opacity:1}
+.api-test-page.v2 .api-test-side-panel > .api-test-mini-action:disabled,
+.api-test-page.v2 .api-test-pick-actions .api-test-mini-action:disabled,
+.api-test-page.v2 .api-test-correction .api-test-mini-action:disabled,
+.api-test-page.v2 .api-test-inline-editor .api-test-mini-action:disabled{opacity:.45;cursor:not-allowed;transform:none;background:rgba(10,42,138,.04)}
+/* Primary CTA */
+.api-test-page.v2 .api-test-mini-action.primary{padding:8px 16px;background:linear-gradient(135deg,var(--v2-blue) 0%,var(--v2-blue-deep) 100%);color:#fff;border:1px solid var(--v2-blue);border-radius:999px;letter-spacing:.7px;box-shadow:0 4px 14px -4px rgba(10,42,138,.4);text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.api-test-page.v2 .api-test-mini-action.primary:hover{transform:translateY(-1px);text-decoration:none;opacity:1;color:#fff;box-shadow:0 6px 18px -4px rgba(10,42,138,.55);background:linear-gradient(135deg,var(--v2-blue-deep),var(--v2-blue))}
+.api-test-page.v2 .api-test-mini-action.primary:disabled{opacity:.45;transform:none;cursor:not-allowed;box-shadow:none}
+/* .api-test-correction container centralizado */
+.api-test-page.v2 .api-test-correction{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;justify-self:center;margin-top:2px}
+/* Admin compact (correção placar oficial pelo admin) — centralizar inputs e botões */
+.api-test-page.v2 .api-test-admin-compact{display:grid;justify-items:center;gap:7px;width:100%}
+.api-test-page.v2 .api-test-inline-editor{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;width:100%}
+.api-test-page.v2 .api-test-admin-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;width:100%}
 
 /* ----- LIVE PANEL (center of LIVE game card) ------------------------------ */
 .api-test-page.v2 .api-test-live-panel{padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,#ecfdf5 0%,#fff 100%);border:1.5px solid rgba(16,185,129,.28);gap:9px;width:100%}
@@ -2253,9 +2296,9 @@ body.chart-modal-open{overflow:hidden}
   .api-test-page.v2 .api-test-primary-score .api-test-score b{min-width:30px;padding:6px 8px;font-size:.94rem}
   .api-test-page.v2 .api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:38px;padding:8px 10px;font-size:1.18rem}
   .api-test-page.v2 .api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:28px;padding:5px 7px;font-size:.9rem}
-  .api-test-page.v2 .api-test-side-panel{width:100%;justify-items:stretch;padding:10px 11px}
+  .api-test-page.v2 .api-test-side-panel{width:100%;justify-items:center;padding:10px 11px}
   .api-test-page.v2 .api-test-live-panel{padding:11px 12px}
-  .api-test-page.v2 .api-test-game.is-hit::after{top:8px;right:10px;font-size:.46rem;padding:2px 7px}
+  .api-test-page.v2 .api-test-game.is-hit::after{display:none}
   .api-test-page.v2 .api-test-pick-input{width:42px;height:42px;font-size:1.1rem}
   .api-test-page.v2 .api-test-mini-action.primary{padding:9px 16px;font-size:.6rem}
   .api-test-page.v2 .api-test-rank-pos{width:32px;height:32px;font-size:.84rem}
@@ -5391,6 +5434,63 @@ function apiTestChartDefaultSelection(rows){
   if(Number.isInteger(mine)&&rows.some(p=>p.i===mine)) return [mine];
   return rows.slice(0,3).map(p=>p.i);
 }
+function chartShortTeamLabel(name){
+  if(!name) return "?";
+  const cleaned=String(name).replace(/[._-]+/g," ").replace(/\s+/g," ").trim();
+  if(!cleaned) return "?";
+  const words=cleaned.split(/\s+/).filter(w=>w&&!/^(de|do|da|dos|das|del|la|el|al|fc|sc|ec|ac|cf)$/i.test(w));
+  if(words.length>=2){
+    return ((words[0][0]||"")+(words[1][0]||"")+(words[2]?.[0]||words[1][1]||"")).toUpperCase().slice(0,3);
+  }
+  return cleaned.replace(/\s+/g,"").slice(0,3).toUpperCase();
+}
+function chartShortPlayerLabel(name){
+  if(!name) return "?";
+  const trimmed=String(name).trim();
+  if(!trimmed) return "?";
+  const firstWord=trimmed.split(/\s+/)[0];
+  return firstWord.length>10?firstWord.slice(0,10)+"…":firstWord;
+}
+function chartAxisIndexes(count,maxLabels){
+  if(count<=0) return [];
+  if(count===1) return [0];
+  if(count<=maxLabels) return Array.from({length:count},(_,i)=>i);
+  const stride=Math.ceil((count-1)/(maxLabels-1));
+  const out=[];
+  for(let i=0;i<count;i+=stride) out.push(i);
+  if(out[out.length-1]!==count-1) out.push(count-1);
+  return out;
+}
+function chartEndpointLayout(items,minSpacing,topBound,bottomBound){
+  if(!items.length) return [];
+  const sorted=items.map((item,idx)=>({...item,_idx:idx})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<sorted.length;i++){
+    const prev=sorted[i-1];
+    if(sorted[i].y<prev.y+minSpacing) sorted[i].y=prev.y+minSpacing;
+  }
+  if(sorted.length){
+    const last=sorted[sorted.length-1];
+    if(last.y>bottomBound){
+      let overflow=last.y-bottomBound;
+      for(let i=sorted.length-1;i>=0;i--){
+        sorted[i].y-=overflow;
+        if(i>0&&sorted[i].y-sorted[i-1].y<minSpacing) overflow=Math.max(0,minSpacing-(sorted[i].y-sorted[i-1].y));
+        else break;
+      }
+    }
+    if(sorted[0].y<topBound){
+      let shift=topBound-sorted[0].y;
+      for(let i=0;i<sorted.length;i++){
+        sorted[i].y+=shift;
+        if(i<sorted.length-1&&sorted[i+1].y-sorted[i].y<minSpacing) shift=Math.max(0,minSpacing-(sorted[i+1].y-sorted[i].y));
+        else break;
+      }
+    }
+  }
+  const out=new Array(items.length);
+  sorted.forEach(item=>{out[item._idx]={...items[item._idx],y:item.y};});
+  return out;
+}
 function apiTestRankingTimeline(rows){
   const fixtures=apiTestFixturesBeforeCopa()
     .filter(fixture=>apiTestCanScoreFixture(fixture)&&apiTestFixtureHasAnyPrediction(fixture))
@@ -5401,11 +5501,13 @@ function apiTestRankingTimeline(rows){
     return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
   });
   const states=["start"];
+  const labels=["Início"];
   let liveCount=0,finalCount=0;
   fixtures.forEach(fixture=>{
     const isLive=!apiTestIsFinal(fixture)&&apiTestIsActiveFixture(fixture);
     if(isLive) liveCount++; else finalCount++;
     states.push(isLive?"live":"final");
+    labels.push(`${chartShortTeamLabel(fixture.home)}×${chartShortTeamLabel(fixture.away)}`);
     series.forEach(line=>{
       const prediction=apiTestPrediction(line.i,fixture.id);
       const info=apiTestScoreInfo(prediction,fixture);
@@ -5416,7 +5518,7 @@ function apiTestRankingTimeline(rows){
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
   const minVal=Math.min(0,...allValues);
-  return {states,series,maxVal,minVal,liveCount,finalCount,fixtureCount:fixtures.length};
+  return {states,labels,series,maxVal,minVal,liveCount,finalCount,fixtureCount:fixtures.length};
 }
 function toggleApiTestChartSeries(participantIndex){
   apiTestChartTouched=true;
@@ -5444,17 +5546,35 @@ function renderApiTestRankingChart(rows,isExpanded=false){
   const allIds=rows.map(p=>p.i);
   const top3Active=top3Ids.length>0&&top3Ids.every(id=>apiTestChartSelection.includes(id));
   const allActive=allIds.length>0&&allIds.every(id=>apiTestChartSelection.includes(id));
+  const padX=36;
+  const padY=20;
+  const padRight=isExpanded?108:88;
+  const padBottom=isExpanded?42:36;
+  const lineHeight=isExpanded?280:240;
   const lineWidth=720;
-  const lineHeight=230;
-  const padX=32;
-  const padY=18;
+  const usableWidth=lineWidth-padX-padRight;
+  const usableHeight=lineHeight-padY-padBottom;
   const tickValues=Array.from(new Set([0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)))));
-  const labels=[
-    chart.fixtureCount?"Início":"Sem jogos com placar ainda",
-    chart.finalCount?`${chart.finalCount} ${chart.finalCount===1?"jogo finalizado":"jogos finalizados"}`:"",
-    chart.liveCount?`${chart.liveCount} ao vivo (parcial)`:""
+  const range=Math.max(1,chart.maxVal-chart.minVal);
+  const points=chart.labels.length;
+  const steps=Math.max(1,points-1);
+  const xFor=index=>padX+(usableWidth*(index/steps));
+  const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
+  const summary=[
+    chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"} pontuáveis`:"Sem jogos com placar ainda",
+    chart.finalCount?`${chart.finalCount} finalizados`:"",
+    chart.liveCount?`${chart.liveCount} ao vivo`:""
   ].filter(Boolean);
   const hasData=chart.fixtureCount>0&&selected.length>0;
+  const axisMax=isExpanded?14:10;
+  const axisIdx=chartAxisIndexes(points,axisMax);
+  const endpointItems=selected.map(line=>{
+    const s=chart.series.find(ss=>ss.i===line.i);
+    const values=s?.values||[0];
+    const v=values[values.length-1]||0;
+    return {color:s?.color||"#002776",name:chartShortPlayerLabel(line.name),value:v,y:yFor(v)};
+  });
+  const endpointLayout=chartEndpointLayout(endpointItems,15,padY+4,padY+usableHeight-2);
   return `<section class="chart-shell chart-shell-compact">
     <div class="chart-toolbar">
       <div>
@@ -5478,37 +5598,61 @@ function renderApiTestRankingChart(rows,isExpanded=false){
       }).join("")}
     </div>
     ${hasData?`<div class="chart-stage">
-      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" role="img" aria-label="Evolução da pontuação do Brasileirão">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação do Brasileirão">
+        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
         ${tickValues.map(value=>{
-          const y=lineHeight-padY-((lineHeight-padY*2)*((value-chart.minVal)/Math.max(1,chart.maxVal-chart.minVal)));
+          const y=yFor(value);
           return `<g>
-            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${lineWidth-padX}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.10)" stroke-width="1"></line>
-            <text x="4" y="${(y+4).toFixed(2)}" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${padX+usableWidth}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.08)" stroke-width="1" stroke-dasharray="2 4"></line>
+            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="11" fill="#7a869a" font-weight="700">${value}</text>
+          </g>`;
+        }).join("")}
+        <line x1="${padX}" y1="${(padY+usableHeight).toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${(padY+usableHeight).toFixed(2)}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
+        ${axisIdx.map(i=>{
+          const x=xFor(i);
+          const lbl=chart.labels[i]||"";
+          const isLive=chart.states[i]==="live";
+          const isStart=i===0;
+          return `<g>
+            <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+5).toFixed(2)}" stroke="rgba(0,39,118,.25)" stroke-width="1"></line>
+            <text class="chart-axis-tick ${isLive?"is-live":""} ${isStart?"is-start":""}" x="${x.toFixed(2)}" y="${(padY+usableHeight+16).toFixed(2)}" text-anchor="middle" font-size="10" fill="#41516d" font-weight="800" transform="rotate(-32 ${x.toFixed(2)} ${(padY+usableHeight+16).toFixed(2)})">${esc(lbl)}</text>
           </g>`;
         }).join("")}
         ${selected.map(line=>{
           const seriesLine=chart.series.find(s=>s.i===line.i);
           const color=seriesLine?.color||"#002776";
           const values=seriesLine?.values||[0];
-          const paths=rankingLinePathSegmented(values,chart.states,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal);
-          const usableWidth=lineWidth-padX*2;
-          const usableHeight=lineHeight-padY*2;
-          const steps=Math.max(1,values.length-1);
-          const range=Math.max(1,chart.maxVal-chart.minVal);
+          const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
           return `<g>
-            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"></path>`:""}
-            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".88"></path>`:""}
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".96"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".82"></path>`:""}
             ${values.map((value,index)=>{
               const isLive=chart.states[index]==="live";
-              const x=padX+(usableWidth*(index/steps));
-              const y=lineHeight-padY-(usableHeight*((value-chart.minVal)/range));
-              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${isLive?"#fff":color}" stroke="${color}" stroke-width="${isLive?2.2:2}"></circle>`;
+              const isLast=index===values.length-1;
+              const x=xFor(index);
+              const y=yFor(value);
+              if(isLast) return `<circle class="chart-endpoint-dot ${isLive?"is-live":""}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="5" fill="${color}" stroke="#fff" stroke-width="2.4"></circle>`;
+              return `<circle class="${isLive?"chart-live-dot":""}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" fill="${isLive?"#fff":color}" stroke="${color}" stroke-width="${isLive?2:1.6}"></circle>`;
             }).join("")}
+          </g>`;
+        }).join("")}
+        ${endpointLayout.map((item,idx)=>{
+          const lastIdx=points-1;
+          const baseX=xFor(lastIdx);
+          const dotX=baseX+10;
+          const labelX=baseX+18;
+          const trueY=yFor(endpointItems[idx].value);
+          const labelY=item.y;
+          const connector=Math.abs(labelY-trueY)>2?`<line x1="${baseX.toFixed(2)}" y1="${trueY.toFixed(2)}" x2="${dotX.toFixed(2)}" y2="${labelY.toFixed(2)}" stroke="${item.color}" stroke-width="1" opacity=".45"></line>`:"";
+          return `<g class="chart-endpoint-label">
+            ${connector}
+            <circle cx="${dotX.toFixed(2)}" cy="${labelY.toFixed(2)}" r="3" fill="${item.color}"></circle>
+            <text x="${labelX.toFixed(2)}" y="${(labelY+3.5).toFixed(2)}" font-size="11" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
           </g>`;
         }).join("")}
       </svg>
     </div>`:`<div class="chart-empty">${chart.fixtureCount?"Ative pelo menos um participante para desenhar a evolução.":"Quando o primeiro jogo tiver placar a curva aparece aqui."}</div>`}
-    <div class="chart-axis">${labels.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+    <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
   </section>`;
 }
 function renderApiTestRanking(){
@@ -5751,7 +5895,10 @@ function rankingTimeline(rows){
     return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
   });
   resolved.forEach(game=>{
-    labels.push(game.id);
+    const teams=(typeof gameTeams==="function")?gameTeams(game):{t1:game.t1,t2:game.t2};
+    const home=teams?.t1||game.t1||"";
+    const away=teams?.t2||game.t2||"";
+    labels.push(home&&away?`${chartShortTeamLabel(home)}×${chartShortTeamLabel(away)}`:String(game.id));
     series.forEach(line=>{
       const res=S.results[game.id];
       const pal=S.palpites[`${line.i}_${game.id}`];
@@ -5795,6 +5942,18 @@ function rankingLinePathSegmented(values,states,width,height,padX,padY,minVal,ma
     const y=height-padY-(usableHeight*((value-minVal)/range));
     return `${x.toFixed(2)} ${y.toFixed(2)}`;
   };
+  const solid=[],dashed=[];
+  for(let i=1;i<values.length;i++){
+    const seg=`M ${pt(values[i-1],i-1)} L ${pt(values[i],i)}`;
+    if(states[i]==="live") dashed.push(seg); else solid.push(seg);
+  }
+  return {solid:solid.join(" "),dashed:dashed.join(" ")};
+}
+function rankingLinePathFlex(values,xFor,yFor){
+  return values.map((value,index)=>`${index===0?"M":"L"} ${xFor(index).toFixed(2)} ${yFor(value).toFixed(2)}`).join(" ");
+}
+function rankingLinePathSegmentedFlex(values,states,xFor,yFor){
+  const pt=(value,index)=>`${xFor(index).toFixed(2)} ${yFor(value).toFixed(2)}`;
   const solid=[],dashed=[];
   for(let i=1;i<values.length;i++){
     const seg=`M ${pt(values[i-1],i-1)} L ${pt(values[i],i)}`;
@@ -5859,16 +6018,34 @@ function renderRankingChart(rows,isExpanded=false){
   const top3Active=top3Ids.length>0&&top3Ids.every(id=>rankingChartSelection.includes(id));
   const allActive=allIds.length>0&&allIds.every(id=>rankingChartSelection.includes(id));
   const chart=rankingTimeline(rows);
-  const lineWidth=760;
-  const lineHeight=280;
-  const padX=36;
+  const padX=42;
   const padY=22;
-  const tickValues=[0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)));
-  const labels=[
-    "Início",
-    chart.resolvedCount?`Após ${chart.resolvedCount} jogos apurados`:"Sem jogos apurados ainda",
-    chart.includePodio?"Pódio oficial incluído":""
+  const padRight=isExpanded?120:96;
+  const padBottom=isExpanded?48:42;
+  const lineHeight=isExpanded?320:300;
+  const lineWidth=760;
+  const usableWidth=lineWidth-padX-padRight;
+  const usableHeight=lineHeight-padY-padBottom;
+  const tickValues=Array.from(new Set([0,.25,.5,.75,1].map(step=>Math.round(chart.minVal+((chart.maxVal-chart.minVal)*step)))));
+  const range=Math.max(1,chart.maxVal-chart.minVal);
+  const points=chart.labels.length;
+  const steps=Math.max(1,points-1);
+  const xFor=index=>padX+(usableWidth*(index/steps));
+  const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
+  const summary=[
+    chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"Sem jogos apurados ainda",
+    chart.includePodio?"Pódio oficial incluído":"",
+    selected.length?`${selected.length} de ${rows.length} participantes no gráfico`:""
   ].filter(Boolean);
+  const axisMax=isExpanded?16:11;
+  const axisIdx=chartAxisIndexes(points,axisMax);
+  const endpointItems=selected.map(line=>{
+    const s=chart.series.find(ss=>ss.i===line.i);
+    const values=s?.values||[0];
+    const v=values[values.length-1]||0;
+    return {color:s?.color||"#002776",name:chartShortPlayerLabel(line.name),value:v,y:yFor(v)};
+  });
+  const endpointLayout=chartEndpointLayout(endpointItems,16,padY+4,padY+usableHeight-2);
   return `<section class="chart-shell">
     <div class="chart-toolbar">
       <div>
@@ -5892,25 +6069,58 @@ function renderRankingChart(rows,isExpanded=false){
       }).join("")}
     </div>
     ${selected.length?`<div class="chart-stage">
-      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
+        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
         ${tickValues.map(value=>{
-          const y=lineHeight-padY-((lineHeight-padY*2)*((value-chart.minVal)/Math.max(1,chart.maxVal-chart.minVal)));
+          const y=yFor(value);
           return `<g>
-            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${lineWidth-padX}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.10)" stroke-width="1"></line>
-            <text x="4" y="${(y+4).toFixed(2)}" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.08)" stroke-width="1" stroke-dasharray="2 4"></line>
+            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+          </g>`;
+        }).join("")}
+        <line x1="${padX}" y1="${(padY+usableHeight).toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${(padY+usableHeight).toFixed(2)}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
+        ${axisIdx.map(i=>{
+          const x=xFor(i);
+          const lbl=chart.labels[i]||"";
+          const isStart=i===0;
+          const isPodio=chart.includePodio&&i===points-1;
+          return `<g>
+            <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+5).toFixed(2)}" stroke="rgba(0,39,118,.25)" stroke-width="1"></line>
+            <text class="chart-axis-tick ${isStart?"is-start":""} ${isPodio?"is-podio":""}" x="${x.toFixed(2)}" y="${(padY+usableHeight+17).toFixed(2)}" text-anchor="middle" font-size="11" fill="#41516d" font-weight="850" transform="rotate(-32 ${x.toFixed(2)} ${(padY+usableHeight+17).toFixed(2)})">${esc(lbl)}</text>
           </g>`;
         }).join("")}
         ${selected.map(line=>{
-          const color=chart.series.find(s=>s.i===line.i)?.color||"#002776";
-          const values=chart.series.find(s=>s.i===line.i)?.values||[0];
+          const seriesLine=chart.series.find(s=>s.i===line.i);
+          const color=seriesLine?.color||"#002776";
+          const values=seriesLine?.values||[0];
           return `<g>
-            <path d="${rankingLinePath(values,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal)}" fill="none" stroke="${color}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
-            ${values.map((value,index)=>rankingPointDot(value,index,values.length,lineWidth,lineHeight,padX,padY,chart.minVal,chart.maxVal,color)).join("")}
+            <path d="${rankingLinePathFlex(values,xFor,yFor)}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>
+            ${values.map((value,index)=>{
+              const isLast=index===values.length-1;
+              const x=xFor(index);
+              const y=yFor(value);
+              if(isLast) return `<circle class="chart-endpoint-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="5" fill="${color}" stroke="#fff" stroke-width="2.4"></circle>`;
+              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" fill="${color}" stroke="#fff" stroke-width="1.6"></circle>`;
+            }).join("")}
+          </g>`;
+        }).join("")}
+        ${endpointLayout.map((item,idx)=>{
+          const lastIdx=points-1;
+          const baseX=xFor(lastIdx);
+          const dotX=baseX+12;
+          const labelX=baseX+20;
+          const trueY=yFor(endpointItems[idx].value);
+          const labelY=item.y;
+          const connector=Math.abs(labelY-trueY)>2?`<line x1="${baseX.toFixed(2)}" y1="${trueY.toFixed(2)}" x2="${dotX.toFixed(2)}" y2="${labelY.toFixed(2)}" stroke="${item.color}" stroke-width="1" opacity=".45"></line>`:"";
+          return `<g class="chart-endpoint-label">
+            ${connector}
+            <circle cx="${dotX.toFixed(2)}" cy="${labelY.toFixed(2)}" r="3.2" fill="${item.color}"></circle>
+            <text x="${labelX.toFixed(2)}" y="${(labelY+3.8).toFixed(2)}" font-size="11.5" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
           </g>`;
         }).join("")}
       </svg>
     </div>`:`<div class="chart-empty">Ative pelo menos um participante para desenhar a curva de evolução.</div>`}
-    <div class="chart-axis">${labels.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+    <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
   </section>`;
 }
 function renderHome(){
