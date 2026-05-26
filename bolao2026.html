@@ -5484,6 +5484,43 @@ function chartNiceTicks(minVal,maxVal,targetCount){
   if(!ticks.length) ticks.push(Math.round(minVal),Math.round(maxVal));
   return Array.from(new Set(ticks));
 }
+function chartIntegerTicks(minVal,maxVal,maxTicks){
+  maxTicks=Math.max(4,maxTicks||12);
+  const range=Math.max(1,maxVal-minVal);
+  const candidates=[1,2,5,10,20,25,50,100,200,500];
+  let step=candidates[candidates.length-1];
+  for(const s of candidates){
+    if(Math.floor(range/s)+1<=maxTicks){ step=s; break; }
+  }
+  const start=Math.floor(minVal/step)*step;
+  const end=Math.ceil(maxVal/step)*step;
+  const ticks=[];
+  for(let v=start;v<=end+1e-9;v+=step){
+    if(v>=minVal-1e-9&&v<=maxVal+1e-9) ticks.push(Math.round(v));
+  }
+  if(!ticks.length) ticks.push(Math.round(minVal),Math.round(maxVal));
+  return Array.from(new Set(ticks));
+}
+const CHART_MONTH_NAMES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+function chartFormatDateKey(key){
+  if(!key) return "?";
+  const parts=String(key).split("-");
+  if(parts.length<3) return String(key);
+  const d=parseInt(parts[2],10);
+  const m=parseInt(parts[1],10);
+  if(!Number.isFinite(d)||!Number.isFinite(m)) return String(key);
+  const mn=CHART_MONTH_NAMES[m-1]||"?";
+  return `${String(d).padStart(2,"0")}/${mn}`;
+}
+function chartDateKeyFromIso(iso){
+  if(!iso) return null;
+  const d=new Date(iso);
+  if(isNaN(d.getTime())) return null;
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
 function chartAxisIndexes(count,maxLabels){
   if(count<=0) return [];
   if(count===1) return [0];
@@ -5528,30 +5565,64 @@ function apiTestRankingTimeline(rows){
   const fixtures=apiTestFixturesBeforeCopa()
     .filter(fixture=>apiTestCanScoreFixture(fixture)&&apiTestFixtureHasAnyPrediction(fixture))
     .sort(compareApiTestFixtures);
+  const dateMap=new Map();
+  fixtures.forEach(fx=>{
+    const key=chartDateKeyFromIso(fx.dateIso)||"";
+    if(!key) return;
+    if(!dateMap.has(key)) dateMap.set(key,[]);
+    dateMap.get(key).push(fx);
+  });
+  const dateKeys=Array.from(dateMap.keys()).sort();
+  const oneDay=86400000;
   const totals={};
   const series=rows.map((p,idx)=>{
     totals[p.i]=0;
     return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
   });
-  const states=["start"];
-  const labels=["Início"];
+  const positions=[];
   let liveCount=0,finalCount=0;
-  fixtures.forEach(fixture=>{
-    const isLive=!apiTestIsFinal(fixture)&&apiTestIsActiveFixture(fixture);
-    if(isLive) liveCount++; else finalCount++;
-    states.push(isLive?"live":"final");
-    labels.push(`${chartShortTeamLabel(fixture.home)}×${chartShortTeamLabel(fixture.away)}`);
+  if(dateKeys.length){
+    const earliestMs=parseDateKey(dateKeys[0]).getTime();
+    positions.push({ms:earliestMs-oneDay,label:"Início",state:"start"});
+    dateKeys.forEach(k=>{
+      const fxs=dateMap.get(k);
+      let hasLive=false;
+      fxs.forEach(fx=>{
+        const isLive=!apiTestIsFinal(fx)&&apiTestIsActiveFixture(fx);
+        if(isLive){liveCount++;hasLive=true;}
+        else finalCount++;
+      });
+      positions.push({ms:parseDateKey(k).getTime(),label:chartFormatDateKey(k),state:hasLive?"live":"final",dateKey:k});
+    });
+  }else{
+    positions.push({ms:Date.now(),label:"Início",state:"start"});
+  }
+  dateKeys.forEach(k=>{
+    const fxs=dateMap.get(k);
     series.forEach(line=>{
-      const prediction=apiTestPrediction(line.i,fixture.id);
-      const info=apiTestScoreInfo(prediction,fixture);
-      totals[line.i]+=info?info.value:0;
+      let dayGain=0;
+      fxs.forEach(fixture=>{
+        const prediction=apiTestPrediction(line.i,fixture.id);
+        const info=apiTestScoreInfo(prediction,fixture);
+        dayGain+=info?info.value:0;
+      });
+      totals[line.i]+=dayGain;
       line.values.push(totals[line.i]);
     });
   });
+  const labels=positions.map(p=>p.label);
+  const states=positions.map(p=>p.state);
+  let xRel=positions.map(()=>0);
+  if(positions.length>1){
+    const startMs=positions[0].ms;
+    const endMs=positions[positions.length-1].ms;
+    const span=Math.max(oneDay,endMs-startMs);
+    xRel=positions.map(p=>(p.ms-startMs)/span);
+  }
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
   const minVal=Math.min(0,...allValues);
-  return {states,labels,series,maxVal,minVal,liveCount,finalCount,fixtureCount:fixtures.length};
+  return {states,labels,xRel,series,maxVal,minVal,liveCount,finalCount,fixtureCount:fixtures.length,dateCount:dateKeys.length};
 }
 function toggleApiTestChartSeries(participantIndex){
   apiTestChartTouched=true;
@@ -5587,19 +5658,18 @@ function renderApiTestRankingChart(rows,isExpanded=false){
   const lineWidth=720;
   const usableWidth=lineWidth-padX-padRight;
   const usableHeight=lineHeight-padY-padBottom;
-  const tickValues=chartNiceTicks(chart.minVal,chart.maxVal,5);
+  const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,isExpanded?13:10);
   const range=Math.max(1,chart.maxVal-chart.minVal);
   const points=chart.labels.length;
-  const steps=Math.max(1,points-1);
-  const xFor=index=>padX+(usableWidth*(index/steps));
+  const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
   const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
   const summary=[
-    chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"} pontuáveis`:"Sem jogos com placar ainda",
-    chart.finalCount?`${chart.finalCount} finalizados`:"",
+    chart.dateCount?`${chart.dateCount} ${chart.dateCount===1?"dia":"dias"} com jogo`:"Sem jogos com placar ainda",
+    chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"} pontuáveis`:"",
     chart.liveCount?`${chart.liveCount} ao vivo`:""
   ].filter(Boolean);
   const hasData=chart.fixtureCount>0&&selected.length>0;
-  const axisMax=isExpanded?14:10;
+  const axisMax=isExpanded?12:8;
   const axisIdx=chartAxisIndexes(points,axisMax);
   const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
   const endpointItems=selected.map((line,idx)=>{
@@ -5633,15 +5703,15 @@ function renderApiTestRankingChart(rows,isExpanded=false){
     </div>
     ${hasData?`<div class="chart-stage">
       <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação do Brasileirão">
-        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
+        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.2)" stroke-width="1"></line>
         ${tickValues.map(value=>{
           const y=yFor(value);
+          const isZero=value===0;
           return `<g>
-            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${padX+usableWidth}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.08)" stroke-width="1" stroke-dasharray="2 4"></line>
-            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="11" fill="#7a869a" font-weight="700">${value}</text>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${padX+usableWidth}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,${isZero?".22":".12"})" stroke-width="1"></line>
+            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="11" fill="#5a6a82" font-weight="800">${value}</text>
           </g>`;
         }).join("")}
-        <line x1="${padX}" y1="${(padY+usableHeight).toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${(padY+usableHeight).toFixed(2)}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
         ${axisIdx.map(i=>{
           const x=xFor(i);
           const lbl=chart.labels[i]||"";
@@ -5924,38 +5994,65 @@ function rankingChartDefaultSelection(rows){
 }
 function rankingTimeline(rows){
   const resolved=GAMES.filter(g=>S.results[g.id]).sort(compareGameSchedule);
-  const labels=["Início"];
+  const dateMap=new Map();
+  resolved.forEach(game=>{
+    const key=game.date||"";
+    if(!key) return;
+    if(!dateMap.has(key)) dateMap.set(key,[]);
+    dateMap.get(key).push(game);
+  });
+  const dateKeys=Array.from(dateMap.keys()).sort();
+  const actual=S.actualPodio||{};
+  const includePodio=["p1","p2","p3","p4"].some(k=>norm(actual[k]));
+  const oneDay=86400000;
   const totals={};
   const series=rows.map((p,idx)=>{
     totals[p.i]=0;
     return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
   });
-  resolved.forEach(game=>{
-    const teams=(typeof gameTeams==="function")?gameTeams(game):{t1:game.t1,t2:game.t2};
-    const home=teams?.t1||game.t1||"";
-    const away=teams?.t2||game.t2||"";
-    labels.push(home&&away?`${chartShortTeamLabel(home)}×${chartShortTeamLabel(away)}`:String(game.id));
+  const positions=[];
+  if(dateKeys.length){
+    const earliestMs=parseDateKey(dateKeys[0]).getTime();
+    positions.push({ms:earliestMs-oneDay,label:"Início",state:"start"});
+    dateKeys.forEach(k=>positions.push({ms:parseDateKey(k).getTime(),label:chartFormatDateKey(k),state:"final",dateKey:k}));
+  }else{
+    positions.push({ms:Date.now(),label:"Início",state:"start"});
+  }
+  dateKeys.forEach(k=>{
+    const games=dateMap.get(k);
     series.forEach(line=>{
-      const res=S.results[game.id];
-      const pal=S.palpites[`${line.i}_${game.id}`];
-      const gain=score(pal,res,game);
-      totals[line.i]+=gain==null?0:gain;
+      let gain=0;
+      games.forEach(g=>{
+        const res=S.results[g.id];
+        const pal=S.palpites[`${line.i}_${g.id}`];
+        const v=score(pal,res,g);
+        if(v!=null) gain+=v;
+      });
+      totals[line.i]+=gain;
       line.values.push(totals[line.i]);
     });
   });
-  const actual=S.actualPodio||{};
-  const includePodio=["p1","p2","p3","p4"].some(k=>norm(actual[k]));
   if(includePodio){
-    labels.push("Pódio");
+    const podioMs=positions.length?positions[positions.length-1].ms+(2*oneDay):Date.now();
+    positions.push({ms:podioMs,label:"Pódio",state:"podio"});
     series.forEach(line=>{
       totals[line.i]+=podioScore(S.podio[line.i]||{},actual);
       line.values.push(totals[line.i]);
     });
   }
+  const labels=positions.map(p=>p.label);
+  const states=positions.map(p=>p.state);
+  let xRel=positions.map(()=>0);
+  if(positions.length>1){
+    const startMs=positions[0].ms;
+    const endMs=positions[positions.length-1].ms;
+    const span=Math.max(oneDay,endMs-startMs);
+    xRel=positions.map(p=>(p.ms-startMs)/span);
+  }
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
   const minVal=Math.min(0,...allValues);
-  return {labels,series,maxVal,minVal,resolvedCount:resolved.length,includePodio};
+  return {labels,states,xRel,series,maxVal,minVal,resolvedCount:resolved.length,dateCount:dateKeys.length,includePodio};
 }
 function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
   const usableWidth=width-padX*2;
@@ -6062,18 +6159,18 @@ function renderRankingChart(rows,isExpanded=false){
   const lineWidth=760;
   const usableWidth=lineWidth-padX-padRight;
   const usableHeight=lineHeight-padY-padBottom;
-  const tickValues=chartNiceTicks(chart.minVal,chart.maxVal,5);
+  const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,isExpanded?14:11);
   const range=Math.max(1,chart.maxVal-chart.minVal);
   const points=chart.labels.length;
-  const steps=Math.max(1,points-1);
-  const xFor=index=>padX+(usableWidth*(index/steps));
+  const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
   const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
   const summary=[
-    chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"Sem jogos apurados ainda",
+    chart.dateCount?`${chart.dateCount} ${chart.dateCount===1?"dia":"dias"} com jogo`:"Sem jogos apurados ainda",
+    chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"",
     chart.includePodio?"Pódio oficial incluído":"",
-    selected.length?`${selected.length} de ${rows.length} participantes no gráfico`:""
+    selected.length?`${selected.length} de ${rows.length} no gráfico`:""
   ].filter(Boolean);
-  const axisMax=isExpanded?16:11;
+  const axisMax=isExpanded?14:9;
   const axisIdx=chartAxisIndexes(points,axisMax);
   const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
   const endpointItems=selected.map((line,idx)=>{
@@ -6107,15 +6204,15 @@ function renderRankingChart(rows,isExpanded=false){
     </div>
     ${selected.length?`<div class="chart-stage">
       <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
-        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
+        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.2)" stroke-width="1"></line>
         ${tickValues.map(value=>{
           const y=yFor(value);
+          const isZero=value===0;
           return `<g>
-            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,.08)" stroke-width="1" stroke-dasharray="2 4"></line>
-            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="12" fill="#7a869a" font-weight="700">${value}</text>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,${isZero?".22":".12"})" stroke-width="1"></line>
+            <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="12" fill="#5a6a82" font-weight="800">${value}</text>
           </g>`;
         }).join("")}
-        <line x1="${padX}" y1="${(padY+usableHeight).toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${(padY+usableHeight).toFixed(2)}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
         ${axisIdx.map(i=>{
           const x=xFor(i);
           const lbl=chart.labels[i]||"";
