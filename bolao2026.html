@@ -2114,23 +2114,24 @@ body.chart-modal-open{overflow:hidden}
 .api-test-page.v2 .api-test-game.is-live .api-test-time::before{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--v2-green-soft);content:"";margin-right:5px;animation:v2LivePulse 1.4s ease-in-out infinite}
 
 /* ----- MATCHLINE & CLUBS -------------------------------------------------- */
-.api-test-page.v2 .api-test-matchline{gap:14px}
-.api-test-page.v2 .api-test-club{font-size:.96rem;font-weight:950;color:var(--v2-ink);gap:10px;letter-spacing:-.01em}
-.api-test-page.v2 .api-test-club img{width:40px;height:40px;filter:saturate(1.05) drop-shadow(0 4px 10px rgba(0,39,118,.18));transition:transform .25s cubic-bezier(.4,1.4,.6,1)}
-.api-test-page.v2 .api-test-game:hover .api-test-club img{transform:scale(1.1) rotate(-3deg)}
-.api-test-page.v2 .api-test-game:hover .api-test-club.away img{transform:scale(1.1) rotate(3deg)}
-.api-test-page.v2 .api-test-game.is-live .api-test-club{font-size:1.05rem}
-.api-test-page.v2 .api-test-game.is-live .api-test-club img{width:46px;height:46px}
-.api-test-page.v2 .api-test-game.is-final .api-test-club{font-size:.86rem;font-weight:900;gap:7px}
-.api-test-page.v2 .api-test-game.is-final .api-test-club img{width:26px;height:26px}
+.api-test-page.v2 .api-test-matchline{gap:10px}
+.api-test-page.v2 .api-test-club{font-size:.84rem;font-weight:850;color:var(--v2-ink);gap:7px;letter-spacing:-.005em;min-width:0}
+.api-test-page.v2 .api-test-club span{min-width:0;max-width:none;white-space:normal;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.15}
+.api-test-page.v2 .api-test-club img{width:32px;height:32px;filter:saturate(1.05) drop-shadow(0 3px 8px rgba(0,39,118,.16));transition:transform .25s cubic-bezier(.4,1.4,.6,1);flex:0 0 auto}
+.api-test-page.v2 .api-test-game:hover .api-test-club img{transform:scale(1.08) rotate(-3deg)}
+.api-test-page.v2 .api-test-game:hover .api-test-club.away img{transform:scale(1.08) rotate(3deg)}
+.api-test-page.v2 .api-test-game.is-live .api-test-club{font-size:.92rem;font-weight:900;gap:8px}
+.api-test-page.v2 .api-test-game.is-live .api-test-club img{width:38px;height:38px}
+.api-test-page.v2 .api-test-game.is-final .api-test-club{font-size:.8rem;font-weight:800;gap:6px}
+.api-test-page.v2 .api-test-game.is-final .api-test-club img{width:24px;height:24px}
 
 /* ----- PRIMARY SCORE (center of matchline) -------------------------------- */
-.api-test-page.v2 .api-test-primary-score{min-width:78px}
-.api-test-page.v2 .api-test-primary-score .api-test-score{gap:8px}
-.api-test-page.v2 .api-test-primary-score .api-test-score b{min-width:40px;padding:9px 11px;font-size:1.15rem;font-weight:950;background:linear-gradient(180deg,#fff,var(--v2-surface-3));border:1.5px solid rgba(10,42,138,.18);border-radius:11px;box-shadow:0 4px 14px -6px rgba(10,42,138,.22);color:var(--v2-ink);letter-spacing:-.02em}
-.api-test-page.v2 .api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:50px;padding:11px 14px;font-size:1.55rem;background:linear-gradient(180deg,#ecfdf5,#d1fae5);border:2px solid rgba(16,185,129,.55);color:var(--v2-green);box-shadow:0 8px 22px -8px rgba(16,185,129,.45)}
-.api-test-page.v2 .api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:38px;padding:7px 10px;font-size:1.1rem;background:linear-gradient(180deg,#0f172a,#1e293b);color:#fff;border-color:#0f172a;box-shadow:0 4px 12px -4px rgba(15,23,42,.5)}
-.api-test-page.v2 .api-test-versus{font-size:.78rem;color:rgba(10,42,138,.32);font-weight:950;letter-spacing:3px}
+.api-test-page.v2 .api-test-primary-score{min-width:66px}
+.api-test-page.v2 .api-test-primary-score .api-test-score{gap:6px}
+.api-test-page.v2 .api-test-primary-score .api-test-score b{min-width:34px;padding:7px 9px;font-size:1rem;font-weight:950;background:linear-gradient(180deg,#fff,var(--v2-surface-3));border:1.5px solid rgba(10,42,138,.18);border-radius:9px;box-shadow:0 3px 10px -5px rgba(10,42,138,.2);color:var(--v2-ink);letter-spacing:-.02em}
+.api-test-page.v2 .api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:44px;padding:9px 12px;font-size:1.32rem;background:linear-gradient(180deg,#ecfdf5,#d1fae5);border:2px solid rgba(16,185,129,.55);color:var(--v2-green);box-shadow:0 6px 18px -8px rgba(16,185,129,.4);border-radius:10px}
+.api-test-page.v2 .api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:30px;padding:5px 8px;font-size:.92rem;background:linear-gradient(180deg,#1e293b,#334155);color:#fff;border-color:#334155;border-radius:8px;box-shadow:0 3px 9px -4px rgba(15,23,42,.4)}
+.api-test-page.v2 .api-test-versus{font-size:.72rem;color:rgba(10,42,138,.32);font-weight:950;letter-spacing:2.5px}
 
 /* ----- SIDE PANEL (prediction vs official — STAR FEATURE) ----------------- */
 .api-test-page.v2 .api-test-side-panel{gap:9px;padding:11px 13px;border-radius:12px;border:1px solid var(--v2-line);background:linear-gradient(180deg,#fbfdff 0%,#fff 100%);justify-items:stretch;min-width:140px;box-shadow:inset 0 1px 0 rgba(255,255,255,1)}
@@ -2242,16 +2243,16 @@ body.chart-modal-open{overflow:hidden}
   .api-test-page.v2 .api-test-game.is-live{grid-template-columns:1fr;gap:11px;padding:13px;min-height:0}
   .api-test-page.v2 .api-test-game.is-live{padding:14px}
   .api-test-page.v2 .api-test-meta{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;width:100%;flex-wrap:wrap;padding-bottom:2px;border-bottom:1px dashed var(--v2-line);padding-bottom:10px}
-  .api-test-page.v2 .api-test-matchline{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:9px;width:100%}
-  .api-test-page.v2 .api-test-club{font-size:.86rem;gap:7px}
-  .api-test-page.v2 .api-test-club img{width:32px;height:32px}
-  .api-test-page.v2 .api-test-game.is-live .api-test-club{font-size:.92rem}
-  .api-test-page.v2 .api-test-game.is-live .api-test-club img{width:36px;height:36px}
-  .api-test-page.v2 .api-test-game.is-final .api-test-club{font-size:.8rem}
-  .api-test-page.v2 .api-test-game.is-final .api-test-club img{width:24px;height:24px}
-  .api-test-page.v2 .api-test-primary-score .api-test-score b{min-width:34px;padding:7px 8px;font-size:1rem}
-  .api-test-page.v2 .api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:42px;padding:9px 10px;font-size:1.25rem}
-  .api-test-page.v2 .api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:34px;padding:6px 8px;font-size:1rem}
+  .api-test-page.v2 .api-test-matchline{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;width:100%}
+  .api-test-page.v2 .api-test-club{font-size:.82rem;gap:6px}
+  .api-test-page.v2 .api-test-club img{width:30px;height:30px}
+  .api-test-page.v2 .api-test-game.is-live .api-test-club{font-size:.88rem}
+  .api-test-page.v2 .api-test-game.is-live .api-test-club img{width:34px;height:34px}
+  .api-test-page.v2 .api-test-game.is-final .api-test-club{font-size:.78rem}
+  .api-test-page.v2 .api-test-game.is-final .api-test-club img{width:22px;height:22px}
+  .api-test-page.v2 .api-test-primary-score .api-test-score b{min-width:30px;padding:6px 8px;font-size:.94rem}
+  .api-test-page.v2 .api-test-game.is-live .api-test-primary-score .api-test-score b{min-width:38px;padding:8px 10px;font-size:1.18rem}
+  .api-test-page.v2 .api-test-game.is-final .api-test-primary-score .api-test-score b{min-width:28px;padding:5px 7px;font-size:.9rem}
   .api-test-page.v2 .api-test-side-panel{width:100%;justify-items:stretch;padding:10px 11px}
   .api-test-page.v2 .api-test-live-panel{padding:11px 12px}
   .api-test-page.v2 .api-test-game.is-hit::after{top:8px;right:10px;font-size:.46rem;padding:2px 7px}
