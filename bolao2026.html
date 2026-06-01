@@ -2543,7 +2543,7 @@ body.chart-modal-open{overflow:hidden}
 	.copa-games-page.v2 .copa-game{
 	  position:relative;
 	  display:grid;
-	  grid-template-columns:92px minmax(0,1fr) 176px;
+	  grid-template-columns:92px minmax(0,1fr) 236px;
 	  align-items:center;
 	  gap:14px;
 	  min-height:88px;
@@ -2575,7 +2575,7 @@ body.chart-modal-open{overflow:hidden}
 	  box-shadow:0 0 0 4px rgba(16,185,129,.10),0 18px 38px -18px rgba(0,132,61,.30);
 	}
 	.copa-games-page.v2 .copa-game.is-live:before{display:none}
-	.copa-games-page.v2 .copa-game.is-final{grid-template-columns:82px minmax(0,1fr) 164px;min-height:76px;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border-color:var(--copa-line)}
+	.copa-games-page.v2 .copa-game.is-final{grid-template-columns:82px minmax(0,1fr) 210px;min-height:76px;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border-color:var(--copa-line)}
 	.copa-games-page.v2 .copa-game.is-final:before{background:linear-gradient(180deg,#475569,#0f172a)}
 	.copa-games-page.v2 .copa-meta{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
 	.copa-games-page.v2 .copa-state-tag{
@@ -2699,9 +2699,18 @@ body.chart-modal-open{overflow:hidden}
 	.copa-games-page.v2 .copa-side-result.warn{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#92400e}
 	.copa-games-page.v2 .copa-side-result.empty{background:transparent;border:1.5px dashed rgba(10,42,138,.18);color:#94a3b8}
 	.copa-games-page.v2 .copa-editor{display:grid;justify-items:center;gap:8px;width:100%}
-	.copa-games-page.v2 .copa-editor .score-wrap{justify-content:center}
-	.copa-games-page.v2 .copa-editor .score-control input{width:38px;height:38px;font-size:1rem;color:var(--copa-blue)}
-	.copa-games-page.v2 .copa-editor .step-btn{height:38px}
+	.copa-games-page.v2 .copa-editor .score-wrap{
+	  display:grid;
+	  grid-template-columns:auto auto auto;
+	  align-items:center;
+	  justify-content:center;
+	  gap:5px;
+	  width:100%;
+	  max-width:190px;
+	}
+	.copa-games-page.v2 .copa-editor .score-control{border-radius:10px;box-shadow:0 4px 10px rgba(0,39,118,.08)}
+	.copa-games-page.v2 .copa-editor .score-control input{width:30px;height:36px;font-size:.92rem;color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-editor .step-btn{width:25px;height:36px;font-size:1rem}
 	.copa-games-page.v2 .copa-actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:100%}
 	.copa-games-page.v2 .copa-mini-action{
 	  display:inline-flex;
