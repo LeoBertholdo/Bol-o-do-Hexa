@@ -2333,10 +2333,452 @@ body.chart-modal-open{overflow:hidden}
   .api-test-page.v2 .api-test-state-tag.live::before,
   .api-test-page.v2 .api-test-game.is-live .api-test-time::before{animation:none;opacity:1;transform:none}
   .api-test-page.v2 .api-test-game,.api-test-page.v2 .api-test-metric,.api-test-page.v2 .api-test-rank-row{transition:none}
-}
-/* ==== END BRASILEIRAO V2 REDESIGN ============================================ */
+	}
+	/* ==== END BRASILEIRAO V2 REDESIGN ============================================ */
 
-/* TOAST */
+	/* COPA GAMES V2 */
+	.copa-games-page.v2{
+	  --copa-blue:#0a2a8a;
+	  --copa-blue-deep:#071c4d;
+	  --copa-green:#00843d;
+	  --copa-green-soft:#10b981;
+	  --copa-yellow:#ffdf00;
+	  --copa-ink:#0f172a;
+	  --copa-mute:#64748b;
+	  --copa-line:rgba(15,23,42,.08);
+	  --copa-line-strong:rgba(15,23,42,.14);
+	  --copa-surface:#fff;
+	  --copa-surface-2:#f7faff;
+	  --copa-surface-3:#eef4ff;
+	  --copa-shadow-sm:0 1px 0 rgba(255,255,255,1) inset,0 4px 14px -8px rgba(15,23,42,.18);
+	  --copa-shadow-md:0 1px 0 rgba(255,255,255,1) inset,0 10px 28px -14px rgba(15,23,42,.22);
+	  display:grid;
+	  gap:18px;
+	}
+	.copa-games-page.v2 .copa-games-shell{
+	  position:relative;
+	  border-radius:18px;
+	  border:1px solid var(--copa-line);
+	  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+	  padding:18px;
+	  box-shadow:var(--copa-shadow-md);
+	  overflow:hidden;
+	}
+	.copa-games-page.v2 .copa-games-shell:before{
+	  content:"";
+	  position:absolute;
+	  inset:0 0 auto 0;
+	  height:6px;
+	  background:linear-gradient(90deg,var(--copa-green) 0%,var(--copa-yellow) 50%,var(--copa-blue) 100%);
+	}
+	.copa-games-page.v2 .copa-games-shell:after{
+	  content:"COPA 2026";
+	  position:absolute;
+	  top:14px;
+	  right:18px;
+	  padding:5px 11px;
+	  border:1px solid rgba(0,39,118,.12);
+	  border-radius:999px;
+	  background:rgba(0,39,118,.06);
+	  color:var(--copa-blue);
+	  font-size:.56rem;
+	  font-weight:950;
+	  letter-spacing:1.4px;
+	}
+	.copa-games-page.v2 .copa-games-metrics{
+	  display:grid;
+	  grid-template-columns:repeat(4,minmax(0,1fr));
+	  gap:10px;
+	  margin-top:18px;
+	}
+	.copa-games-page.v2 .copa-games-metric{
+	  position:relative;
+	  overflow:hidden;
+	  border:1px solid var(--copa-line);
+	  border-radius:14px;
+	  background:linear-gradient(160deg,#fff 0%,var(--copa-surface-2) 100%);
+	  padding:14px 14px 16px;
+	  box-shadow:var(--copa-shadow-sm);
+	}
+	.copa-games-page.v2 .copa-games-metric:before{
+	  content:"";
+	  position:absolute;
+	  top:0;
+	  left:0;
+	  right:0;
+	  height:3px;
+	  background:linear-gradient(90deg,var(--copa-blue),var(--copa-green));
+	}
+	.copa-games-page.v2 .copa-games-metric:nth-child(2):before{background:linear-gradient(90deg,var(--copa-green-soft),var(--copa-green))}
+	.copa-games-page.v2 .copa-games-metric:nth-child(3):before{background:linear-gradient(90deg,#475569,#0f172a)}
+	.copa-games-page.v2 .copa-games-metric:nth-child(4):before{background:linear-gradient(90deg,var(--copa-yellow),#f59e0b)}
+	.copa-games-page.v2 .copa-games-metric strong{
+	  display:block;
+	  font-size:1.75rem;
+	  line-height:1;
+	  font-weight:950;
+	  color:var(--copa-blue);
+	}
+	.copa-games-page.v2 .copa-games-metric:nth-child(2) strong{color:var(--copa-green)}
+	.copa-games-page.v2 .copa-games-metric:nth-child(4) strong{color:#a16207}
+	.copa-games-page.v2 .copa-games-metric span{
+	  display:block;
+	  margin-top:9px;
+	  color:var(--copa-mute);
+	  font-size:.6rem;
+	  font-weight:950;
+	  letter-spacing:.85px;
+	  text-transform:uppercase;
+	}
+	.copa-games-page.v2 .copa-games-toolbar{
+	  display:grid;
+	  grid-template-columns:minmax(0,1.4fr) 180px auto;
+	  gap:10px;
+	  margin-top:16px;
+	  padding:10px;
+	  border:1px solid var(--copa-line);
+	  border-radius:14px;
+	  background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(247,250,255,.85));
+	  box-shadow:var(--copa-shadow-sm);
+	}
+	.copa-games-page.v2 .copa-games-toolbar .txt-inp,
+	.copa-games-page.v2 .copa-games-toolbar .txt-select{
+	  height:42px;
+	  border:1px solid var(--copa-line-strong);
+	  border-radius:10px;
+	  background:#fff;
+	  text-align:left;
+	  font-weight:850;
+	}
+	.copa-games-page.v2 .copa-games-toolbar .txt-inp:focus,
+	.copa-games-page.v2 .copa-games-toolbar .txt-select:focus{
+	  outline:none;
+	  border-color:var(--copa-blue);
+	  box-shadow:0 0 0 3px rgba(10,42,138,.14);
+	}
+	.copa-games-page.v2 .copa-games-toolbar .txt-inp[type="search"]{
+	  padding-left:34px;
+	  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>");
+	  background-repeat:no-repeat;
+	  background-position:11px center;
+	  background-size:15px 15px;
+	}
+	.copa-games-page.v2 .copa-games-toolbar .action-btn{
+	  min-width:0;
+	  height:42px;
+	  border:1px solid var(--copa-line-strong);
+	  border-radius:10px;
+	  background:#fff;
+	  color:var(--copa-blue);
+	  font-weight:950;
+	  white-space:nowrap;
+	}
+	.copa-games-page.v2 .copa-games-toolbar .action-btn:hover{background:var(--copa-surface-3);border-color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-phase-strip{
+	  display:flex;
+	  gap:6px;
+	  flex-wrap:wrap;
+	  margin-top:12px;
+	  padding:6px;
+	  border:1px solid var(--copa-line);
+	  border-radius:14px;
+	  background:#eef4ff;
+	}
+	.copa-games-page.v2 .copa-phase-strip .fbtn{
+	  border-color:transparent;
+	  background:transparent;
+	  color:var(--copa-blue);
+	}
+	.copa-games-page.v2 .copa-phase-strip .fbtn.active{
+	  background:#fff;
+	  color:var(--copa-blue);
+	  border-color:rgba(10,42,138,.12);
+	  box-shadow:0 5px 16px rgba(0,39,118,.08);
+	}
+	.copa-games-page.v2 .ko-note{margin-top:12px;margin-bottom:0}
+	.copa-games-page.v2 .copa-games-list{display:grid;gap:20px;margin-top:16px}
+	.copa-games-page.v2 .copa-games-day{
+	  display:grid;
+	  gap:12px;
+	  padding:16px 16px 18px;
+	  border:1px solid var(--copa-line);
+	  border-radius:18px;
+	  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+	  box-shadow:var(--copa-shadow-sm);
+	}
+	.copa-games-page.v2 .copa-games-day-head{
+	  display:flex;
+	  align-items:center;
+	  justify-content:space-between;
+	  gap:10px;
+	  padding:0 4px 12px;
+	  border-bottom:1px dashed var(--copa-line-strong);
+	}
+	.copa-games-page.v2 .copa-games-day-title{
+	  display:flex;
+	  align-items:center;
+	  gap:10px;
+	  color:var(--copa-ink);
+	  font-size:.95rem;
+	  font-weight:950;
+	}
+	.copa-games-page.v2 .copa-games-day-title:before{
+	  content:"";
+	  width:5px;
+	  height:20px;
+	  border-radius:3px;
+	  background:linear-gradient(180deg,var(--copa-green),var(--copa-blue));
+	}
+	.copa-games-page.v2 .copa-games-day-count{
+	  padding:5px 12px;
+	  border-radius:999px;
+	  background:linear-gradient(135deg,var(--copa-blue),var(--copa-blue-deep));
+	  color:#fff;
+	  font-size:.56rem;
+	  font-weight:950;
+	  letter-spacing:.75px;
+	  text-transform:uppercase;
+	}
+	.copa-games-page.v2 .copa-games-day-games{display:grid;gap:12px}
+	.copa-games-page.v2 .copa-game{
+	  position:relative;
+	  display:grid;
+	  grid-template-columns:92px minmax(0,1fr) 176px;
+	  align-items:center;
+	  gap:14px;
+	  min-height:88px;
+	  padding:14px 16px 14px 18px;
+	  border:1px solid var(--copa-line);
+	  border-radius:14px;
+	  background:#fff;
+	  box-shadow:var(--copa-shadow-sm);
+	  overflow:visible;
+	  transition:transform .18s ease,box-shadow .2s ease,border-color .2s ease;
+	}
+	.copa-games-page.v2 .copa-game:before{
+	  content:"";
+	  position:absolute;
+	  inset:0 auto 0 0;
+	  width:4px;
+	  border-radius:14px 0 0 14px;
+	  background:linear-gradient(180deg,#cbd5e1,#94a3b8);
+	}
+	.copa-games-page.v2 .copa-game:hover{transform:translateY(-2px);box-shadow:var(--copa-shadow-md);border-color:rgba(10,42,138,.22)}
+	.copa-games-page.v2 .copa-game.is-upcoming{background:linear-gradient(180deg,#fff 0%,#f6faff 100%);border-color:rgba(10,42,138,.14)}
+	.copa-games-page.v2 .copa-game.is-upcoming:before{background:linear-gradient(180deg,var(--copa-blue),#1e40af)}
+	.copa-games-page.v2 .copa-game.is-closed{background:linear-gradient(180deg,#fff7ed 0%,#fff 100%);border-color:rgba(245,158,11,.28)}
+	.copa-games-page.v2 .copa-game.is-closed:before{background:linear-gradient(180deg,#f59e0b,#b45309)}
+	.copa-games-page.v2 .copa-game.is-live{
+	  min-height:112px;
+	  border:2px solid transparent;
+	  background:linear-gradient(#fff,#fff) padding-box,linear-gradient(135deg,#10b981 0%,#34d399 50%,#10b981 100%) border-box;
+	  box-shadow:0 0 0 4px rgba(16,185,129,.10),0 18px 38px -18px rgba(0,132,61,.30);
+	}
+	.copa-games-page.v2 .copa-game.is-live:before{display:none}
+	.copa-games-page.v2 .copa-game.is-final{grid-template-columns:82px minmax(0,1fr) 164px;min-height:76px;background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);border-color:var(--copa-line)}
+	.copa-games-page.v2 .copa-game.is-final:before{background:linear-gradient(180deg,#475569,#0f172a)}
+	.copa-games-page.v2 .copa-meta{display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:0}
+	.copa-games-page.v2 .copa-state-tag{
+	  display:inline-flex;
+	  align-items:center;
+	  justify-content:center;
+	  min-height:22px;
+	  padding:5px 10px;
+	  border-radius:999px;
+	  border:0;
+	  background:#eef5ff;
+	  color:var(--copa-blue);
+	  font-size:.54rem;
+	  font-weight:950;
+	  letter-spacing:.75px;
+	  line-height:1;
+	  text-transform:uppercase;
+	  white-space:nowrap;
+	}
+	.copa-games-page.v2 .copa-state-tag.upcoming{background:linear-gradient(135deg,var(--copa-blue),var(--copa-blue-deep));color:#fff}
+	.copa-games-page.v2 .copa-state-tag.closed{background:linear-gradient(135deg,#f59e0b,#b45309);color:#fff}
+	.copa-games-page.v2 .copa-state-tag.live{background:linear-gradient(135deg,var(--copa-green-soft),var(--copa-green));color:#fff}
+	.copa-games-page.v2 .copa-state-tag.live:before{content:"●";margin-right:5px}
+	.copa-games-page.v2 .copa-state-tag.final{background:linear-gradient(135deg,#334155,#0f172a);color:#fff}
+	.copa-games-page.v2 .copa-state-tag.final:before{content:"\2713";margin-right:5px}
+	.copa-games-page.v2 .copa-time{font-size:.88rem;font-weight:950;color:var(--copa-ink)}
+	.copa-games-page.v2 .copa-round,.copa-games-page.v2 .copa-game-id{font-size:.58rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--copa-mute);line-height:1.15}
+	.copa-games-page.v2 .copa-matchline{
+	  display:grid;
+	  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+	  align-items:center;
+	  gap:10px;
+	  min-width:0;
+	}
+	.copa-games-page.v2 .copa-club{
+	  display:flex;
+	  align-items:center;
+	  justify-content:flex-end;
+	  gap:8px;
+	  min-width:0;
+	  color:var(--copa-ink);
+	  font-size:.86rem;
+	  font-weight:850;
+	  line-height:1.12;
+	  text-align:right;
+	}
+	.copa-games-page.v2 .copa-club.away{justify-content:flex-start;text-align:left}
+	.copa-games-page.v2 .copa-club.muted{color:#94a3b8}
+	.copa-games-page.v2 .copa-flag{
+	  display:inline-flex;
+	  align-items:center;
+	  justify-content:center;
+	  width:34px;
+	  height:34px;
+	  border-radius:10px;
+	  background:#fff;
+	  border:1px solid var(--copa-line);
+	  font-size:1.22rem;
+	  line-height:1;
+	  box-shadow:0 3px 8px rgba(0,39,118,.08);
+	  flex:0 0 auto;
+	}
+	.copa-games-page.v2 .copa-team-name{
+	  min-width:0;
+	  display:-webkit-box;
+	  -webkit-line-clamp:2;
+	  -webkit-box-orient:vertical;
+	  overflow:hidden;
+	  overflow-wrap:break-word;
+	}
+	.copa-games-page.v2 .copa-primary-score{display:flex;align-items:center;justify-content:center;min-width:66px}
+	.copa-games-page.v2 .copa-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-score b{
+	  min-width:34px;
+	  padding:7px 9px;
+	  border:1.5px solid rgba(10,42,138,.18);
+	  border-radius:9px;
+	  background:linear-gradient(180deg,#fff,var(--copa-surface-3));
+	  color:var(--copa-ink);
+	  font-size:1rem;
+	  text-align:center;
+	  box-shadow:0 3px 10px -5px rgba(10,42,138,.2);
+	}
+	.copa-games-page.v2 .copa-game.is-live .copa-score b{min-width:44px;padding:9px 12px;font-size:1.32rem;background:linear-gradient(180deg,#ecfdf5,#d1fae5);border-color:rgba(16,185,129,.55);color:var(--copa-green)}
+	.copa-games-page.v2 .copa-game.is-final .copa-score b{min-width:30px;padding:5px 8px;font-size:.92rem;background:linear-gradient(180deg,#1e293b,#334155);border-color:#334155;color:#fff}
+	.copa-games-page.v2 .copa-versus{font-size:.72rem;color:rgba(10,42,138,.32);font-weight:950;letter-spacing:2.5px;text-transform:uppercase}
+	.copa-games-page.v2 .copa-side-panel{
+	  display:grid;
+	  justify-items:center;
+	  align-content:center;
+	  gap:9px;
+	  width:100%;
+	  min-width:0;
+	  padding:11px 13px;
+	  border:1px solid var(--copa-line);
+	  border-radius:12px;
+	  background:linear-gradient(180deg,#fbfdff 0%,#fff 100%);
+	  box-shadow:inset 0 1px 0 rgba(255,255,255,1);
+	}
+	.copa-games-page.v2 .copa-side-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0}
+	.copa-games-page.v2 .copa-side-label{font-size:.5rem;font-weight:950;letter-spacing:.95px;color:var(--copa-blue);text-transform:uppercase}
+	.copa-games-page.v2 .copa-side-result{
+	  display:inline-flex;
+	  align-items:center;
+	  justify-content:center;
+	  width:100%;
+	  padding:7px 11px;
+	  border:1px solid #e2e8f0;
+	  border-radius:8px;
+	  background:#f1f5f9;
+	  color:#475569;
+	  font-size:.6rem;
+	  font-weight:950;
+	  letter-spacing:.85px;
+	  line-height:1;
+	  text-align:center;
+	  text-transform:uppercase;
+	}
+	.copa-games-page.v2 .copa-side-result.ok{background:linear-gradient(135deg,#3b82f6 0%,#1e40af 100%);border-color:#1e40af;color:#fff}
+	.copa-games-page.v2 .copa-side-result.live{background:linear-gradient(135deg,#10b981,#059669);border-color:#059669;color:#fff}
+	.copa-games-page.v2 .copa-side-result.warn{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#fbbf24;color:#92400e}
+	.copa-games-page.v2 .copa-side-result.empty{background:transparent;border:1.5px dashed rgba(10,42,138,.18);color:#94a3b8}
+	.copa-games-page.v2 .copa-editor{display:grid;justify-items:center;gap:8px;width:100%}
+	.copa-games-page.v2 .copa-editor .score-wrap{justify-content:center}
+	.copa-games-page.v2 .copa-editor .score-control input{width:38px;height:38px;font-size:1rem;color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-editor .step-btn{height:38px}
+	.copa-games-page.v2 .copa-actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;width:100%}
+	.copa-games-page.v2 .copa-mini-action{
+	  display:inline-flex;
+	  align-items:center;
+	  justify-content:center;
+	  padding:7px 14px;
+	  border:1px solid rgba(10,42,138,.18);
+	  border-radius:999px;
+	  background:rgba(10,42,138,.06);
+	  color:var(--copa-blue);
+	  font-size:.58rem;
+	  font-weight:950;
+	  letter-spacing:.7px;
+	  line-height:1;
+	  text-transform:uppercase;
+	  text-decoration:none;
+	  white-space:nowrap;
+	}
+	.copa-games-page.v2 .copa-mini-action.primary{padding:8px 16px;background:linear-gradient(135deg,var(--copa-blue),var(--copa-blue-deep));border-color:var(--copa-blue);color:#fff;box-shadow:0 4px 14px -4px rgba(10,42,138,.4)}
+	.copa-games-page.v2 .copa-mini-action.danger{border-color:rgba(220,38,38,.22);background:#fef2f2;color:#b91c1c}
+	.copa-games-page.v2 .copa-mini-action:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+	.copa-games-page.v2 .copa-side-panel .result-detail{width:100%}
+	.copa-games-page.v2 .copa-side-panel .result-detail-line,
+	.copa-games-page.v2 .copa-side-panel .penalty-detail{background:#fff;border-color:var(--copa-line)}
+	.copa-games-page.v2 .copa-side-panel .advancer-badge{width:100%;justify-content:center}
+	.copa-games-page.v2 .copa-side-panel .ko-advancer{width:100%;min-width:0}
+	.copa-games-page.v2 .copa-side-panel .ko-advancer label{text-align:center}
+	.copa-games-page.v2 .copa-side-panel .ko-advancer .txt-select{width:100%}
+	.copa-games-page.v2 .copa-empty{
+	  padding:36px 24px;
+	  border:2px dashed rgba(10,42,138,.18);
+	  border-radius:14px;
+	  background:linear-gradient(180deg,#fbfdff,#fff);
+	  color:var(--copa-mute);
+	  font-size:.86rem;
+	  font-weight:850;
+	  line-height:1.5;
+	  text-align:center;
+	}
+
+	@media(max-width:760px){
+	  .copa-games-page.v2 .copa-games-shell{padding:14px;border-radius:14px}
+	  .copa-games-page.v2 .copa-games-shell:after{top:11px;right:12px;font-size:.5rem;padding:3px 8px}
+	  .copa-games-page.v2 .copa-games-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+	  .copa-games-page.v2 .copa-games-metric{padding:11px 11px 13px;border-radius:12px}
+	  .copa-games-page.v2 .copa-games-metric strong{font-size:1.4rem}
+	  .copa-games-page.v2 .copa-games-metric span{font-size:.54rem;margin-top:7px}
+	  .copa-games-page.v2 .copa-games-toolbar{grid-template-columns:1fr;gap:8px;padding:9px}
+	  .copa-games-page.v2 .copa-games-toolbar .txt-inp,
+	  .copa-games-page.v2 .copa-games-toolbar .txt-select,
+	  .copa-games-page.v2 .copa-games-toolbar .action-btn{height:40px}
+	  .copa-games-page.v2 .copa-games-day{padding:12px;border-radius:14px}
+	  .copa-games-page.v2 .copa-games-day-head{padding:0 2px 10px;align-items:flex-start}
+	  .copa-games-page.v2 .copa-games-day-title{font-size:.84rem}
+	  .copa-games-page.v2 .copa-game,
+	  .copa-games-page.v2 .copa-game.is-final,
+	  .copa-games-page.v2 .copa-game.is-live{grid-template-columns:1fr;gap:11px;min-height:0;padding:13px}
+	  .copa-games-page.v2 .copa-meta{flex-direction:row;align-items:center;justify-content:space-between;gap:8px;width:100%;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px dashed var(--copa-line)}
+	  .copa-games-page.v2 .copa-matchline{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;width:100%}
+	  .copa-games-page.v2 .copa-club{font-size:.82rem;gap:6px}
+	  .copa-games-page.v2 .copa-flag{width:30px;height:30px;font-size:1.08rem}
+	  .copa-games-page.v2 .copa-primary-score .copa-score b{min-width:30px;padding:6px 8px;font-size:.94rem}
+	  .copa-games-page.v2 .copa-game.is-live .copa-score b{min-width:38px;padding:8px 10px;font-size:1.18rem}
+	  .copa-games-page.v2 .copa-side-panel{padding:10px 11px}
+	}
+
+	@media(max-width:520px){
+	  .copa-games-page.v2 .copa-games-shell:after{display:none}
+	  .copa-games-page.v2 .copa-games-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+	  .copa-games-page.v2 .copa-phase-strip{flex-wrap:nowrap;overflow-x:auto}
+	  .copa-games-page.v2 .copa-phase-strip .fbtn{flex:0 0 auto}
+	  .copa-games-page.v2 .copa-club{font-size:.78rem}
+	  .copa-games-page.v2 .copa-flag{width:28px;height:28px;font-size:1rem}
+	  .copa-games-page.v2 .copa-primary-score .copa-score b{min-width:30px;padding:6px 7px;font-size:.92rem}
+		}
+
+	/* TOAST */
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1000;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
@@ -4356,6 +4798,8 @@ const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","
 let activeTab="home";
 let palPi=0;
 let jFilter="all";
+let jogosSearch="";
+let jogosStatusFilter="all";
 let palStage="groups";
 let palFilter="all";
 let resultDrafts={};
@@ -4654,7 +5098,14 @@ function apiTestHasStarted(fixture){
   return minutes!==null&&minutes>=0;
 }
 function apiTestNeedsFinalScore(fixture){
-  return Boolean(fixture&&!apiTestHasFinalStatus(fixture)&&!apiTestIsActiveFixture(fixture)&&apiTestHasStarted(fixture));
+  const hasScore=apiTestBaseGoalsHome(fixture)!=null&&apiTestBaseGoalsAway(fixture)!=null;
+  return Boolean(
+    fixture&&
+    !apiTestHasFinalStatus(fixture)&&
+    !apiTestIsActiveFixture(fixture)&&
+    apiTestHasStarted(fixture)&&
+    (apiTestIsStaleLiveFixture(fixture)||hasScore)
+  );
 }
 function apiTestCanManualFinalScore(fixture){
   return Boolean(fixture&&(apiTestHasFinalStatus(fixture)||apiTestNeedsFinalScore(fixture)));
@@ -6499,85 +6950,181 @@ function renderGrupos(){
   document.getElementById("tab-grupos").innerHTML=h;
 }
 
+function copaGameState(game){
+  if(S.results[game.id]) return "final";
+  const kickoff=game.utc?new Date(game.utc).getTime():NaN;
+  if(Number.isFinite(kickoff)){
+    const now=Date.now();
+    if(now>=kickoff&&now<kickoff+2*60*60*1000) return "live";
+    if(now>=kickoff) return "closed";
+  }
+  return "upcoming";
+}
+function copaGameStateLabel(game){
+  const state=copaGameState(game);
+  if(state==="final") return "Final";
+  if(state==="live") return "Ao vivo";
+  if(state==="closed") return "Fechado";
+  return "Programado";
+}
+function copaRoundLabel(game){
+  if(game.ko) return game.matchNo?`Jogo ${game.matchNo}`:game.phase;
+  return game.round?`Rodada ${game.round}`:"Fase de grupos";
+}
+function copaDayTitle(key){
+  const d=parseDateKey(key);
+  if(!d||Number.isNaN(d.getTime())) return "Sem data";
+  return new Intl.DateTimeFormat("pt-BR",{weekday:"long",day:"2-digit",month:"long"}).format(d);
+}
+function copaScoreHTML(s1,s2){
+  const waiting=s1==null||s2==null;
+  return `<div class="copa-score ${waiting?"is-waiting":""}"><b>${s1!=null?s1:"-"}</b><span>×</span><b>${s2!=null?s2:"-"}</b></div>`;
+}
+function copaTeamHTML(name,side="",muted=false){
+  const flag=teamFlag(name);
+  const placeholder=!flag;
+  const cls=`copa-club ${side} ${muted||placeholder?"muted":""}`;
+  const flagHTML=flag?`<span class="copa-flag">${flag}</span>`:"";
+  const nameHTML=`<span class="copa-team-name">${esc(name)}</span>`;
+  return side==="home"
+    ? `<div class="${cls}">${nameHTML}${flagHTML}</div>`
+    : `<div class="${cls}">${flagHTML}${nameHTML}</div>`;
+}
+function copaBaseGamesByPhase(){
+  if(jFilter==="all") return GAMES;
+  if(jFilter.startsWith("g-")){
+    const gr=jFilter.slice(2);
+    return GAMES.filter(g=>g.phase===`Grupo ${gr}`);
+  }
+  return GAMES.filter(g=>g.phaseKey===jFilter);
+}
+function copaVisibleGames(){
+  const search=jogosSearch.trim().toLowerCase();
+  return copaBaseGamesByPhase().filter(game=>{
+    const teams=gameTeams(game);
+    const haystack=`${game.id} ${game.phase} ${teams.t1} ${teams.t2}`.toLowerCase();
+    if(search&&!haystack.includes(search)) return false;
+    const state=copaGameState(game);
+    if(jogosStatusFilter==="open"&&state!=="upcoming") return false;
+    if(jogosStatusFilter==="live"&&state!=="live") return false;
+    if(jogosStatusFilter==="finished"&&state!=="final") return false;
+    if(jogosStatusFilter==="pending"&&state==="final") return false;
+    return true;
+  }).sort(compareGameSchedule);
+}
+function renderCopaMetrics(games){
+  const total=games.length;
+  const live=games.filter(game=>copaGameState(game)==="live").length;
+  const finished=games.filter(game=>copaGameState(game)==="final").length;
+  const pending=games.filter(game=>copaGameState(game)!=="final").length;
+  return `<div class="copa-games-metrics">
+    <div class="copa-games-metric"><strong>${total}</strong><span>Na tela</span></div>
+    <div class="copa-games-metric"><strong>${live}</strong><span>Ao vivo</span></div>
+    <div class="copa-games-metric"><strong>${finished}</strong><span>Apurados</span></div>
+    <div class="copa-games-metric"><strong>${pending}</strong><span>Pendentes</span></div>
+  </div>`;
+}
+function renderCopaGamesList(games){
+  if(!games.length) return `<div class="copa-empty">Nenhum jogo bate com esse filtro.</div>`;
+  const groups=games.reduce((acc,game)=>{
+    const key=game.date||"sem-data";
+    if(!acc[key]) acc[key]=[];
+    acc[key].push(game);
+    return acc;
+  },{});
+  return `<div class="copa-games-list">${Object.entries(groups).sort(([a],[b])=>a.localeCompare(b)).map(([key,dayGames])=>`
+    <section class="copa-games-day">
+      <div class="copa-games-day-head">
+        <div class="copa-games-day-title">${esc(copaDayTitle(key))}</div>
+        <div class="copa-games-day-count">${dayGames.length} ${dayGames.length===1?"jogo":"jogos"}</div>
+      </div>
+      <div class="copa-games-day-games">
+        ${dayGames.map(game=>renderGameRow(game)).join("")}
+      </div>
+    </section>`).join("")}</div>`;
+}
 function renderJogos(){
   const phases=[
     {k:"all",l:"Todos"},
     ...GROUP_KEYS.map(g=>({k:`g-${g}`,l:`Grupo ${g}`})),
     ...KO_PHASES.map(p=>({k:p.k,l:p.l}))
   ];
-  let h=`<div class="panel">
-    <div class="fbar">${phases.map(p=>`<button class="fbtn ${jFilter===p.k?"active":""}" onclick="setJFilter('${p.k}')">${p.l}</button>`).join("")}</div>
-    ${isOnlineMode()&&!isAdmin()?`<div class="ko-note">Os resultados oficiais ficam bloqueados para participantes. Você pode acompanhar aqui e preencher seus palpites na aba Palpites.</div>`:""}
-    ${!groupPhaseComplete()?`<div class="ko-note">O mata-mata será montado automaticamente quando todos os resultados da fase de grupos forem preenchidos.</div>`:""}`;
-  let filtered=GAMES;
-  if(jFilter!=="all"){
-    if(jFilter.startsWith("g-")){
-      const gr=jFilter.slice(2);
-      filtered=GAMES.filter(g=>g.phase===`Grupo ${gr}`);
-    }else filtered=GAMES.filter(g=>g.phaseKey===jFilter);
-  }
-  let curPhase="";
-  filtered.forEach(game=>{
-    if(game.phase!==curPhase){
-      curPhase=game.phase;
-      h+=`<div class="phase-hdr">${esc(game.phase)}</div>`;
-    }
-    h+=renderGameRow(game,false);
-  });
-  h+=`</div>`;
+  const games=copaVisibleGames();
+  const h=`<div class="copa-games-page v2">
+    <section class="copa-games-shell">
+      ${renderCopaMetrics(games)}
+      <div class="copa-games-toolbar">
+        <input class="txt-inp" type="search" placeholder="Buscar seleção ou jogo" value="${esc(jogosSearch)}" oninput="jogosSearch=this.value;renderJogos()">
+        <select class="txt-select" onchange="jogosStatusFilter=this.value;renderJogos()">
+          ${[["all","Todos"],["open","Programados"],["live","Ao vivo"],["finished","Apurados"],["pending","Pendentes"]].map(([value,label])=>`<option value="${value}" ${jogosStatusFilter===value?"selected":""}>${label}</option>`).join("")}
+        </select>
+        <button class="action-btn secondary" onclick="jogosSearch='';jogosStatusFilter='all';renderJogos()">Limpar filtros</button>
+      </div>
+      <div class="copa-phase-strip">${phases.map(p=>`<button class="fbtn ${jFilter===p.k?"active":""}" onclick="setJFilter('${p.k}')">${p.l}</button>`).join("")}</div>
+      ${isOnlineMode()&&!isAdmin()?`<div class="ko-note">Os resultados oficiais ficam bloqueados para participantes. Você pode acompanhar aqui e preencher seus palpites na aba Palpites.</div>`:""}
+      ${!groupPhaseComplete()?`<div class="ko-note">O mata-mata será montado automaticamente quando todos os resultados da fase de grupos forem preenchidos.</div>`:""}
+      ${renderCopaGamesList(games)}
+    </section>
+  </div>`;
   document.getElementById("tab-jogos").innerHTML=h;
 }
-function renderGameRow(game,forPalpite){
+function renderGameRow(game){
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const t1=teams.t1;
   const t2=teams.t2;
   const canEdit=canEditResults();
-  if(res&&!forPalpite){
-    const outcome=koOutcomeLabel(game,res,teams);
-    return `<div class="game-row">
-      <div class="gid">${esc(game.id)}</div>
-      <div class="gteams">
-        ${teamHTML(t1,"r",!teams.ready)}
-        <div class="result-stack">
-          <div class="res"><span class="sc">${res.s1}</span><span>×</span><span class="sc">${res.s2}</span></div>
-          ${outcome?`<div class="advancer-badge">${esc(outcome)}</div>`:""}
-          ${resultDetailHTML(game,res,teams)}
-        </div>
-        ${teamHTML(t2,"",!teams.ready)}
-      </div>
-      ${canEdit?`<button class="btn-x" onclick="clearRes('${game.id}')">Remover</button>`:`<div class="microcopy">Oficial</div>`}
-    </div>`;
-  }
-  if(!canEdit&&!forPalpite){
-    return `<div class="game-row">
-      <div class="gid">${esc(game.id)}</div>
-      <div class="gteams">
-        ${teamHTML(t1,"r",!teams.ready)}
-        <div class="microcopy">Aguardando placar</div>
-        ${teamHTML(t2,"",!teams.ready)}
-      </div>
-      <div class="microcopy">Pendente</div>
-    </div>`;
-  }
+  const state=copaGameState(game);
   const disabled=game.ko&&!teams.ready;
   const draft=resultDrafts[game.id]||{s1:0,s2:0};
-  return `<div class="game-row">
-    <div class="gid">${esc(game.id)}</div>
-    <div class="gteams">
-      ${teamHTML(t1,"r",!teams.ready)}
-      <div class="result-stack">
+  const mainScoreHTML=res
+    ? `<div class="copa-primary-score">${copaScoreHTML(res.s1,res.s2)}</div>`
+    : `<div class="copa-primary-score"><span class="copa-versus">x</span></div>`;
+  let sidePanelHTML="";
+  if(res){
+    const outcome=koOutcomeLabel(game,res,teams);
+    sidePanelHTML=`<div class="copa-side-panel">
+      <div class="copa-side-row"><span class="copa-side-label">Resultado</span><span class="copa-side-result ok">Apurado</span></div>
+      ${outcome?`<div class="advancer-badge">${esc(outcome)}</div>`:""}
+      ${resultDetailHTML(game,res,teams)}
+      ${canEdit?`<div class="copa-actions"><button class="copa-mini-action danger" onclick="clearRes(${jsAttr(game.id)})">Remover</button></div>`:""}
+    </div>`;
+  }else if(canEdit){
+    sidePanelHTML=`<div class="copa-side-panel">
+      <div class="copa-editor">
+        <span class="copa-side-label">Placar oficial</span>
         <div class="score-wrap">
-          ${scoreControl(`r1_${game.id}`,draft.s1,`setResDraft('${game.id}',1,this.value)`,"0","oninput",disabled)}
+          ${scoreControl(`r1_${game.id}`,draft.s1,`setResDraft(${jsAttr(game.id)},1,this.value)`,"0","oninput",disabled)}
           <span class="ssep">×</span>
-          ${scoreControl(`r2_${game.id}`,draft.s2,`setResDraft('${game.id}',2,this.value)`,"0","oninput",disabled)}
+          ${scoreControl(`r2_${game.id}`,draft.s2,`setResDraft(${jsAttr(game.id)},2,this.value)`,"0","oninput",disabled)}
         </div>
         ${koAdvancerControl(game,teams,draft,disabled)}
+        <div class="copa-actions"><button class="copa-mini-action primary" ${disabled?"disabled":""} onclick="confirmRes(${jsAttr(game.id)})">Salvar</button></div>
       </div>
-      ${teamHTML(t2,"",!teams.ready)}
+    </div>`;
+  }else{
+    const pendingCls=state==="live"?"live":state==="closed"?"warn":"empty";
+    const pendingLabel=state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
+    sidePanelHTML=`<div class="copa-side-panel">
+      <div class="copa-side-row"><span class="copa-side-label">Resultado</span></div>
+      <div class="copa-side-result ${pendingCls}">${pendingLabel}</div>
+    </div>`;
+  }
+  const cardCls=["copa-game",`is-${state}`,disabled?"is-locked":""].filter(Boolean).join(" ");
+  return `<article class="${cardCls}" data-tournament="copa" data-game-id="${esc(game.id)}">
+    <div class="copa-meta">
+      <div class="copa-state-tag ${state}">${esc(copaGameStateLabel(game))}</div>
+      <div class="copa-time">${esc(game.time||"--:--")}</div>
+      <div class="copa-round">${esc(copaRoundLabel(game))}</div>
+      <div class="copa-game-id">${esc(game.id)}</div>
     </div>
-    <button class="btn-ok" ${disabled?"disabled":""} onclick="confirmRes('${game.id}')">Salvar</button>
-  </div>`;
+    <div class="copa-matchline">
+      ${copaTeamHTML(t1,"home",!teams.ready)}
+      ${mainScoreHTML}
+      ${copaTeamHTML(t2,"away",!teams.ready)}
+    </div>
+    ${sidePanelHTML}
+  </article>`;
 }
 function koAdvancerControl(game,teams,draft,disabled){
   if(!game.ko) return "";
