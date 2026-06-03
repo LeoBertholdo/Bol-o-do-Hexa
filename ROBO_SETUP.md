@@ -16,10 +16,21 @@ A cada 1 minuto:
   Robô olha o calendário → tem jogo agora?
   ├── NÃO  → dorme. (0 chamadas)
   └── SIM  → 1 chamada na football-data (cobre TODOS os jogos da rodada do dia)
+            → até 8 chamadas de detalhe quando houver jogo perto/ao vivo/final
             → salva placar na tabela live_scores
 ```
 
 Limite do free tier da football-data: **10 chamadas/minuto** (não tem teto diário!). Muito mais folgado que a API-Football.
+
+O robô também faz algumas proteções para a Copa:
+
+- usa o detalhe do jogo (`/matches/{id}`) perto do início/ao vivo/final, limitado a 8 detalhes por execução;
+- pede eventos de gol com `X-Unfold-Goals`, quando disponíveis, para reduzir buracos de placar;
+- aceita correções de placar para baixo quando a API corrige um gol anulado;
+- continua procurando jogos sem `FT` por até 36 horas, com cadência mais lenta depois de 4 horas;
+- quando um jogo da Copa finaliza e está mapeado para `GA1`, `R32_01`, `FINAL` etc., grava também em `results`, mas não sobrescreve resultado que já tenha sido salvo manualmente por admin.
+
+Limitação honesta: se a football-data não enviar um gol, uma anulação ou o status final, o robô não inventa. Ele continua tentando e o admin pode travar/corrigir manualmente.
 
 ---
 
@@ -73,13 +84,14 @@ truncate public.api_sync_log;
 
 ---
 
-## Passo 5 — Mapear a Premier League (teste, 1 chamada)
+## Passo 5 — Mapear a competição de teste (1 chamada)
 
-Domingo **24/05/2026** é o último round da Premier League — todos os 10 jogos no mesmo horário. Perfeito pra testar.
+O teste antigo usava a Premier League de **24/05/2026**. Como essa data já passou, para o setup da Copa em **junho de 2026** use primeiro o `dry_run` do passo "Quando a Copa do Mundo começar". Se ainda quiser testar uma temporada completa, este body da Premier League continua válido como teste de mapeamento histórico:
 
 **Edge Functions → api-football-map → Test**
 
 - HTTP Method: **POST**
+- Header: `x-bolao-cron-secret: <mesmo valor do BOLAO_CRON_SECRET>`
 - Body:
 ```json
 {
@@ -219,10 +231,19 @@ where game_id = 'PL_500001';
 ## Quando a Copa do Mundo começar (jun/2026)
 
 1. Limpa o mapa: `truncate api_fixture_map cascade;`
-2. Invoca o `api-football-map` com:
+2. Invoca o `api-football-map` primeiro em modo conferência:
+   - Header: `x-bolao-cron-secret: <mesmo valor do BOLAO_CRON_SECRET>`
+   ```json
+   { "competition": "WC", "season": 2026, "tournament": "copa", "dry_run": true }
+   ```
+3. Se o `unmapped_count` vier `0`, invoca de verdade:
    ```json
    { "competition": "WC", "season": 2026, "tournament": "copa" }
    ```
-3. O resto continua igual — mesmo robô, mesmo cron.
+4. O resto continua igual — mesmo robô, mesmo cron.
 
-> A integração entre os game_ids da Copa (WC_xxx) e os IDs do bolão (GA1, R32_01...) é um próximo passo: vou montar a tradução quando o calendário da Copa estiver disponível na football-data.
+Por padrão, a Copa agora tenta gravar o mapa com os IDs internos do bolão (`GA1`, `R32_01`, `FINAL` etc.). Se algum jogo não bater por horário/seleções, o mapeador recusa a gravação em vez de chutar. Para rodar só um mapa paralelo tipo teste do Brasileirão, use:
+
+```json
+{ "competition": "WC", "season": 2026, "tournament": "copa", "use_bolao_game_ids": false }
+```

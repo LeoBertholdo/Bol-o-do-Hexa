@@ -757,54 +757,61 @@ body.chart-modal-open{overflow:hidden}
 .ranking-card h3{font-size:1rem;line-height:1.1;color:var(--text);font-weight:950}
 .ranking-card p{margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45}
 .ranking-card .mini-action{margin-top:12px}
-.stats-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}
-.stat-box{background:linear-gradient(180deg,#fff,#fbfff3);border-radius:8px;border:1px solid var(--border);padding:12px;text-align:center}
-.stat-box .bv{font-size:1.45rem;font-weight:950;color:var(--blue)}
-.stat-box .bl{font-size:.62rem;color:var(--muted);text-transform:uppercase;font-weight:850;letter-spacing:.5px}
-.lb-row{display:grid;grid-template-columns:auto minmax(120px,1fr) 1fr auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05)}
+.lb-row{display:grid;grid-template-columns:auto minmax(96px,0.9fr) minmax(0,1.3fr) auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+@media(hover:hover){.lb-row:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,39,118,.12);border-color:#cdd9ea}}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
 .podium-row .pname{font-size:1.06rem}
-.podium-row .pts{font-size:1.72rem}
+.podium-row .pts-num{font-size:2rem}
 .podium-row.top-1{background:linear-gradient(110deg,#fff8d8,#fffdf4 46%,#fff);border-color:#f5c542}
 .podium-row.top-2{background:linear-gradient(110deg,#f4f7fb,#fff 48%,#fff);border-color:#b9c3cf}
 .podium-row.top-3{background:linear-gradient(110deg,#fff0df,#fff 48%,#fff);border-color:#c98747}
 .rank{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.82rem;flex-shrink:0}
 .podium-row .rank{width:42px;height:42px;font-size:.95rem;box-shadow:0 8px 18px rgba(0,0,0,.12)}
-.ro{background:#eef3f8;color:var(--muted)}
+.ro{background:#eef3f8;color:var(--muted);border:1px solid #e0e8f1}
 .pname{font-weight:900;font-size:.98rem;min-width:0}
 .lb-row.me{
   border-color:#9fc5ff;
   background:linear-gradient(110deg,#f7fbff,#ffffff 48%,#f7fbff);
   box-shadow:0 12px 28px rgba(0,39,118,.1);
 }
-.pstats{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.lb-row.me .pname:after{content:"Você";margin-left:8px;font-size:.56rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);background:#e4eeff;border:1px solid #c5d9f7;border-radius:999px;padding:2px 7px;vertical-align:middle}
+.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:7px;align-items:stretch}
 .stat{
   display:grid;
-  gap:2px;
-  min-width:60px;
-  padding:0;
+  gap:3px;
+  align-content:center;
+  padding:6px 8px;
   border:0;
-  background:transparent;
-  text-align:left;
+  border-radius:9px;
+  background:#f1f4f9;
+  text-align:center;
 }
-.sv{font-size:1rem;font-weight:950;line-height:1;color:var(--text)}
-.sl{font-size:.58rem;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.45px}
-.pts{
-  min-width:44px;
-  text-align:right;
-  font-size:1.85rem;
-  font-weight:950;
-  color:var(--green);
+.sv{font-size:1.02rem;font-weight:950;line-height:1;color:var(--text)}
+.sl{font-size:.55rem;text-transform:uppercase;color:var(--muted);font-weight:900;letter-spacing:.4px;white-space:nowrap}
+.lb-row .pts{
+  min-width:48px;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
   line-height:1;
 }
+.pts-num{font-size:1.82rem;font-weight:950;color:var(--green);line-height:1}
+.pts-unit{font-size:.54rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:900;margin-top:3px}
+.crav-stat{background:rgba(245,197,66,.16)}
+.corr-stat{background:rgba(0,39,118,.07)}
+.inv-stat{background:rgba(216,58,52,.09)}
+.podio-stat{background:rgba(0,132,61,.1)}
 .crav-stat .sv{color:#9a7200}
 .corr-stat .sv{color:var(--blue)}
 .inv-stat .sv{color:var(--red)}
+.podio-stat .sv{color:var(--green)}
 
 /* GROUP TABLES */
 .groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:12px}
-.group-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 8px 22px rgba(0,39,118,.06)}
-.group-title{display:flex;justify-content:space-between;align-items:center;background:#f2f7ef;padding:10px 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;font-weight:950;color:var(--blue)}
+.group-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 8px 22px rgba(0,39,118,.06);transition:transform .16s ease,box-shadow .16s ease}
+@media(hover:hover){.group-card:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(0,39,118,.12)}}
+.group-title{display:flex;justify-content:space-between;align-items:center;gap:8px;background:linear-gradient(90deg,#eaf3ec,#f6faf3);border-bottom:1px solid var(--border);padding:10px 12px;font-size:.74rem;text-transform:uppercase;letter-spacing:.8px;font-weight:950;color:var(--blue)}
+.group-title span:last-child{font-size:.6rem;letter-spacing:.4px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:3px 9px;white-space:nowrap}
 .group-table{width:100%;border-collapse:collapse;font-size:.78rem}
 .group-table th,.group-table td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:center}
 .group-table th{font-size:.58rem;text-transform:uppercase;color:var(--muted);font-weight:900;background:#fbfdf8}
@@ -814,10 +821,26 @@ body.chart-modal-open{overflow:hidden}
 .team-cell .team-name{white-space:normal}
 .group-table .pts-cell{font-weight:950;color:var(--green)}
 .qual-row{background:#f3fff5}
+.qual-row td:first-child{box-shadow:inset 3px 0 0 #34c77b}
 .third-row{background:#fffdf0}
+.third-row td:first-child{box-shadow:inset 3px 0 0 #f5c542}
 .pos-pill{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#eef3f8;color:var(--muted);font-size:.68rem;font-weight:950}
 .qual-row .pos-pill{background:#d1fae5;color:#065f46}
 .third-row .pos-pill{background:#fff0a6;color:#725400}
+.groups-head{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+.groups-head-main{min-width:0}
+.groups-head-title{font-size:1.05rem;font-weight:950;color:var(--text);line-height:1.12;margin-top:3px}
+.groups-progress{flex:1;min-width:200px;max-width:340px;display:grid;gap:7px}
+.groups-progress-label{display:flex;align-items:baseline;gap:7px;font-size:.76rem;font-weight:850;color:var(--muted)}
+.groups-progress-label strong{font-size:1.2rem;color:var(--blue);font-weight:950;line-height:1}
+.groups-progress-label .gp-rest{margin-left:auto;font-size:.64rem;text-transform:uppercase;letter-spacing:.5px;font-weight:900}
+.groups-progress-bar{position:relative;height:8px;border-radius:999px;background:#e7eef6;overflow:hidden}
+.groups-progress-bar:before{content:"";position:absolute;inset:0 auto 0 0;width:var(--gp,0%);border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--green))}
+.groups-legend{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.legend-pill{display:inline-flex;align-items:center;gap:7px;font-size:.7rem;font-weight:850;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:5px 11px}
+.legend-dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
+.legend-dot.is-qual{background:#34c77b;box-shadow:0 0 0 3px rgba(52,199,123,.18)}
+.legend-dot.is-third{background:#f5c542;box-shadow:0 0 0 3px rgba(245,197,66,.22)}
 
 /* FILTERS */
 .fbar,.psel,.section-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
@@ -2793,6 +2816,7 @@ body.chart-modal-open{overflow:hidden}
 
 @media(max-width:980px){
   .home-spotlight,.home-layout{grid-template-columns:1fr}
+  .ranking-grid{grid-template-columns:1fr}
   .api-test-grid{grid-template-columns:1fr}
   .api-test-form{grid-template-columns:repeat(2,minmax(0,1fr))}
   .home-prize-board{max-width:none}
@@ -2915,10 +2939,9 @@ body.chart-modal-open{overflow:hidden}
   .fixture-row.is-result .fixture-vs{min-width:0;background:transparent;color:var(--green)}
   .brazil-row{grid-template-columns:21px minmax(136px,1fr) 36px repeat(7,29px);font-size:.7rem;padding:8px 7px;min-width:483px}
   .brazil-row .team-cell{font-size:.74rem}
-  .stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lb-row{grid-template-columns:auto 1fr auto}
   .lb-row .pts{grid-column:3;grid-row:1;align-self:center}
-  .pstats{grid-column:1 / -1;grid-row:2;justify-content:flex-start;padding-left:46px;gap:16px}
+  .pstats{grid-column:1 / -1;grid-row:2;justify-content:flex-start;padding-left:46px;gap:8px}
   .game-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
   .game-row .btn-ok,.game-row .btn-x{grid-column:2;justify-self:end}
   .pal-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
@@ -3033,7 +3056,6 @@ body.chart-modal-open{overflow:hidden}
   <button onclick="goTab('grupos')">Grupos</button>
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
-  <button onclick="goTab('api-test')">Brasileirão</button>
   <button onclick="goTab('config')">Config</button>
 </nav>
 
@@ -3042,7 +3064,6 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-grupos" class="tab"></div>
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
-<div id="tab-api-test" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
@@ -6372,21 +6393,20 @@ function handleApiTestVisibilityChange(){
 // ==== END BRASILEIRAO TEST LAB ====
 
 function goTab(t){
+  if(t==="api-test") t="home";
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
+  const tabs=["home","ranking","grupos","jogos","palpites","config"];
+  if(!tabs.includes(t)) t="home";
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const tabs=["home","ranking","grupos","jogos","palpites","api-test","config"];
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
   syncApiTestClockTimer();
   syncApiTestRealtimeSubscription();
-  if(t==="api-test"&&remoteClient&&remoteSession){
-    loadApiTestRemote(false,{silent:true});
-  }
 }
 function render(t){
   renderAuthControls();
@@ -6395,7 +6415,6 @@ function render(t){
   if(t==="grupos") renderGrupos();
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
-  if(t==="api-test") renderApiTest();
   if(t==="config") renderConfig();
 }
 
@@ -6910,9 +6929,9 @@ function renderRanking(){
                 <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
                 <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
                 <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
-                ${p.pp>0?`<div class="stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
+                ${p.pp>0?`<div class="stat podio-stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
               </div>
-              <div class="pts">${p.pts}</div>
+              <div class="pts"><span class="pts-num">${p.pts}</span><span class="pts-unit">pts</span></div>
             </div>`;
           }).join("")}
         </div>
@@ -6928,13 +6947,25 @@ function renderRanking(){
 
 function renderGrupos(){
   const tables=groupStandings();
+  const totalGroupGames=groupGames().length;
   const played=groupGames().filter(g=>S.results[g.id]).length;
+  const remaining=totalGroupGames-played;
+  const groupPct=totalGroupGames?Math.round((played/totalGroupGames)*100):0;
   let h=`<div class="panel">
-    <div class="stats-row">
-      <div class="stat-box"><div class="bv">${played}</div><div class="bl">Jogos dos grupos</div></div>
-      <div class="stat-box"><div class="bv">${groupGames().length-played}</div><div class="bl">Restantes</div></div>
+    <div class="groups-head">
+      <div class="groups-head-main">
+        <div class="section-kicker">Fase de grupos</div>
+        <h3 class="groups-head-title">Classificação dos grupos</h3>
+      </div>
+      <div class="groups-progress" style="--gp:${groupPct}%">
+        <div class="groups-progress-label"><strong>${played}</strong>/${totalGroupGames} jogos<span class="gp-rest">${remaining} restantes</span></div>
+        <div class="groups-progress-bar" aria-hidden="true"></div>
+      </div>
     </div>
-    <div class="card-title">Classificação dos grupos</div>
+    <div class="groups-legend">
+      <span class="legend-pill"><i class="legend-dot is-qual"></i>Classificados · 1º e 2º</span>
+      <span class="legend-pill"><i class="legend-dot is-third"></i>Melhor 3º · repescagem</span>
+    </div>
     <div class="groups-grid">`;
   GROUP_KEYS.forEach(group=>{
     const rows=tables[group];

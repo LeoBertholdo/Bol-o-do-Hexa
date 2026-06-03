@@ -31,15 +31,13 @@ Repositório oficial: [LeoBertholdo/Bol-o-do-Hexa](https://github.com/LeoBerthol
 │       │   └── index.ts  # Mapeia jogos da football-data.org no Supabase
 │       ├── api-football-sync/
 │       │   └── index.ts  # Robô de placares ao vivo via football-data.org
-│       └── api-football-test/
-│           └── index.ts  # Função legada desativada
 └── assets/
     └── header-hexa-2026.png
 ```
 
 `index.html` existe apenas para garantir que a raiz do repositório redirecione corretamente (útil em GitHub Pages ou qualquer servidor estático). Toda a lógica está em `bolao2026.html`.
 
-O `bolao2026.html` também contém abas removíveis **Brasileirão** e **Ranking BR**. Elas usam as tabelas `api_fixture_map`, `live_scores` e `test_predictions` para testar o desenho de placares automáticos antes da Copa, com ranking separado sem alterar o bolão principal.
+O `bolao2026.html` também contém abas removíveis **Brasileirão** e **Ranking BR**. Elas usam as tabelas `api_fixture_map`, `live_scores` e `test_predictions` para testar o desenho de placares automáticos com ranking separado. Para a Copa, o mapeador tenta usar os IDs internos do bolão (`GA1`, `R32_01`, `FINAL` etc.) e o robô grava jogos finalizados também em `results`, sem sobrescrever resultado salvo manualmente por admin.
 
 ---
 

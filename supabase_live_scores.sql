@@ -61,6 +61,7 @@ create table if not exists public.live_scores (
   red_cards_away integer,
   corner_kicks_home integer,
   corner_kicks_away integer,
+  api_last_updated timestamptz,
   last_synced_at timestamptz not null default now(),
   is_locked_by_admin boolean not null default false
 );
@@ -78,7 +79,8 @@ add column if not exists yellow_cards_away integer,
 add column if not exists red_cards_home integer,
 add column if not exists red_cards_away integer,
 add column if not exists corner_kicks_home integer,
-add column if not exists corner_kicks_away integer;
+add column if not exists corner_kicks_away integer,
+add column if not exists api_last_updated timestamptz;
 
 -- ============================================
 -- PALPITES DE TESTE: ranking paralelo para torneios de ensaio.
