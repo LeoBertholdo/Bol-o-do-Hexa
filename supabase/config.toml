@@ -1,0 +1,5 @@
+[functions."api-football-map"]
+verify_jwt = false
+
+[functions."api-football-sync-"]
+verify_jwt = false

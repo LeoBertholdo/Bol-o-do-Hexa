@@ -17,6 +17,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const FD_BASE_URL = "https://api.football-data.org/v4";
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-bolao-cron-secret",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
 
 // Competições do free tier (id da football-data.org → código curto da API)
 const COMPETITIONS: Record<string, { id: number; code: string; name: string }> = {
@@ -122,7 +127,7 @@ const COPA_FIXTURES: Array<readonly [string, string, string?, string?]> = [
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" }
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json; charset=utf-8" }
   });
 }
 
@@ -230,13 +235,7 @@ function getSupabaseAdminKey(): string | null {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-bolao-cron-secret",
-        "Access-Control-Allow-Methods": "POST, OPTIONS"
-      }
-    });
+    return new Response("ok", { headers: CORS_HEADERS });
   }
   if (req.method !== "POST") return json(405, { error: "Use POST." });
 

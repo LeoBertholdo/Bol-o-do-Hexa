@@ -13,6 +13,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
 const FD_BASE_URL = "https://api.football-data.org/v4";
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-bolao-cron-secret",
+  "Access-Control-Allow-Methods": "POST, OPTIONS"
+};
 
 // Status em jogo (continuamos chamando rápido)
 const LIVE_STATUSES = new Set(["IN_PLAY", "PAUSED", "LIVE"]);
@@ -104,7 +109,7 @@ const COPA_TEAM_ALIASES: Record<string, string> = {
 function json(status: number, body: unknown) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" }
+    headers: { ...CORS_HEADERS, "Content-Type": "application/json; charset=utf-8" }
   });
 }
 
@@ -288,6 +293,25 @@ function isInternalCopaGameId(gameId: unknown): boolean {
   return COPA_INTERNAL_GAME_ID_RE.test(String(gameId || ""));
 }
 
+function isPlaceholderTeamName(name: unknown): boolean {
+  const normalized = normalizeTeamName(name);
+  if (!normalized) return true;
+  return [
+    "tbd",
+    "tba",
+    "adefinir",
+    "tobeconfirmed",
+    "tobedetermined",
+    "tobedecided",
+    "winner",
+    "winnermatch",
+    "vencedor",
+    "loser",
+    "perdedor",
+    "qualifiedteam"
+  ].some(token => normalized.includes(token));
+}
+
 function resolveScoreOrientation(
   match: any,
   bolaoHome: unknown,
@@ -297,7 +321,7 @@ function resolveScoreOrientation(
   const away = normalizeTeamName(matchTeamName(match, "away"));
   const expectedHome = normalizeTeamName(bolaoHome);
   const expectedAway = normalizeTeamName(bolaoAway);
-  if (!home || !away || !expectedHome || !expectedAway) return "same";
+  if (!home || !away || !expectedHome || !expectedAway || isPlaceholderTeamName(bolaoHome) || isPlaceholderTeamName(bolaoAway)) return "same";
   if (home === expectedHome && away === expectedAway) return "same";
   if (home === expectedAway && away === expectedHome) return "reversed";
   return "unknown";
@@ -334,6 +358,21 @@ function orientPenaltyShootout(
     ...event,
     side: event.side === "home" ? "away" : "home"
   }));
+}
+
+function orientedWinnerName(
+  match: any,
+  winnerSide: "home" | "away",
+  bolaoHome: unknown,
+  bolaoAway: unknown,
+  orientation: "same" | "reversed" | "unknown"
+): string {
+  const expected = winnerSide === "home" ? canonicalCopaTeamName(bolaoHome) : canonicalCopaTeamName(bolaoAway);
+  if (!isPlaceholderTeamName(expected)) return expected;
+  if (orientation === "reversed") {
+    return matchTeamName(match, winnerSide === "home" ? "away" : "home");
+  }
+  return matchTeamName(match, winnerSide);
 }
 
 function bookingSide(match: any, booking: any): "home" | "away" | null {
@@ -427,13 +466,19 @@ function footballDataHeaders(token: string): Record<string, string> {
   };
 }
 
-function buildCopaResultRow(row: any, match: any): { row?: any; error?: string } {
+function buildCopaResultRow(
+  row: any,
+  match: any,
+  context: {
+    bolaoHome?: string | null;
+    bolaoAway?: string | null;
+    scoreOrientation: "same" | "reversed" | "unknown";
+  }
+): { row?: any; error?: string } {
   if (!isInternalCopaGameId(row?.game_id)) return {};
   if (!FINAL_STATUSES.has(row?.status_short || "")) return {};
 
   const isKnockout = isCopaKnockoutGame("copa", row.game_id);
-  if (isKnockout) return {};
-
   const baseHome = isKnockout && ["AET", "PEN"].includes(row.status_short)
     ? numberOrNull(row.regular_goals_home)
     : numberOrNull(row.goals_home);
@@ -487,7 +532,13 @@ function buildCopaResultRow(row: any, match: any): { row?: any; error?: string }
     return { error: `${row.game_id}: mata-mata empatado sem vencedor vindo da API.` };
   }
 
-  const winnerName = matchTeamName(match, winnerSide);
+  const winnerName = orientedWinnerName(
+    match,
+    winnerSide,
+    context.bolaoHome,
+    context.bolaoAway,
+    context.scoreOrientation
+  );
   if (!winnerName) {
     return { error: `${row.game_id}: vencedor sem nome de seleção na API.` };
   }
@@ -551,6 +602,9 @@ function getSupabaseAdminKey(): string | null {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: CORS_HEADERS });
+  }
   if (req.method !== "POST") return json(405, { error: "Use POST." });
 
   const cronSecret = Deno.env.get("BOLAO_CRON_SECRET");
@@ -874,7 +928,11 @@ Deno.serve(async (req) => {
       upserts.push(liveRow);
 
       if (candidate.tournament === "copa" && scoreOrientation !== "unknown") {
-        const built = buildCopaResultRow(liveRow, match);
+        const built = buildCopaResultRow(liveRow, match, {
+          bolaoHome: candidate.bolaoHome,
+          bolaoAway: candidate.bolaoAway,
+          scoreOrientation
+        });
         if (built.row) copaResultRows.push(built.row);
         if (built.error) errors.push(built.error);
       }

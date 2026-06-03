@@ -211,6 +211,14 @@ create table if not exists public.podium_predictions (
   updated_at timestamptz not null default now()
 );
 
+-- Horários oficiais usados pelo banco para bloquear palpites depois do início.
+-- O app preenche essa tabela quando um admin abre o bolão online.
+create table if not exists public.game_kickoffs (
+  game_id text primary key,
+  kickoff_utc timestamptz not null,
+  updated_at timestamptz not null default now()
+);
+
 alter table public.profiles enable row level security;
 alter table public.settings enable row level security;
 alter table public.results enable row level security;
@@ -218,6 +226,7 @@ alter table public.predictions enable row level security;
 alter table public.actual_podium enable row level security;
 alter table public.podium_predictions enable row level security;
 alter table public.invited_emails enable row level security;
+alter table public.game_kickoffs enable row level security;
 
 grant select, insert, update, delete on public.profiles to authenticated;
 grant select, insert, update, delete on public.settings to authenticated;
@@ -226,6 +235,7 @@ grant select, insert, update, delete on public.predictions to authenticated;
 grant select, insert, update, delete on public.actual_podium to authenticated;
 grant select, insert, update, delete on public.podium_predictions to authenticated;
 grant select, insert, update, delete on public.invited_emails to authenticated;
+grant select, insert, update, delete on public.game_kickoffs to authenticated;
 
 drop trigger if exists protect_last_admin on public.profiles;
 create trigger protect_last_admin
@@ -273,12 +283,15 @@ with check (
 );
 
 -- Policies: invited_emails
--- Qualquer usuário autenticado pode ver a lista (necessário para o app verificar seu slot).
--- Somente admins podem adicionar, alterar ou remover convites.
+-- Cada usuário vê só o próprio convite; admins veem tudo.
 drop policy if exists "invited emails visible to signed in users" on public.invited_emails;
-create policy "invited emails visible to signed in users"
+drop policy if exists "invited emails self select" on public.invited_emails;
+create policy "invited emails self select"
 on public.invited_emails for select to authenticated
-using (true);
+using (
+  email = (auth.jwt() ->> 'email')
+  or app_private.is_admin()
+);
 
 drop policy if exists "admins manage invited emails" on public.invited_emails;
 create policy "admins manage invited emails"
@@ -296,6 +309,62 @@ with check (
   not app_private.has_admin()
   and email = (auth.jwt() ->> 'email')
 );
+
+drop policy if exists "game_kickoffs visible" on public.game_kickoffs;
+create policy "game_kickoffs visible"
+on public.game_kickoffs for select to authenticated using (true);
+
+drop policy if exists "game_kickoffs admin insert" on public.game_kickoffs;
+create policy "game_kickoffs admin insert"
+on public.game_kickoffs for insert to authenticated
+with check (app_private.is_admin());
+
+drop policy if exists "game_kickoffs admin update" on public.game_kickoffs;
+create policy "game_kickoffs admin update"
+on public.game_kickoffs for update to authenticated
+using (app_private.is_admin()) with check (app_private.is_admin());
+
+drop policy if exists "game_kickoffs admin delete" on public.game_kickoffs;
+create policy "game_kickoffs admin delete"
+on public.game_kickoffs for delete to authenticated
+using (app_private.is_admin());
+
+-- Recusa edição de palpites depois do início do jogo no servidor.
+-- Admin continua podendo corrigir/importar dados.
+create or replace function app_private.predictions_kickoff_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  kickoff timestamptz;
+begin
+  if app_private.is_admin() then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
+  select kickoff_utc into kickoff
+  from public.game_kickoffs
+  where game_id = coalesce(new.game_id, old.game_id);
+  if kickoff is not null and now() >= kickoff then
+    raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
+      using errcode = 'P0001';
+  end if;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists predictions_kickoff_guard on public.predictions;
+create trigger predictions_kickoff_guard
+before insert or update on public.predictions
+for each row execute function app_private.predictions_kickoff_guard();
+
+drop trigger if exists predictions_kickoff_guard_delete on public.predictions;
+create trigger predictions_kickoff_guard_delete
+before delete on public.predictions
+for each row execute function app_private.predictions_kickoff_guard();
 
 drop policy if exists "settings visible to signed in users" on public.settings;
 create policy "settings visible to signed in users"

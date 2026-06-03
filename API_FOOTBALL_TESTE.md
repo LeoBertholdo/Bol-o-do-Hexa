@@ -21,9 +21,9 @@ As Edge Functions usadas são:
 
 ## Brasileirão Série A
 
-Para preparar o teste, publique as funções e rode o SQL de `supabase_live_scores.sql`.
+Para preparar o teste, publique as funções, deixe **Verify JWT** desligado nelas e rode o SQL de `supabase_live_scores.sql`. As funções não ficam abertas: `api-football-map` valida admin logado ou `x-bolao-cron-secret`, e `api-football-sync-` exige `x-bolao-cron-secret`.
 
-Depois, no painel do Supabase, invoque a função `api-football-map` uma vez com:
+Depois, no painel do Supabase, invoque a função `api-football-map` uma vez com o header `x-bolao-cron-secret` e este body:
 
 ```json
 {

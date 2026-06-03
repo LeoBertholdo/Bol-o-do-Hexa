@@ -69,6 +69,12 @@ Já tava deployado a versão antiga (API-Football). Agora você precisa atualiza
    - [supabase/functions/api-football-map/index.ts](supabase/functions/api-football-map/index.ts)
    - [supabase/functions/api-football-sync/index.ts](supabase/functions/api-football-sync/index.ts)
 4. Clica em **Deploy**.
+5. Em **Settings** de cada uma, deixa **Verify JWT** desligado.
+
+As duas funções continuam protegidas pelo próprio código:
+
+- `api-football-map` aceita admin logado pelo app ou o header `x-bolao-cron-secret`;
+- `api-football-sync-` aceita somente o header `x-bolao-cron-secret`.
 
 ---
 

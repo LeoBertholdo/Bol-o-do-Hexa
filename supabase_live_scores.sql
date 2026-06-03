@@ -232,6 +232,43 @@ using (
   or app_private.is_admin()
 );
 
+-- Recusa edição de palpites de teste depois do início do jogo.
+-- Usa a kickoff_utc do mapa da API.
+create or replace function app_private.test_predictions_kickoff_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  kickoff timestamptz;
+begin
+  if app_private.is_admin() then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
+  select kickoff_utc into kickoff
+  from public.api_fixture_map
+  where game_id = coalesce(new.game_id, old.game_id);
+  if kickoff is not null and now() >= kickoff then
+    raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
+      using errcode = 'P0001';
+  end if;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists test_predictions_kickoff_guard on public.test_predictions;
+create trigger test_predictions_kickoff_guard
+before insert or update on public.test_predictions
+for each row execute function app_private.test_predictions_kickoff_guard();
+
+drop trigger if exists test_predictions_kickoff_guard_delete on public.test_predictions;
+create trigger test_predictions_kickoff_guard_delete
+before delete on public.test_predictions
+for each row execute function app_private.test_predictions_kickoff_guard();
+
 drop policy if exists "api_sync_log visible" on public.api_sync_log;
 create policy "api_sync_log visible"
 on public.api_sync_log for select to authenticated using (true);

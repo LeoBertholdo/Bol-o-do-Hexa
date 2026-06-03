@@ -1,6 +1,8 @@
 -- Correções de segurança do Bolão do Hexa 2026.
 -- Cole tudo no SQL Editor do Supabase e clique em Run.
 -- Idempotente: pode rodar quantas vezes quiser.
+-- Observação: projetos novos que rodarem o supabase_setup.sql atual já recebem
+-- estas correções principais. Este arquivo continua útil para projetos antigos.
 --
 -- O que isso resolve (numerada como no review):
 --   #3  Trava de kickoff no servidor pra palpites da Copa (tabela predictions).
@@ -54,7 +56,10 @@ as $$
 declare
   kickoff timestamptz;
 begin
-  if app_private.is_admin() then return new; end if;
+  if app_private.is_admin() then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
   select kickoff_utc into kickoff
   from public.game_kickoffs
   where game_id = coalesce(new.game_id, old.game_id);
@@ -62,6 +67,7 @@ begin
     raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
       using errcode = 'P0001';
   end if;
+  if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
 $$;
@@ -89,7 +95,10 @@ as $$
 declare
   kickoff timestamptz;
 begin
-  if app_private.is_admin() then return new; end if;
+  if app_private.is_admin() then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
   select kickoff_utc into kickoff
   from public.api_fixture_map
   where game_id = coalesce(new.game_id, old.game_id);
@@ -97,6 +106,7 @@ begin
     raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
       using errcode = 'P0001';
   end if;
+  if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
 $$;
