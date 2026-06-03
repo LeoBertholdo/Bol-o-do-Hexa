@@ -1367,12 +1367,19 @@ body.chart-modal-open{overflow:hidden}
 .podium-card .pos-info .lbl{font-size:.66rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
 .podium-card .pos-info .ttl{font-size:1rem;font-weight:950;color:var(--text);line-height:1}
 .podium-card .pts-pill{
-  margin-left:auto;font-size:.7rem;font-weight:950;color:#fff;
-  background:currentColor;padding:5px 10px;border-radius:99px;
-  filter:saturate(1.1);
+  margin-left:auto;
+  display:inline-flex;align-items:baseline;justify-content:center;gap:3px;
+  min-width:58px;
+  padding:6px 9px;border-radius:999px;
+  font-size:.66rem;font-weight:950;line-height:1;white-space:nowrap;
+  color:var(--podium-points-text);
+  background:var(--podium-points-bg);
+  border:1px solid var(--podium-points-border);
+  box-shadow:0 8px 18px var(--podium-points-shadow);
   flex-shrink:0;
 }
-.podium-card .pts-pill span{color:#fff}
+.podium-card .pts-pill strong{font-size:.76rem;color:inherit}
+.podium-card .pts-pill span{font-size:.58rem;color:inherit;text-transform:uppercase;letter-spacing:.35px;opacity:.82}
 .podium-card .country-input{display:flex;flex-direction:column;gap:6px}
 .podium-card input{
   width:100%;border:1.6px solid var(--border);border-radius:10px;
@@ -1386,13 +1393,13 @@ body.chart-modal-open{overflow:hidden}
 }
 .podium-card .country-display.empty{color:var(--muted);font-weight:700;font-style:italic;border-style:dashed}
 .podium-card .country-display .flag{font-size:1.4rem}
-.podium-card.gold{color:#b48400;background:linear-gradient(180deg,#fffaea 0%,#fff 60%);border-color:#f0d77e}
+.podium-card.gold{color:#b48400;background:linear-gradient(180deg,#fffaea 0%,#fff 60%);border-color:#f0d77e;--podium-points-text:#805800;--podium-points-bg:#fff3bf;--podium-points-border:#efd06a;--podium-points-shadow:rgba(180,132,0,.16)}
 .podium-card.gold .podium-medal{background:linear-gradient(135deg,#fff1a8,#f5c542 60%,#b48400);color:#5a3d00;border:2px solid #fff1a8}
-.podium-card.silver{color:#5f6c7d;background:linear-gradient(180deg,#f6f9fc 0%,#fff 60%);border-color:#cdd6e0}
+.podium-card.silver{color:#5f6c7d;background:linear-gradient(180deg,#f6f9fc 0%,#fff 60%);border-color:#cdd6e0;--podium-points-text:#4b5b6f;--podium-points-bg:#edf2f7;--podium-points-border:#c5d0dc;--podium-points-shadow:rgba(95,108,125,.14)}
 .podium-card.silver .podium-medal{background:linear-gradient(135deg,#e7ecf2,#b9c3cf 60%,#7f8b9b);color:#fff}
-.podium-card.bronze{color:#915221;background:linear-gradient(180deg,#fff4e9 0%,#fff 60%);border-color:#e3b793}
+.podium-card.bronze{color:#915221;background:linear-gradient(180deg,#fff4e9 0%,#fff 60%);border-color:#e3b793;--podium-points-text:#7a3f12;--podium-points-bg:#ffe5ca;--podium-points-border:#e2ab79;--podium-points-shadow:rgba(145,82,33,.14)}
 .podium-card.bronze .podium-medal{background:linear-gradient(135deg,#f3c79a,#c98747 60%,#7d4715);color:#fff}
-.podium-card.fourth{color:var(--blue);background:linear-gradient(180deg,#eef4fb 0%,#fff 60%);border-color:#cfdcf0}
+.podium-card.fourth{color:var(--blue);background:linear-gradient(180deg,#eef4fb 0%,#fff 60%);border-color:#cfdcf0;--podium-points-text:#173d83;--podium-points-bg:#e7efff;--podium-points-border:#bed0f2;--podium-points-shadow:rgba(0,39,118,.14)}
 .podium-card.fourth .podium-medal{background:linear-gradient(135deg,#dbe7f6,var(--blue) 80%);color:#fff}
 
 /* Locked / muted state */
@@ -7468,7 +7475,7 @@ function renderPodioBody(){
                 <span class="lbl">${esc(p.sub)}</span>
                 <span class="ttl">${esc(p.l)}</span>
               </div>
-              <span class="pts-pill"><span>+${p.pts} pts</span></span>
+              <span class="pts-pill"><strong>+${p.pts}</strong><span>pts</span></span>
             </div>
             <div class="country-input">
               ${officialLocked
@@ -7508,7 +7515,7 @@ function renderPodioBody(){
                 <span class="lbl">${esc(p.sub)}${hit?" · acerto":""}</span>
                 <span class="ttl">${esc(p.l)}</span>
               </div>
-              <span class="pts-pill"><span>${hit?`+${p.pts}`:`+${p.pts} pts`}</span></span>
+              <span class="pts-pill"><strong>+${p.pts}</strong><span>pts</span></span>
             </div>
             <div class="country-input">
               ${meCanEditOwn
