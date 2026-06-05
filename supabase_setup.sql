@@ -144,6 +144,12 @@ create table if not exists public.results (
   pens_s1 integer check (pens_s1 between 0 and 30),
   pens_s2 integer check (pens_s2 between 0 and 30),
   penalty_shootout jsonb,
+  yellow_cards_home integer check (yellow_cards_home >= 0),
+  yellow_cards_away integer check (yellow_cards_away >= 0),
+  yellow_red_cards_home integer check (yellow_red_cards_home >= 0),
+  yellow_red_cards_away integer check (yellow_red_cards_away >= 0),
+  red_cards_home integer check (red_cards_home >= 0),
+  red_cards_away integer check (red_cards_away >= 0),
   updated_at timestamptz not null default now(),
   updated_by uuid references auth.users(id) on delete set null
 );
@@ -168,6 +174,24 @@ add column if not exists pens_s2 integer check (pens_s2 between 0 and 30);
 
 alter table public.results
 add column if not exists penalty_shootout jsonb;
+
+alter table public.results
+add column if not exists yellow_cards_home integer check (yellow_cards_home >= 0);
+
+alter table public.results
+add column if not exists yellow_cards_away integer check (yellow_cards_away >= 0);
+
+alter table public.results
+add column if not exists yellow_red_cards_home integer check (yellow_red_cards_home >= 0);
+
+alter table public.results
+add column if not exists yellow_red_cards_away integer check (yellow_red_cards_away >= 0);
+
+alter table public.results
+add column if not exists red_cards_home integer check (red_cards_home >= 0);
+
+alter table public.results
+add column if not exists red_cards_away integer check (red_cards_away >= 0);
 
 create table if not exists public.predictions (
   participant_index integer not null check (participant_index >= 0),

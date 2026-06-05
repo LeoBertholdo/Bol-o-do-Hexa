@@ -842,6 +842,177 @@ body.chart-modal-open{overflow:hidden}
 .legend-dot.is-qual{background:#34c77b;box-shadow:0 0 0 3px rgba(52,199,123,.18)}
 .legend-dot.is-third{background:#f5c542;box-shadow:0 0 0 3px rgba(245,197,66,.22)}
 
+.projection-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(250px,.8fr);
+  gap:14px;
+  align-items:stretch;
+  margin-bottom:14px;
+}
+.projection-title{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-width:0;
+}
+.projection-title h3{
+  margin-top:4px;
+  color:var(--text);
+  font-size:1.08rem;
+  line-height:1.12;
+  font-weight:950;
+}
+.projection-title p{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.76rem;
+  line-height:1.45;
+  font-weight:750;
+}
+.projection-metrics{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.projection-metric{
+  display:grid;
+  align-content:center;
+  gap:4px;
+  min-width:0;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:linear-gradient(180deg,#fff,#f8fbff);
+}
+.projection-metric strong{
+  color:var(--blue);
+  font-size:1.25rem;
+  line-height:1;
+  font-weight:950;
+}
+.projection-metric span{
+  color:var(--muted);
+  font-size:.58rem;
+  font-weight:950;
+  letter-spacing:.55px;
+  text-transform:uppercase;
+  line-height:1.2;
+}
+.projection-meter{
+  position:relative;
+  height:6px;
+  overflow:hidden;
+  border-radius:999px;
+  background:#e6eef8;
+}
+.projection-meter:before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:var(--projection-progress,0%);
+  border-radius:inherit;
+  background:linear-gradient(90deg,var(--blue),var(--green));
+}
+.projection-privacy{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  width:max-content;
+  max-width:100%;
+  margin-top:10px;
+  padding:5px 10px;
+  border:1px solid #d8e5ff;
+  border-radius:999px;
+  background:#f7fbff;
+  color:var(--blue);
+  font-size:.68rem;
+  font-weight:900;
+}
+.projection-empty{
+  margin-bottom:12px;
+  padding:13px;
+  border:1px dashed #c7d7f0;
+  border-radius:8px;
+  background:#f7fbff;
+  color:#41516d;
+  font-size:.8rem;
+  line-height:1.45;
+  font-weight:850;
+}
+.projection-thirds{
+  display:grid;
+  gap:10px;
+  margin-bottom:14px;
+  padding:12px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:linear-gradient(180deg,#fffdf3,#fff);
+}
+.projection-thirds-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+}
+.projection-thirds-head h4{
+  color:var(--text);
+  font-size:.88rem;
+  font-weight:950;
+  line-height:1.15;
+}
+.projection-thirds-head span{
+  color:var(--muted);
+  font-size:.62rem;
+  font-weight:900;
+  letter-spacing:.55px;
+  text-transform:uppercase;
+}
+.projection-third-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(158px,1fr));
+  gap:7px;
+}
+.projection-third{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  padding:8px;
+  border:1px solid #f0e1a2;
+  border-radius:8px;
+  background:#fffef8;
+  min-width:0;
+}
+.projection-third.out{
+  border-color:#e2e8f0;
+  background:#f8fafc;
+  opacity:.74;
+}
+.projection-third .rank{
+  width:24px;
+  height:24px;
+  font-size:.66rem;
+}
+.projection-third .name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--text);
+  font-size:.75rem;
+  font-weight:900;
+}
+.projection-third .points{
+  color:var(--green);
+  font-size:.76rem;
+  font-weight:950;
+  white-space:nowrap;
+}
+.projection-group-card.is-incomplete .group-title{
+  background:linear-gradient(90deg,#f7fbff,#fbfcfe);
+}
+
 /* FILTERS */
 .fbar,.psel,.section-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
 .fbtn,.pbtn,.seg-btn{
@@ -1001,17 +1172,20 @@ body.chart-modal-open{overflow:hidden}
 .pal-person.active .avatar{background:linear-gradient(135deg,var(--blue),var(--green));color:#fff}
 .pal-person.self:after{content:"você";font-size:.5rem;font-weight:950;text-transform:uppercase;letter-spacing:.5px;padding:2px 5px;border-radius:99px;background:rgba(255,223,0,.92);color:#1a1300;margin-left:2px}
 
-/* Stage segmented — compact 3 stages */
+/* Stage segmented — compact 4 stages */
 .pal-stages{
   display:flex;gap:4px;flex-shrink:0;
   padding:4px;border-radius:11px;background:rgba(0,0,0,.22);
   border:1px solid rgba(255,255,255,.16);
-  min-width:0;
+  min-width:0;overflow-x:auto;scrollbar-width:thin;
 }
+.pal-stages::-webkit-scrollbar{height:4px}
+.pal-stages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:99px}
 .pal-stage{
   display:inline-flex;align-items:center;gap:6px;
   padding:7px 12px;border-radius:8px;background:transparent;border:0;color:rgba(255,255,255,.78);
   font-size:.74rem;font-weight:900;cursor:pointer;transition:background .18s,color .18s;white-space:nowrap;
+  flex:0 0 auto;
 }
 .pal-stage .ico{font-size:.95rem;line-height:1}
 .pal-stage:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -2857,6 +3031,7 @@ body.chart-modal-open{overflow:hidden}
   .pal-hero-bottom{grid-template-columns:1fr;gap:8px}
   .pal-stages{align-self:stretch;justify-content:space-between}
   .pal-stage{flex:1;justify-content:center}
+  .projection-head{grid-template-columns:1fr}
   /* Bracket falls back to chronological list (rendered in .ko-mobile-list) */
   .bracket-stage,.r32-head,.r32-grid{display:none}
   .ko-mobile-list{display:flex}
@@ -2992,6 +3167,7 @@ body.chart-modal-open{overflow:hidden}
   .pal-stage{padding:7px 8px;font-size:.66rem}
   .pal-stage .ico{font-size:.85rem}
   .pal-stage span:not(.ico){display:none}
+  .projection-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
   .podio-entry .pe-picks{grid-template-columns:repeat(2,minmax(0,1fr))}
   .podio-entry{padding:10px}
   .pe-pick{font-size:.7rem;padding:5px 7px}
@@ -3022,6 +3198,7 @@ body.chart-modal-open{overflow:hidden}
   .home-section,.card,.panel,.ranking-card{padding:10px}
   .api-test-form,.api-test-metrics{grid-template-columns:1fr}
   .home-metrics,.home-insights{grid-template-columns:1fr}
+  .projection-metrics{grid-template-columns:1fr}
   .home-spotlight{width:100%;max-width:100%;gap:12px}
   .home-link-btn,.home-ghost-btn{width:100%;text-align:center}
   .prize-head{align-items:flex-start;flex-direction:column;gap:8px}
@@ -3634,7 +3811,13 @@ function applyRemoteData(payload){
       afterEt2:row.after_et_s2,
       pens1:row.pens_s1,
       pens2:row.pens_s2,
-      penaltyShootout:row.penalty_shootout
+      penaltyShootout:row.penalty_shootout,
+      yellowCards1:row.yellow_cards_home,
+      yellowCards2:row.yellow_cards_away,
+      yellowRedCards1:row.yellow_red_cards_home,
+      yellowRedCards2:row.yellow_red_cards_away,
+      redCards1:row.red_cards_home,
+      redCards2:row.red_cards_away
     });
   });
   (payload.predictions||[]).forEach(row=>{
@@ -3671,6 +3854,8 @@ function applyRemoteData(payload){
 }
 
 async function fetchResultsRemote(){
+  const withFairPlay=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision,after_et_s1,after_et_s2,pens_s1,pens_s2,penalty_shootout,yellow_cards_home,yellow_cards_away,yellow_red_cards_home,yellow_red_cards_away,red_cards_home,red_cards_away");
+  if(!withFairPlay.error) return withFairPlay;
   const rich=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision,after_et_s1,after_et_s2,pens_s1,pens_s2,penalty_shootout");
   if(!rich.error) return rich;
   const full=await remoteClient.from("results").select("game_id,s1,s2,ko_winner,ko_decision");
@@ -3924,6 +4109,12 @@ function saveResultRemote(id){
     pens_s1:res.pens1??null,
     pens_s2:res.pens2??null,
     penalty_shootout:res.penaltyShootout?.length?res.penaltyShootout:null,
+    yellow_cards_home:res.yellowCards1??null,
+    yellow_cards_away:res.yellowCards2??null,
+    yellow_red_cards_home:res.yellowRedCards1??null,
+    yellow_red_cards_away:res.yellowRedCards2??null,
+    red_cards_home:res.redCards1??null,
+    red_cards_away:res.redCards2??null,
     updated_by:remoteSession.user.id
   },{onConflict:"game_id"})).then(ok=>{
     if(ok) dirtyResultKeys.delete(id);
@@ -4054,6 +4245,12 @@ async function pushLocalStateToRemote(){
     pens_s1:res.pens1??null,
     pens_s2:res.pens2??null,
     penalty_shootout:res.penaltyShootout?.length?res.penaltyShootout:null,
+    yellow_cards_home:res.yellowCards1??null,
+    yellow_cards_away:res.yellowCards2??null,
+    yellow_red_cards_home:res.yellowRedCards1??null,
+    yellow_red_cards_away:res.yellowRedCards2??null,
+    red_cards_home:res.redCards1??null,
+    red_cards_away:res.redCards2??null,
     updated_by:adminUserId
   }));
   // user_id propositalmente em branco: assim cada participante consegue reclamar
@@ -4336,6 +4533,11 @@ function optionalScore(v){
   if(v==null||v==="") return null;
   const n=parseInt(v,10);
   return !Number.isNaN(n)&&n>=0?Math.min(30,n):null;
+}
+function optionalCount(v){
+  if(v==null||v==="") return null;
+  const n=parseInt(v,10);
+  return !Number.isNaN(n)&&n>=0?n:null;
 }
 function normalizePenaltyShootout(value){
   if(!Array.isArray(value)) return [];
@@ -4625,13 +4827,20 @@ function prize(rank){
   return 0;
 }
 
-function groupStandings(){
+function officialGroupResultForGame(game){
+  return S.results[game.id];
+}
+function predictionGroupResultForParticipant(pi,game){
+  const pal=S.palpites[`${pi}_${game.id}`];
+  return hasScore(pal)?pal:null;
+}
+function groupStandings(resultForGame=officialGroupResultForGame){
   const tables={};
   Object.entries(GROUPS).forEach(([grp,teams])=>{
     tables[grp]=teams.map(team=>({group:grp,team,played:0,w:0,d:0,l:0,gf:0,ga:0,gd:0,pts:0,pos:0}));
   });
   groupGames().forEach(game=>{
-    const res=S.results[game.id];
+    const res=resultForGame(game);
     if(!res) return;
     const table=tables[game.group];
     const a=table.find(row=>row.team===game.t1);
@@ -4644,7 +4853,7 @@ function groupStandings(){
     else{a.d++; b.d++; a.pts++; b.pts++;}
   });
   Object.entries(tables).forEach(([group,table])=>{
-    tables[group]=rankGroupTable(table,group);
+    tables[group]=rankGroupTable(table,group,resultForGame);
     tables[group].forEach((row,i)=>row.pos=i+1);
   });
   return tables;
@@ -4686,11 +4895,11 @@ function sameTeamSet(a,b){
   const teams=new Set(a.map(row=>row.team));
   return b.every(row=>teams.has(row.team));
 }
-function headToHeadStats(group,rows){
+function headToHeadStats(group,rows,resultForGame=officialGroupResultForGame){
   const teams=new Set(rows.map(row=>row.team));
   const stats=Object.fromEntries(rows.map(row=>[row.team,{pts:0,gf:0,ga:0,gd:0}]));
   groupGames().forEach(game=>{
-    const res=S.results[game.id];
+    const res=resultForGame(game);
     if(!res||game.group!==group||!teams.has(game.t1)||!teams.has(game.t2)) return;
     const a=stats[game.t1];
     const b=stats[game.t2];
@@ -4704,8 +4913,8 @@ function headToHeadStats(group,rows){
   Object.values(stats).forEach(row=>row.gd=row.gf-row.ga);
   return stats;
 }
-function applyHeadToHeadStep(rows,group){
-  const h2h=headToHeadStats(group,rows);
+function applyHeadToHeadStep(rows,group,resultForGame=officialGroupResultForGame){
+  const h2h=headToHeadStats(group,rows,resultForGame);
   const groups=applyCriteriaGroups(rows,[
     {value:row=>h2h[row.team].pts,dir:"desc"},
     {value:row=>h2h[row.team].gd,dir:"desc"},
@@ -4713,11 +4922,11 @@ function applyHeadToHeadStep(rows,group){
   ]);
   return groups.flatMap(groupRows=>{
     if(groupRows.length<2||sameTeamSet(groupRows,rows)) return [groupRows];
-    return applyHeadToHeadStep(groupRows,group);
+    return applyHeadToHeadStep(groupRows,group,resultForGame);
   });
 }
-function rankEqualPointRows(rows,group){
-  return applyHeadToHeadStep(rows,group).flatMap(groupRows=>{
+function rankEqualPointRows(rows,group,resultForGame=officialGroupResultForGame){
+  return applyHeadToHeadStep(rows,group,resultForGame).flatMap(groupRows=>{
     if(groupRows.length<2) return groupRows;
     return applyCriteriaGroups(groupRows,[
       {value:row=>row.gd,dir:"desc"},
@@ -4728,9 +4937,9 @@ function rankEqualPointRows(rows,group){
     ]).flat();
   });
 }
-function rankGroupTable(table,group){
+function rankGroupTable(table,group,resultForGame=officialGroupResultForGame){
   return splitByCriterion(table,row=>row.pts,"desc").flatMap(rows=>{
-    return rows.length<2?rows:rankEqualPointRows(rows,group);
+    return rows.length<2?rows:rankEqualPointRows(rows,group,resultForGame);
   });
 }
 function compareTeams(a,b){
@@ -7079,6 +7288,110 @@ function renderGrupos(){
   document.getElementById("tab-grupos").innerHTML=h;
 }
 
+function projectionParticipantIndex(){
+  const myIdx=myParticipantIndex();
+  if(isOnlineMode()&&Number.isInteger(myIdx)) return myIdx;
+  return palPi;
+}
+function projectedGroupCounts(pi){
+  return Object.fromEntries(GROUP_KEYS.map(group=>{
+    const games=groupGames().filter(game=>game.group===group);
+    const filled=games.filter(game=>hasScore(S.palpites[`${pi}_${game.id}`])).length;
+    return [group,{filled,total:games.length}];
+  }));
+}
+function projectedThirdRows(tables){
+  return GROUP_KEYS.map(group=>tables[group][2]).filter(Boolean).sort(compareTeams);
+}
+function renderGroupProjectionBody(){
+  const projectionPi=projectionParticipantIndex();
+  const tables=groupStandings(game=>predictionGroupResultForParticipant(projectionPi,game));
+  const counts=projectedGroupCounts(projectionPi);
+  const totalGroupGames=groupGames().length;
+  const filled=groupGames().filter(game=>hasScore(S.palpites[`${projectionPi}_${game.id}`])).length;
+  const missing=totalGroupGames-filled;
+  const completeGroups=GROUP_KEYS.filter(group=>counts[group].filled===counts[group].total).length;
+  const filledPct=totalGroupGames?Math.round(filled*100/totalGroupGames):0;
+  const thirds=projectedThirdRows(tables);
+  const hasAnyProjection=filled>0;
+  const bestThirdTeams=hasAnyProjection?new Set(thirds.slice(0,8).map(row=>row.team)):new Set();
+  const projectionName=participantName(projectionPi);
+  const emptyHTML=filled===0
+    ? `<div class="projection-empty">Nenhum placar de grupo preenchido para ${esc(projectionName)} ainda.</div>`
+    : "";
+  const thirdsHTML=hasAnyProjection?`
+    <div class="projection-thirds">
+      <div class="projection-thirds-head">
+        <h4>${missing?"Melhores terceiros provisórios":"Melhores terceiros"}</h4>
+        <span>${missing?"Parcial":"Top 8 avançam"}</span>
+      </div>
+      <div class="projection-third-list">
+        ${thirds.map((row,index)=>{
+          const out=index>=8;
+          return `<div class="projection-third ${out?"out":""}">
+            <div class="rank ${out?"ro":"r3"}">${index+1}</div>
+            <div class="name">${teamFlag(row.team)?`<span class="flag">${teamFlag(row.team)}</span> `:""}${esc(row.team)}</div>
+            <div class="points">${row.pts} pts</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>`:"";
+  let h=`<div class="panel">
+    <div class="projection-head">
+      <div class="projection-title">
+        <div class="section-kicker">Meus grupos</div>
+        <h3>Classificação projetada por ${esc(projectionName)}</h3>
+        <p>${missing?`${missing} ${missing===1?"palpite restante":"palpites restantes"} para fechar a simulação completa da fase de grupos.`:"Todos os jogos da fase de grupos estão preenchidos nesta simulação."}</p>
+        <div class="projection-privacy">Visão individual · não altera o ranking</div>
+      </div>
+      <div class="projection-metrics">
+        <div class="projection-metric" style="--projection-progress:${filledPct}%">
+          <strong>${filled}/${totalGroupGames}</strong>
+          <span>Jogos preenchidos</span>
+          <div class="projection-meter" aria-hidden="true"></div>
+        </div>
+        <div class="projection-metric">
+          <strong>${completeGroups}/12</strong>
+          <span>Grupos fechados</span>
+        </div>
+        <div class="projection-metric">
+          <strong>${filledPct}%</strong>
+          <span>Simulação</span>
+        </div>
+      </div>
+    </div>
+    ${emptyHTML}
+    <div class="groups-legend">
+      <span class="legend-pill"><i class="legend-dot is-qual"></i>Classificados · 1º e 2º</span>
+      <span class="legend-pill"><i class="legend-dot is-third"></i>Melhores terceiros · top 8</span>
+    </div>
+    ${thirdsHTML}
+    <div class="groups-grid">`;
+  GROUP_KEYS.forEach(group=>{
+    const rows=tables[group];
+    const count=counts[group];
+    const incomplete=count.filled<count.total;
+    h+=`<div class="group-card projection-group-card ${incomplete?"is-incomplete":""}">
+      <div class="group-title"><span>Grupo ${esc(group)}</span><span>${count.filled}/${count.total} palpites</span></div>
+      <table class="group-table">
+        <thead><tr><th>Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead>
+        <tbody>`;
+    rows.forEach(row=>{
+      const cls=hasAnyProjection?(row.pos<=2?"qual-row":row.pos===3&&bestThirdTeams.has(row.team)?"third-row":""):"";
+      h+=`<tr class="${cls}">
+        <td><div class="team-cell"><span class="pos-pill">${row.pos}</span>${teamFlag(row.team)?`<span class="flag">${teamFlag(row.team)}</span>`:""}<span class="team-name">${esc(row.team)}</span></div></td>
+        <td>${row.played}</td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td>
+        <td>${row.gf}</td><td>${row.ga}</td><td>${row.gd}</td><td class="pts-cell">${row.pts}</td>
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  });
+  h+=`</div>
+    <div class="microcopy" style="margin-top:12px">A ordenação usa os mesmos critérios da tabela oficial da fase de grupos.</div>
+  </div>`;
+  return h;
+}
+
 function copaGameState(game){
   if(S.results[game.id]) return "final";
   const kickoff=game.utc?new Date(game.utc).getTime():NaN;
@@ -7419,12 +7732,13 @@ function palInitials(name){
 }
 function renderPalpites(){
   if(palPi>=S.participants.length) palPi=0;
-  if(!["groups","ko","podio"].includes(palStage)) palStage="groups";
+  if(!["groups","projection","ko","podio"].includes(palStage)) palStage="groups";
   if(isOnlineMode()&&(!isSignedIn()||!currentProfile)){
     document.getElementById("tab-palpites").innerHTML=`<div class="panel">${accountCard()}</div>`;
     return;
   }
   const myIdx=myParticipantIndex();
+  if(palStage==="projection"&&isOnlineMode()&&Number.isInteger(myIdx)) palPi=myIdx;
   const stats=playerStats(palPi);
   const rank=ranking();
   const rankIdx=rank.findIndex(r=>r.i===palPi);
@@ -7435,6 +7749,7 @@ function renderPalpites(){
 
   const STAGE_META={
     groups:{ico:"⚽",label:"Grupos"},
+    projection:{ico:"\u{1F4CA}",label:"Meus grupos"},
     ko:    {ico:"⚔️",label:"Mata-mata"},
     podio: {ico:"\u{1F451}",label:"Pódio"}
   };
@@ -7445,6 +7760,8 @@ function renderPalpites(){
     bodyHTML=renderPodioBody();
   }else if(palStage==="ko"){
     bodyHTML=renderKnockoutBody();
+  }else if(palStage==="projection"){
+    bodyHTML=renderGroupProjectionBody();
   }else{
     const groupFilters=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`Grupo ${g}`,l:`Grupo ${g}`}))];
     let filtered=groupGames();
@@ -7470,7 +7787,7 @@ function renderPalpites(){
     bodyHTML=`<div class="panel">${inner}</div>`;
   }
 
-  const stageBtns=["groups","ko","podio"].map(s=>`
+  const stageBtns=["groups","projection","ko","podio"].map(s=>`
     <button class="pal-stage ${palStage===s?"active":""}" onclick="setPalStage('${s}')">
       <span class="ico">${STAGE_META[s].ico}</span>
       <span>${STAGE_META[s].label}</span>

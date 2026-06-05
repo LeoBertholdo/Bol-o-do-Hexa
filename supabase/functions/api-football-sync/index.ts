@@ -342,6 +342,8 @@ function orientCards(
   return {
     yellowHome: cards.yellowAway,
     yellowAway: cards.yellowHome,
+    yellowRedHome: cards.yellowRedAway,
+    yellowRedAway: cards.yellowRedHome,
     redHome: cards.redAway,
     redAway: cards.redHome,
     cornersHome: cards.cornersAway,
@@ -404,6 +406,8 @@ function normalizeMatchDetail(data: any): any {
 function extractCardCounts(match: any): {
   yellowHome: number | null;
   yellowAway: number | null;
+  yellowRedHome: number | null;
+  yellowRedAway: number | null;
   redHome: number | null;
   redAway: number | null;
   cornersHome: number | null;
@@ -421,25 +425,30 @@ function extractCardCounts(match: any): {
     return {
       yellowHome: homeYellow,
       yellowAway: awayYellow,
-      redHome: homeRed == null && homeYellowRed == null ? null : (homeRed || 0) + (homeYellowRed || 0),
-      redAway: awayRed == null && awayYellowRed == null ? null : (awayRed || 0) + (awayYellowRed || 0),
+      yellowRedHome: homeYellowRed,
+      yellowRedAway: awayYellowRed,
+      redHome: homeRed,
+      redAway: awayRed,
       cornersHome: numberOrNull(homeStats?.corner_kicks),
       cornersAway: numberOrNull(awayStats?.corner_kicks)
     };
   }
 
   if (!Array.isArray(match?.bookings)) {
-    return { yellowHome: null, yellowAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
+    return { yellowHome: null, yellowAway: null, yellowRedHome: null, yellowRedAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
   }
 
-  const counts = { yellowHome: 0, yellowAway: 0, redHome: 0, redAway: 0, cornersHome: null, cornersAway: null };
+  const counts = { yellowHome: 0, yellowAway: 0, yellowRedHome: 0, yellowRedAway: 0, redHome: 0, redAway: 0, cornersHome: null, cornersAway: null };
   let found = false;
   for (const booking of match.bookings) {
     const side = bookingSide(match, booking);
     if (!side) continue;
     const card = String(booking.card || "").toUpperCase();
     found = true;
-    if (card.includes("RED")) {
+    if ((card.includes("YELLOW") && card.includes("RED")) || card.includes("SECOND_YELLOW") || card.includes("2ND_YELLOW")) {
+      if (side === "home") counts.yellowRedHome += 1;
+      else counts.yellowRedAway += 1;
+    } else if (card.includes("RED")) {
       if (side === "home") counts.redHome += 1;
       else counts.redAway += 1;
     } else if (card.includes("YELLOW")) {
@@ -448,7 +457,7 @@ function extractCardCounts(match: any): {
     }
   }
 
-  return found ? counts : { yellowHome: null, yellowAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
+  return found ? counts : { yellowHome: null, yellowAway: null, yellowRedHome: null, yellowRedAway: null, redHome: null, redAway: null, cornersHome: null, cornersAway: null };
 }
 
 function hasCardCounts(cards: ReturnType<typeof extractCardCounts>): boolean {
@@ -494,6 +503,12 @@ function buildCopaResultRow(
     game_id: row.game_id,
     s1: baseHome,
     s2: baseAway,
+    yellow_cards_home: row.yellow_cards_home ?? null,
+    yellow_cards_away: row.yellow_cards_away ?? null,
+    yellow_red_cards_home: row.yellow_red_cards_home ?? null,
+    yellow_red_cards_away: row.yellow_red_cards_away ?? null,
+    red_cards_home: row.red_cards_home ?? null,
+    red_cards_away: row.red_cards_away ?? null,
     updated_by: null
   };
 
@@ -632,7 +647,7 @@ Deno.serve(async (req) => {
   // 2. Lê estado conhecido
   const { data: liveRows } = await supa
     .from("live_scores")
-    .select("game_id, status_short, status_long, elapsed, goals_home, goals_away, regular_goals_home, regular_goals_away, extra_time_goals_home, extra_time_goals_away, after_extra_goals_home, after_extra_goals_away, pens_home, pens_away, last_synced_at, api_last_updated, is_locked_by_admin, yellow_cards_home, yellow_cards_away, red_cards_home, red_cards_away, corner_kicks_home, corner_kicks_away");
+    .select("game_id, status_short, status_long, elapsed, goals_home, goals_away, regular_goals_home, regular_goals_away, extra_time_goals_home, extra_time_goals_away, after_extra_goals_home, after_extra_goals_away, pens_home, pens_away, last_synced_at, api_last_updated, is_locked_by_admin, yellow_cards_home, yellow_cards_away, yellow_red_cards_home, yellow_red_cards_away, red_cards_home, red_cards_away, corner_kicks_home, corner_kicks_away");
   const liveByGame = new Map((liveRows || []).map((r: any) => [r.game_id, r]));
 
   // 3. Filtra candidatos
@@ -917,6 +932,8 @@ Deno.serve(async (req) => {
         penalty_shootout: penaltyShootout,
         yellow_cards_home: cards.yellowHome ?? live.yellow_cards_home ?? null,
         yellow_cards_away: cards.yellowAway ?? live.yellow_cards_away ?? null,
+        yellow_red_cards_home: cards.yellowRedHome ?? live.yellow_red_cards_home ?? null,
+        yellow_red_cards_away: cards.yellowRedAway ?? live.yellow_red_cards_away ?? null,
         red_cards_home: cards.redHome ?? live.red_cards_home ?? null,
         red_cards_away: cards.redAway ?? live.red_cards_away ?? null,
         corner_kicks_home: cards.cornersHome ?? live.corner_kicks_home ?? null,
