@@ -1108,6 +1108,27 @@ body.chart-modal-open{overflow:hidden}
 .pal-card-status.live{color:var(--green-2)}
 .pal-card-status.locked{color:#a3aab6}
 
+.pal-state-slot{
+  display:flex;justify-content:center;margin-top:7px;min-height:0;
+}
+.pal-state-chips{
+  display:flex;align-items:center;justify-content:center;gap:5px;flex-wrap:wrap;
+}
+.pal-state-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  min-height:20px;padding:3px 7px;border-radius:999px;
+  border:1px solid #b8ebcb;background:#edfdf3;color:var(--green-2);
+  font-size:.56rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;
+  line-height:1;white-space:nowrap;
+}
+.pal-state-chip .dot{width:6px;height:6px;border-radius:999px;background:currentColor;box-shadow:0 0 0 2px rgba(255,255,255,.8)}
+.pal-state-chip.saving{background:#eef5ff;border-color:#cfe0ff;color:var(--blue)}
+.pal-state-chip.local{background:#fff8d7;border-color:#f3df89;color:#725400}
+.pal-state-chip.closed{background:#fff1f2;border-color:#fecdd3;color:var(--red)}
+.pal-state-chips.compact{justify-content:flex-start}
+.bracket-card .pal-state-slot{justify-content:flex-start;margin-top:8px}
+.bracket-card .pal-state-chip{font-size:.51rem;padding:3px 6px;min-height:18px}
+
 .pal-card-result{
   display:flex;flex-direction:column;align-items:center;gap:4px;
   margin-top:3px;font-size:.65rem;font-weight:900;color:var(--muted);
@@ -3938,8 +3959,12 @@ function savePredictionRemote(pi,gid){
     ko_decision:null
   },{onConflict:"participant_index,game_id"})).then(ok=>{
     if(ok) dirtyPredictionKeys.delete(key);
+    refreshPredictionStateIndicators(pi,gid);
     return ok;
-  }).finally(()=>pendingPredictionWrites.delete(key));
+  }).finally(()=>{
+    pendingPredictionWrites.delete(key);
+    refreshPredictionStateIndicators(pi,gid);
+  });
 }
 function savePodioRemote(pi){
   if(!remoteClient) return;
@@ -7755,6 +7780,54 @@ function renderKnockoutBody(){
   </div>`;
 }
 
+function predictionStateId(scope,pi,gid){
+  return `predictionState_${scope}_${pi}_${gid}`;
+}
+function predictionStateChipsHTML(key,game,pal,opts={}){
+  const complete=isPredictionComplete(game,pal);
+  const closed=predictionDeadlineClosed(game);
+  const chips=[];
+  if(complete){
+    let cls="valid";
+    let label="Salvo";
+    let title="Palpite completo e salvo.";
+    if(pendingPredictionWrites.has(key)){
+      cls="saving";
+      label="Salvando";
+      title="Palpite válido, aguardando confirmação online.";
+    }else if(isOnlineMode()&&dirtyPredictionKeys.has(key)){
+      cls="local";
+      label="Salvo local";
+      title="Palpite válido, salvo neste navegador e aguardando sincronização.";
+    }
+    chips.push(`<span class="pal-state-chip ${cls}" title="${esc(title)}"><span class="dot"></span>${esc(label)}</span>`);
+  }
+  if(closed){
+    const label=formatPredictionDeadline(predictionDeadlineMs(game));
+    const title=label?`Prazo encerrado em ${label}.`:"Prazo encerrado.";
+    chips.push(`<span class="pal-state-chip closed" title="${esc(title)}"><span class="dot"></span>Prazo encerrado</span>`);
+  }
+  if(!chips.length) return "";
+  return `<div class="pal-state-chips ${opts.compact?"compact":""}">${chips.join("")}</div>`;
+}
+function predictionStateSlotHTML(scope,pi,gid,game,pal,opts={}){
+  const key=`${pi}_${gid}`;
+  return `<div class="pal-state-slot" id="${esc(predictionStateId(scope,pi,gid))}">${predictionStateChipsHTML(key,game,pal,opts)}</div>`;
+}
+function refreshPredictionStateIndicators(pi,gid){
+  const game=gameById(gid);
+  if(!game) return;
+  const key=`${pi}_${gid}`;
+  const pal=S.palpites[key]||{};
+  [
+    {scope:"pal",compact:false},
+    {scope:"bk",compact:true}
+  ].forEach(item=>{
+    const el=document.getElementById(predictionStateId(item.scope,pi,gid));
+    if(el) el.innerHTML=predictionStateChipsHTML(key,game,pal,{compact:item.compact});
+  });
+}
+
 function bracketCard(game,opts){
   if(!game) return "";
   opts=opts||{};
@@ -7810,6 +7883,7 @@ function bracketCard(game,opts){
     <div class="bk-divider"></div>
     ${rowHTML(teams.t2,"t2",v2,2)}
     ${palTiebreakControl(palPi,game,teams,pal,disabled||waiting,"bk")}
+    ${predictionStateSlotHTML("bk",palPi,game.id,game,pal,{compact:true})}
   </div>`;
 }
 
@@ -7884,7 +7958,10 @@ function renderPalpiteRow(game){
   if(waiting){
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",true)}
-      <div class="pal-card-status">aguardando definição</div>
+      <div>
+        <div class="pal-card-status">aguardando definição</div>
+        ${predictionStateSlotHTML("pal",palPi,game.id,game,pal)}
+      </div>
       ${palTeamHTML(teams.t2,"r",true)}
     </div>`;
   }else{
@@ -7904,6 +7981,7 @@ function renderPalpiteRow(game){
           ${scoreControl(`p_${palPi}_${game.id}_2`,v2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
         </div>
         ${palTiebreakControl(palPi,game,teams,pal,disabled)}
+        ${predictionStateSlotHTML("pal",palPi,game.id,game,pal)}
         ${statusNote}
       </div>
       ${palTeamHTML(teams.t2,"r",!teams.ready)}
