@@ -3107,7 +3107,7 @@ const TEAM_FLAGS = {
   "Inglaterra":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}","Croácia":"🇭🇷","Gana":"🇬🇭","Panamá":"🇵🇦"
 };
 
-const DEFAULT_PARTICIPANTS = ["Leo B.","Leo C.","Gabriel","Gustavo","Otávio","Vitão","Thyago"];
+const DEFAULT_PARTICIPANTS = ["Leo B.","Leo C.","Gabriel","Gustavo","Otávio","Vitão","Thyago","Luiz R."];
 const STORAGE_KEY = "bolao2026v4";
 const OLD_STORAGE_KEYS = ["bolao2026v2"];
 const CAN_USE_LOCAL_STORAGE = (() => {
@@ -3126,6 +3126,7 @@ const SUPABASE_CONFIG = {
 };
 const REMOTE_STATE_ID = "main";
 const REMOTE_POLL_MS = 30000;
+const GROUP_AND_PODIO_LOCK_UTC = "2026-06-11T18:00:00Z";
 const GROUP_KEYS = Object.keys(GROUPS);
 const COUNTRY_LIST = Object.freeze(Object.values(GROUPS).flat());
 const PODIO_FIELDS = Object.freeze([
@@ -3411,6 +3412,7 @@ function completePredictionVisibleZero(pal){
 function applyLocalPredictionDraft(pi,gid,w,value){
   if(!canEditParticipant(pi)) return;
   const game=gameById(gid);
+  if(predictionDeadlineClosed(game)) return;
   const key=`${pi}_${gid}`;
   if(!S.palpites[key]) S.palpites[key]={};
   const n=parseInt(value,10);
@@ -3468,7 +3470,7 @@ function trackScoreDraftInput(input){
 }
 function remoteErrorText(error){
   const msg=error&&error.message?error.message:String(error||"");
-  if(msg.includes("Palpites encerrados")) return "Este jogo já começou. Palpites encerrados.";
+  if(msg.includes("Palpites encerrados")) return msg;
   if(msg.includes("ko_winner")||msg.includes("ko_decision")||msg.includes("after_et")||msg.includes("pens_s")||msg.includes("penalty_shootout")) return "Atualize o Supabase com as colunas do mata-mata para salvar desempates, prorrogação e pênaltis.";
   if(msg.includes("No suitable key")||msg.includes("wrong key type")||error?.code==="PGRST301") return "A chave pública do Supabase parece inválida ou foi trocada. Atualize o anonKey/publishable key no SUPABASE_CONFIG.";
   if(msg.includes("duplicate key")) return "Esse participante já foi vinculado a outra conta.";
@@ -3699,7 +3701,7 @@ async function loadRemoteData(showToast=false,options={}){
   if(currentProfile&&!palSelectionTouched) palPi=currentProfile.participant_index;
   setSyncStatus("ok",currentProfile?`Online como ${participantName(currentProfile.participant_index)}`:"Conta sem participante vinculado.");
   if(showToast&&currentProfile) toast("Bolão online sincronizado.");
-  // Admins sincronizam os horários dos jogos pra o trigger do banco bloquear palpites após o início.
+  // Admins sincronizam os horários dos jogos para o trigger do banco calcular os prazos.
   if(isAdmin()) syncGameKickoffsRemote();
   if(activeTab==="api-test"){
     await loadApiTestRemote(false,{silent:true,skipRender:true});
@@ -3921,6 +3923,8 @@ function savePredictionRemote(pi,gid){
   if(!remoteClient) return;
   if(!requireOnlineLogin()) return;
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");loadRemoteData(false);return;}
+  const game=gameById(gid);
+  if(predictionDeadlineClosed(game)){toast(predictionClosedMessage(game));loadRemoteData(false);return;}
   const key=`${pi}_${gid}`;
   const pal=S.palpites[`${pi}_${gid}`]||{};
   pendingPredictionWrites.add(key);
@@ -3941,6 +3945,7 @@ function savePodioRemote(pi){
   if(!remoteClient) return;
   if(!requireOnlineLogin()) return;
   if(!canEditParticipant(pi)){toast("Você só pode alterar seu próprio pódio.");loadRemoteData(false);return;}
+  if(podioPredictionDeadlineClosed()){toast(podioClosedMessage());loadRemoteData(false);return;}
   const pd=normalizePodio(S.podio[pi]||{});
   dirtyPodioKeys.add(pi);
   pendingPodioWrites.add(pi);
@@ -3991,7 +3996,7 @@ function saveConfigRemote(){
 }
 
 // Empurra os horários estáticos do calendário pra tabela game_kickoffs.
-// O trigger no banco usa essa tabela pra impedir palpites após o início do jogo.
+// O trigger no banco usa essa tabela para calcular os prazos de palpites.
 // Idempotente — só admins precisam rodar; demais usuários falham por RLS sem problema.
 let gameKickoffsSyncedAt=0;
 async function syncGameKickoffsRemote(){
@@ -4415,6 +4420,58 @@ function brl(n){return new Intl.NumberFormat("pt-BR",{style:"currency",currency:
 function gameById(id){return GAMES.find(g=>g.id===id);}
 function groupGames(){return GAMES.filter(g=>!g.ko);}
 function koGames(){return GAMES.filter(g=>g.ko);}
+function gameKickoffMs(game){
+  const ms=game?.utc?new Date(game.utc).getTime():NaN;
+  return Number.isFinite(ms)?ms:NaN;
+}
+function groupAndPodioDeadlineMs(){
+  const ms=new Date(GROUP_AND_PODIO_LOCK_UTC).getTime();
+  return Number.isFinite(ms)?ms:NaN;
+}
+function predictionDeadlineMs(game){
+  if(!game) return NaN;
+  if(!game.ko) return groupAndPodioDeadlineMs();
+  return gameKickoffMs(game);
+}
+function deadlineClosed(ms){
+  return Number.isFinite(ms)&&Date.now()>=ms;
+}
+function predictionDeadlineClosed(game){
+  return deadlineClosed(predictionDeadlineMs(game));
+}
+function podioPredictionDeadlineClosed(){
+  return deadlineClosed(groupAndPodioDeadlineMs());
+}
+function formatPredictionDeadline(ms){
+  if(!Number.isFinite(ms)) return "";
+  return new Intl.DateTimeFormat("pt-BR",{
+    timeZone:BR_TIME_ZONE,
+    weekday:"short",
+    day:"2-digit",
+    month:"short",
+    hour:"2-digit",
+    minute:"2-digit"
+  }).format(new Date(ms)).replace(/\./g,"");
+}
+function groupAndPodioDeadlineText(){
+  const deadline=groupAndPodioDeadlineMs();
+  const label=formatPredictionDeadline(deadline);
+  if(!label) return "";
+  return deadlineClosed(deadline)
+    ? `Prazo encerrado em ${label}`
+    : `Grupos e pódio liberados até ${label}`;
+}
+function predictionClosedMessage(game){
+  if(game&&!game.ko){
+    const label=formatPredictionDeadline(groupAndPodioDeadlineMs());
+    return label?`Palpites dos grupos encerrados em ${label}.`:"Palpites dos grupos encerrados.";
+  }
+  return "Este jogo já começou. Palpites encerrados.";
+}
+function podioClosedMessage(){
+  const label=formatPredictionDeadline(groupAndPodioDeadlineMs());
+  return label?`Palpites de pódio encerrados em ${label}.`:"Palpites de pódio encerrados.";
+}
 function teamFlag(name){return TEAM_FLAGS[name]||"";}
 function teamHTML(name,side="",muted=false){
   const flag=teamFlag(name);
@@ -7370,11 +7427,13 @@ function renderPalpites(){
       filtered=filtered.filter(g=>g.phase===palFilter);
     }
     const filledFiltered=filtered.filter(g=>isPredictionComplete(g,S.palpites[`${palPi}_${g.id}`])).length;
+    const deadlineText=groupAndPodioDeadlineText();
     let inner=`
       <div class="pal-filters">
         <div class="fbar">${groupFilters.map(p=>`<button class="fbtn ${palFilter===p.k?"active":""}" onclick="setPalFilter('${esc(p.k)}')">${esc(p.l)}</button>`).join("")}</div>
         <div class="progress-pill" id="palProgress">${filledFiltered}/${filtered.length} preenchidos</div>
-      </div>`;
+      </div>
+      ${deadlineText?`<div class="pal-stage-note"><span>${esc(deadlineText)}</span></div>`:""}`;
     let curPhase="";
     filtered.forEach(game=>{
       if(game.phase!==curPhase){
@@ -7448,7 +7507,9 @@ function renderPodioBody(){
   const myPodio=normalizePodio((palPi!=null&&S.podio[palPi])||{});
   const myPodioScore=podioScore(myPodio,ap);
   const apFilled=pos.filter(p=>ap[p.k]).length;
-  const meCanEditOwn=canEditParticipant(palPi);
+  const podioClosed=podioPredictionDeadlineClosed();
+  const podioDeadlineText=groupAndPodioDeadlineText();
+  const meCanEditOwn=canEditParticipant(palPi)&&!podioClosed;
 
   const officialCard=`
     <div class="card" style="margin-bottom:0">
@@ -7497,9 +7558,9 @@ function renderPodioBody(){
           <h3>Pódio de ${esc(participantName(palPi))}</h3>
           <p>Escolha os quatro primeiros colocados para garantir pontos extras no encerramento.</p>
         </div>
-        <span class="podio-status-chip ${myPodioScore>0?"":"locked"}">
+        <span class="podio-status-chip ${podioClosed||myPodioScore<=0?"locked":""}">
           <span class="dot"></span>
-          ${myPodioScore>0?`+${myPodioScore} pts já garantidos`:"Sem pontos ainda"}
+          ${podioClosed?"Prazo encerrado":myPodioScore>0?`+${myPodioScore} pts já garantidos`:"Sem pontos ainda"}
         </span>
       </div>
       <div class="podium-cards" style="margin-top:14px">
@@ -7526,7 +7587,8 @@ function renderPodioBody(){
           </div>`;
         }).join("")}
       </div>
-      ${!meCanEditOwn?`<div class="podium-locked-note">\u{1F441}️ Você está visualizando os palpites de ${esc(participantName(palPi))}.</div>`:""}
+      ${podioClosed&&canEditParticipant(palPi)&&podioDeadlineText?`<div class="podium-locked-note">${esc(podioDeadlineText)}</div>`:""}
+      ${!canEditParticipant(palPi)?`<div class="podium-locked-note">\u{1F441}️ Você está visualizando os palpites de ${esc(participantName(palPi))}.</div>`:""}
     </div>`;
 
   // Leaderboard ordenada por pontos do pódio (desc)
@@ -7702,7 +7764,8 @@ function bracketCard(game,opts){
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
   const gameStarted=!!(game.utc&&new Date()>=new Date(game.utc));
-  const disabled=!canEdit||gameStarted;
+  const deadlineClosed=predictionDeadlineClosed(game);
+  const disabled=!canEdit||deadlineClosed;
   const waiting=!teams.ready;
   const dateParts=game.date?formatGameDateParts(game.date):null;
 
@@ -7721,8 +7784,8 @@ function bracketCard(game,opts){
     else badge=`<span class="bk-badge" style="background:#9ca3af">0</span>`;
   }
 
-  const v1=canEdit&&!gameStarted&&!waiting?(pal.s1??null):pal.s1;
-  const v2=canEdit&&!gameStarted&&!waiting?(pal.s2??null):pal.s2;
+  const v1=canEdit&&!deadlineClosed&&!waiting?(pal.s1??null):pal.s1;
+  const v2=canEdit&&!deadlineClosed&&!waiting?(pal.s2??null):pal.s2;
   const inp=(id,val,which)=>`<input id="${id}" type="number" min="0" max="30" inputmode="numeric" value="${val==null?"":esc(val)}" placeholder="–" ${disabled||waiting?"disabled":""} onchange="setPal(${palPi},'${game.id}',${which},this.value)">`;
 
   const rowHTML=(name,side,val,which)=>{
@@ -7780,7 +7843,8 @@ function renderPalpiteRow(game){
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
   const gameStarted=!!(game.utc&&new Date()>=new Date(game.utc));
-  const disabled=!canEdit||gameStarted;
+  const deadlineClosed=predictionDeadlineClosed(game);
+  const disabled=!canEdit||deadlineClosed;
   const waiting=game.ko&&!teams.ready;
   const dateParts=game.date?formatGameDateParts(game.date):null;
   let cardCls="pal-card";
@@ -7824,8 +7888,8 @@ function renderPalpiteRow(game){
       ${palTeamHTML(teams.t2,"r",true)}
     </div>`;
   }else{
-    const v1=canEdit&&!gameStarted?(pal.s1??null):pal.s1;
-    const v2=canEdit&&!gameStarted?(pal.s2??null):pal.s2;
+    const v1=canEdit&&!deadlineClosed?(pal.s1??null):pal.s1;
+    const v2=canEdit&&!deadlineClosed?(pal.s2??null):pal.s2;
     const statusNote=gameStarted&&!res
       ? `<div class="pal-card-status live">encerrado · aguardando resultado</div>`
       : res
@@ -7858,8 +7922,8 @@ function setPalFilter(k){palFilter=k;renderPalpites();}
 function setPal(pi,gid,w,v){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");renderPalpites();return;}
   const game=gameById(gid);
-  if(game&&game.utc&&new Date()>=new Date(game.utc)){
-    toast("Este jogo já começou. Palpites encerrados.");
+  if(predictionDeadlineClosed(game)){
+    toast(predictionClosedMessage(game));
     renderPalpites();
     return;
   }
@@ -7887,8 +7951,8 @@ function setPal(pi,gid,w,v){
 function setPalTiebreak(pi,gid,value){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");renderPalpites();return;}
   const game=gameById(gid);
-  if(game&&game.utc&&new Date()>=new Date(game.utc)){
-    toast("Este jogo já começou. Palpites encerrados.");
+  if(predictionDeadlineClosed(game)){
+    toast(predictionClosedMessage(game));
     renderPalpites();
     return;
   }
@@ -7934,6 +7998,7 @@ function setAP(k,v){
 }
 function setPodio(pi,k,v){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seu próprio pódio.");renderPodio();return;}
+  if(podioPredictionDeadlineClosed()){toast(podioClosedMessage());renderPodio();return;}
   const draft=draftPodio(S.podio[pi]||{},k,v);
   if(!draft.ok){
     toast(`${draft.value} já foi escolhido como ${podioLabel(draft.duplicateKey)}.`);

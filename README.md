@@ -112,6 +112,8 @@ Critérios de desempate no ranking: total de pontos → cravadas → menor núme
 
 No mata-mata, acertar quem passa soma +1 ao que o palpite já marcou no placar. Se o resultado oficial empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1. Quem palpitou vitória de uma seleção e o jogo empatou aos 90 minutos faz 0 nesse jogo.
 
+Os palpites da fase de grupos e os palpites de pódio podem ser preenchidos ou editados somente até 1 hora antes da primeira partida da Copa. No mata-mata, cada palpite continua aberto até o início do próprio jogo.
+
 ---
 
 ## Como fazer o deploy
@@ -143,6 +145,8 @@ Sem essa configuração, o app funciona normalmente em modo offline usando apena
 
 Depois do setup inicial, cadastre os e-mails dos participantes em `invited_emails` ou pela aba **Configurações** depois que o primeiro administrador assumir o controle do bolão.
 
+Para aplicar somente a trava nova de palpites em um projeto Supabase já existente, rode `supabase_prediction_lock_update.sql` no SQL Editor. Ele cria/atualiza o prazo canônico `group_podium = 2026-06-11 18:00:00+00`, reinstala os triggers de `predictions` e `podium_predictions` e retorna uma linha de verificação.
+
 ---
 
 ## Participantes e configuração
@@ -150,7 +154,7 @@ Depois do setup inicial, cadastre os e-mails dos participantes em `invited_email
 Os participantes padrão estão definidos em:
 
 ```js
-const DEFAULT_PARTICIPANTS = ["Leo B.", "Leo C.", "Gabriel", "Gustavo", "Otávio", "Vitão", "Thyago"];
+const DEFAULT_PARTICIPANTS = ["Leo B.", "Leo C.", "Gabriel", "Gustavo", "Otávio", "Vitão", "Thyago", "Luiz R."];
 ```
 
 Em modo online, cada participante faz login com sua conta Supabase e vincula o usuário ao seu índice na lista. Em modo offline, a seleção é feita diretamente na aba **Configurações**.

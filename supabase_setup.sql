@@ -211,13 +211,35 @@ create table if not exists public.podium_predictions (
   updated_at timestamptz not null default now()
 );
 
--- Horários oficiais usados pelo banco para bloquear palpites depois do início.
+-- Horários oficiais usados pelo banco para calcular os prazos dos palpites.
 -- O app preenche essa tabela quando um admin abre o bolão online.
 create table if not exists public.game_kickoffs (
   game_id text primary key,
   kickoff_utc timestamptz not null,
   updated_at timestamptz not null default now()
 );
+
+-- Prazo canônico para travas que não dependem de cada jogo individual.
+-- Mantém a decisão no banco, independente de um admin abrir o app para sincronizar horários.
+create table if not exists public.prediction_lock_deadlines (
+  lock_key text primary key,
+  lock_at timestamptz not null,
+  description text,
+  updated_at timestamptz not null default now(),
+  updated_by uuid references auth.users(id) on delete set null,
+  constraint prediction_lock_deadlines_key_check check (lock_key in ('group_podium'))
+);
+
+insert into public.prediction_lock_deadlines (lock_key, lock_at, description)
+values (
+  'group_podium',
+  '2026-06-11 18:00:00+00'::timestamptz,
+  'Fase de grupos e pódio fecham 1 hora antes da primeira partida da Copa.'
+)
+on conflict (lock_key) do update set
+  lock_at = excluded.lock_at,
+  description = excluded.description,
+  updated_at = now();
 
 alter table public.profiles enable row level security;
 alter table public.settings enable row level security;
@@ -227,6 +249,7 @@ alter table public.actual_podium enable row level security;
 alter table public.podium_predictions enable row level security;
 alter table public.invited_emails enable row level security;
 alter table public.game_kickoffs enable row level security;
+alter table public.prediction_lock_deadlines enable row level security;
 
 grant select, insert, update, delete on public.profiles to authenticated;
 grant select, insert, update, delete on public.settings to authenticated;
@@ -236,6 +259,7 @@ grant select, insert, update, delete on public.actual_podium to authenticated;
 grant select, insert, update, delete on public.podium_predictions to authenticated;
 grant select, insert, update, delete on public.invited_emails to authenticated;
 grant select, insert, update, delete on public.game_kickoffs to authenticated;
+grant select, insert, update, delete on public.prediction_lock_deadlines to authenticated;
 
 drop trigger if exists protect_last_admin on public.profiles;
 create trigger protect_last_admin
@@ -329,7 +353,41 @@ create policy "game_kickoffs admin delete"
 on public.game_kickoffs for delete to authenticated
 using (app_private.is_admin());
 
--- Recusa edição de palpites depois do início do jogo no servidor.
+drop policy if exists "prediction_lock_deadlines visible" on public.prediction_lock_deadlines;
+create policy "prediction_lock_deadlines visible"
+on public.prediction_lock_deadlines for select to authenticated using (true);
+
+drop policy if exists "prediction_lock_deadlines admin insert" on public.prediction_lock_deadlines;
+create policy "prediction_lock_deadlines admin insert"
+on public.prediction_lock_deadlines for insert to authenticated
+with check (app_private.is_admin());
+
+drop policy if exists "prediction_lock_deadlines admin update" on public.prediction_lock_deadlines;
+create policy "prediction_lock_deadlines admin update"
+on public.prediction_lock_deadlines for update to authenticated
+using (app_private.is_admin()) with check (app_private.is_admin());
+
+drop policy if exists "prediction_lock_deadlines admin delete" on public.prediction_lock_deadlines;
+create policy "prediction_lock_deadlines admin delete"
+on public.prediction_lock_deadlines for delete to authenticated
+using (app_private.is_admin());
+
+create or replace function app_private.group_podium_lock_at()
+returns timestamptz
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(
+    (select lock_at from public.prediction_lock_deadlines where lock_key = 'group_podium'),
+    '2026-06-11 18:00:00+00'::timestamptz
+  );
+$$;
+
+-- Recusa edição de palpites fora do prazo no servidor.
+-- Grupos fecham 1 hora antes da primeira partida da Copa.
+-- Mata-mata fecha no início de cada jogo.
 -- Admin continua podendo corrigir/importar dados.
 create or replace function app_private.predictions_kickoff_guard()
 returns trigger
@@ -338,19 +396,39 @@ security definer
 set search_path = public
 as $$
 declare
+  target_game_id text;
   kickoff timestamptz;
+  deadline timestamptz;
 begin
+  if tg_op = 'DELETE' then
+    target_game_id := old.game_id;
+  else
+    target_game_id := new.game_id;
+  end if;
+
   if app_private.is_admin() then
     if tg_op = 'DELETE' then return old; end if;
     return new;
   end if;
-  select kickoff_utc into kickoff
-  from public.game_kickoffs
-  where game_id = coalesce(new.game_id, old.game_id);
-  if kickoff is not null and now() >= kickoff then
-    raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
-      using errcode = 'P0001';
+
+  if target_game_id ~ '^G[A-L][1-6]$' then
+    deadline := app_private.group_podium_lock_at();
+
+    if deadline is not null and now() >= deadline then
+      raise exception 'Palpites encerrados: fase de grupos fechou 1 hora antes da primeira partida da Copa.'
+        using errcode = 'P0001';
+    end if;
+  else
+    select kickoff_utc into kickoff
+    from public.game_kickoffs
+    where game_id = target_game_id;
+
+    if kickoff is not null and now() >= kickoff then
+      raise exception 'Palpites encerrados: o jogo % já começou.', target_game_id
+        using errcode = 'P0001';
+    end if;
   end if;
+
   if tg_op = 'DELETE' then return old; end if;
   return new;
 end;
@@ -365,6 +443,44 @@ drop trigger if exists predictions_kickoff_guard_delete on public.predictions;
 create trigger predictions_kickoff_guard_delete
 before delete on public.predictions
 for each row execute function app_private.predictions_kickoff_guard();
+
+-- O pódio dos participantes fecha junto com os palpites da fase de grupos:
+-- 1 hora antes da primeira partida da Copa.
+create or replace function app_private.podium_predictions_deadline_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deadline timestamptz;
+begin
+  if app_private.is_admin() then
+    if tg_op = 'DELETE' then return old; end if;
+    return new;
+  end if;
+
+  deadline := app_private.group_podium_lock_at();
+
+  if deadline is not null and now() >= deadline then
+    raise exception 'Palpites encerrados: pódio fechou 1 hora antes da primeira partida da Copa.'
+      using errcode = 'P0001';
+  end if;
+
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists podium_predictions_deadline_guard on public.podium_predictions;
+create trigger podium_predictions_deadline_guard
+before insert or update on public.podium_predictions
+for each row execute function app_private.podium_predictions_deadline_guard();
+
+drop trigger if exists podium_predictions_deadline_guard_delete on public.podium_predictions;
+create trigger podium_predictions_deadline_guard_delete
+before delete on public.podium_predictions
+for each row execute function app_private.podium_predictions_deadline_guard();
 
 drop policy if exists "settings visible to signed in users" on public.settings;
 create policy "settings visible to signed in users"

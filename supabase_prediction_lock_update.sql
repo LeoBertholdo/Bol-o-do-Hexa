@@ -1,29 +1,28 @@
--- Correções de segurança do Bolão do Hexa 2026.
--- Cole tudo no SQL Editor do Supabase e clique em Run.
--- Idempotente: pode rodar quantas vezes quiser.
--- Observação: projetos novos que rodarem o supabase_setup.sql atual já recebem
--- estas correções principais. Este arquivo continua útil para projetos antigos.
---
--- O que isso resolve (numerada como no review):
---   #3  Trava de prazo no servidor pra palpites da Copa (tabela predictions).
---   #5  E-mails da lista de convidados deixam de ser visíveis pra todo mundo.
---   #6  Trava de kickoff no servidor pra palpites do Brasileirão (test_predictions).
+-- Bolao do Hexa 2026 - trava confiavel de palpites.
+-- Cole este arquivo no SQL Editor do Supabase e clique em Run.
+-- Idempotente: pode rodar mais de uma vez.
 
 begin;
 
--- ============================================================
--- #3 — Trava de palpites por prazo (predictions da Copa)
--- ============================================================
--- Tabela auxiliar com o horário de cada jogo. O app preenche
--- automaticamente quando um admin abre o bolão online.
+create schema if not exists app_private;
+
+do $$
+begin
+  if to_regprocedure('app_private.is_admin()') is null then
+    raise exception 'Rode supabase_setup.sql antes deste arquivo: app_private.is_admin() nao existe.';
+  end if;
+end $$;
+
+-- Mantem o mata-mata protegido por horario de cada jogo.
 create table if not exists public.game_kickoffs (
   game_id text primary key,
   kickoff_utc timestamptz not null,
   updated_at timestamptz not null default now()
 );
 
--- Prazo canônico para travas que não dependem de cada jogo individual.
--- Mantém a decisão no banco, independente de um admin abrir o app para sincronizar horários.
+-- Prazo canonico no banco para grupos e podio.
+-- O horario abaixo e 1 hora antes do primeiro jogo da Copa:
+-- 2026-06-11 19:00:00 UTC -> trava em 2026-06-11 18:00:00 UTC.
 create table if not exists public.prediction_lock_deadlines (
   lock_key text primary key,
   lock_at timestamptz not null,
@@ -37,7 +36,7 @@ insert into public.prediction_lock_deadlines (lock_key, lock_at, description)
 values (
   'group_podium',
   '2026-06-11 18:00:00+00'::timestamptz,
-  'Fase de grupos e pódio fecham 1 hora antes da primeira partida da Copa.'
+  'Fase de grupos e podio fecham 1 hora antes da primeira partida da Copa.'
 )
 on conflict (lock_key) do update set
   lock_at = excluded.lock_at,
@@ -46,28 +45,10 @@ on conflict (lock_key) do update set
 
 alter table public.game_kickoffs enable row level security;
 alter table public.prediction_lock_deadlines enable row level security;
+
 grant select on public.game_kickoffs to authenticated;
 grant insert, update, delete on public.game_kickoffs to authenticated;
 grant select, insert, update, delete on public.prediction_lock_deadlines to authenticated;
-
-drop policy if exists "game_kickoffs visible" on public.game_kickoffs;
-create policy "game_kickoffs visible"
-on public.game_kickoffs for select to authenticated using (true);
-
-drop policy if exists "game_kickoffs admin insert" on public.game_kickoffs;
-create policy "game_kickoffs admin insert"
-on public.game_kickoffs for insert to authenticated
-with check (app_private.is_admin());
-
-drop policy if exists "game_kickoffs admin update" on public.game_kickoffs;
-create policy "game_kickoffs admin update"
-on public.game_kickoffs for update to authenticated
-using (app_private.is_admin()) with check (app_private.is_admin());
-
-drop policy if exists "game_kickoffs admin delete" on public.game_kickoffs;
-create policy "game_kickoffs admin delete"
-on public.game_kickoffs for delete to authenticated
-using (app_private.is_admin());
 
 drop policy if exists "prediction_lock_deadlines visible" on public.prediction_lock_deadlines;
 create policy "prediction_lock_deadlines visible"
@@ -101,10 +82,6 @@ as $$
   );
 $$;
 
--- Trigger que recusa palpites fora do prazo.
--- Grupos fecham 1 hora antes da primeira partida da Copa.
--- Mata-mata fecha no início de cada jogo.
--- Admin continua podendo corrigir (ex.: registrar resultado oficial).
 create or replace function app_private.predictions_kickoff_guard()
 returns trigger
 language plpgsql
@@ -140,7 +117,7 @@ begin
     where game_id = target_game_id;
 
     if kickoff is not null and now() >= kickoff then
-      raise exception 'Palpites encerrados: o jogo % já começou.', target_game_id
+      raise exception 'Palpites encerrados: o jogo % ja comecou.', target_game_id
         using errcode = 'P0001';
     end if;
   end if;
@@ -160,8 +137,6 @@ create trigger predictions_kickoff_guard_delete
 before delete on public.predictions
 for each row execute function app_private.predictions_kickoff_guard();
 
--- O pódio dos participantes fecha junto com os palpites da fase de grupos:
--- 1 hora antes da primeira partida da Copa.
 create or replace function app_private.podium_predictions_deadline_guard()
 returns trigger
 language plpgsql
@@ -179,7 +154,7 @@ begin
   deadline := app_private.group_podium_lock_at();
 
   if deadline is not null and now() >= deadline then
-    raise exception 'Palpites encerrados: pódio fechou 1 hora antes da primeira partida da Copa.'
+    raise exception 'Palpites encerrados: podio fechou 1 hora antes da primeira partida da Copa.'
       using errcode = 'P0001';
   end if;
 
@@ -198,57 +173,26 @@ create trigger podium_predictions_deadline_guard_delete
 before delete on public.podium_predictions
 for each row execute function app_private.podium_predictions_deadline_guard();
 
--- ============================================================
--- #6 — Mesma trava pros palpites do Brasileirão (test_predictions)
---      Usa a kickoff_utc que já está em api_fixture_map.
--- ============================================================
-create or replace function app_private.test_predictions_kickoff_guard()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-declare
-  kickoff timestamptz;
-begin
-  if app_private.is_admin() then
-    if tg_op = 'DELETE' then return old; end if;
-    return new;
-  end if;
-  select kickoff_utc into kickoff
-  from public.api_fixture_map
-  where game_id = coalesce(new.game_id, old.game_id);
-  if kickoff is not null and now() >= kickoff then
-    raise exception 'Palpites encerrados: o jogo % já começou.', coalesce(new.game_id, old.game_id)
-      using errcode = 'P0001';
-  end if;
-  if tg_op = 'DELETE' then return old; end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists test_predictions_kickoff_guard on public.test_predictions;
-create trigger test_predictions_kickoff_guard
-before insert or update on public.test_predictions
-for each row execute function app_private.test_predictions_kickoff_guard();
-
-drop trigger if exists test_predictions_kickoff_guard_delete on public.test_predictions;
-create trigger test_predictions_kickoff_guard_delete
-before delete on public.test_predictions
-for each row execute function app_private.test_predictions_kickoff_guard();
-
--- ============================================================
--- #5 — Esconde e-mails dos demais usuários
--- ============================================================
--- Antes: qualquer pessoa logada via toda a lista de convidados.
--- Agora: cada um vê só o próprio convite; admin vê tudo.
-drop policy if exists "invited emails visible to signed in users" on public.invited_emails;
-drop policy if exists "invited emails self select" on public.invited_emails;
-create policy "invited emails self select"
-on public.invited_emails for select to authenticated
-using (
-  email = (auth.jwt() ->> 'email')
-  or app_private.is_admin()
-);
-
 commit;
+
+select
+  lock_key,
+  lock_at,
+  lock_at at time zone 'America/Sao_Paulo' as lock_at_sao_paulo,
+  app_private.group_podium_lock_at() as effective_lock_at,
+  exists (
+    select 1
+    from pg_trigger
+    where tgname = 'predictions_kickoff_guard'
+      and tgrelid = 'public.predictions'::regclass
+      and not tgisinternal
+  ) as predictions_trigger_ok,
+  exists (
+    select 1
+    from pg_trigger
+    where tgname = 'podium_predictions_deadline_guard'
+      and tgrelid = 'public.podium_predictions'::regclass
+      and not tgisinternal
+  ) as podium_trigger_ok
+from public.prediction_lock_deadlines
+where lock_key = 'group_podium';
