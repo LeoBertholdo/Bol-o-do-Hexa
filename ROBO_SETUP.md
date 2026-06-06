@@ -205,6 +205,9 @@ E uma vez que os jogos comecem:
 select m.home_team, m.away_team,
        l.status_short, l.elapsed,
        l.goals_home, l.goals_away,
+       l.yellow_cards_home, l.yellow_cards_away,
+       l.yellow_red_cards_home, l.yellow_red_cards_away,
+       l.red_cards_home, l.red_cards_away,
        l.last_synced_at
 from public.api_fixture_map m
 left join public.live_scores l on l.game_id = m.game_id

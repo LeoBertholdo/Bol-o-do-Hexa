@@ -461,7 +461,14 @@ function extractCardCounts(match: any): {
 }
 
 function hasCardCounts(cards: ReturnType<typeof extractCardCounts>): boolean {
-  return Object.values(cards).some(v => v != null);
+  return [
+    cards.yellowHome,
+    cards.yellowAway,
+    cards.yellowRedHome,
+    cards.yellowRedAway,
+    cards.redHome,
+    cards.redAway
+  ].some(v => v != null);
 }
 
 function toIsoDate(d: Date) {
