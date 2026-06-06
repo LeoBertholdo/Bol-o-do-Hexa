@@ -807,18 +807,21 @@ body.chart-modal-open{overflow:hidden}
 .podio-stat .sv{color:var(--green)}
 
 /* GROUP TABLES */
-.groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(265px,1fr));gap:12px}
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
 .group-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 8px 22px rgba(0,39,118,.06);transition:transform .16s ease,box-shadow .16s ease}
 @media(hover:hover){.group-card:hover{transform:translateY(-2px);box-shadow:0 16px 32px rgba(0,39,118,.12)}}
 .group-title{display:flex;justify-content:space-between;align-items:center;gap:8px;background:linear-gradient(90deg,#eaf3ec,#f6faf3);border-bottom:1px solid var(--border);padding:10px 12px;font-size:.74rem;text-transform:uppercase;letter-spacing:.8px;font-weight:950;color:var(--blue)}
 .group-title span:last-child{font-size:.6rem;letter-spacing:.4px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:999px;padding:3px 9px;white-space:nowrap}
-.group-table{width:100%;border-collapse:collapse;font-size:.78rem}
-.group-table th,.group-table td{padding:7px 8px;border-bottom:1px solid var(--border);text-align:center}
+.group-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.78rem;font-variant-numeric:tabular-nums}
+.group-table th,.group-table td{padding:7px 4px;border-bottom:1px solid var(--border);text-align:center}
 .group-table th{font-size:.58rem;text-transform:uppercase;color:var(--muted);font-weight:900;background:#fbfdf8}
-.group-table td:first-child,.group-table th:first-child{text-align:left}
+.group-table td:first-child,.group-table th:first-child{width:44%;text-align:left;padding-left:10px;padding-right:5px}
+.group-table th:not(:first-child),.group-table td:not(:first-child){width:7%}
 .group-table tr:last-child td{border-bottom:0}
-.team-cell{display:flex;align-items:center;gap:6px;min-width:0;font-weight:850}
+.team-cell{display:flex;align-items:center;gap:5px;min-width:0;font-weight:850}
 .team-cell .team-name{white-space:normal}
+.group-table .team-name{min-width:0;line-height:1.13;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+.group-table .flag,.group-table .pos-pill{flex:0 0 auto}
 .group-table .pts-cell{font-weight:950;color:var(--green)}
 .qual-row{background:#f3fff5}
 .qual-row td:first-child{box-shadow:inset 3px 0 0 #34c77b}
