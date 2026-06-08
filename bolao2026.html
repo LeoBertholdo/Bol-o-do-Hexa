@@ -1116,6 +1116,9 @@ body.chart-modal-open{overflow:hidden}
 .pal-card-score{
   display:flex;align-items:center;gap:7px;flex-shrink:0;
 }
+.pal-card-main{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;
+}
 .pal-card-score .ssep{color:var(--muted);font-weight:950;font-size:.92rem}
 .pal-card-score .score-control{box-shadow:0 4px 10px rgba(0,39,118,.08)}
 .pal-card-status{
@@ -1165,7 +1168,7 @@ body.chart-modal-open{overflow:hidden}
   border:1px solid #d8e5ff;background:#f5f9ff;color:var(--blue);
   white-space:nowrap;
 }
-.pal-self-compare.same{border-color:#b8ebcb;background:#edfdf3;color:var(--green-2)}
+.pal-self-compare.same{border-color:#d8e5ff;background:#f5f9ff;color:var(--blue)}
 .pal-self-compare.incomplete{border-style:dashed;color:#6b7280;background:#f8fafc}
 .pal-self-label,.pal-hidden-note .label{
   font-size:.5rem;text-transform:uppercase;letter-spacing:.55px;color:inherit;opacity:.72;
@@ -8201,7 +8204,7 @@ function renderPalpiteRow(game){
   if(!canViewPal){
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",!teams.ready)}
-      <div>
+      <div class="pal-card-main">
         ${hiddenPredictionNoticeHTML(game)}
       </div>
       ${palTeamHTML(teams.t2,"r",!teams.ready)}
@@ -8209,7 +8212,7 @@ function renderPalpiteRow(game){
   }else if(waiting){
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",true)}
-      <div>
+      <div class="pal-card-main">
         <div class="pal-card-status">aguardando definição</div>
         ${predictionStateSlotHTML("pal",palPi,game.id,game,pal)}
       </div>
@@ -8225,7 +8228,7 @@ function renderPalpiteRow(game){
         : "";
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",!teams.ready)}
-      <div>
+      <div class="pal-card-main">
         <div class="pal-card-score">
           ${scoreControl(`p_${palPi}_${game.id}_1`,v1,`setPal(${palPi},'${game.id}',1,this.value)`,"–","onchange",disabled)}
           <span class="ssep">×</span>
