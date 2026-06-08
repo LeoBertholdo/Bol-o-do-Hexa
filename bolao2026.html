@@ -1157,6 +1157,38 @@ body.chart-modal-open{overflow:hidden}
 .pal-card-result .result-detail{font-size:.58rem}
 .pal-card-result .penalty-detail{max-width:220px}
 
+.pal-self-compare,.pal-hidden-note{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-width:0;max-width:100%;margin-top:7px;
+  padding:4px 9px;border-radius:999px;
+  font-size:.62rem;font-weight:950;line-height:1;
+  border:1px solid #d8e5ff;background:#f5f9ff;color:var(--blue);
+  white-space:nowrap;
+}
+.pal-self-compare.same{border-color:#b8ebcb;background:#edfdf3;color:var(--green-2)}
+.pal-self-compare.incomplete{border-style:dashed;color:#6b7280;background:#f8fafc}
+.pal-self-label,.pal-hidden-note .label{
+  font-size:.5rem;text-transform:uppercase;letter-spacing:.55px;color:inherit;opacity:.72;
+}
+.pal-self-score{display:inline-flex;align-items:center;gap:4px}
+.pal-self-score b{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:6px;
+  background:#fff;color:var(--text);box-shadow:inset 0 0 0 1px rgba(0,39,118,.08);
+}
+.pal-self-adv{
+  min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;
+  color:#475569;font-size:.56rem;font-weight:900;
+}
+.pal-hidden-note{border-color:#e4eaf2;background:#f8fafc;color:#64748b}
+.pal-hidden-note .dot{width:6px;height:6px;border-radius:999px;background:currentColor;opacity:.62;flex-shrink:0}
+.bracket-card .pal-self-compare,.bracket-card .pal-hidden-note{
+  align-self:flex-start;margin-top:4px;padding:3px 6px;font-size:.51rem;gap:4px;
+}
+.bracket-card .pal-self-label,.bracket-card .pal-hidden-note .label{font-size:.46rem}
+.bracket-card .pal-self-score b{min-width:16px;height:16px;padding:0 4px;border-radius:5px}
+.bracket-card .pal-self-adv{display:none}
+
 .pal-card-badge{
   display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;min-width:50px;
 }
@@ -7990,11 +8022,54 @@ function refreshPredictionStateIndicators(pi,gid){
   });
 }
 
+function canViewParticipantPrediction(pi,game){
+  const myIdx=myParticipantIndex();
+  if(!isOnlineMode()||isAdmin()||myIdx===pi) return true;
+  return predictionDeadlineClosed(game);
+}
+function predictionRevealLabel(game){
+  const label=formatPredictionDeadline(predictionDeadlineMs(game));
+  if(game?.ko) return label?`Libera ${label}`:"Libera no início do jogo";
+  return label?`Libera ${label}`:"Libera no prazo";
+}
+function hiddenPredictionNoticeHTML(game,scope="pal"){
+  const compact=scope==="bk";
+  return `<div class="pal-hidden-note ${compact?"compact":""}" title="${esc(predictionRevealLabel(game))}">
+    <span class="dot"></span><span class="label">Palpite oculto</span>
+  </div>`;
+}
+function samePrediction(a,b,game){
+  if(!hasScore(a)||!hasScore(b)) return false;
+  const sameScore=+a.s1===+b.s1&&+a.s2===+b.s2;
+  if(!sameScore) return false;
+  if(!game?.ko||+a.s1!==+a.s2) return true;
+  return koAdvancerValue(a.koWinner)===koAdvancerValue(b.koWinner);
+}
+function ownPredictionCompareHTML(game,viewedPal,scope="pal"){
+  const myIdx=myParticipantIndex();
+  if(!Number.isInteger(myIdx)||myIdx===palPi) return "";
+  if(!canViewParticipantPrediction(palPi,game)) return "";
+  const myPal=S.palpites[`${myIdx}_${game.id}`]||{};
+  if(!hasScore(myPal)) return "";
+  const complete=isPredictionComplete(game,myPal);
+  const same=samePrediction(myPal,viewedPal,game);
+  const advancer=game?.ko&&+myPal.s1===+myPal.s2&&myPal.koWinner?`${teamFlag(myPal.koWinner)} ${myPal.koWinner} passa`:"";
+  const compact=scope==="bk";
+  const title=`Seu palpite: ${myPal.s1} x ${myPal.s2}${advancer?` - ${advancer}`:""}`;
+  return `<div class="pal-self-compare ${compact?"compact":""} ${same?"same":""} ${complete?"":"incomplete"}" title="${esc(title)}">
+    <span class="pal-self-label">Seu palpite</span>
+    <span class="pal-self-score"><b>${esc(myPal.s1)}</b><span>×</span><b>${esc(myPal.s2)}</b></span>
+    ${advancer?`<span class="pal-self-adv">${esc(advancer)}</span>`:""}
+  </div>`;
+}
+
 function bracketCard(game,opts){
   if(!game) return "";
   opts=opts||{};
   const key=`${palPi}_${game.id}`;
-  const pal=S.palpites[key]||{};
+  const rawPal=S.palpites[key]||{};
+  const canViewPal=canViewParticipantPrediction(palPi,game);
+  const pal=canViewPal?rawPal:{};
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
@@ -8010,7 +8085,7 @@ function bracketCard(game,opts){
   if(gameStarted&&!res) cls+=" live";
 
   let badge="";
-  if(pal.s1!=null&&pal.s2!=null&&res){
+  if(canViewPal&&pal.s1!=null&&pal.s2!=null&&res){
     const details=scoreDetails(pal,res,game);
     const sc=details?.pts;
     if(details?.exact){cls+=" hit";badge=`<span class="bk-badge">+${sc} cravou</span>`;}
@@ -8037,6 +8112,7 @@ function bracketCard(game,opts){
     <span>${esc(game.id)}</span>
     ${dateParts?`<span class="date">${esc(dateParts.dayMonth)}${game.time?` · ${esc(game.time)}`:""}</span>`:""}
   </div>`;
+  const compareHTML=canViewPal?ownPredictionCompareHTML(game,pal,"bk"):hiddenPredictionNoticeHTML(game,"bk");
 
   return `<div class="${cls}">
     ${badge}
@@ -8044,8 +8120,9 @@ function bracketCard(game,opts){
     ${rowHTML(teams.t1,"t1",v1,1)}
     <div class="bk-divider"></div>
     ${rowHTML(teams.t2,"t2",v2,2)}
-    ${palTiebreakControl(palPi,game,teams,pal,disabled||waiting,"bk")}
-    ${predictionStateSlotHTML("bk",palPi,game.id,game,pal,{compact:true})}
+    ${canViewPal?palTiebreakControl(palPi,game,teams,pal,disabled||waiting,"bk"):""}
+    ${canViewPal?predictionStateSlotHTML("bk",palPi,game.id,game,pal,{compact:true}):""}
+    ${compareHTML}
   </div>`;
 }
 
@@ -8074,7 +8151,9 @@ function palTeamHTML(name,side,muted){
 }
 function renderPalpiteRow(game){
   const key=`${palPi}_${game.id}`;
-  const pal=S.palpites[key]||{};
+  const rawPal=S.palpites[key]||{};
+  const canViewPal=canViewParticipantPrediction(palPi,game);
+  const pal=canViewPal?rawPal:{};
   const res=S.results[game.id];
   const teams=gameTeams(game);
   const canEdit=canEditParticipant(palPi);
@@ -8087,7 +8166,9 @@ function renderPalpiteRow(game){
   let badgeHTML=`<div class="sbadge bem">–</div>`;
   let badgeLbl="aguardando";
   let sc=null;
-  if(pal.s1!=null&&pal.s2!=null&&res){
+  if(!canViewPal){
+    badgeLbl="oculto";
+  }else if(pal.s1!=null&&pal.s2!=null&&res){
     const details=scoreDetails(pal,res,game);
     sc=details?.pts;
     const cls=details?.exact?"b3":sc>0?"b1":sc===-2?"bn2":"b0";
@@ -8117,7 +8198,15 @@ function renderPalpiteRow(game){
     </div>`;
 
   let bodyHTML;
-  if(waiting){
+  if(!canViewPal){
+    bodyHTML=`<div class="pal-card-body">
+      ${palTeamHTML(teams.t1,"",!teams.ready)}
+      <div>
+        ${hiddenPredictionNoticeHTML(game)}
+      </div>
+      ${palTeamHTML(teams.t2,"r",!teams.ready)}
+    </div>`;
+  }else if(waiting){
     bodyHTML=`<div class="pal-card-body">
       ${palTeamHTML(teams.t1,"",true)}
       <div>
@@ -8143,6 +8232,7 @@ function renderPalpiteRow(game){
           ${scoreControl(`p_${palPi}_${game.id}_2`,v2,`setPal(${palPi},'${game.id}',2,this.value)`,"–","onchange",disabled)}
         </div>
         ${palTiebreakControl(palPi,game,teams,pal,disabled)}
+        ${ownPredictionCompareHTML(game,pal)}
         ${predictionStateSlotHTML("pal",palPi,game.id,game,pal)}
         ${statusNote}
       </div>
