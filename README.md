@@ -112,7 +112,7 @@ Critérios de desempate no ranking: total de pontos → cravadas → menor núme
 
 No mata-mata, acertar quem passa soma +1 ao que o palpite já marcou no placar. Se o resultado oficial empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1. Quem palpitou vitória de uma seleção e o jogo empatou aos 90 minutos faz 0 nesse jogo.
 
-Os palpites da fase de grupos e os palpites de pódio podem ser preenchidos ou editados somente até 1 hora antes da primeira partida da Copa. No mata-mata, cada palpite continua aberto até o início do próprio jogo.
+Os palpites da fase de grupos e os palpites de pódio podem ser preenchidos ou editados somente até 1 hora antes da primeira partida da Copa. Durante a fase de grupos, todos os participantes autenticados podem ver os palpites de todos. No mata-mata, cada palpite continua aberto até o início do próprio jogo, e os palpites dos outros participantes só aparecem depois desse bloqueio.
 
 ---
 

@@ -8028,6 +8028,7 @@ function refreshPredictionStateIndicators(pi,gid){
 function canViewParticipantPrediction(pi,game){
   const myIdx=myParticipantIndex();
   if(!isOnlineMode()||isAdmin()||myIdx===pi) return true;
+  if(!game?.ko) return true;
   return predictionDeadlineClosed(game);
 }
 function predictionRevealLabel(game){
