@@ -4716,18 +4716,25 @@ function actualAdvancer(game,res,teams=gameTeams(game)){
   if(+res.s1<+res.s2) return teams.t2;
   return koAdvancerFromResult(game,res,teams);
 }
+function koPassPoints(game,pal,res,teams=gameTeams(game)){
+  if(!game?.ko||!pal||!res) return 0;
+  const predicted=predictedAdvancer(game,pal,teams);
+  const actual=actualAdvancer(game,res,teams);
+  if(!predicted||!actual) return 0;
+  if(predicted!==actual) return 0;
+  if(+res.s1!==+res.s2) return +pal.s1!==+pal.s2?1:0;
+  return +pal.s1===+pal.s2?1:0;
+}
 function scoreDetails(pal,res,game=null){
   if(!pal||!res||pal.s1==null||pal.s2==null||res.s1==null||res.s2==null) return null;
   const ps1=+pal.s1, ps2=+pal.s2, rs1=+res.s1, rs2=+res.s2;
   if(game?.ko&&rs1===rs2){
     const teams=gameTeams(game);
-    const predicted=predictedAdvancer(game,pal,teams);
-    const actual=actualAdvancer(game,res,teams);
     const palDraw=ps1===ps2;
     if(!palDraw) return {pts:0,base:0,passBonus:0,exact:false,koDraw:true};
     const exact=ps1===rs1&&ps2===rs2;
-    const base=exact?2:1;
-    const passBonus=predicted&&actual&&predicted===actual?1:0;
+    const base=exact?3:1;
+    const passBonus=koPassPoints(game,pal,res,teams);
     return {pts:base+passBonus,base,passBonus,exact,koDraw:true};
   }
   let base=0;
@@ -4742,9 +4749,7 @@ function scoreDetails(pal,res,game=null){
   let passBonus=0;
   if(game?.ko){
     const teams=gameTeams(game);
-    const predicted=predictedAdvancer(game,pal,teams);
-    const actual=actualAdvancer(game,res,teams);
-    if(predicted&&actual&&predicted===actual) passBonus=1;
+    passBonus=koPassPoints(game,pal,res,teams);
   }
   return {pts:base+passBonus,base,passBonus,exact,koDraw:false};
 }
@@ -8437,13 +8442,13 @@ function renderConfig(){
     <div class="card">
       <div class="card-title">Regras de pontuação</div>
       <div class="rules-box">
-        <div><strong>Cravada:</strong> placar exato vale <strong style="color:#065f46">+3 pontos</strong>; empate no mata-mata vale 2 antes do bônus de classificado.</div>
+        <div><strong>Cravada:</strong> placar exato vale <strong style="color:#065f46">+3 pontos</strong>.</div>
         <div><strong>Resultado certo:</strong> vencedor ou empate correto, sem placar exato, vale <strong style="color:#1e40af">+1 ponto</strong>.</div>
         <div><strong>Invertida:</strong> placar exatamente ao contrário vale <strong style="color:#b91c1c">−2 pontos</strong>.</div>
         <div><strong>Erro:</strong> resultado incorreto vale <strong>0 ponto</strong>.</div>
         <hr style="margin:10px 0;border:none;border-top:1px solid var(--border)">
         <div><strong>Pódio:</strong> campeão +20, vice +10, 3º lugar +5 e 4º lugar +3.</div>
-        <div><strong>Mata-mata:</strong> acertar quem passa soma <strong style="color:#065f46">+1 ponto extra</strong>. Se o jogo empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1.</div>
+        <div><strong>Mata-mata:</strong> com vencedor no tempo normal, cravada vale 3+1 e acerto do vencedor sem cravar vale 1+1; erro vale 0 e invertida vale −2. Se empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 3 e empate não cravado vale 1, com +1 se acertar quem passa.</div>
       </div>
     </div>
     <div class="card">

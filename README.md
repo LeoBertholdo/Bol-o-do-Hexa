@@ -99,10 +99,10 @@ Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos
 
 | Evento | Pontos |
 |---|---|
-| Placar exato (cravada) | **+3**; empate no mata-mata vale **+2** antes do bônus |
+| Placar exato (cravada) | **+3** |
 | Resultado correto (acertou o vencedor) | **+1** |
 | Invertida (apostou no time errado para ganhar) | **−2** |
-| Mata-mata: acertar quem passa | **+1 extra** |
+| Mata-mata: acertar quem passa | **+1 extra** quando também há acerto do vencedor ou de empate |
 | Acertar o campeão (1º lugar no pódio) | **+20** |
 | Acertar o vice-campeão (2º lugar) | **+10** |
 | Acertar o 3º colocado | **+5** |
@@ -110,7 +110,7 @@ Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos
 
 Critérios de desempate no ranking: total de pontos → cravadas → menor número de invertidas → ordem alfabética.
 
-No mata-mata, acertar quem passa soma +1 ao que o palpite já marcou no placar. Se o resultado oficial empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 2 pontos, empate não cravado vale 1, e acertar quem passa soma +1. Quem palpitou vitória de uma seleção e o jogo empatou aos 90 minutos faz 0 nesse jogo.
+No mata-mata, se houver vencedor no tempo normal, a cravada vale 3+1 e o acerto do vencedor sem cravar vale 1+1; erro vale 0 e invertida vale −2. Se o resultado oficial empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 3 pontos, empate não cravado vale 1, e acertar quem passa soma +1. Errar quem passa não tira ponto nessa versão; apenas não soma o bônus.
 
 Os palpites da fase de grupos e os palpites de pódio podem ser preenchidos ou editados somente até 1 hora antes da primeira partida da Copa. Durante a fase de grupos, todos os participantes autenticados podem ver os palpites de todos. No mata-mata, cada palpite continua aberto até o início do próprio jogo, e os palpites dos outros participantes só aparecem depois desse bloqueio.
 
