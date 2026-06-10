@@ -544,9 +544,22 @@ on public.results for delete to authenticated
 using (app_private.is_admin());
 
 drop policy if exists "predictions visible to signed in users" on public.predictions;
-create policy "predictions visible to signed in users"
+drop policy if exists "predictions visible with ko lock" on public.predictions;
+-- Fase de grupos: todos os logados veem tudo. Mata-mata: o palpite dos OUTROS
+-- participantes so aparece depois do inicio do proprio jogo (game_kickoffs).
+create policy "predictions visible with ko lock"
 on public.predictions for select to authenticated
-using (true);
+using (
+  app_private.is_admin()
+  or user_id = (select auth.uid())
+  or app_private.owns_participant_index(participant_index)
+  or game_id ~ '^G[A-L][1-6]$'
+  or exists (
+    select 1 from public.game_kickoffs k
+    where k.game_id = predictions.game_id
+      and now() >= k.kickoff_utc
+  )
+);
 
 drop policy if exists "participants insert own predictions" on public.predictions;
 create policy "participants insert own predictions"

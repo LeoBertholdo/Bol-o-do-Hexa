@@ -83,15 +83,13 @@ O cliente faz polling a cada **30 segundos** (`REMOTE_POLL_MS`) para manter o ra
 
 ### Geração do calendário
 
-As partidas são geradas dinamicamente pela função `genGames()` com base nas constantes:
+As partidas são geradas pela função `genGames()` a partir das tabelas `OFFICIAL_GROUP_FIXTURES` (72 jogos da fase de grupos, com confrontos e horários oficiais em UTC) e `OFFICIAL_KO_FIXTURES` (32 jogos do mata-mata: R32 a partir de 28/06, R16 04/07, quartas 09/07, semis 14–15/07, 3º lugar 18/07 e final 19/07). O mesmo calendário existe em três lugares que precisam ficar em sincronia: o app, a Edge Function `api-football-map` e a tabela `game_kickoffs` do banco.
 
-```js
-const GROUP_ROUND_STARTS = { 1: "2026-06-11", 2: "2026-06-18", 3: "2026-06-25" }
-const KO_DATE_STARTS = { r32: "2026-07-03", r16: "2026-07-07", qf: "2026-07-10",
-                         sf: "2026-07-14", p3: "2026-07-18", final: "2026-07-19" }
-```
+Os confrontos das fases eliminatórias são preenchidos automaticamente quando a fase de grupos termina (ou manualmente pelo admin). Em empate no mata-mata, o palpite guarda apenas quem passa; o resultado oficial guarda também se foi na prorrogação ou nos pênaltis, incluindo placar após prorrogação e a sequência da disputa quando a API fornecer.
 
-Nenhum dado de partida é hardcoded além dos grupos e seleções. Os confrontos das fases eliminatórias são preenchidos manualmente pelo admin conforme os resultados são definidos. Em empate no mata-mata, o palpite guarda apenas quem passa; o resultado oficial guarda também se foi na prorrogação ou nos pênaltis, incluindo placar após prorrogação e a sequência da disputa quando a API fornecer.
+### Placar ao vivo
+
+O robô (`api-football-sync-`, agendado a cada minuto via cron + pg_net) grava o andamento dos jogos na tabela `live_scores` e, no apito final, o resultado em `results` (sem sobrescrever resultado lançado manualmente por admin). O app lê `live_scores` no poll de 30 s e via Realtime: a aba **Jogos** mostra o placar parcial com o minuto, e a aba **Grupos** inclui jogos em andamento como parciais — o resultado oficial em `results` sempre tem precedência. O botão "atualizar agora" do robô exige login de admin do bolão.
 
 ---
 

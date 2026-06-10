@@ -844,6 +844,8 @@ body.chart-modal-open{overflow:hidden}
 .legend-dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto}
 .legend-dot.is-qual{background:#34c77b;box-shadow:0 0 0 3px rgba(52,199,123,.18)}
 .legend-dot.is-third{background:#f5c542;box-shadow:0 0 0 3px rgba(245,197,66,.22)}
+.legend-dot.is-live{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.22);animation:livePulse 1.6s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.45}}
 
 /* FILTERS */
 .fbar,.psel,.section-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
@@ -3294,7 +3296,19 @@ const KO_DECISIONS = Object.freeze([
 ]);
 const KO_DECISION_LABELS = Object.fromEntries(KO_DECISIONS);
 const TEAM_CONDUCT_SCORES = Object.freeze({});
-const FIFA_RANKING_ORDER = Object.freeze({});
+// Ranking FIFA masculino oficial de 01/04/2026 (fonte: api.fifa.com) — usado como
+// penúltimo critério de desempate dos grupos, antes da ordem alfabética.
+const FIFA_RANKING_ORDER = Object.freeze({
+  "França":1,"Espanha":2,"Argentina":3,"Inglaterra":4,"Portugal":5,"Brasil":6,
+  "Holanda":7,"Marrocos":8,"Bélgica":9,"Alemanha":10,"Croácia":11,"Colômbia":13,
+  "Senegal":14,"México":15,"EUA":16,"Uruguai":17,"Japão":18,"Suíça":19,"Irã":21,
+  "Turquia":22,"Equador":23,"Áustria":24,"Coreia do Sul":25,"Austrália":27,
+  "Argélia":28,"Egito":29,"Canadá":30,"Noruega":31,"Panamá":33,"Costa do Marfim":34,
+  "Suécia":38,"Paraguai":40,"Rep. Tcheca":41,"Escócia":43,"Tunísia":44,
+  "Rep. D. do Congo":46,"Uzbequistão":50,"Catar":55,"Iraque":57,"África do Sul":60,
+  "Arábia Saudita":61,"Jordânia":63,"Bósnia-Herzegovina":65,"Cabo Verde":69,
+  "Gana":74,"Curaçau":82,"Haiti":83,"Nova Zelândia":85
+});
 const FIFA_RANKING_HISTORY = Object.freeze([FIFA_RANKING_ORDER]);
 const FAIR_PLAY_CARD_POINTS = Object.freeze({yellow:-1,yellowRed:-3,red:-4});
 const KO_PHASES = [
@@ -3407,6 +3421,10 @@ let remoteSession=null;
 let remotePollTimer=null;
 let currentProfile=null;
 let remoteProfiles=[];
+// Placar ao vivo da Copa (alimentado pelo robô via live_scores; nunca persiste em S)
+let copaLive={};
+let copaLiveRealtimeChannel=null;
+let copaLiveRefreshTimer=null;
 let authReady=false;
 // null = não verificado ainda; 'loading' = buscando; 'not_invited' = não encontrado; number = participant_index autorizado
 let inviteSlot=null;
@@ -3447,7 +3465,7 @@ function loadState(){
     try{
       const raw=localStorage.getItem(key);
       if(raw) return migrateState(JSON.parse(raw));
-    }catch(e){}
+    }catch(e){console.warn("Falha lendo estado salvo de",key,e);}
   }
   return migrateState(defaultState());
 }
@@ -3483,7 +3501,7 @@ function save(){
   if(!CAN_USE_LOCAL_STORAGE) return;
   try{
     localStorage.setItem(STORAGE_KEY,JSON.stringify(S));
-  }catch(e){}
+  }catch(e){console.warn("Falha salvando estado no localStorage",e);}
 }
 save();
 
@@ -3714,6 +3732,7 @@ async function initRemote(){
       remotePollTimer=setInterval(()=>loadRemoteData(false,{source:"poll"}),REMOTE_POLL_MS);
     }else{
       passwordResetMode=false;
+      syncCopaLiveRealtime();
       setSyncStatus("warn","Entre para carregar o bolão online.");
       render(activeTab);
     }
@@ -3828,18 +3847,66 @@ async function fetchPredictionsRemote(){
   return remoteClient.from("predictions").select("participant_index,game_id,s1,s2");
 }
 
+// ==== PLACAR AO VIVO DA COPA (live_scores → copaLive) ====
+const COPA_LIVE_GAME_ID_RE=/^(G[A-L][1-6]|R32_\d{2}|R16_\d{2}|QF_\d{2}|SF_\d{2}|P3|FINAL)$/;
+async function fetchCopaLiveRemote(){
+  if(!remoteClient) return null;
+  return remoteClient.from("live_scores")
+    .select("game_id,status_short,elapsed,goals_home,goals_away,after_extra_goals_home,after_extra_goals_away,pens_home,pens_away,yellow_cards_home,yellow_cards_away,yellow_red_cards_home,yellow_red_cards_away,red_cards_home,red_cards_away,last_synced_at");
+}
+function applyCopaLiveRows(rows){
+  if(!Array.isArray(rows)) return;
+  const next={};
+  rows.forEach(row=>{
+    if(COPA_LIVE_GAME_ID_RE.test(String(row.game_id||""))) next[row.game_id]=row;
+  });
+  copaLive=next;
+}
+function queueCopaLiveRefresh(){
+  if(!remoteClient||!remoteSession) return;
+  if(copaLiveRefreshTimer!==null) clearTimeout(copaLiveRefreshTimer);
+  copaLiveRefreshTimer=setTimeout(async()=>{
+    copaLiveRefreshTimer=null;
+    try{
+      const resp=await fetchCopaLiveRemote();
+      if(!resp||resp.error) return;
+      applyCopaLiveRows(resp.data);
+      if(["home","ranking","grupos","jogos"].includes(activeTab)&&!shouldDeferRemoteRender()) render(activeTab);
+    }catch(e){console.warn(e);}
+  },400);
+}
+function syncCopaLiveRealtime(){
+  const shouldRun=Boolean(remoteClient&&remoteSession);
+  if(shouldRun&&copaLiveRealtimeChannel===null){
+    copaLiveRealtimeChannel=remoteClient
+      .channel("copa-live-scores")
+      .on("postgres_changes",{event:"*",schema:"public",table:"live_scores"},queueCopaLiveRefresh)
+      .subscribe();
+  }else if(!shouldRun&&copaLiveRealtimeChannel!==null){
+    if(remoteClient) remoteClient.removeChannel(copaLiveRealtimeChannel);
+    copaLiveRealtimeChannel=null;
+    if(copaLiveRefreshTimer!==null){clearTimeout(copaLiveRefreshTimer);copaLiveRefreshTimer=null;}
+    copaLive={};
+  }
+}
+// ==== END PLACAR AO VIVO DA COPA ====
+
 async function loadRemoteData(showToast=false,options={}){
   if(!remoteClient||!remoteSession) return;
   const deferRender=options.source==="poll"&&shouldDeferRemoteRender();
   setSyncStatus("warn","Sincronizando...");
-  const [profiles,settings,results,predictions,podium,actualPodio]=await Promise.all([
+  const [profiles,settings,results,predictions,podium,actualPodio,liveScores]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
     remoteClient.from("settings").select("entry_value,prize_percents").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
     fetchPredictionsRemote(),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
-    remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle()
+    remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle(),
+    fetchCopaLiveRemote()
   ]);
+  // Placar ao vivo é opcional: erro aqui não derruba a sincronização principal.
+  if(liveScores&&!liveScores.error) applyCopaLiveRows(liveScores.data);
+  syncCopaLiveRealtime();
   const failed=[profiles,settings,results,predictions,podium,actualPodio].find(r=>r.error);
   if(failed){
     setSyncStatus("err",remoteErrorText(failed.error));
@@ -7237,9 +7304,11 @@ function renderRanking(){
 }
 
 function renderGrupos(){
-  const tables=groupStandings();
+  // Tabela usa o resultado oficial quando existe; jogos em andamento entram como parcial ao vivo.
+  const tables=groupStandings(effectiveGroupResultForGame);
   const totalGroupGames=groupGames().length;
   const played=groupGames().filter(g=>S.results[g.id]).length;
+  const liveGamesCount=groupGames().filter(g=>!S.results[g.id]&&copaLiveScoreForGame(g)).length;
   const remaining=totalGroupGames-played;
   const groupPct=totalGroupGames?Math.round((played/totalGroupGames)*100):0;
   let h=`<div class="panel">
@@ -7256,6 +7325,7 @@ function renderGrupos(){
     <div class="groups-legend">
       <span class="legend-pill"><i class="legend-dot is-qual"></i>Classificados · 1º e 2º</span>
       <span class="legend-pill"><i class="legend-dot is-third"></i>Melhor 3º · repescagem</span>
+      ${liveGamesCount?`<span class="legend-pill"><i class="legend-dot is-live"></i>Inclui ${liveGamesCount} jogo${liveGamesCount>1?"s":""} ao vivo (parcial)</span>`:""}
     </div>
     <div class="groups-grid">`;
   GROUP_KEYS.forEach(group=>{
@@ -7281,8 +7351,69 @@ function renderGrupos(){
   document.getElementById("tab-grupos").innerHTML=h;
 }
 
+const COPA_LIVE_ACTIVE_STATUSES=new Set(["1H","2H","HT","ET","BT","P","LIVE","IN_PLAY","PAUSED"]);
+const COPA_LIVE_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","FINISHED","AWARDED"]);
+function copaLiveForGame(gameId){
+  return copaLive[gameId]||null;
+}
+function copaLiveIsActive(live){
+  return Boolean(live&&COPA_LIVE_ACTIVE_STATUSES.has(String(live.status_short||"")));
+}
+function copaLiveIsFinal(live){
+  return Boolean(live&&COPA_LIVE_FINAL_STATUSES.has(String(live.status_short||"")));
+}
+function copaLiveHasScore(live){
+  return Boolean(live)&&live.goals_home!=null&&live.goals_away!=null;
+}
+// Placar ao vivo exibível para um jogo SEM resultado oficial ainda.
+function copaLiveScoreForGame(game){
+  if(S.results[game.id]) return null;
+  const live=copaLiveForGame(game.id);
+  if(!copaLiveHasScore(live)) return null;
+  if(!copaLiveIsActive(live)&&!copaLiveIsFinal(live)) return null;
+  return live;
+}
+// Resultado provisório (ao vivo) no formato de `results`, para a tabela de grupos.
+function liveProvisionalResult(game){
+  const live=copaLiveScoreForGame(game);
+  if(!live) return null;
+  return {
+    s1:+live.goals_home,
+    s2:+live.goals_away,
+    yellowCards1:live.yellow_cards_home,
+    yellowCards2:live.yellow_cards_away,
+    yellowRedCards1:live.yellow_red_cards_home,
+    yellowRedCards2:live.yellow_red_cards_away,
+    redCards1:live.red_cards_home,
+    redCards2:live.red_cards_away,
+    provisional:true
+  };
+}
+// Resultado "efetivo" dos grupos: o oficial (admin/robô em `results`) sempre manda;
+// o ao vivo só entra como provisório enquanto não existe resultado oficial.
+function effectiveGroupResultForGame(game){
+  return S.results[game.id]||liveProvisionalResult(game);
+}
+function copaLiveMinuteLabel(live){
+  if(!live) return "";
+  const st=String(live.status_short||"");
+  if(st==="HT") return "Intervalo";
+  if(st==="BT") return "Intervalo da prorrogação";
+  if(st==="ET") return live.elapsed!=null?`Prorrogação ${live.elapsed}'`:"Prorrogação";
+  if(st==="P") return "Pênaltis";
+  if(["1H","2H","LIVE","IN_PLAY","PAUSED"].includes(st)) return live.elapsed!=null?`${live.elapsed}'`:"Ao vivo";
+  if(COPA_LIVE_FINAL_STATUSES.has(st)) return "Encerrado";
+  return "";
+}
+function copaLivePensSuffix(live){
+  if(!live||live.pens_home==null||live.pens_away==null) return "";
+  return ` · pên. ${live.pens_home}–${live.pens_away}`;
+}
 function copaGameState(game){
   if(S.results[game.id]) return "final";
+  const live=copaLiveForGame(game.id);
+  if(copaLiveIsActive(live)) return "live";
+  if(copaLiveIsFinal(live)) return "closed";
   const kickoff=game.utc?new Date(game.utc).getTime():NaN;
   if(Number.isFinite(kickoff)){
     const now=Date.now();
@@ -7408,9 +7539,13 @@ function renderGameRow(game){
   const state=copaGameState(game);
   const disabled=game.ko&&!teams.ready;
   const draft=resultDrafts[game.id]||{s1:0,s2:0};
+  const liveScore=copaLiveScoreForGame(game);
+  const liveMinute=liveScore?copaLiveMinuteLabel(liveScore):"";
   const mainScoreHTML=res
     ? `<div class="copa-primary-score">${copaScoreHTML(res.s1,res.s2)}</div>`
-    : `<div class="copa-primary-score"><span class="copa-versus">x</span></div>`;
+    : liveScore
+      ? `<div class="copa-primary-score">${copaScoreHTML(liveScore.goals_home,liveScore.goals_away)}</div>`
+      : `<div class="copa-primary-score"><span class="copa-versus">x</span></div>`;
   let sidePanelHTML="";
   if(res){
     const outcome=koOutcomeLabel(game,res,teams);
@@ -7421,7 +7556,11 @@ function renderGameRow(game){
       ${canEdit?`<div class="copa-actions"><button class="copa-mini-action danger" onclick="clearRes(${jsAttr(game.id)})">Remover</button></div>`:""}
     </div>`;
   }else if(canEdit){
+    const liveInfoHTML=liveScore
+      ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result ${copaLiveIsActive(liveScore)?"live":"warn"}">${esc((copaLiveIsActive(liveScore)?"Ao vivo":"Encerrado")+(liveMinute&&copaLiveIsActive(liveScore)?` · ${liveMinute}`:"")+copaLivePensSuffix(liveScore))}</span></div>`
+      : "";
     sidePanelHTML=`<div class="copa-side-panel">
+      ${liveInfoHTML}
       <div class="copa-editor">
         <span class="copa-side-label">Placar oficial</span>
         <div class="score-wrap">
@@ -7435,10 +7574,14 @@ function renderGameRow(game){
     </div>`;
   }else{
     const pendingCls=state==="live"?"live":state==="closed"?"warn":"empty";
-    const pendingLabel=state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
+    const pendingLabel=liveScore
+      ? (copaLiveIsActive(liveScore)
+        ? `Ao vivo${liveMinute?` · ${liveMinute}`:""}${copaLivePensSuffix(liveScore)}`
+        : "Encerrado · aguardando apuração")
+      : state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
     sidePanelHTML=`<div class="copa-side-panel">
       <div class="copa-side-row"><span class="copa-side-label">Resultado</span></div>
-      <div class="copa-side-result ${pendingCls}">${pendingLabel}</div>
+      <div class="copa-side-result ${pendingCls}">${esc(pendingLabel)}</div>
     </div>`;
   }
   const cardCls=["copa-game",`is-${state}`,disabled?"is-locked":""].filter(Boolean).join(" ");
