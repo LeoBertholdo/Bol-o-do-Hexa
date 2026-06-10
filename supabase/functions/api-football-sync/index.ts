@@ -631,15 +631,40 @@ Deno.serve(async (req) => {
 
   const cronSecret = Deno.env.get("BOLAO_CRON_SECRET");
   if (!cronSecret) return json(500, { error: "BOLAO_CRON_SECRET não configurado." });
-  if (req.headers.get("x-bolao-cron-secret") !== cronSecret) {
-    return json(401, { error: "Não autorizado." });
-  }
 
   const token = Deno.env.get("FOOTBALL_DATA_TOKEN");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceKey = getSupabaseAdminKey();
   if (!token) return json(500, { error: "FOOTBALL_DATA_TOKEN não configurada." });
   if (!supabaseUrl || !serviceKey) return json(500, { error: "SUPABASE env vars ausentes." });
+
+  // Autorização: ou o cron (secret no header), ou um admin do bolão logado.
+  const isTrustedBackendCall = req.headers.get("x-bolao-cron-secret") === cronSecret;
+  if (!isTrustedBackendCall) {
+    const authHeader = req.headers.get("Authorization") || "";
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
+      return json(401, { error: "Não autorizado." });
+    }
+    const anonKey = Deno.env.get("BOLAO_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY") || "";
+    if (!anonKey) return json(500, { error: "BOLAO_PUBLISHABLE_KEY ausente nos secrets." });
+    const userClient = createClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false },
+      global: { headers: { Authorization: authHeader } }
+    });
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData?.user) {
+      return json(401, { error: "Sessão inválida ou expirada." });
+    }
+    const { data: profile, error: profErr } = await userClient
+      .from("profiles")
+      .select("role")
+      .eq("id", userData.user.id)
+      .maybeSingle();
+    if (profErr) return json(500, { error: "Falha lendo perfil.", detail: profErr.message });
+    if (profile?.role !== "admin") {
+      return json(403, { error: "Só o administrador do bolão pode acionar o robô manualmente." });
+    }
+  }
 
   const supa = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false } });
   const now = Date.now();
