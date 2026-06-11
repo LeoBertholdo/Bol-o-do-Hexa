@@ -599,7 +599,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   background:#edf9f0;
   color:var(--green);
 }
-.fixture-meta{flex-wrap:wrap;align-items:flex-start}
+.fixture-meta{flex-direction:column;align-items:flex-start;gap:6px}
+.fixture-meta-time{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
 .fixture-row.is-live{
   border-color:#7ed1a1;
   background:linear-gradient(180deg,#f4fff7,#fff);
@@ -4922,7 +4923,8 @@ function podioScore(pal,actual){
 function playerStats(pi){
   let pts=0,crav=0,corr=0,inv=0,played=0;
   GAMES.forEach(g=>{
-    const res=S.results[g.id];
+    // O resultado oficial em `results` sempre manda; jogos em andamento entram como parcial ao vivo.
+    const res=S.results[g.id]||liveProvisionalResult(g);
     const pal=S.palpites[`${pi}_${g.id}`];
     const details=scoreDetails(pal,res,g);
     if(!details) return;
@@ -6922,6 +6924,7 @@ function renderFixtureRow(game,showDate){
   const teams=gameTeams(game);
   const timeLabel=game.time||"A definir";
   const liveMinute=isLive?copaLiveMinuteLabel(liveScore):"";
+  const liveMinuteSuffix=liveMinute&&!/^ao vivo$/i.test(liveMinute)?` · ${esc(liveMinute)}`:"";
   const versusLabel=res
     ? resultLabel(game,res,teams)
     : liveScore
@@ -6930,14 +6933,16 @@ function renderFixtureRow(game,showDate){
   const dateParts=showDate?formatGameDateParts(game.date):null;
   const stateCls=res?"is-result":isLive?"is-live":isLiveClosed?"is-live-closed":"is-upcoming";
   const livePill=isLive
-    ? `<span class="fixture-live-pill"><i aria-hidden="true"></i>AO VIVO${liveMinute?` · ${esc(liveMinute)}`:""}</span>`
+    ? `<span class="fixture-live-pill"><i aria-hidden="true"></i>AO VIVO${liveMinuteSuffix}</span>`
     : isLiveClosed
-      ? `<span class="fixture-live-pill closed">Encerrado · aguardando apuração</span>`
+      ? `<span class="fixture-live-pill closed">Encerrado</span>`
       : "";
   return `<div class="fixture-row ${stateCls}">
     <div class="fixture-meta">
-      ${showDate?`<div class="fixture-date-inline"><span class="fixture-weekday fixture-weekday-full">${esc(dateParts.weekdayLong)}</span><span class="fixture-weekday fixture-weekday-short">${esc(dateParts.weekdayShort)}</span><span class="fixture-day">${esc(dateParts.dayMonth)}</span></div>`:""}
-      <span class="fixture-time">${esc(timeLabel)}</span>
+      <div class="fixture-meta-time">
+        ${showDate?`<div class="fixture-date-inline"><span class="fixture-weekday fixture-weekday-full">${esc(dateParts.weekdayLong)}</span><span class="fixture-weekday fixture-weekday-short">${esc(dateParts.weekdayShort)}</span><span class="fixture-day">${esc(dateParts.dayMonth)}</span></div>`:""}
+        <span class="fixture-time">${esc(timeLabel)}</span>
+      </div>
       ${livePill}
     </div>
     <div class="fixture-match">
@@ -7482,11 +7487,11 @@ function copaLiveScoreForGame(game){
   if(!copaLiveIsActive(live)&&!copaLiveIsFinal(live)) return null;
   return live;
 }
-// Resultado provisório (ao vivo) no formato de `results`, para a tabela de grupos.
+// Resultado provisório (ao vivo) no formato de `results`, para a tabela de grupos e o ranking.
 function liveProvisionalResult(game){
   const live=copaLiveScoreForGame(game);
   if(!live) return null;
-  return {
+  const res={
     s1:+live.goals_home,
     s2:+live.goals_away,
     yellowCards1:live.yellow_cards_home,
@@ -7497,6 +7502,14 @@ function liveProvisionalResult(game){
     redCards2:live.red_cards_away,
     provisional:true
   };
+  // No mata-mata, repassa prorrogação/pênaltis ao vivo para o bônus de "quem passa" pontuar parcialmente.
+  if(game?.ko){
+    if(live.after_extra_goals_home!=null) res.afterEt1=+live.after_extra_goals_home;
+    if(live.after_extra_goals_away!=null) res.afterEt2=+live.after_extra_goals_away;
+    if(live.pens_home!=null) res.pens1=+live.pens_home;
+    if(live.pens_away!=null) res.pens2=+live.pens_away;
+  }
+  return res;
 }
 // Resultado "efetivo" dos grupos: o oficial (admin/robô em `results`) sempre manda;
 // o ao vivo só entra como provisório enquanto não existe resultado oficial.
