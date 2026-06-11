@@ -1,4 +1,4 @@
-// O ROBÔ — versão football-data.org.
+// O ROBÔ — football-data.org + overlay ESPN para o live da Copa.
 // Acorda de minuto em minuto (via cron), olha o calendário no banco,
 // decide se vale chamar a API, e se vale, chama UMA vez por competição
 // num intervalo de 2 dias (cobre todos os jogos do dia da competição).
@@ -9,6 +9,12 @@
 //
 // Limite football-data free: 10 requests/minuto (sem teto diário).
 // Cadência muito mais folgada que api-football.
+//
+// ESPN (scoreboard público, sem chave): o free tier da football-data atrasa
+// minutos para refletir gol. Enquanto o jogo da Copa está em andamento, o
+// placar/minuto/status vêm da ESPN (quase tempo real). O fechamento oficial
+// do jogo (status final + gravação em `results`) continua EXCLUSIVO da
+// football-data — a ESPN nunca grava resultado oficial.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 
@@ -482,6 +488,158 @@ function footballDataHeaders(token: string): Record<string, string> {
   };
 }
 
+// ─── ESPN: fonte live não-oficial da Copa (sem chave, quase tempo real) ────
+const ESPN_SCOREBOARD_URL = "https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard";
+
+// Status em que o placar corrente ainda é o do tempo regulamentar.
+const ESPN_REGULAR_TIME_STATUSES = new Set(["1H", "HT", "2H", "LIVE", "FT"]);
+
+type EspnEvent = {
+  state: string;
+  statusName: string;
+  period: number | null;
+  minute: number | null;
+  homeName: string;
+  awayName: string;
+  homeScore: number | null;
+  awayScore: number | null;
+};
+
+function parseEspnScoreboard(data: any): EspnEvent[] {
+  const events = Array.isArray(data?.events) ? data.events : [];
+  const out: EspnEvent[] = [];
+  for (const ev of events) {
+    const comp = ev?.competitions?.[0];
+    const st = comp?.status || ev?.status || {};
+    const competitors = Array.isArray(comp?.competitors) ? comp.competitors : [];
+    const home = competitors.find((c: any) => c?.homeAway === "home");
+    const away = competitors.find((c: any) => c?.homeAway === "away");
+    if (!home || !away) continue;
+    const clock = parseInt(String(st?.displayClock || ""), 10);
+    out.push({
+      state: String(st?.type?.state || ""),
+      statusName: String(st?.type?.name || ""),
+      period: numberOrNull(st?.period),
+      minute: Number.isFinite(clock) ? clock : null,
+      homeName: String(home?.team?.displayName || home?.team?.name || ""),
+      awayName: String(away?.team?.displayName || away?.team?.name || ""),
+      homeScore: numberOrNull(home?.score),
+      awayScore: numberOrNull(away?.score)
+    });
+  }
+  return out;
+}
+
+// Casa o evento ESPN com o jogo do bolão pelos nomes canônicos das seleções.
+// Sem casamento → sem overlay (o jogo segue 100% na football-data).
+function findEspnEvent(
+  events: EspnEvent[],
+  bolaoHome: unknown,
+  bolaoAway: unknown
+): { event: EspnEvent; reversed: boolean } | null {
+  if (isPlaceholderTeamName(bolaoHome) || isPlaceholderTeamName(bolaoAway)) return null;
+  const home = normalizeTeamName(canonicalCopaTeamName(bolaoHome));
+  const away = normalizeTeamName(canonicalCopaTeamName(bolaoAway));
+  if (!home || !away) return null;
+  for (const event of events) {
+    const eventHome = normalizeTeamName(canonicalCopaTeamName(event.homeName));
+    const eventAway = normalizeTeamName(canonicalCopaTeamName(event.awayName));
+    if (eventHome === home && eventAway === away) return { event, reversed: false };
+    if (eventHome === away && eventAway === home) return { event, reversed: true };
+  }
+  return null;
+}
+
+// ESPN status → vocabulário interno. "pre" devolve null (não sobrescreve nada).
+function espnStatusShort(event: EspnEvent): string | null {
+  const name = event.statusName.toUpperCase();
+  if (event.state === "pre") return null;
+  if (name.includes("HALFTIME")) return "HT";
+  if (name.includes("SHOOTOUT")) return "P";
+  if (event.state === "post") {
+    if (name.includes("PEN")) return "PEN";
+    if ((event.period ?? 0) > 2 || name.includes("OVERTIME") || name.includes("EXTRA")) return "AET";
+    return "FT";
+  }
+  if (name.includes("OVERTIME") || name.includes("EXTRA") || (event.period ?? 0) > 2) return "ET";
+  if (event.period === 1) return "1H";
+  if ((event.period ?? 0) >= 2) return "2H";
+  if (event.minute != null) return event.minute > 45 ? "2H" : "1H";
+  return "LIVE";
+}
+
+function espnOrientedScore(event: EspnEvent, reversed: boolean): { home: number | null; away: number | null } {
+  return reversed
+    ? { home: event.awayScore, away: event.homeScore }
+    : { home: event.homeScore, away: event.awayScore };
+}
+
+// Se a chamada da football-data falhar, a ESPN segura o live sozinha nessa
+// rodada (só live_scores + histórico; nunca grava em `results`).
+async function espnFallbackUpsert(
+  supa: any,
+  group: any[],
+  liveByGame: Map<string, any>,
+  espnEvents: EspnEvent[] | null,
+  errors: string[]
+): Promise<number> {
+  if (!espnEvents?.length) return 0;
+  const nowIso = new Date().toISOString();
+  const upserts: any[] = [];
+  const historyRows: any[] = [];
+  for (const candidate of group) {
+    if (candidate.tournament !== "copa") continue;
+    const live = liveByGame.get(candidate.gameId) || {};
+    if (live.is_locked_by_admin) continue;
+    if (FINAL_STATUSES.has(live.status_short || "")) continue;
+    const found = findEspnEvent(espnEvents, candidate.bolaoHome, candidate.bolaoAway);
+    if (!found) continue;
+    const status = espnStatusShort(found.event);
+    const score = espnOrientedScore(found.event, found.reversed);
+    if (!status || score.home == null || score.away == null) continue;
+    const row: any = {
+      game_id: candidate.gameId,
+      status_short: status,
+      status_long: `ESPN ${found.event.statusName}`,
+      elapsed: found.event.state === "in" && found.event.minute != null ? found.event.minute : (live.elapsed ?? null),
+      goals_home: score.home,
+      goals_away: score.away,
+      last_synced_at: nowIso
+    };
+    if (ESPN_REGULAR_TIME_STATUSES.has(status)) {
+      row.regular_goals_home = score.home;
+      row.regular_goals_away = score.away;
+    }
+    upserts.push(row);
+    const prevGoalsHome = numberOrNull(live.goals_home);
+    const prevGoalsAway = numberOrNull(live.goals_away);
+    if (prevGoalsHome !== score.home || prevGoalsAway !== score.away) {
+      historyRows.push({
+        game_id: candidate.gameId,
+        status_short: status,
+        elapsed: row.elapsed,
+        goals_home: score.home,
+        goals_away: score.away,
+        recorded_at: nowIso,
+        source: "robot"
+      });
+    }
+  }
+  if (!upserts.length) return 0;
+  const { error: upErr, count } = await supa
+    .from("live_scores")
+    .upsert(upserts, { onConflict: "game_id", count: "exact" });
+  if (upErr) {
+    errors.push(`espn fallback: ${upErr.message}`);
+    return 0;
+  }
+  if (historyRows.length) {
+    const { error: histErr } = await supa.from("live_score_history").insert(historyRows);
+    if (histErr) errors.push(`espn fallback history: ${histErr.message}`);
+  }
+  return count ?? upserts.length;
+}
+
 function buildCopaResultRow(
   row: any,
   match: any,
@@ -763,9 +921,23 @@ Deno.serve(async (req) => {
   let totalCopaResultsSkippedManual = 0;
   let lastRateMinute: string | null = null;
   let detailCalls = 0;
+  let espnOverlays = 0;
   const calls: any[] = [];
   const errors: string[] = [];
   const fdHeaders = footballDataHeaders(token);
+
+  // ESPN: 1 chamada por execução quando há jogo da Copa na janela.
+  let espnEvents: EspnEvent[] | null = null;
+  if (candidates.some(c => c.tournament === "copa")) {
+    try {
+      const espnResp = await fetch(ESPN_SCOREBOARD_URL);
+      const espnData = await espnResp.json();
+      if (espnResp.ok) espnEvents = parseEspnScoreboard(espnData);
+      else errors.push(`espn: HTTP ${espnResp.status}`);
+    } catch (e) {
+      errors.push(`espn: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
 
   for (const [competitionId, group] of byComp) {
     const detailCallsBeforeCompetition = detailCalls;
@@ -788,6 +960,7 @@ Deno.serve(async (req) => {
         ok: false,
         message: msg
       });
+      totalUpdated += await espnFallbackUpsert(supa, group, liveByGame, espnEvents, errors);
       continue;
     }
 
@@ -803,6 +976,7 @@ Deno.serve(async (req) => {
         ok: false,
         message: msg
       });
+      totalUpdated += await espnFallbackUpsert(supa, group, liveByGame, espnEvents, errors);
       continue;
     }
 
@@ -975,12 +1149,37 @@ Deno.serve(async (req) => {
         last_synced_at: new Date().toISOString()
       };
 
+      // Overlay ESPN: enquanto a football-data NÃO declarar o jogo final, o
+      // placar/minuto/status ao vivo vêm da ESPN (quase tempo real). Quando a
+      // football-data finalizar (isFinalStatus), ela reassume integralmente.
+      if (candidate.tournament === "copa" && espnEvents?.length && !isFinalStatus) {
+        const found = findEspnEvent(espnEvents, candidate.bolaoHome, candidate.bolaoAway);
+        if (found) {
+          const espnStatus = espnStatusShort(found.event);
+          const espnScore = espnOrientedScore(found.event, found.reversed);
+          if (espnStatus && espnScore.home != null && espnScore.away != null) {
+            liveRow.goals_home = espnScore.home;
+            liveRow.goals_away = espnScore.away;
+            if (!decision.aet && !decision.pen && ESPN_REGULAR_TIME_STATUSES.has(espnStatus)) {
+              liveRow.regular_goals_home = espnScore.home;
+              liveRow.regular_goals_away = espnScore.away;
+            }
+            liveRow.status_short = espnStatus;
+            liveRow.status_long = `ESPN ${found.event.statusName}`;
+            if (found.event.state === "in" && found.event.minute != null) {
+              liveRow.elapsed = found.event.minute;
+            }
+            espnOverlays += 1;
+          }
+        }
+      }
+
       upserts.push(liveRow);
 
       // Histórico gol a gol: registra cada mudança de placar observada, com o
       // horário da observação (recorded_at), pra alimentar a evolução intra-jogo
       // do gráfico do ranking. O fechamento oficial continua vindo de `results`.
-      const trackableStatus = INTERNAL_LIVE_STATUSES.has(storedStatus || "") || FINAL_STATUSES.has(storedStatus || "");
+      const trackableStatus = INTERNAL_LIVE_STATUSES.has(liveRow.status_short || "") || FINAL_STATUSES.has(liveRow.status_short || "");
       const prevGoalsHome = numberOrNull(live.goals_home);
       const prevGoalsAway = numberOrNull(live.goals_away);
       if (
@@ -990,7 +1189,7 @@ Deno.serve(async (req) => {
       ) {
         historyRows.push({
           game_id: gameId,
-          status_short: storedStatus,
+          status_short: liveRow.status_short,
           elapsed: liveRow.elapsed,
           goals_home: liveRow.goals_home,
           goals_away: liveRow.goals_away,
@@ -999,7 +1198,9 @@ Deno.serve(async (req) => {
         });
       }
 
-      if (candidate.tournament === "copa" && scoreOrientation !== "unknown") {
+      // Resultado oficial só com final confirmado pela football-data — o
+      // overlay ESPN pode marcar FT no live, mas nunca grava em `results`.
+      if (candidate.tournament === "copa" && scoreOrientation !== "unknown" && isFinalStatus) {
         const built = buildCopaResultRow(liveRow, match, {
           bolaoHome: candidate.bolaoHome,
           bolaoAway: candidate.bolaoAway,
@@ -1062,6 +1263,8 @@ Deno.serve(async (req) => {
     copa_results_written: totalCopaResultsWritten,
     copa_results_skipped_manual: totalCopaResultsSkippedManual,
     requests_available_minute: lastRateMinute,
+    espn_events: espnEvents ? espnEvents.length : 0,
+    espn_overlays: espnOverlays,
     calls,
     errors: errors.length ? errors : undefined
   });
