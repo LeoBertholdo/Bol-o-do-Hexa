@@ -3508,6 +3508,9 @@ let currentProfile=null;
 let remoteProfiles=[];
 // Placar ao vivo da Copa (alimentado pelo robô via live_scores; nunca persiste em S)
 let copaLive={};
+// Histórico gol a gol observado pelo robô (live_score_history), por game_id.
+// Alimenta a evolução intra-jogo do gráfico do ranking; nunca persiste em S.
+let copaLiveHistory={};
 let copaLiveRealtimeChannel=null;
 let copaLiveRefreshTimer=null;
 let authReady=false;
@@ -3947,13 +3950,35 @@ function applyCopaLiveRows(rows){
   });
   copaLive=next;
 }
+async function fetchCopaLiveHistoryRemote(){
+  if(!remoteClient) return null;
+  return remoteClient.from("live_score_history")
+    .select("game_id,status_short,elapsed,goals_home,goals_away,recorded_at")
+    .order("recorded_at",{ascending:true});
+}
+function applyCopaLiveHistoryRows(rows){
+  if(!Array.isArray(rows)) return;
+  const next={};
+  rows.forEach(row=>{
+    const id=String(row.game_id||"");
+    if(!COPA_LIVE_GAME_ID_RE.test(id)) return;
+    if(row.goals_home==null||row.goals_away==null) return;
+    if(!next[id]) next[id]=[];
+    const prev=next[id][next[id].length-1];
+    // Linhas repetidas (mesmo placar em sequência) não acrescentam nada à curva.
+    if(prev&&+prev.goals_home===+row.goals_home&&+prev.goals_away===+row.goals_away) return;
+    next[id].push(row);
+  });
+  copaLiveHistory=next;
+}
 function queueCopaLiveRefresh(){
   if(!remoteClient||!remoteSession) return;
   if(copaLiveRefreshTimer!==null) clearTimeout(copaLiveRefreshTimer);
   copaLiveRefreshTimer=setTimeout(async()=>{
     copaLiveRefreshTimer=null;
     try{
-      const resp=await fetchCopaLiveRemote();
+      const [resp,hist]=await Promise.all([fetchCopaLiveRemote(),fetchCopaLiveHistoryRemote()]);
+      if(hist&&!hist.error) applyCopaLiveHistoryRows(hist.data);
       if(!resp||resp.error) return;
       applyCopaLiveRows(resp.data);
       if(["home","ranking","grupos","jogos"].includes(activeTab)&&!shouldDeferRemoteRender()) render(activeTab);
@@ -3972,6 +3997,7 @@ function syncCopaLiveRealtime(){
     copaLiveRealtimeChannel=null;
     if(copaLiveRefreshTimer!==null){clearTimeout(copaLiveRefreshTimer);copaLiveRefreshTimer=null;}
     copaLive={};
+    copaLiveHistory={};
   }
 }
 // ==== END PLACAR AO VIVO DA COPA ====
@@ -3980,17 +4006,19 @@ async function loadRemoteData(showToast=false,options={}){
   if(!remoteClient||!remoteSession) return;
   const deferRender=options.source==="poll"&&shouldDeferRemoteRender();
   setSyncStatus("warn","Sincronizando...");
-  const [profiles,settings,results,predictions,podium,actualPodio,liveScores]=await Promise.all([
+  const [profiles,settings,results,predictions,podium,actualPodio,liveScores,liveHistory]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
     remoteClient.from("settings").select("entry_value,prize_percents").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
     fetchPredictionsRemote(),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
     remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle(),
-    fetchCopaLiveRemote()
+    fetchCopaLiveRemote(),
+    fetchCopaLiveHistoryRemote()
   ]);
-  // Placar ao vivo é opcional: erro aqui não derruba a sincronização principal.
+  // Placar ao vivo e histórico são opcionais: erro aqui não derruba a sincronização principal.
   if(liveScores&&!liveScores.error) applyCopaLiveRows(liveScores.data);
+  if(liveHistory&&!liveHistory.error) applyCopaLiveHistoryRows(liveHistory.data);
   syncCopaLiveRealtime();
   const failed=[profiles,settings,results,predictions,podium,actualPodio].find(r=>r.error);
   if(failed){
@@ -6486,6 +6514,17 @@ function chartDateKeyFromIso(iso){
   const day=String(d.getDate()).padStart(2,"0");
   return `${y}-${m}-${day}`;
 }
+// Escolhe ticks do eixo X a partir de índices candidatos (posições rotuladas),
+// mantendo sempre o primeiro e o último.
+function chartAxisIndexesFromCandidates(candidates,maxLabels){
+  if(!candidates.length) return [];
+  if(candidates.length<=maxLabels) return candidates.slice();
+  const stride=Math.ceil(candidates.length/maxLabels);
+  const out=[];
+  for(let i=0;i<candidates.length;i+=stride) out.push(candidates[i]);
+  if(out[out.length-1]!==candidates[candidates.length-1]) out.push(candidates[candidates.length-1]);
+  return out;
+}
 function chartAxisIndexes(count,maxLabels){
   if(count<=0) return [];
   if(count===1) return [0];
@@ -6983,67 +7022,99 @@ function rankingChartDefaultSelection(rows){
   if(Number.isInteger(mine)) return [mine];
   return rows.slice(0,3).map(p=>p.i);
 }
-function rankingTimeline(rows){
-  const resolved=GAMES.filter(g=>S.results[g.id]).sort(compareGameSchedule);
-  const dateMap=new Map();
-  resolved.forEach(game=>{
-    const key=game.date||"";
-    if(!key) return;
-    if(!dateMap.has(key)) dateMap.set(key,[]);
-    dateMap.get(key).push(game);
+// Eventos de pontuação da Copa em ordem cronológica:
+// - cada mudança de placar registrada pelo robô (live_score_history) vira um evento;
+// - o fechamento de cada jogo é SEMPRE o resultado oficial (`results`), então
+//   correções manuais do admin mandam mesmo quando a API registrou bobagem;
+// - jogo em andamento entra como parcial (estado "live", traço tracejado).
+// O eixo usa o horário em que o robô OBSERVOU a mudança (recorded_at), preso à
+// janela do jogo — o minuto reportado pela API atrasa/erra demais pra ordenar.
+function rankingGameEvents(){
+  const events=[];
+  const histWindowMs=5*3600000;
+  GAMES.forEach(game=>{
+    const official=S.results[game.id]||null;
+    const liveRes=official?null:liveProvisionalResult(game);
+    if(!official&&!liveRes) return;
+    const kickoffMs=game.utc?new Date(game.utc).getTime():(game.date?parseDateKey(game.date).getTime():Date.now());
+    const hist=(copaLiveHistory[game.id]||[]).map(row=>{
+      const raw=new Date(row.recorded_at||"").getTime();
+      const ms=Number.isFinite(raw)?Math.min(Math.max(raw,kickoffMs),kickoffMs+histWindowMs):kickoffMs;
+      return {ms,game,res:{s1:+row.goals_home,s2:+row.goals_away,provisional:true},state:official?"detail":"live"};
+    });
+    hist.forEach(ev=>events.push(ev));
+    const closing=official||liveRes;
+    const closingState=official?"final":"live";
+    const lastHist=hist.length?hist[hist.length-1]:null;
+    const sameAsLast=lastHist&&+lastHist.res.s1===+closing.s1&&+lastHist.res.s2===+closing.s2;
+    if(sameAsLast){
+      // O último lance já tem o placar de fechamento: vira o próprio fechamento
+      // (com o resultado oficial completo, incluindo prorrogação/pênaltis no mata-mata).
+      lastHist.res=closing;
+      lastHist.state=closingState;
+    }else{
+      const fallbackMs=official?kickoffMs:Math.min(Math.max(Date.now(),kickoffMs),kickoffMs+histWindowMs);
+      events.push({ms:lastHist?lastHist.ms+1:fallbackMs,game,res:closing,state:closingState});
+    }
   });
-  const dateKeys=Array.from(dateMap.keys()).sort();
+  events.sort((a,b)=>a.ms-b.ms||compareGameSchedule(a.game,b.game));
+  return events;
+}
+function rankingTimeline(rows){
+  const events=rankingGameEvents();
   const actual=S.actualPodio||{};
   const includePodio=["p1","p2","p3","p4"].some(k=>norm(actual[k]));
-  const oneDay=86400000;
   const totals={};
+  const perGame={};
   const series=rows.map((p,idx)=>{
     totals[p.i]=0;
+    perGame[p.i]={};
     return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
   });
-  const positions=[];
-  if(dateKeys.length){
-    const earliestMs=parseDateKey(dateKeys[0]).getTime();
-    positions.push({ms:earliestMs-oneDay,label:"Início",state:"start"});
-    dateKeys.forEach(k=>positions.push({ms:parseDateKey(k).getTime(),label:chartFormatDateKey(k),state:"final",dateKey:k}));
-  }else{
-    positions.push({ms:Date.now(),label:"Início",state:"start"});
-  }
-  dateKeys.forEach(k=>{
-    const games=dateMap.get(k);
+  const positions=[{label:"Início",state:"start",event:null}];
+  const resolvedIds=new Set(),liveIds=new Set(),dateSet=new Set();
+  let detailEventCount=0;
+  events.forEach(ev=>{
     series.forEach(line=>{
-      let gain=0;
-      games.forEach(g=>{
-        const res=S.results[g.id];
-        const pal=S.palpites[`${line.i}_${g.id}`];
-        const v=score(pal,res,g);
-        if(v!=null) gain+=v;
-      });
-      totals[line.i]+=gain;
+      const pal=S.palpites[`${line.i}_${ev.game.id}`];
+      const v=score(pal,ev.res,ev.game);
+      const cur=v==null?0:v;
+      // Só a diferença em relação ao último placar conhecido DESTE jogo entra,
+      // então gol anulado/virada sobe e desce a curva como aconteceu ao vivo.
+      totals[line.i]+=cur-(perGame[line.i][ev.game.id]||0);
+      perGame[line.i][ev.game.id]=cur;
       line.values.push(totals[line.i]);
     });
+    if(ev.state==="final") resolvedIds.add(ev.game.id);
+    if(ev.state==="live") liveIds.add(ev.game.id);
+    if(ev.state==="detail") detailEventCount++;
+    if(ev.game.date) dateSet.add(ev.game.date);
+    positions.push({label:"",state:ev.state,dateKey:ev.game.date||"",event:ev});
   });
   if(includePodio){
-    const podioMs=positions.length?positions[positions.length-1].ms+(2*oneDay):Date.now();
-    positions.push({ms:podioMs,label:"Pódio",state:"podio"});
+    positions.push({label:"Pódio",state:"podio",event:null});
     series.forEach(line=>{
       totals[line.i]+=podioScore(S.podio[line.i]||{},actual);
       line.values.push(totals[line.i]);
     });
   }
+  // Rótulo de data apenas no primeiro evento de cada dia, pro eixo não poluir.
+  let prevDate=null;
+  positions.forEach(p=>{
+    if(!p.event||!p.dateKey) return;
+    if(p.dateKey!==prevDate){p.label=chartFormatDateKey(p.dateKey);prevDate=p.dateKey;}
+  });
   const labels=positions.map(p=>p.label);
   const states=positions.map(p=>p.state);
-  let xRel=positions.map(()=>0);
-  if(positions.length>1){
-    const startMs=positions[0].ms;
-    const endMs=positions[positions.length-1].ms;
-    const span=Math.max(oneDay,endMs-startMs);
-    xRel=positions.map(p=>(p.ms-startMs)/span);
-  }
+  const eventsMeta=positions.map(p=>p.event);
+  const axisCandidates=positions.map((p,idx)=>p.label?idx:-1).filter(i=>i>=0);
+  const xRel=positions.map((_,i)=>positions.length>1?i/(positions.length-1):0);
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
   const minVal=Math.min(0,...allValues);
-  return {labels,states,xRel,series,maxVal,minVal,resolvedCount:resolved.length,dateCount:dateKeys.length,includePodio};
+  return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
+    resolvedCount:resolvedIds.size,liveGameCount:liveIds.size,detailEventCount,
+    dateCount:dateSet.size,includePodio};
 }
 function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
   const usableWidth=width-padX*2;
@@ -7158,11 +7229,26 @@ function renderRankingChart(rows,isExpanded=false){
   const summary=[
     chart.dateCount?`${chart.dateCount} ${chart.dateCount===1?"dia":"dias"} com jogo`:"Sem jogos apurados ainda",
     chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"",
+    chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
+    chart.detailEventCount?"Inclui a oscilação gol a gol":"",
     chart.includePodio?"Pódio oficial incluído":"",
     selected.length?`${selected.length} de ${rows.length} no gráfico`:""
   ].filter(Boolean);
   const axisMax=isExpanded?14:9;
-  const axisIdx=chartAxisIndexes(points,axisMax);
+  const axisIdx=chart.axisCandidates&&chart.axisCandidates.length
+    ?chartAxisIndexesFromCandidates(chart.axisCandidates,axisMax)
+    :chartAxisIndexes(points,axisMax);
+  // Em gráficos muito cheios, as oscilações intra-jogo ficam só na linha (sem bolinha).
+  const dense=points>90;
+  const eventTip=(index,name,value)=>{
+    const st=chart.states[index];
+    if(st==="start") return `Início — ${name}: 0 pts`;
+    if(st==="podio") return `Pódio — ${name}: ${value} pts`;
+    const ev=chart.events?.[index];
+    if(!ev) return "";
+    const flag=st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
+    return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts`;
+  };
   const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
   const endpointItems=selected.map((line,idx)=>{
     const s=chart.series.find(ss=>ss.i===line.i);
@@ -7222,14 +7308,22 @@ function renderRankingChart(rows,isExpanded=false){
           const seriesLine=chart.series.find(s=>s.i===line.i);
           const color=seriesLine?.color||"#002776";
           const values=seriesLine?.values||[0];
+          const name=seriesLine?.name||"";
+          const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
           return `<g>
-            <path d="${rankingLinePathFlex(values,xFor,yFor)}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
             ${values.map((value,index)=>{
+              const st=chart.states[index];
               const isLast=index===values.length-1;
+              const isLive=st==="live";
+              if(!isLast&&dense&&st==="detail") return "";
               const x=xFor(index);
               const y=yFor(value);
-              if(isLast) return `<circle class="chart-endpoint-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="5" fill="${color}" stroke="#fff" stroke-width="2.4"></circle>`;
-              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" fill="${color}" stroke="#fff" stroke-width="1.6"></circle>`;
+              const title=`<title>${esc(eventTip(index,name,value))}</title>`;
+              if(isLast) return `<circle class="chart-endpoint-dot ${isLive?"is-live":""}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="5" fill="${color}" stroke="#fff" stroke-width="2.4">${title}</circle>`;
+              if(isLive) return `<circle class="chart-live-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3" fill="#fff" stroke="${color}" stroke-width="2">${title}</circle>`;
+              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${st==="detail"?2.3:3}" fill="${color}" stroke="#fff" stroke-width="1.6">${title}</circle>`;
             }).join("")}
           </g>`;
         }).join("")}

@@ -810,6 +810,7 @@ Deno.serve(async (req) => {
     const apiToCandidate = new Map(group.map(c => [c.apiId, c]));
     const upserts: any[] = [];
     const copaResultRows: any[] = [];
+    const historyRows: any[] = [];
 
     for (const m of matches) {
       const candidate = apiToCandidate.get(m.id);
@@ -976,6 +977,28 @@ Deno.serve(async (req) => {
 
       upserts.push(liveRow);
 
+      // Histórico gol a gol: registra cada mudança de placar observada, com o
+      // horário da observação (recorded_at), pra alimentar a evolução intra-jogo
+      // do gráfico do ranking. O fechamento oficial continua vindo de `results`.
+      const trackableStatus = INTERNAL_LIVE_STATUSES.has(storedStatus || "") || FINAL_STATUSES.has(storedStatus || "");
+      const prevGoalsHome = numberOrNull(live.goals_home);
+      const prevGoalsAway = numberOrNull(live.goals_away);
+      if (
+        trackableStatus &&
+        liveRow.goals_home != null && liveRow.goals_away != null &&
+        (prevGoalsHome !== liveRow.goals_home || prevGoalsAway !== liveRow.goals_away)
+      ) {
+        historyRows.push({
+          game_id: gameId,
+          status_short: storedStatus,
+          elapsed: liveRow.elapsed,
+          goals_home: liveRow.goals_home,
+          goals_away: liveRow.goals_away,
+          recorded_at: liveRow.last_synced_at,
+          source: "robot"
+        });
+      }
+
       if (candidate.tournament === "copa" && scoreOrientation !== "unknown") {
         const built = buildCopaResultRow(liveRow, match, {
           bolaoHome: candidate.bolaoHome,
@@ -994,6 +1017,12 @@ Deno.serve(async (req) => {
         .upsert(upserts, { onConflict: "game_id", count: "exact" });
       if (upErr) errors.push(`upsert comp ${competitionId}: ${upErr.message}`);
       else updated = count ?? upserts.length;
+    }
+
+    // Histórico é melhor-esforço: erro aqui não derruba o placar ao vivo.
+    if (updated && historyRows.length) {
+      const { error: histErr } = await supa.from("live_score_history").insert(historyRows);
+      if (histErr) errors.push(`history comp ${competitionId}: ${histErr.message}`);
     }
 
     if (updated && copaResultRows.length) {
