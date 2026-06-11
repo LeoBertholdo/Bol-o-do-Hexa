@@ -491,19 +491,20 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .fixture-list{display:grid;gap:10px;flex:1}
 .fixture-row{
   display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
+  grid-template-columns:minmax(86px,auto) minmax(0,1fr);
   align-items:center;
-  gap:12px;
-  padding:12px;
+  gap:14px;
+  padding:12px 14px;
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:10px;
   background:#fff;
   box-shadow:0 8px 20px rgba(0,39,118,.05);
 }
 .fixture-meta{
   display:flex;
-  align-items:center;
-  gap:8px;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:6px;
   min-width:0;
 }
 .fixture-date-inline{
@@ -549,13 +550,13 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   line-height:1;
 }
 .fixture-phase{
-  justify-self:end;
-  font-size:.66rem;
+  font-size:.6rem;
   text-transform:uppercase;
-  letter-spacing:.6px;
+  letter-spacing:.7px;
   color:var(--muted);
   font-weight:900;
   white-space:nowrap;
+  line-height:1;
 }
 .fixture-match{
   display:grid;
@@ -599,7 +600,6 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   background:#edf9f0;
   color:var(--green);
 }
-.fixture-meta{flex-direction:column;align-items:flex-start;gap:6px}
 .fixture-meta-time{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
 .fixture-row.is-live{
   border-color:#7ed1a1;
@@ -2813,7 +2813,7 @@ body.chart-modal-open{overflow:hidden}
 	  overflow:hidden;
 	  overflow-wrap:break-word;
 	}
-	.copa-games-page.v2 .copa-primary-score{display:flex;align-items:center;justify-content:center;min-width:66px}
+	.copa-games-page.v2 .copa-primary-score{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:66px}
 	.copa-games-page.v2 .copa-score{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:950;color:var(--copa-blue)}
 	.copa-games-page.v2 .copa-score b{
 	  min-width:34px;
@@ -2918,23 +2918,24 @@ body.chart-modal-open{overflow:hidden}
 	  text-align:center;
 	}
 	.copa-games-page.v2 .copa-self-pick{
-	  display:grid;
-	  justify-items:center;
+	  display:inline-flex;
+	  align-items:center;
 	  gap:6px;
-	  width:100%;
-	  padding:9px 11px 10px;
-	  border:1px solid rgba(255,223,0,.55);
-	  border-radius:10px;
+	  padding:3px 8px 3px 7px;
+	  border:1px solid rgba(255,223,0,.6);
+	  border-radius:999px;
 	  background:linear-gradient(180deg,#fffdf2 0%,#fff 100%);
-	  box-shadow:inset 0 1px 0 rgba(255,255,255,1),0 2px 8px -4px rgba(160,120,0,.18);
+	  box-shadow:0 1px 4px -2px rgba(160,120,0,.25);
+	  line-height:1;
+	  max-width:100%;
+	  white-space:nowrap;
 	}
-	.copa-games-page.v2 .copa-self-pick-label{font-size:.5rem;font-weight:950;letter-spacing:.95px;color:#a16207;text-transform:uppercase}
-	.copa-games-page.v2 .copa-self-pick-score{display:inline-flex;align-items:center;gap:5px;color:var(--copa-blue);font-weight:950;line-height:1}
-	.copa-games-page.v2 .copa-self-pick-score b{min-width:26px;padding:5px 8px;border:1px solid rgba(10,42,138,.18);border-radius:8px;background:#fff;font-size:.95rem;text-align:center}
-	.copa-games-page.v2 .copa-self-pick-score span{font-size:.7rem;color:var(--copa-mute);font-weight:900}
-	.copa-games-page.v2 .copa-self-pick-adv{font-size:.54rem;font-weight:950;letter-spacing:.6px;color:#a16207;text-transform:uppercase;display:inline-flex;align-items:center;gap:5px}
-	.copa-games-page.v2 .copa-self-pick-empty{font-size:.6rem;font-weight:950;letter-spacing:.7px;color:#94a3b8;text-transform:uppercase}
-	.copa-games-page.v2 .copa-self-pick-badge{display:inline-flex;align-items:center;justify-content:center;padding:4px 9px;border-radius:999px;border:1px solid transparent;font-size:.54rem;font-weight:950;letter-spacing:.7px;text-transform:uppercase;line-height:1}
+	.copa-games-page.v2 .copa-self-pick-label{font-size:.46rem;font-weight:950;letter-spacing:.75px;color:#a16207;text-transform:uppercase}
+	.copa-games-page.v2 .copa-self-pick-score{display:inline-flex;align-items:center;gap:3px;color:var(--copa-blue);font-weight:950;font-size:.72rem;line-height:1}
+	.copa-games-page.v2 .copa-self-pick-score span{font-size:.56rem;color:var(--copa-mute);font-weight:900;margin:0 1px}
+	.copa-games-page.v2 .copa-self-pick-adv{font-size:.46rem;font-weight:950;letter-spacing:.5px;color:#a16207;text-transform:uppercase;display:inline-flex;align-items:center;gap:3px;padding-left:4px;border-left:1px solid rgba(160,120,0,.25)}
+	.copa-games-page.v2 .copa-self-pick-empty{font-size:.52rem;font-weight:950;letter-spacing:.5px;color:#94a3b8;text-transform:uppercase}
+	.copa-games-page.v2 .copa-self-pick-badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 6px;border-radius:999px;border:1px solid transparent;font-size:.46rem;font-weight:950;letter-spacing:.5px;text-transform:uppercase;line-height:1}
 	.copa-games-page.v2 .copa-self-pick-badge.hit{background:linear-gradient(135deg,#10b981,#047857);border-color:#047857;color:#fff}
 	.copa-games-page.v2 .copa-self-pick-badge.good{background:linear-gradient(135deg,#3b82f6,#1e40af);border-color:#1e40af;color:#fff}
 	.copa-games-page.v2 .copa-self-pick-badge.zero{background:#e2e8f0;border-color:#cbd5e1;color:#475569}
@@ -3070,22 +3071,22 @@ body.chart-modal-open{overflow:hidden}
   .prize-head{align-items:flex-start;flex-direction:column;gap:8px}
   .fixture-list{gap:8px}
   .fixture-row{
-    grid-template-columns:72px minmax(0,1fr);
+    grid-template-columns:minmax(76px,auto) minmax(0,1fr);
     align-items:center;
     gap:10px;
     padding:10px;
   }
   .fixture-meta{
-    align-self:stretch;
+    align-self:center;
     flex-direction:column;
     justify-content:center;
     align-items:flex-start;
-    gap:6px;
+    gap:5px;
   }
   .fixture-date-inline .fixture-weekday-full{display:none}
   .fixture-date-inline .fixture-weekday-short{display:inline-flex}
   .fixture-time{min-height:28px;padding:5px 9px;font-size:.72rem}
-  .fixture-phase{font-size:.58rem;letter-spacing:.45px;line-height:1.15}
+  .fixture-phase{font-size:.56rem;letter-spacing:.5px;line-height:1}
   .fixture-match{
     display:grid;
     grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -3093,7 +3094,6 @@ body.chart-modal-open{overflow:hidden}
   }
   .fixture-row .team{font-size:.82rem;gap:5px}
   .fixture-row .team.r{justify-content:flex-end;text-align:right}
-  .fixture-phase{grid-column:2;justify-self:start;align-self:start}
   .fixture-vs{
     justify-self:center;
     min-width:0;
@@ -3231,7 +3231,7 @@ body.chart-modal-open{overflow:hidden}
   .section-head{grid-template-columns:1fr auto;gap:8px}
   .section-head h2{font-size:.94rem}
   .section-sub,.microcopy{font-size:.72rem}
-  .fixture-row{grid-template-columns:62px minmax(0,1fr);gap:8px;padding:9px}
+  .fixture-row{grid-template-columns:minmax(70px,auto) minmax(0,1fr);gap:8px;padding:9px}
   .fixture-date-inline{gap:6px}
   .fixture-time{font-size:.7rem;padding:5px 8px}
   .fixture-row .team{font-size:.78rem;line-height:1.15}
@@ -6939,6 +6939,7 @@ function renderFixtureRow(game,showDate){
       : "";
   return `<div class="fixture-row ${stateCls}">
     <div class="fixture-meta">
+      <div class="fixture-phase">${esc(game.phase)}</div>
       <div class="fixture-meta-time">
         ${showDate?`<div class="fixture-date-inline"><span class="fixture-weekday fixture-weekday-full">${esc(dateParts.weekdayLong)}</span><span class="fixture-weekday fixture-weekday-short">${esc(dateParts.weekdayShort)}</span><span class="fixture-day">${esc(dateParts.dayMonth)}</span></div>`:""}
         <span class="fixture-time">${esc(timeLabel)}</span>
@@ -6950,7 +6951,6 @@ function renderFixtureRow(game,showDate){
       <span class="fixture-vs">${esc(versusLabel)}</span>
       ${teamHTML(teams.t2,"",!teams.ready)}
     </div>
-    <div class="fixture-phase">${esc(game.phase)}</div>
   </div>`;
 }
 function nextBrazilGame(){
@@ -7698,16 +7698,16 @@ function renderGameRow(game){
   const liveScore=copaLiveScoreForGame(game);
   const liveMinute=liveScore?copaLiveMinuteLabel(liveScore):"";
   const selfPickHTML=copaSelfPickHTML(game);
-  const mainScoreHTML=res
-    ? `<div class="copa-primary-score">${copaScoreHTML(res.s1,res.s2)}</div>`
+  const scoreCoreHTML=res
+    ? copaScoreHTML(res.s1,res.s2)
     : liveScore
-      ? `<div class="copa-primary-score">${copaScoreHTML(liveScore.goals_home,liveScore.goals_away)}</div>`
-      : `<div class="copa-primary-score"><span class="copa-versus">x</span></div>`;
+      ? copaScoreHTML(liveScore.goals_home,liveScore.goals_away)
+      : `<span class="copa-versus">x</span>`;
+  const mainScoreHTML=`<div class="copa-primary-score">${scoreCoreHTML}${selfPickHTML}</div>`;
   let sidePanelHTML="";
   if(res){
     const outcome=koOutcomeLabel(game,res,teams);
     sidePanelHTML=`<div class="copa-side-panel">
-      ${selfPickHTML}
       <div class="copa-side-row"><span class="copa-side-label">Resultado</span><span class="copa-side-result ok">Apurado</span></div>
       ${outcome?`<div class="advancer-badge">${esc(outcome)}</div>`:""}
       ${resultDetailHTML(game,res,teams)}
@@ -7718,7 +7718,6 @@ function renderGameRow(game){
       ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result ${copaLiveIsActive(liveScore)?"live":"warn"}">${esc((copaLiveIsActive(liveScore)?"Ao vivo":"Encerrado")+(liveMinute&&copaLiveIsActive(liveScore)?` · ${liveMinute}`:"")+copaLivePensSuffix(liveScore))}</span></div>`
       : "";
     sidePanelHTML=`<div class="copa-side-panel">
-      ${selfPickHTML}
       ${liveInfoHTML}
       <div class="copa-editor">
         <span class="copa-side-label">Placar oficial</span>
@@ -7739,7 +7738,6 @@ function renderGameRow(game){
         : "Encerrado · aguardando apuração")
       : state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
     sidePanelHTML=`<div class="copa-side-panel">
-      ${selfPickHTML}
       <div class="copa-side-row"><span class="copa-side-label">Resultado</span></div>
       <div class="copa-side-result ${pendingCls}">${esc(pendingLabel)}</div>
     </div>`;
