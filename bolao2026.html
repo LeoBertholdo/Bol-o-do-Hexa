@@ -2998,6 +2998,11 @@ body.chart-modal-open{overflow:hidden}
 	  transition:transform .18s ease,background .15s ease;
 	}
 	.copa-games-page.v2 .copa-self-pick.solo .copa-self-pick-chev{background:rgba(10,42,138,.12);color:var(--copa-blue)}
+	/* Variante "final": jogo encerrado/apurado usa dourado (em vez do verde do ao vivo). */
+	.copa-games-page.v2 .copa-self-pick.has-chev.final{border-color:rgba(255,223,0,.6);background:linear-gradient(180deg,#fffdf2 0%,#fff 100%);box-shadow:0 1px 5px -2px rgba(160,120,0,.3)}
+	.copa-games-page.v2 .copa-self-pick.has-chev.final:hover{border-color:rgba(255,223,0,.9);background:linear-gradient(180deg,#fff8e0 0%,#fff 100%)}
+	.copa-games-page.v2 .copa-self-pick.has-chev.final .copa-self-pick-label{color:#a16207}
+	.copa-games-page.v2 .copa-self-pick.has-chev.final .copa-self-pick-chev{background:rgba(160,120,0,.16);color:#a16207}
 	.copa-games-page.v2 .copa-self-pick-wrap[open]>.copa-self-pick .copa-self-pick-chev{transform:rotate(180deg)}
 	.copa-games-page.v2 .copa-self-pick-others{
 	  position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
@@ -7720,14 +7725,15 @@ function renderGrupos(){
     h+=`<div class="group-card">
       <div class="group-title"><span>Grupo ${esc(group)}</span><span>${rows.reduce((acc,row)=>acc+row.played,0)/2}/6 jogos</span></div>
       <table class="group-table">
-        <thead><tr><th>Seleção</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Pts</th></tr></thead>
+        <thead><tr><th>Seleção</th><th>Pts</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead>
         <tbody>`;
     rows.forEach(row=>{
       const cls=row.pos<=2?"qual-row":row.pos===3?"third-row":"";
       h+=`<tr class="${cls}">
         <td><div class="team-cell"><span class="pos-pill">${row.pos}</span>${teamFlag(row.team)?`<span class="flag">${teamFlag(row.team)}</span>`:""}<span class="team-name">${esc(row.team)}</span></div></td>
+        <td class="pts-cell">${row.pts}</td>
         <td>${row.played}</td><td>${row.w}</td><td>${row.d}</td><td>${row.l}</td>
-        <td>${row.gf}</td><td>${row.ga}</td><td>${row.gd}</td><td class="pts-cell">${row.pts}</td>
+        <td>${row.gf}</td><td>${row.ga}</td><td>${row.gd}</td>
       </tr>`;
     });
     h+=`</tbody></table></div>`;
@@ -7957,12 +7963,16 @@ function copaSelfPickHTML(game){
   const res=S.results[game.id];
   const isLiveState=!res&&copaGameState(game)==="live";
   const liveRes=isLiveState?liveProvisionalResult(game):null;
+  // Oficial manda; ao vivo entra como parcial. Serve tanto pro badge do "Seu
+  // palpite" quanto pra pontuar o dropdown dos outros (ao vivo OU encerrado).
+  const scoringRes=res||liveRes;
+  const othersHTML=copaSelfPickOthersHTML(game,scoringRes);
+  // Verde = ao vivo; dourado = encerrado/apurado.
+  const variantCls=isLiveState?"":"final";
   if(!Number.isInteger(myIdx)){
-    if(!isLiveState) return "";
-    const othersHTML=copaSelfPickOthersHTML(game,liveRes);
     if(!othersHTML) return "";
     return `<details class="copa-self-pick-wrap">
-      <summary class="copa-self-pick has-chev solo">
+      <summary class="copa-self-pick has-chev solo ${variantCls}">
         <span class="copa-self-pick-label">Palpites dos outros</span>
         <span class="copa-self-pick-chev" aria-hidden="true">▾</span>
       </summary>
@@ -7978,7 +7988,6 @@ function copaSelfPickHTML(game){
     const advancer=tied&&pal.koWinner?`${teamFlag(pal.koWinner)} ${esc(pal.koWinner)} passa`:"";
     bodyHTML=`<span class="copa-self-pick-score"><b>${esc(pal.s1)}</b><span>×</span><b>${esc(pal.s2)}</b></span>
       ${advancer?`<span class="copa-self-pick-adv">${advancer}</span>`:""}`;
-    const scoringRes=res||liveRes;
     if(scoringRes){
       const d=scoreDetails(pal,scoringRes,game);
       if(d){
@@ -7986,22 +7995,22 @@ function copaSelfPickHTML(game){
         const lbl=d.exact?`Cravou +${d.pts}`:d.pts>0?`+${d.pts}`:d.pts===-2?"−2":"0";
         badgeHTML=`<span class="copa-self-pick-badge ${cls}">${esc(lbl)}</span>`;
       }
-    }else if(!isLiveState){
+    }else{
       badgeHTML=`<span class="copa-self-pick-badge pending">Aguardando apuração</span>`;
     }
   }else{
     bodyHTML=`<span class="copa-self-pick-empty">Sem palpite registrado</span>`;
   }
-  if(!isLiveState){
+  // Sem ninguém pra comparar (só eu de participante) → pill estática, sem dropdown.
+  if(!othersHTML){
     return `<div class="copa-self-pick">
       <span class="copa-self-pick-label">Seu palpite</span>
       ${bodyHTML}
       ${badgeHTML}
     </div>`;
   }
-  const othersHTML=copaSelfPickOthersHTML(game,liveRes);
   return `<details class="copa-self-pick-wrap">
-    <summary class="copa-self-pick has-chev">
+    <summary class="copa-self-pick has-chev ${variantCls}">
       <span class="copa-self-pick-label">Seu palpite</span>
       ${bodyHTML}
       ${badgeHTML}
