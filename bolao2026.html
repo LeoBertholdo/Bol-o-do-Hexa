@@ -478,7 +478,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   font-size:.72rem;
   font-weight:950;
 }
-.mini-rank.gold,.r1{
+.mini-rank.gold{
   background:
     radial-gradient(circle at 30% 28%,rgba(255,247,196,.95) 0 18%,transparent 19%),
     linear-gradient(145deg,#fff6bf 0%,#f7d45e 32%,#d49b16 72%,#8a5c00 100%);
@@ -486,7 +486,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border:1px solid rgba(255,227,132,.85);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(0,0,0,.12);
 }
-.mini-rank.silver,.r2{
+.mini-rank.silver{
   background:
     radial-gradient(circle at 30% 28%,rgba(255,255,255,.95) 0 18%,transparent 19%),
     linear-gradient(145deg,#ffffff 0%,#dce4ee 34%,#a1adbb 70%,#657283 100%);
@@ -494,7 +494,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border:1px solid rgba(230,238,247,.9);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 6px rgba(0,0,0,.12);
 }
-.mini-rank.bronze,.r3{
+.mini-rank.bronze{
   background:
     radial-gradient(circle at 30% 28%,rgba(255,228,202,.92) 0 18%,transparent 19%),
     linear-gradient(145deg,#ffd4b0 0%,#d89255 35%,#aa5a24 72%,#6f3111 100%);
@@ -858,7 +858,7 @@ body.chart-modal-open{overflow:hidden}
 .ranking-card h3{font-size:1rem;line-height:1.1;color:var(--text);font-weight:950}
 .ranking-card p{margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45}
 .ranking-card .mini-action{margin-top:12px}
-.lb-row{display:grid;grid-template-columns:auto minmax(96px,0.9fr) minmax(0,1.3fr) auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.lb-row{display:grid;grid-template-columns:auto minmax(96px,0.9fr) minmax(0,1.35fr) auto;align-items:center;gap:12px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 @media(hover:hover){.lb-row:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,39,118,.12);border-color:#cdd9ea}}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
 .podium-row .pname{font-size:1.06rem}
@@ -867,8 +867,24 @@ body.chart-modal-open{overflow:hidden}
 .podium-row.top-2{background:linear-gradient(110deg,#f4f7fb,#fff 48%,#fff);border-color:#b9c3cf}
 .podium-row.top-3{background:linear-gradient(110deg,#fff0df,#fff 48%,#fff);border-color:#c98747}
 .rank{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.82rem;flex-shrink:0}
-.podium-row .rank{width:42px;height:42px;font-size:.95rem;box-shadow:0 8px 18px rgba(0,0,0,.12)}
 .ro{background:#eef3f8;color:var(--muted);border:1px solid #e0e8f1}
+.rank.r1{background:linear-gradient(135deg,#fff8dc 0%,#ffe99b 100%);color:#7a5700;border:1px solid #efc64a;box-shadow:0 10px 20px rgba(212,151,0,.16)}
+.rank.r2{background:linear-gradient(135deg,#f8fafc 0%,#dfe7f0 100%);color:#415066;border:1px solid #c7d1dd;box-shadow:0 10px 20px rgba(83,98,120,.14)}
+.rank.r3{background:linear-gradient(135deg,#fff1e3 0%,#df9a62 100%);color:#743910;border:1px solid #c87b39;box-shadow:0 10px 20px rgba(170,90,36,.16)}
+.podium-row .rank{
+  position:relative;
+  width:54px;
+  height:44px;
+  border-radius:12px;
+  flex-direction:column;
+  gap:1px;
+  overflow:hidden;
+  box-shadow:0 10px 22px rgba(0,39,118,.14);
+}
+.podium-row .rank:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:currentColor;opacity:.78}
+.podium-row .rank .rank-pos{font-size:1.12rem;font-weight:950;line-height:.95;letter-spacing:0}
+.podium-row .rank .rank-suffix{font-size:.62em;margin-left:1px}
+.podium-row .rank .rank-label{font-size:.48rem;font-weight:900;letter-spacing:.45px;line-height:1;text-transform:uppercase;opacity:.72}
 .pname{font-weight:900;font-size:.98rem;min-width:0}
 .lb-row.me{
   border-color:#9fc5ff;
@@ -876,7 +892,7 @@ body.chart-modal-open{overflow:hidden}
   box-shadow:0 12px 28px rgba(0,39,118,.1);
 }
 .lb-row.me .pname:after{content:"Você";margin-left:8px;font-size:.56rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:var(--blue);background:#e4eeff;border:1px solid #c5d9f7;border-radius:999px;padding:2px 7px;vertical-align:middle}
-.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:7px;align-items:stretch}
+.pstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(58px,1fr));gap:7px;align-items:stretch}
 .stat{
   display:grid;
   gap:3px;
@@ -898,14 +914,16 @@ body.chart-modal-open{overflow:hidden}
 }
 .pts-num{font-size:1.82rem;font-weight:950;color:var(--green);line-height:1}
 .pts-unit{font-size:.54rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:900;margin-top:3px}
-.crav-stat{background:rgba(245,197,66,.16)}
+.crav-stat{background:rgba(0,132,61,.1)}
 .corr-stat{background:rgba(0,39,118,.07)}
+.err-stat{background:rgba(100,116,139,.1)}
 .inv-stat{background:rgba(216,58,52,.09)}
-.podio-stat{background:rgba(0,132,61,.1)}
-.crav-stat .sv{color:#9a7200}
+.podio-stat{background:rgba(245,197,66,.16)}
+.crav-stat .sv{color:var(--green)}
 .corr-stat .sv{color:var(--blue)}
+.err-stat .sv{color:#64748b}
 .inv-stat .sv{color:var(--red)}
-.podio-stat .sv{color:var(--green)}
+.podio-stat .sv{color:#9a7200}
 
 /* GROUP TABLES */
 .groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:12px}
@@ -3241,7 +3259,9 @@ body.chart-modal-open{overflow:hidden}
   .brazil-row .team-cell{font-size:.74rem}
   .lb-row{grid-template-columns:auto 1fr auto}
   .lb-row .pts{grid-column:3;grid-row:1;align-self:center}
-  .pstats{grid-column:1 / -1;grid-row:2;justify-content:flex-start;padding-left:46px;gap:8px}
+  .pstats{grid-column:1 / -1;grid-row:2;justify-content:flex-start;padding-left:46px;gap:7px}
+  .podium-row .rank{width:50px;height:40px;border-radius:11px}
+  .podium-row .rank .rank-pos{font-size:1.02rem}
   .game-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
   .game-row .btn-ok,.game-row .btn-x{grid-column:2;justify-self:end}
   .pal-row{grid-template-columns:48px minmax(0,1fr);align-items:start}
@@ -3385,6 +3405,16 @@ body.chart-modal-open{overflow:hidden}
   .step-btn{width:28px;height:34px}
   .btn-ok,.btn-x{padding:8px 9px;font-size:.76rem}
   .action-btn,.action-label{min-width:130px;padding:10px;font-size:.78rem}
+  .lb-row{gap:8px;padding:10px}
+  .rank{width:30px;height:30px;font-size:.76rem}
+  .podium-row{padding:11px 10px}
+  .podium-row .rank{width:46px;height:38px;border-radius:10px}
+  .podium-row .rank .rank-pos{font-size:.96rem}
+  .podium-row .rank .rank-label{font-size:.44rem;letter-spacing:.32px}
+  .pstats{grid-template-columns:repeat(auto-fit,minmax(54px,1fr));padding-left:38px;gap:5px}
+  .stat{padding:5px 4px;border-radius:8px}
+  .sv{font-size:.94rem}
+  .sl{font-size:.48rem;letter-spacing:.24px}
   .cfg-row{align-items:flex-start;flex-direction:column;gap:8px}
   .cfg-inp{width:100%;max-width:180px}
   .podium-cards{grid-template-columns:1fr}
@@ -5109,7 +5139,7 @@ function podioScore(pal,actual){
   return p;
 }
 function playerStats(pi){
-  let pts=0,crav=0,corr=0,inv=0,played=0;
+  let pts=0,crav=0,corr=0,err=0,inv=0,played=0;
   GAMES.forEach(g=>{
     // O resultado oficial em `results` sempre manda; jogos em andamento entram como parcial ao vivo.
     const res=S.results[g.id]||liveProvisionalResult(g);
@@ -5120,10 +5150,11 @@ function playerStats(pi){
     pts+=details.pts;
     if(details.exact) crav++;
     if(details.base===1) corr++;
+    if(details.base===0) err++;
     if(details.base===-2) inv++;
   });
   const pp=podioScore(S.podio[pi]||{},S.actualPodio||{});
-  return {pts:pts+pp,crav,corr,inv,played,pp};
+  return {pts:pts+pp,crav,corr,err,inv,played,pp};
 }
 function ranking(){
   return S.participants.map((name,i)=>({name,i,...playerStats(i)})).sort((a,b)=>{
@@ -7114,7 +7145,13 @@ function filmeFrames(){
   return {frames,maxVal:Math.max(3,tl.maxVal),minVal:Math.min(0,tl.minVal),series:tl.series,states:tl.states};
 }
 // Geometria do gráfico do filme (compartilhada entre o desenho e o cursor).
-const FILME_CHART={W:760,H:240,padX:42,padR:14,padY:12,padB:22};
+const FILME_CHART={W:760,H:240,padX:42,padR:110,padY:12,padB:22};
+function filmeChartY(data,v){
+  const {H,padY,padB}=FILME_CHART;
+  const uh=H-padY-padB;
+  const range=Math.max(1,data.maxVal-data.minVal);
+  return padY+uh-uh*((v-data.minVal)/range);
+}
 function filmeChartX(data,idx){
   const n=data.frames.length;
   return FILME_CHART.padX+(FILME_CHART.W-FILME_CHART.padX-FILME_CHART.padR)*(n>1?idx/(n-1):0);
@@ -7138,6 +7175,7 @@ function filmeChartSvg(data){
     <defs><clipPath id="filmeChartClip"><rect id="filmeClipRect" x="0" y="0" width="${padX}" height="${H}"></rect></clipPath></defs>
     ${grid}
     <g clip-path="url(#filmeChartClip)">${lines}</g>
+    <g id="filmeChartLabels"></g>
     <rect id="filmeCursorRect" x="${(padX-1).toFixed(1)}" y="${padY}" width="2" height="${uh}" rx="1" fill="rgba(0,39,118,.45)"></rect>
   </svg>`;
 }
@@ -7234,6 +7272,16 @@ function filmeApplyFrame(data,idx,animate=true){
     elm.style[prop]=`${val.toFixed(1)}px`;
     elm.setAttribute(prop,val.toFixed(1));
   });
+  const labelsEl=document.getElementById("filmeChartLabels");
+  if(labelsEl){
+    const uniq=chartUniqueLabels(data.series.map(s=>s.name));
+    const items=data.series.map((s,si)=>({color:s.color,name:uniq[si],value:s.values[idx],y:filmeChartY(data,s.values[idx])}));
+    labelsEl.innerHTML=chartEndpointLabelsSvg(items,{
+      baseX:chartX,lineHeight:13,groupGap:14,
+      topBound:FILME_CHART.padY+2,bottomBound:FILME_CHART.H-FILME_CHART.padB-2,
+      maxChars:12,fontSize:11,dy:4
+    });
+  }
   const cap=document.getElementById("filmeCaption");
   if(cap) cap.innerHTML=filmeCaptionHtml(frame);
   const slider=document.getElementById("filmeSlider");
@@ -7975,6 +8023,7 @@ function renderRanking(){
   const invTotal=r.reduce((acc,p)=>acc+p.inv,0);
   const cravTotal=r.reduce((acc,p)=>acc+p.crav,0);
   const corrTotal=r.reduce((acc,p)=>acc+p.corr,0);
+  const errTotal=r.reduce((acc,p)=>acc+p.err,0);
   const myIndex=myParticipantIndex();
   const myRank=Number.isInteger(myIndex)?r.findIndex(p=>p.i===myIndex):-1;
   const myPlayer=myRank>=0?r[myRank]:null;
@@ -7985,7 +8034,7 @@ function renderRanking(){
           <div>
             <div class="section-kicker">Tabela principal</div>
             <h3>Ranking completo</h3>
-            <p>${cravTotal} cravadas, ${corrTotal} acertos e ${invTotal} invertidas somadas até agora.</p>
+            <p>${cravTotal} cravadas, ${corrTotal} acertos, ${errTotal} erros e ${invTotal} invertidas somadas até agora.</p>
           </div>
           <button class="mini-action" onclick="goTab('podio')">Ver pódio</button>
         </div>
@@ -7996,12 +8045,16 @@ function renderRanking(){
               myPlayer&&p.i===myPlayer.i?"me":""
             ].filter(Boolean).join(" ");
             const rankCls=ri===0?"r1":ri===1?"r2":ri===2?"r3":"ro";
+            const rankHTML=ri<3
+              ?`<span class="rank-pos">${ri+1}<span class="rank-suffix">º</span></span><span class="rank-label">lugar</span>`
+              :`${ri+1}`;
             return `<div class="lb-row ${rowCls}">
-              <div class="rank ${rankCls}">${ri+1}</div>
+              <div class="rank ${rankCls}" aria-label="${ri+1}º lugar">${rankHTML}</div>
               <div class="pname">${esc(p.name)}</div>
               <div class="pstats">
                 <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
                 <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
+                <div class="stat err-stat"><div class="sv">${p.err}</div><div class="sl">Erros</div></div>
                 <div class="stat inv-stat"><div class="sv">${p.inv}</div><div class="sl">Invertidas</div></div>
                 ${p.pp>0?`<div class="stat podio-stat"><div class="sv">+${p.pp}</div><div class="sl">Pódio</div></div>`:""}
               </div>
