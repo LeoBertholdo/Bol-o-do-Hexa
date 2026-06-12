@@ -810,6 +810,8 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-goal-marker.is-live line{animation:chart-live-pulse 1.6s ease-in-out infinite}
 .chart-series{transition:opacity .25s ease;cursor:pointer}
 svg.chart-hover .chart-series:not(.is-hovered),svg.chart-focus:not(.chart-hover) .chart-series:not(.is-focused){opacity:.18}
+.chart-endpoint-name{cursor:pointer;transition:fill-opacity .25s ease}
+svg.chart-hover .chart-endpoint-name:not(.is-hovered),svg.chart-focus:not(.chart-hover) .chart-endpoint-name:not(.is-focused){fill-opacity:.25}
 @keyframes chart-live-pulse{
   0%,100%{opacity:1;transform:scale(1);transform-origin:center;transform-box:fill-box}
   50%{opacity:.55;transform:scale(1.25);transform-origin:center;transform-box:fill-box}
@@ -6760,7 +6762,10 @@ function chartEndpointLabelsSvg(items,opts){
       const spans=line.map(member=>{
         memberCount++;
         const sep=memberCount<group.members.length?`<tspan fill="#94a3b8" font-weight="800">, </tspan>`:"";
-        return `<tspan fill="${member.color}">${esc(member.name)}</tspan>${sep}`;
+        // Nome clicável/hover quando o item traz o índice do participante
+        // (gráfico do ranking); o do laboratório da API fica estático.
+        const focusAttrs=member.i!=null?` class="chart-endpoint-name${member.focused?" is-focused":""}" data-series="${member.i}" onmouseenter="hoverRankingSeries(this,${member.i},true)" onmouseleave="hoverRankingSeries(this,${member.i},false)" onclick="focusRankingSeries(${member.i},event)"`:"";
+        return `<tspan fill="${member.color}"${focusAttrs}>${esc(member.name)}</tspan>${sep}`;
       }).join("");
       const valueSpan=isLastLine?`<tspan fill="${multi?"#41516d":group.members[0].color}"> · ${group.value}</tspan>`:"";
       return `<text x="${(opts.baseX+13).toFixed(2)}" y="${(y+opts.dy).toFixed(2)}" font-size="${opts.fontSize}" font-weight="900">${spans}${valueSpan}</text>`;
@@ -7611,11 +7616,13 @@ function rankingPointDot(value,index,totalPoints,width,height,padX,padY,minVal,m
 }
 // Foco numa linha do gráfico: hover esmaece as demais (sem re-render);
 // clique/toque fixa o foco (sobrevive ao re-render do poll) e re-clique solta.
-function hoverRankingSeries(el,on){
+// Funciona a partir da linha OU do nome à direita: tudo que tiver
+// data-series do participante acende junto.
+function hoverRankingSeries(el,participantIndex,on){
   const svg=el.closest("svg");
   if(!svg) return;
   svg.classList.toggle("chart-hover",on);
-  el.classList.toggle("is-hovered",on);
+  svg.querySelectorAll(`[data-series="${participantIndex}"]`).forEach(node=>node.classList.toggle("is-hovered",on));
 }
 function focusRankingSeries(participantIndex,ev){
   if(ev) ev.stopPropagation();
@@ -7721,7 +7728,7 @@ function renderRankingChart(rows,isExpanded=false){
     const s=chart.series.find(ss=>ss.i===line.i);
     const values=s?.values||[0];
     const v=values[values.length-1]||0;
-    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};
+    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v),i:line.i,focused:rankingChartFocus===line.i};
   });
   const endpointLabels=chartEndpointLabelsSvg(endpointItems,{
     baseX:xFor(points-1),
@@ -7811,7 +7818,7 @@ function renderRankingChart(rows,isExpanded=false){
           const values=seriesLine?.values||[0];
           const name=seriesLine?.name||"";
           const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
-          return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" onmouseenter="hoverRankingSeries(this,true)" onmouseleave="hoverRankingSeries(this,false)" onclick="focusRankingSeries(${line.i},event)">
+          return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" data-series="${line.i}" onmouseenter="hoverRankingSeries(this,${line.i},true)" onmouseleave="hoverRankingSeries(this,${line.i},false)" onclick="focusRankingSeries(${line.i},event)">
             ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
             ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
             ${values.map((value,index)=>{
