@@ -6664,35 +6664,78 @@ function chartAxisIndexes(count,maxLabels){
   if(out[out.length-1]!==count-1) out.push(count-1);
   return out;
 }
-function chartEndpointLayout(items,minSpacing,topBound,bottomBound){
+function chartEndpointGroupLayout(items,lineHeight,groupGap,topBound,bottomBound,maxChars){
   if(!items.length) return [];
-  const sorted=items.map((item,idx)=>({...item,_idx:idx})).sort((a,b)=>a.y-b.y);
-  for(let i=1;i<sorted.length;i++){
-    const prev=sorted[i-1];
-    if(sorted[i].y<prev.y+minSpacing) sorted[i].y=prev.y+minSpacing;
+  const byValue=new Map();
+  items.forEach(item=>{
+    if(!byValue.has(item.value)) byValue.set(item.value,{value:item.value,trueY:item.y,members:[]});
+    byValue.get(item.value).members.push(item);
+  });
+  const groups=Array.from(byValue.values()).sort((a,b)=>a.trueY-b.trueY);
+  groups.forEach(group=>{
+    const valueLen=` · ${group.value}`.length;
+    const lines=[];
+    let line=[],lineLen=0;
+    group.members.forEach((member,i)=>{
+      const tokenLen=member.name.length+(i===group.members.length-1?valueLen:2);
+      if(line.length&&lineLen+tokenLen>maxChars){lines.push(line);line=[];lineLen=0;}
+      line.push(member);
+      lineLen+=tokenLen;
+    });
+    if(line.length) lines.push(line);
+    group.lines=lines;
+    group.height=(lines.length-1)*lineHeight;
+    group.y=group.trueY-group.height/2;
+  });
+  for(let i=1;i<groups.length;i++){
+    const minY=groups[i-1].y+groups[i-1].height+groupGap;
+    if(groups[i].y<minY) groups[i].y=minY;
   }
-  if(sorted.length){
-    const last=sorted[sorted.length-1];
-    if(last.y>bottomBound){
-      let overflow=last.y-bottomBound;
-      for(let i=sorted.length-1;i>=0;i--){
-        sorted[i].y-=overflow;
-        if(i>0&&sorted[i].y-sorted[i-1].y<minSpacing) overflow=Math.max(0,minSpacing-(sorted[i].y-sorted[i-1].y));
-        else break;
-      }
-    }
-    if(sorted[0].y<topBound){
-      let shift=topBound-sorted[0].y;
-      for(let i=0;i<sorted.length;i++){
-        sorted[i].y+=shift;
-        if(i<sorted.length-1&&sorted[i+1].y-sorted[i].y<minSpacing) shift=Math.max(0,minSpacing-(sorted[i+1].y-sorted[i].y));
-        else break;
-      }
+  const last=groups[groups.length-1];
+  if(last.y+last.height>bottomBound){
+    let overflow=last.y+last.height-bottomBound;
+    for(let i=groups.length-1;i>=0;i--){
+      groups[i].y-=overflow;
+      if(i===0) break;
+      const gap=groups[i].y-(groups[i-1].y+groups[i-1].height);
+      if(gap<groupGap) overflow=Math.max(0,groupGap-gap);
+      else break;
     }
   }
-  const out=new Array(items.length);
-  sorted.forEach(item=>{out[item._idx]={...items[item._idx],y:item.y};});
-  return out;
+  if(groups[0].y<topBound){
+    let shift=topBound-groups[0].y;
+    for(let i=0;i<groups.length;i++){
+      groups[i].y+=shift;
+      if(i===groups.length-1) break;
+      const gap=groups[i+1].y-(groups[i].y+groups[i].height);
+      if(gap<groupGap) shift=Math.max(0,groupGap-gap);
+      else break;
+    }
+  }
+  return groups;
+}
+function chartEndpointLabelsSvg(items,opts){
+  const groups=chartEndpointGroupLayout(items,opts.lineHeight,opts.groupGap,opts.topBound,opts.bottomBound,opts.maxChars);
+  return groups.map(group=>{
+    const centerY=group.y+group.height/2;
+    const connector=Math.abs(centerY-group.trueY)>2
+      ?`<path d="M ${(opts.baseX+5).toFixed(2)} ${group.trueY.toFixed(2)} L ${(opts.baseX+10).toFixed(2)} ${centerY.toFixed(2)}" fill="none" stroke="${group.members[0].color}" stroke-width="1" opacity=".45"></path>`
+      :"";
+    const multi=group.members.length>1;
+    let memberCount=0;
+    const linesSvg=group.lines.map((line,li)=>{
+      const y=group.y+li*opts.lineHeight;
+      const isLastLine=li===group.lines.length-1;
+      const spans=line.map(member=>{
+        memberCount++;
+        const sep=memberCount<group.members.length?`<tspan fill="#94a3b8" font-weight="800">, </tspan>`:"";
+        return `<tspan fill="${member.color}">${esc(member.name)}</tspan>${sep}`;
+      }).join("");
+      const valueSpan=isLastLine?`<tspan fill="${multi?"#41516d":group.members[0].color}"> · ${group.value}</tspan>`:"";
+      return `<text x="${(opts.baseX+13).toFixed(2)}" y="${(y+opts.dy).toFixed(2)}" font-size="${opts.fontSize}" font-weight="900">${spans}${valueSpan}</text>`;
+    }).join("");
+    return `<g class="chart-endpoint-label">${connector}${linesSvg}</g>`;
+  }).join("");
 }
 function apiTestRankingTimeline(rows){
   const fixtures=apiTestFixturesBeforeCopa()
@@ -6785,7 +6828,7 @@ function renderApiTestRankingChart(rows,isExpanded=false){
   const allActive=allIds.length>0&&allIds.every(id=>apiTestChartSelection.includes(id));
   const padX=36;
   const padY=20;
-  const padRight=isExpanded?132:96;
+  const padRight=isExpanded?152:116;
   const padBottom=isExpanded?44:38;
   const lineHeight=isExpanded?280:240;
   const lineWidth=720;
@@ -6811,7 +6854,16 @@ function renderApiTestRankingChart(rows,isExpanded=false){
     const v=values[values.length-1]||0;
     return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};
   });
-  const endpointLayout=chartEndpointLayout(endpointItems,15,padY+4,padY+usableHeight-2);
+  const endpointLabels=chartEndpointLabelsSvg(endpointItems,{
+    baseX:xFor(points-1),
+    lineHeight:13,
+    groupGap:isExpanded?17:15,
+    topBound:padY+4,
+    bottomBound:padY+usableHeight-2,
+    maxChars:isExpanded?24:18,
+    fontSize:11,
+    dy:3.8
+  });
   return `<section class="chart-shell chart-shell-compact">
     <div class="chart-toolbar">
       <div>
@@ -6877,18 +6929,7 @@ function renderApiTestRankingChart(rows,isExpanded=false){
             }).join("")}
           </g>`;
         }).join("")}
-        ${endpointLayout.map((item,idx)=>{
-          const lastIdx=points-1;
-          const baseX=xFor(lastIdx);
-          const labelX=baseX+12;
-          const trueY=yFor(endpointItems[idx].value);
-          const labelY=item.y;
-          const connector=Math.abs(labelY-trueY)>2?`<path d="M ${(baseX+5).toFixed(2)} ${trueY.toFixed(2)} L ${(baseX+10).toFixed(2)} ${labelY.toFixed(2)}" fill="none" stroke="${item.color}" stroke-width="1" opacity=".45"></path>`:"";
-          return `<g class="chart-endpoint-label">
-            ${connector}
-            <text x="${labelX.toFixed(2)}" y="${(labelY+3.8).toFixed(2)}" font-size="11" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
-          </g>`;
-        }).join("")}
+        ${endpointLabels}
       </svg>
     </div>`:`<div class="chart-empty">${chart.fixtureCount?"Ative pelo menos um participante para desenhar a evolução.":"Quando o primeiro jogo tiver placar a curva aparece aqui."}</div>`}
     <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
@@ -7388,7 +7429,7 @@ function renderRankingChart(rows,isExpanded=false){
   const chart=rankingTimeline(rows);
   const padX=42;
   const padY=22;
-  const padRight=isExpanded?140:104;
+  const padRight=isExpanded?160:124;
   const padBottom=isExpanded?50:44;
   const lineHeight=isExpanded?320:300;
   const lineWidth=760;
@@ -7429,7 +7470,16 @@ function renderRankingChart(rows,isExpanded=false){
     const v=values[values.length-1]||0;
     return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};
   });
-  const endpointLayout=chartEndpointLayout(endpointItems,16,padY+4,padY+usableHeight-2);
+  const endpointLabels=chartEndpointLabelsSvg(endpointItems,{
+    baseX:xFor(points-1),
+    lineHeight:14,
+    groupGap:isExpanded?18:16,
+    topBound:padY+4,
+    bottomBound:padY+usableHeight-2,
+    maxChars:isExpanded?24:18,
+    fontSize:11.5,
+    dy:4
+  });
   return `<section class="chart-shell">
     <div class="chart-toolbar">
       <div>
@@ -7500,18 +7550,7 @@ function renderRankingChart(rows,isExpanded=false){
             }).join("")}
           </g>`;
         }).join("")}
-        ${endpointLayout.map((item,idx)=>{
-          const lastIdx=points-1;
-          const baseX=xFor(lastIdx);
-          const labelX=baseX+13;
-          const trueY=yFor(endpointItems[idx].value);
-          const labelY=item.y;
-          const connector=Math.abs(labelY-trueY)>2?`<path d="M ${(baseX+5).toFixed(2)} ${trueY.toFixed(2)} L ${(baseX+11).toFixed(2)} ${labelY.toFixed(2)}" fill="none" stroke="${item.color}" stroke-width="1" opacity=".45"></path>`:"";
-          return `<g class="chart-endpoint-label">
-            ${connector}
-            <text x="${labelX.toFixed(2)}" y="${(labelY+4).toFixed(2)}" font-size="11.5" font-weight="900" fill="${item.color}">${esc(item.name)} · ${item.value}</text>
-          </g>`;
-        }).join("")}
+        ${endpointLabels}
       </svg>
     </div>`:`<div class="chart-empty">Ative pelo menos um participante para desenhar a curva de evolução.</div>`}
     <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
