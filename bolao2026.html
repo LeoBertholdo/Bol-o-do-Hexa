@@ -3406,6 +3406,29 @@ body.chart-modal-open{overflow:hidden}
   .podio-entry{grid-template-columns:32px minmax(0,1fr) auto;gap:10px;padding:9px}
   .podio-entry .pe-avatar{width:32px;height:32px;font-size:.7rem}
 }
+/* ===== Filme da Copa (corrida do ranking) ===== */
+.filme-caption{min-height:48px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;flex-wrap:wrap}
+.filme-caption .filme-caption-date{font-size:12px;font-weight:500;opacity:.7;display:block}
+.filme-caption .filme-caption-live{font-size:11px;font-weight:700;color:#d83a34;text-transform:uppercase;letter-spacing:.4px}
+.filme-stage{position:relative;margin-top:10px;overflow:hidden}
+.filme-row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px;transition:transform .6s cubic-bezier(.22,.9,.35,1)}
+.filme-row .filme-posn{width:26px;text-align:right;font-weight:700;font-size:14px;opacity:.8;flex:none}
+.filme-row .filme-name{width:34%;max-width:190px;flex:none;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filme-row .filme-trend{width:16px;flex:none;font-size:12px;text-align:center}
+.filme-trend.up{color:#15a36b}
+.filme-trend.down{color:#d83a34}
+.filme-row .filme-bar-wrap{flex:1;min-width:0}
+.filme-row .filme-bar{height:22px;border-radius:6px;transition:width .6s cubic-bezier(.22,.9,.35,1);min-width:2px}
+.filme-row .filme-pts{width:58px;flex:none;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px}
+.filme-row .filme-delta{font-size:11px;font-weight:600;margin-left:4px}
+.filme-delta.pos{color:#15a36b}
+.filme-delta.neg{color:#d83a34}
+.filme-controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.filme-controls input[type=range]{flex:1;min-width:160px}
+.filme-progress{font-size:12px;opacity:.75;font-variant-numeric:tabular-nums;white-space:nowrap}
+.filme-speed{display:flex;gap:4px}
+.filme-speed button{padding:4px 10px;font-size:12px;border-radius:8px}
+.filme-speed button.active{outline:2px solid #002776}
 </style>
 </head>
 <body>
@@ -3430,6 +3453,7 @@ body.chart-modal-open{overflow:hidden}
   <button onclick="goTab('jogos')">Jogos</button>
   <button onclick="goTab('palpites')">Palpites</button>
   <button onclick="goTab('config')">Config</button>
+  <button id="navFilmeBtn" hidden onclick="goTab('filme')">Histórico</button>
 </nav>
 
 <div id="tab-home" class="tab active"></div>
@@ -3438,6 +3462,7 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-jogos" class="tab"></div>
 <div id="tab-palpites" class="tab"></div>
 <div id="tab-config" class="tab"></div>
+<div id="tab-filme" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
 
@@ -7045,11 +7070,167 @@ function handleApiTestVisibilityChange(){
 }
 // ==== END BRASILEIRAO TEST LAB ====
 
+// ===== Filme da Copa: corrida do ranking gol a gol =====
+// Reconstrói a classificação em cada lance registrado (live_score_history +
+// resultados oficiais) e anima as subidas e quedas. Por enquanto só o admin vê.
+let filmePlaying=false,filmeFrameIdx=null,filmeTimer=null,filmeSpeed=1;
+const FILME_SPEED_MS={1:900,2:450,4:220};
+function filmeAvailable(){return isOnlineMode()&&isAdmin();}
+function filmeFrames(){
+  const rows=ranking();
+  const tl=rankingTimeline(rows);
+  const count=tl.series.length?tl.series[0].values.length:0;
+  const frames=[];
+  let prevPos={},prevPts={};
+  rows.forEach((r,idx)=>{prevPos[r.i]=idx;prevPts[r.i]=0;});
+  for(let k=0;k<count;k++){
+    const entries=tl.series.map(s=>({i:s.i,name:s.name,color:s.color,pts:s.values[k]}));
+    // Desempate: pontos e, persistindo, quem já estava na frente segue na frente
+    // (estabilidade visual; o desempate oficial por cravadas fica pro ranking).
+    entries.sort((a,b)=>b.pts-a.pts||prevPos[a.i]-prevPos[b.i]||a.name.localeCompare(b.name));
+    const pos={};
+    entries.forEach((e,idx)=>{
+      pos[e.i]=idx;
+      e.pos=idx;
+      e.delta=e.pts-(prevPts[e.i]||0);
+      e.moved=idx-(prevPos[e.i]!=null?prevPos[e.i]:idx);
+    });
+    frames.push({entries,state:tl.states[k],event:tl.events[k]});
+    prevPos=pos;
+    prevPts={};
+    entries.forEach(e=>{prevPts[e.i]=e.pts;});
+  }
+  return {frames,maxVal:Math.max(3,tl.maxVal)};
+}
+function filmeCaptionHtml(frame){
+  if(frame.state==="start") return `<span>Início da Copa — todo mundo com 0 ponto</span>`;
+  if(frame.state==="podio") return `<span>Pódio oficial somado</span>`;
+  const ev=frame.event;
+  if(!ev) return "";
+  const f1=TEAM_FLAGS[ev.game.t1]||"",f2=TEAM_FLAGS[ev.game.t2]||"";
+  const liveTag=frame.state==="live"?`<span class="filme-caption-live">ao vivo · parcial</span>`:"";
+  return `<span>${f1} ${esc(ev.game.t1)} <strong>${ev.res.s1} x ${ev.res.s2}</strong> ${esc(ev.game.t2)} ${f2}
+    <span class="filme-caption-date">${ev.game.date?formatGameDate(ev.game.date):""}</span></span>${liveTag}`;
+}
+function renderFilme(){
+  const el=document.getElementById("tab-filme");
+  if(!el) return;
+  if(!filmeAvailable()){el.innerHTML="";return;}
+  const data=filmeFrames();
+  const total=data.frames.length;
+  if(!total||total<2){
+    el.innerHTML=`<div class="card"><div class="section-kicker">Histórico da Copa</div>
+      <h2>Corrida do ranking</h2>
+      <p class="microcopy">Quando o primeiro jogo tiver placar, a animação aparece aqui.</p></div>`;
+    return;
+  }
+  if(filmeFrameIdx==null||filmeFrameIdx>total-1) filmeFrameIdx=total-1;
+  const rowH=30;
+  const n=data.frames[0].entries.length;
+  el.innerHTML=`<div class="card">
+    <div class="section-kicker">Histórico da Copa</div>
+    <h2 style="margin-bottom:6px">Corrida do ranking, gol a gol</h2>
+    <div class="filme-caption" id="filmeCaption"></div>
+    <div class="filme-stage" id="filmeStage" style="height:${n*rowH}px">
+      ${data.frames[0].entries.map(e=>`<div class="filme-row" id="filmeRow-${e.i}">
+        <span class="filme-posn" id="filmePos-${e.i}"></span>
+        <span class="filme-trend" id="filmeTrend-${e.i}"></span>
+        <span class="filme-name">${esc(e.name)}</span>
+        <span class="filme-bar-wrap"><span class="filme-bar" id="filmeBar-${e.i}" style="display:block;background:${e.color}"></span></span>
+        <span class="filme-pts"><span id="filmePts-${e.i}">0</span><span class="filme-delta" id="filmeDelta-${e.i}"></span></span>
+      </div>`).join("")}
+    </div>
+    <div class="filme-controls">
+      <button class="action-btn" id="filmePlayBtn" onclick="filmeTogglePlay()">▶ Assistir</button>
+      <div class="filme-speed">
+        ${[1,2,4].map(s=>`<button class="action-btn secondary${filmeSpeed===s?" active":""}" onclick="filmeSetSpeed(${s})">${s}x</button>`).join("")}
+      </div>
+      <input type="range" min="0" max="${total-1}" step="1" value="${filmeFrameIdx}" id="filmeSlider"
+        oninput="filmeSeek(+this.value)" aria-label="Posição no histórico">
+      <span class="filme-progress" id="filmeProgress"></span>
+    </div>
+  </div>`;
+  filmeApplyFrame(data,filmeFrameIdx,false);
+}
+function filmeApplyFrame(data,idx,animate=true){
+  const frame=data.frames[idx];
+  if(!frame) return;
+  filmeFrameIdx=idx;
+  const rowH=30;
+  frame.entries.forEach(e=>{
+    const row=document.getElementById(`filmeRow-${e.i}`);
+    if(!row) return;
+    if(!animate) row.style.transition="none";
+    row.style.transform=`translateY(${e.pos*rowH}px)`;
+    const bar=document.getElementById(`filmeBar-${e.i}`);
+    if(bar){
+      if(!animate) bar.style.transition="none";
+      bar.style.width=`${Math.max(0.5,Math.max(0,e.pts)/data.maxVal*100)}%`;
+    }
+    if(!animate) requestAnimationFrame(()=>{row.style.transition="";if(bar)bar.style.transition="";});
+    const posEl=document.getElementById(`filmePos-${e.i}`);
+    if(posEl) posEl.textContent=`${e.pos+1}º`;
+    const ptsEl=document.getElementById(`filmePts-${e.i}`);
+    if(ptsEl) ptsEl.textContent=e.pts;
+    const deltaEl=document.getElementById(`filmeDelta-${e.i}`);
+    if(deltaEl){
+      deltaEl.textContent=e.delta?`${e.delta>0?"+":""}${e.delta}`:"";
+      deltaEl.className=`filme-delta ${e.delta>0?"pos":e.delta<0?"neg":""}`;
+    }
+    const trendEl=document.getElementById(`filmeTrend-${e.i}`);
+    if(trendEl){
+      trendEl.textContent=e.moved<0?"▲":e.moved>0?"▼":"";
+      trendEl.className=`filme-trend ${e.moved<0?"up":e.moved>0?"down":""}`;
+    }
+  });
+  const cap=document.getElementById("filmeCaption");
+  if(cap) cap.innerHTML=filmeCaptionHtml(frame);
+  const slider=document.getElementById("filmeSlider");
+  if(slider&&+slider.value!==idx) slider.value=idx;
+  const prog=document.getElementById("filmeProgress");
+  if(prog) prog.textContent=`lance ${idx+1} de ${data.frames.length}`;
+}
+function filmeStop(){
+  filmePlaying=false;
+  if(filmeTimer){clearTimeout(filmeTimer);filmeTimer=null;}
+  const btn=document.getElementById("filmePlayBtn");
+  if(btn) btn.textContent="▶ Assistir";
+}
+function filmeTogglePlay(){
+  if(filmePlaying){filmeStop();return;}
+  const data=filmeFrames();
+  if(data.frames.length<2) return;
+  if(filmeFrameIdx==null||filmeFrameIdx>=data.frames.length-1){
+    filmeApplyFrame(data,0,false);
+  }
+  filmePlaying=true;
+  const btn=document.getElementById("filmePlayBtn");
+  if(btn) btn.textContent="⏸ Pausar";
+  const tick=()=>{
+    if(!filmePlaying||activeTab!=="filme"){filmeStop();return;}
+    if(filmeFrameIdx>=data.frames.length-1){filmeStop();return;}
+    filmeApplyFrame(data,filmeFrameIdx+1,true);
+    filmeTimer=setTimeout(tick,FILME_SPEED_MS[filmeSpeed]||900);
+  };
+  filmeTimer=setTimeout(tick,FILME_SPEED_MS[filmeSpeed]||900);
+}
+function filmeSetSpeed(s){
+  filmeSpeed=FILME_SPEED_MS[s]?s:1;
+  document.querySelectorAll(".filme-speed button").forEach(b=>{
+    b.classList.toggle("active",b.textContent===`${filmeSpeed}x`);
+  });
+}
+function filmeSeek(idx){
+  filmeStop();
+  filmeApplyFrame(filmeFrames(),idx,true);
+}
+
 function goTab(t){
   if(t==="api-test") t="home";
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
-  const tabs=["home","ranking","grupos","jogos","palpites","config"];
+  if(t==="filme"&&!filmeAvailable()) t="home";
+  const tabs=["home","ranking","grupos","jogos","palpites","config","filme"];
   if(!tabs.includes(t)) t="home";
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
@@ -7063,12 +7244,15 @@ function goTab(t){
 }
 function render(t){
   renderAuthControls();
+  const filmeBtn=document.getElementById("navFilmeBtn");
+  if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
   if(t==="home") renderHome();
   if(t==="ranking") renderRanking();
   if(t==="grupos") renderGrupos();
   if(t==="jogos") renderJogos();
   if(t==="palpites") renderPalpites();
   if(t==="config") renderConfig();
+  if(t==="filme") renderFilme();
 }
 
 function predictionProgress(){
