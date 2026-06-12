@@ -7649,21 +7649,64 @@ function rankingChartDefaultSelection(rows){
 // - jogo em andamento entra como parcial (estado "live", traço tracejado).
 // O eixo usa o horário em que o robô OBSERVOU a mudança (recorded_at), preso à
 // janela do jogo — o minuto reportado pela API atrasa/erra demais pra ordenar.
+//
+// Carência do empate (só no gráfico; Palpites/Jogos não mudam): 0x0 antes do
+// fim do 1º tempo não pontua — senão todo empatista "pontua" no apito inicial.
+// Se o 1º tempo acaba 0x0, o empate parcial entra no intervalo. Um 0x0 DEPOIS
+// de gol (anulado) no 1º tempo derruba a curva sem premiar empate (zeroGate).
 function rankingGameEvents(){
   const events=[];
   const histWindowMs=5*3600000;
+  // 45min + acréscimos típicos; usado quando o status da linha não diz o tempo.
+  const halfEndOffsetMs=49*60000;
+  const pastFirstHalf=(statusShort,ms,halfEndMs)=>{
+    const st=String(statusShort||"").toUpperCase();
+    if(st==="1H"||st==="NS") return false;
+    if(["HT","2H","ET","BT","P","FT","AET","PEN","FINISHED","AWARDED","AWD"].includes(st)) return true;
+    return ms>=halfEndMs;
+  };
   GAMES.forEach(game=>{
     const official=S.results[game.id]||null;
     const liveRes=official?null:liveProvisionalResult(game);
     if(!official&&!liveRes) return;
     const kickoffMs=game.utc?new Date(game.utc).getTime():(game.date?parseDateKey(game.date).getTime():Date.now());
-    const hist=(copaLiveHistory[game.id]||[]).map(row=>{
+    const halfEndMs=kickoffMs+halfEndOffsetMs;
+    const mapped=(copaLiveHistory[game.id]||[]).map(row=>{
       const raw=new Date(row.recorded_at||"").getTime();
       const ms=Number.isFinite(raw)?Math.min(Math.max(raw,kickoffMs),kickoffMs+histWindowMs):kickoffMs;
-      return {ms,game,res:{s1:+row.goals_home,s2:+row.goals_away,provisional:true},state:official?"detail":"live"};
+      const zero=!(+row.goals_home||0)&&!(+row.goals_away||0);
+      return {ms,game,res:{s1:+row.goals_home,s2:+row.goals_away,provisional:true},
+        state:official?"detail":"live",zero,firstHalf:!pastFirstHalf(row.status_short,ms,halfEndMs)};
     });
-    hist.forEach(ev=>events.push(ev));
+    let goalSeen=false;
+    const hist=[];
+    mapped.forEach(ev=>{
+      if(!ev.zero) goalSeen=true;
+      else if(ev.firstHalf){
+        if(!goalSeen) return; // 0x0 do apito inicial: fora do gráfico
+        ev.zeroGate=true;     // gol anulado no 1º tempo: evento zerado pra todos
+      }
+      hist.push(ev);
+    });
+    // 1º tempo terminou 0x0? O empate parcial entra no apito do intervalo.
     const closing=official||liveRes;
+    const closingZero=!(+closing.s1||0)&&!(+closing.s2||0);
+    const firstGoal=hist.find(ev=>!ev.zero);
+    const liveStatus=official?null:(copaLiveForGame(game.id)||{}).status_short;
+    let syntheticMs=null;
+    if(firstGoal&&!firstGoal.firstHalf){
+      syntheticMs=Math.max(kickoffMs+1,Math.min(halfEndMs,firstGoal.ms-1000));
+    }else if(!firstGoal&&closingZero&&(official||pastFirstHalf(liveStatus,Date.now(),halfEndMs))){
+      syntheticMs=halfEndMs;
+    }
+    const countedZeroEarly=hist.some(ev=>ev.zero&&!ev.zeroGate&&(!firstGoal||ev.ms<firstGoal.ms));
+    if(syntheticMs!=null&&!countedZeroEarly){
+      hist.push({ms:syntheticMs,game,res:{s1:0,s2:0,provisional:true},state:official?"detail":"live",zero:true,synthetic:true});
+      hist.sort((a,b)=>a.ms-b.ms);
+    }
+    // Jogo ao vivo ainda 0x0 no 1º tempo e sem lances aproveitáveis: nada a mostrar.
+    if(!hist.length&&!official&&closingZero) return;
+    hist.forEach(ev=>events.push(ev));
     const closingState=official?"final":"live";
     const lastHist=hist.length?hist[hist.length-1]:null;
     const sameAsLast=lastHist&&+lastHist.res.s1===+closing.s1&&+lastHist.res.s2===+closing.s2;
@@ -7672,6 +7715,7 @@ function rankingGameEvents(){
       // (com o resultado oficial completo, incluindo prorrogação/pênaltis no mata-mata).
       lastHist.res=closing;
       lastHist.state=closingState;
+      if(official) lastHist.zeroGate=false; // resultado oficial sempre pontua
     }else{
       const fallbackMs=official?kickoffMs:Math.min(Math.max(Date.now(),kickoffMs),kickoffMs+histWindowMs);
       events.push({ms:lastHist?lastHist.ms+1:fallbackMs,game,res:closing,state:closingState});
@@ -7697,7 +7741,8 @@ function rankingTimeline(rows){
   events.forEach(ev=>{
     series.forEach(line=>{
       const pal=S.palpites[`${line.i}_${ev.game.id}`];
-      const v=score(pal,ev.res,ev.game);
+      // zeroGate: 0x0 pós-anulação no 1º tempo zera o jogo pra todos.
+      const v=ev.zeroGate?0:score(pal,ev.res,ev.game);
       const cur=v==null?0:v;
       // Só a diferença em relação ao último placar conhecido DESTE jogo entra,
       // então gol anulado/virada sobe e desce a curva como aconteceu ao vivo.
@@ -7891,7 +7936,7 @@ function renderRankingChart(rows,isExpanded=false){
     if(st==="podio") return `Pódio — ${name}: ${value} pts`;
     const ev=chart.events?.[index];
     if(!ev) return "";
-    const flag=st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
+    const flag=ev.synthetic?" · 0x0 no intervalo":st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
     return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts`;
   };
   const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
@@ -7918,7 +7963,7 @@ function renderRankingChart(rows,isExpanded=false){
     const x=xFor(i);
     const color=st==="live"?"#d83a34":st==="final"?"#002776":"#8492ab";
     const scoreTxt=`${ev.res.s1}x${ev.res.s2}`;
-    const tip=`${ev.game.t1} ${scoreTxt} ${ev.game.t2}${st==="live"?" · ao vivo (parcial)":""}`;
+    const tip=`${ev.game.t1} ${scoreTxt} ${ev.game.t2}${ev.synthetic?" · 0x0 no intervalo":st==="live"?" · ao vivo (parcial)":""}`;
     const tickEnd=axisBaseY+(st==="detail"?4:5.5);
     let label="";
     if(goalTier!=="tick"){
