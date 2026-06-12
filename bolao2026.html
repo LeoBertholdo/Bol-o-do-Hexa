@@ -3429,6 +3429,8 @@ body.chart-modal-open{overflow:hidden}
 .filme-speed{display:flex;gap:4px}
 .filme-speed button{padding:4px 10px;font-size:12px;border-radius:8px}
 .filme-speed button.active{outline:2px solid #002776}
+.filme-chart{margin-top:18px}
+.filme-chart svg{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -7100,7 +7102,35 @@ function filmeFrames(){
     prevPts={};
     entries.forEach(e=>{prevPts[e.i]=e.pts;});
   }
-  return {frames,maxVal:Math.max(3,tl.maxVal)};
+  return {frames,maxVal:Math.max(3,tl.maxVal),minVal:Math.min(0,tl.minVal),series:tl.series,states:tl.states};
+}
+// Geometria do gráfico do filme (compartilhada entre o desenho e o cursor).
+const FILME_CHART={W:760,H:240,padX:42,padR:14,padY:12,padB:22};
+function filmeChartX(data,idx){
+  const n=data.frames.length;
+  return FILME_CHART.padX+(FILME_CHART.W-FILME_CHART.padX-FILME_CHART.padR)*(n>1?idx/(n-1):0);
+}
+// Desenha o gráfico de evolução completo uma única vez; a animação só move a
+// janela de recorte (clip) e o cursor, revelando as linhas da esquerda pra direita.
+function filmeChartSvg(data){
+  const {W,H,padX,padR,padY,padB}=FILME_CHART;
+  const uw=W-padX-padR,uh=H-padY-padB;
+  const range=Math.max(1,data.maxVal-data.minVal);
+  const xFor=i=>filmeChartX(data,i);
+  const yFor=v=>padY+uh-uh*((v-data.minVal)/range);
+  const ticks=chartIntegerTicks(data.minVal,data.maxVal,8);
+  const grid=ticks.map(t=>`<g><line x1="${padX}" x2="${W-padR}" y1="${yFor(t).toFixed(1)}" y2="${yFor(t).toFixed(1)}" stroke="rgba(15,23,42,.08)"></line><text x="${padX-8}" y="${yFor(t).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="rgba(15,23,42,.55)">${t}</text></g>`).join("");
+  const lines=data.series.map(s=>{
+    const seg=rankingLinePathSegmentedFlex(s.values,data.states,xFor,yFor);
+    return `${seg.solid?`<path d="${seg.solid}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linecap="round"></path>`:""}
+      ${seg.dashed?`<path d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-dasharray="5 5" stroke-linecap="round"></path>`:""}`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação até o lance atual">
+    <defs><clipPath id="filmeChartClip"><rect id="filmeClipRect" x="0" y="0" width="${padX}" height="${H}"></rect></clipPath></defs>
+    ${grid}
+    <g clip-path="url(#filmeChartClip)">${lines}</g>
+    <rect id="filmeCursorRect" x="${(padX-1).toFixed(1)}" y="${padY}" width="2" height="${uh}" rx="1" fill="rgba(0,39,118,.45)"></rect>
+  </svg>`;
 }
 function filmeCaptionHtml(frame){
   if(frame.state==="start") return `<span>Início da Copa — todo mundo com 0 ponto</span>`;
@@ -7140,6 +7170,7 @@ function renderFilme(){
         <span class="filme-pts"><span id="filmePts-${e.i}">0</span><span class="filme-delta" id="filmeDelta-${e.i}"></span></span>
       </div>`).join("")}
     </div>
+    <div class="filme-chart">${filmeChartSvg(data)}</div>
     <div class="filme-controls">
       <button class="action-btn" id="filmePlayBtn" onclick="filmeTogglePlay()">▶ Assistir</button>
       <div class="filme-speed">
@@ -7182,6 +7213,17 @@ function filmeApplyFrame(data,idx,animate=true){
       trendEl.textContent=e.moved<0?"▲":e.moved>0?"▼":"";
       trendEl.className=`filme-trend ${e.moved<0?"up":e.moved>0?"down":""}`;
     }
+  });
+  const chartX=filmeChartX(data,idx);
+  const clipRect=document.getElementById("filmeClipRect");
+  const cursorRect=document.getElementById("filmeCursorRect");
+  // style + atributo: navegadores com geometria SVG via CSS animam suave;
+  // os demais só pulam o recorte pro lugar certo, sem quebrar nada.
+  [[clipRect,"width",chartX],[cursorRect,"x",chartX-1]].forEach(([elm,prop,val])=>{
+    if(!elm) return;
+    elm.style.transition=animate?`${prop} .6s cubic-bezier(.22,.9,.35,1)`:"none";
+    elm.style[prop]=`${val.toFixed(1)}px`;
+    elm.setAttribute(prop,val.toFixed(1));
   });
   const cap=document.getElementById("filmeCaption");
   if(cap) cap.innerHTML=filmeCaptionHtml(frame);
