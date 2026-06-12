@@ -807,6 +807,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-endpoint-label text{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 .chart-endpoint-dot{filter:drop-shadow(0 2px 4px rgba(0,39,118,.18))}
 .chart-endpoint-dot.is-live,.chart-live-dot{animation:chart-live-pulse 1.6s ease-in-out infinite}
+.chart-goal-marker.is-live line{animation:chart-live-pulse 1.6s ease-in-out infinite}
+.chart-series{transition:opacity .25s ease;cursor:pointer}
+svg.chart-hover .chart-series:not(.is-hovered),svg.chart-focus:not(.chart-hover) .chart-series:not(.is-focused){opacity:.18}
 @keyframes chart-live-pulse{
   0%,100%{opacity:1;transform:scale(1);transform-origin:center;transform-box:fill-box}
   50%{opacity:.55;transform:scale(1.25);transform-origin:center;transform-box:fill-box}
@@ -5465,6 +5468,7 @@ let authPanelOpen=false;
 let authMode="signin";
 let rankingChartSelection=[];
 let rankingChartTouched=false;
+let rankingChartFocus=null;
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
 let chartExpanded=null;
@@ -7605,6 +7609,20 @@ function rankingPointDot(value,index,totalPoints,width,height,padX,padY,minVal,m
   const y=height-padY-(usableHeight*((value-minVal)/range));
   return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="3.5" fill="${color}" stroke="#fff" stroke-width="2"></circle>`;
 }
+// Foco numa linha do gráfico: hover esmaece as demais (sem re-render);
+// clique/toque fixa o foco (sobrevive ao re-render do poll) e re-clique solta.
+function hoverRankingSeries(el,on){
+  const svg=el.closest("svg");
+  if(!svg) return;
+  svg.classList.toggle("chart-hover",on);
+  el.classList.toggle("is-hovered",on);
+}
+function focusRankingSeries(participantIndex,ev){
+  if(ev) ev.stopPropagation();
+  rankingChartFocus=rankingChartFocus===participantIndex?null:participantIndex;
+  if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
+}
 function toggleRankingSeries(participantIndex){
   rankingChartTouched=true;
   if(rankingChartSelection.includes(participantIndex)) rankingChartSelection=rankingChartSelection.filter(id=>id!==participantIndex);
@@ -7656,14 +7674,21 @@ function renderRankingChart(rows,isExpanded=false){
   const padX=42;
   const padY=22;
   const padRight=isExpanded?160:124;
-  const padBottom=isExpanded?50:44;
-  const lineHeight=isExpanded?320:300;
   const lineWidth=760;
   const usableWidth=lineWidth-padX-padRight;
+  const points=chart.labels.length;
+  const eventCount=chart.events?chart.events.filter(Boolean).length:0;
+  // Marcadores de lance sob o eixo X: o rótulo encolhe conforme a Copa acumula
+  // eventos (bandeiras+placar -> só placar -> só tracinho com tooltip), pra
+  // continuar legível dos primeiros jogos até a final.
+  const stepPx=usableWidth/Math.max(1,points-1);
+  const goalTier=!eventCount?"tick":stepPx>=24?"full":stepPx>=11?"score":"tick";
+  const goalBand=goalTier==="full"?40:goalTier==="score"?22:0;
+  const padBottom=(isExpanded?50:44)+goalBand;
+  const lineHeight=(isExpanded?320:300)+goalBand;
   const usableHeight=lineHeight-padY-padBottom;
   const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,isExpanded?14:11);
   const range=Math.max(1,chart.maxVal-chart.minVal);
-  const points=chart.labels.length;
   const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
   const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
   const summary=[
@@ -7671,6 +7696,8 @@ function renderRankingChart(rows,isExpanded=false){
     chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"",
     chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
     chart.detailEventCount?"Inclui a oscilação gol a gol":"",
+    eventCount&&goalTier!=="tick"?"Placar de cada lance no eixo":"",
+    eventCount&&goalTier==="tick"?"Lances marcados como traços no eixo (toque para ver)":"",
     chart.includePodio?"Pódio oficial incluído":"",
     selected.length?`${selected.length} de ${rows.length} no gráfico`:""
   ].filter(Boolean);
@@ -7706,6 +7733,27 @@ function renderRankingChart(rows,isExpanded=false){
     fontSize:11.5,
     dy:4
   });
+  const axisBaseY=padY+usableHeight;
+  const goalMarkers=(chart.events||[]).map((ev,i)=>{
+    if(!ev) return "";
+    const st=chart.states[i];
+    const x=xFor(i);
+    const color=st==="live"?"#d83a34":st==="final"?"#002776":"#8492ab";
+    const scoreTxt=`${ev.res.s1}x${ev.res.s2}`;
+    const tip=`${ev.game.t1} ${scoreTxt} ${ev.game.t2}${st==="live"?" · ao vivo (parcial)":""}`;
+    const tickEnd=axisBaseY+(st==="detail"?4:5.5);
+    let label="";
+    if(goalTier!=="tick"){
+      const txt=goalTier==="full"?`${TEAM_FLAGS[ev.game.t1]||""} ${scoreTxt} ${TEAM_FLAGS[ev.game.t2]||""}`.trim():scoreTxt;
+      const ty=axisBaseY+15;
+      label=`<text x="${x.toFixed(2)}" y="${ty.toFixed(2)}" text-anchor="end" font-size="9" font-weight="800" fill="${color}" transform="rotate(-45 ${x.toFixed(2)} ${ty.toFixed(2)})">${esc(txt)}</text>`;
+    }
+    return `<g class="chart-goal-marker${st==="live"?" is-live":""}">
+      <title>${esc(tip)}</title>
+      <line x1="${x.toFixed(2)}" y1="${axisBaseY.toFixed(2)}" x2="${x.toFixed(2)}" y2="${tickEnd.toFixed(2)}" stroke="${color}" stroke-width="${st==="detail"?1.1:1.7}"></line>
+      ${label}
+    </g>`;
+  }).join("");
   return `<section class="chart-shell">
     <div class="chart-toolbar">
       <div>
@@ -7729,7 +7777,7 @@ function renderRankingChart(rows,isExpanded=false){
       }).join("")}
     </div>
     ${selected.length?`<div class="chart-stage">
-      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
         <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.2)" stroke-width="1"></line>
         ${tickValues.map(value=>{
           const y=yFor(value);
@@ -7744,22 +7792,26 @@ function renderRankingChart(rows,isExpanded=false){
           const lbl=chart.labels[i]||"";
           const isStart=i===0;
           const isPodio=chart.includePodio&&i===points-1;
-          const tx=isStart?x+4:x;
-          const ty=padY+usableHeight+(isStart?15:17);
+          // Datas descem uma faixa quando os placares dos lances ocupam o rodapé;
+          // aí ficam na horizontal pra não invadir a diagonal dos placares, e a
+          // primeira data se afasta do "Início" pra não sobrepor.
+          const tx=isStart?x+4:(goalBand?Math.max(x,padX+64):x);
+          const ty=padY+usableHeight+goalBand+(isStart?15:17);
           const anchor=isStart?"start":"middle";
-          const rot=isStart?0:-32;
+          const rot=isStart||goalBand?0:-32;
           return `<g>
             <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+5).toFixed(2)}" stroke="rgba(0,39,118,.25)" stroke-width="1"></line>
             <text class="chart-axis-tick ${isStart?"is-start":""} ${isPodio?"is-podio":""}" x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" text-anchor="${anchor}" font-size="11" fill="#41516d" font-weight="850"${rot?` transform="rotate(${rot} ${tx.toFixed(2)} ${ty.toFixed(2)})"`:""}>${esc(lbl)}</text>
           </g>`;
         }).join("")}
+        ${goalMarkers}
         ${selected.map(line=>{
           const seriesLine=chart.series.find(s=>s.i===line.i);
           const color=seriesLine?.color||"#002776";
           const values=seriesLine?.values||[0];
           const name=seriesLine?.name||"";
           const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
-          return `<g>
+          return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" onmouseenter="hoverRankingSeries(this,true)" onmouseleave="hoverRankingSeries(this,false)" onclick="focusRankingSeries(${line.i},event)">
             ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
             ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
             ${values.map((value,index)=>{
