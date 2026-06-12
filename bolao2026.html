@@ -429,6 +429,26 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   white-space:nowrap;
 }
 .mini-action:hover{border-color:#b8c7df;background:#f7fbff}
+.fixture-section-head{align-items:center}
+.fixture-nav-info{min-width:0;flex:1}
+.fixture-nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.fixture-nav-arrows{display:inline-flex;align-items:center;gap:4px;padding:3px;background:#f3f6fb;border:1px solid var(--border);border-radius:10px}
+.fixture-nav-btn{
+  width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:7px;border:0;background:transparent;color:var(--blue);
+  font-size:1.15rem;font-weight:950;line-height:1;cursor:pointer;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.fixture-nav-btn:hover:not(:disabled){background:#fff;box-shadow:0 1px 4px rgba(0,39,118,.12)}
+.fixture-nav-btn:active:not(:disabled){transform:scale(.94)}
+.fixture-nav-btn:disabled{opacity:.32;cursor:not-allowed}
+.fixture-today-link{
+  margin-top:6px;display:inline-flex;align-items:center;gap:4px;
+  background:transparent;border:0;padding:2px 0;
+  color:var(--blue);font-size:.72rem;font-weight:900;letter-spacing:.2px;cursor:pointer;
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;
+}
+.fixture-today-link:hover{color:#0a2a8a}
 .ranking-compact{min-height:0}
 .home-ranking-full .lb-row:last-child{margin-bottom:0}
 .full-ranking-list{display:grid;gap:8px}
@@ -2942,6 +2962,105 @@ body.chart-modal-open{overflow:hidden}
 	.copa-games-page.v2 .copa-self-pick-badge.bad{background:linear-gradient(135deg,#ef4444,#991b1b);border-color:#991b1b;color:#fff}
 	.copa-games-page.v2 .copa-self-pick-badge.pending{background:#fffbeb;border-color:#fde68a;color:#a16207}
 
+	/* === LIVE PANEL (Seu palpite + dropdown dos outros) === */
+	.copa-games-page.v2 .copa-game.is-live{grid-template-rows:auto auto}
+	.copa-games-page.v2 .copa-game.is-noside{grid-template-columns:92px minmax(0,1fr)}
+	.copa-games-page.v2 .copa-live-panel{
+	  grid-column:1 / -1;
+	  display:grid;
+	  grid-template-columns:minmax(260px,360px) minmax(0,1fr);
+	  gap:14px;
+	  margin-top:6px;
+	  padding-top:14px;
+	  border-top:1px dashed rgba(16,185,129,.35);
+	}
+	.copa-games-page.v2 .copa-live-panel.no-self{grid-template-columns:1fr}
+	.copa-games-page.v2 .copa-live-self{
+	  display:flex;flex-direction:column;gap:9px;
+	  padding:13px 14px;
+	  border-radius:14px;
+	  background:linear-gradient(155deg,#ecfdf5 0%,#fff 80%);
+	  border:1px solid rgba(16,185,129,.35);
+	  box-shadow:0 4px 14px -10px rgba(0,132,61,.35);
+	}
+	.copa-games-page.v2 .copa-live-self-head{
+	  display:flex;align-items:center;justify-content:space-between;gap:10px;
+	}
+	.copa-games-page.v2 .copa-live-self-label{
+	  font-size:.6rem;font-weight:950;letter-spacing:1px;text-transform:uppercase;
+	  color:var(--copa-green);
+	}
+	.copa-games-page.v2 .copa-live-self-pts{
+	  display:inline-flex;align-items:center;justify-content:center;
+	  min-width:48px;padding:5px 11px;border-radius:999px;
+	  font-size:.66rem;font-weight:950;letter-spacing:.5px;text-transform:uppercase;line-height:1;
+	  border:1px solid transparent;
+	}
+	.copa-games-page.v2 .copa-live-self-pts.hit{background:linear-gradient(135deg,#10b981,#047857);color:#fff;border-color:#047857}
+	.copa-games-page.v2 .copa-live-self-pts.good{background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border-color:#1e40af}
+	.copa-games-page.v2 .copa-live-self-pts.zero{background:#e2e8f0;color:#475569;border-color:#cbd5e1}
+	.copa-games-page.v2 .copa-live-self-pts.bad{background:linear-gradient(135deg,#ef4444,#991b1b);color:#fff;border-color:#991b1b}
+	.copa-games-page.v2 .copa-live-self-pts.none{background:#fff;color:#94a3b8;border-color:#e2e8f0}
+	.copa-games-page.v2 .copa-live-self-pick{display:flex;flex-direction:column;gap:5px;background:#fff;border-radius:10px;border:1px solid rgba(16,185,129,.18);padding:9px 11px}
+	.copa-games-page.v2 .copa-live-self-line{display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;color:var(--copa-ink);font-size:.86rem}
+	.copa-games-page.v2 .copa-live-self-line strong{font-size:1.2rem;font-weight:950;color:var(--copa-blue);min-width:30px;text-align:right}
+	.copa-games-page.v2 .copa-live-self-team{display:inline-flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.copa-games-page.v2 .copa-live-self-adv{margin-top:3px;font-size:.62rem;font-weight:950;letter-spacing:.5px;text-transform:uppercase;color:#a16207;border-top:1px dashed rgba(160,120,0,.25);padding-top:6px}
+	.copa-games-page.v2 .copa-live-self-empty{font-size:.78rem;font-weight:850;color:var(--copa-mute);padding:14px 4px;text-align:center;border:1px dashed rgba(148,163,184,.4);border-radius:10px;background:#fff}
+	.copa-games-page.v2 .copa-live-self-foot{font-size:.62rem;font-weight:850;color:var(--copa-mute);text-align:center}
+
+	.copa-games-page.v2 .copa-live-others{
+	  align-self:stretch;display:flex;flex-direction:column;min-width:0;
+	  border:1px solid var(--copa-line);border-radius:14px;background:#fff;overflow:hidden;
+	}
+	.copa-games-page.v2 .copa-live-others>summary{
+	  display:flex;align-items:center;justify-content:space-between;gap:10px;
+	  padding:13px 14px;cursor:pointer;list-style:none;
+	  font-weight:900;color:var(--copa-ink);
+	  background:linear-gradient(180deg,#fff,#f8fafc);
+	  transition:background .15s ease;
+	}
+	.copa-games-page.v2 .copa-live-others>summary::-webkit-details-marker{display:none}
+	.copa-games-page.v2 .copa-live-others>summary:hover{background:#f1f5f9}
+	.copa-games-page.v2 .copa-live-others-title{font-size:.74rem;font-weight:950;letter-spacing:.5px;color:var(--copa-ink)}
+	.copa-games-page.v2 .copa-live-others-meta{margin-left:auto;font-size:.6rem;font-weight:900;letter-spacing:.5px;color:var(--copa-mute);text-transform:uppercase}
+	.copa-games-page.v2 .copa-live-others-chev{
+	  display:inline-flex;align-items:center;justify-content:center;
+	  width:22px;height:22px;border-radius:50%;background:#eef5ff;color:var(--copa-blue);
+	  font-size:.95rem;font-weight:950;line-height:1;
+	  transition:transform .18s ease;
+	}
+	.copa-games-page.v2 .copa-live-others[open]>summary .copa-live-others-chev{transform:rotate(90deg)}
+	.copa-games-page.v2 .copa-live-others-list{
+	  display:flex;flex-direction:column;border-top:1px solid var(--copa-line);
+	  max-height:260px;overflow-y:auto;
+	}
+	.copa-games-page.v2 .copa-live-pal-row{
+	  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;
+	  align-items:center;gap:10px;
+	  padding:9px 14px;
+	  border-bottom:1px solid #f1f5f9;
+	  font-size:.78rem;
+	}
+	.copa-games-page.v2 .copa-live-pal-row:last-child{border-bottom:0}
+	.copa-games-page.v2 .copa-live-pal-name{font-weight:900;color:var(--copa-ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+	.copa-games-page.v2 .copa-live-pal-name small{color:var(--copa-mute);font-weight:850}
+	.copa-games-page.v2 .copa-live-pal-pick{display:inline-flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap}
+	.copa-games-page.v2 .copa-live-pal-score{display:inline-flex;align-items:center;gap:4px;color:var(--copa-blue);font-weight:950;font-size:.86rem;line-height:1}
+	.copa-games-page.v2 .copa-live-pal-score span{font-size:.66rem;color:var(--copa-mute);font-weight:900}
+	.copa-games-page.v2 .copa-live-pal-score.empty{color:#94a3b8;font-weight:850}
+	.copa-games-page.v2 .copa-live-pal-adv{font-size:.56rem;font-weight:950;letter-spacing:.5px;color:#a16207;text-transform:uppercase}
+	.copa-games-page.v2 .copa-live-pal-pts{
+	  display:inline-flex;align-items:center;justify-content:center;
+	  min-width:40px;padding:3px 8px;border-radius:999px;border:1px solid transparent;
+	  font-size:.6rem;font-weight:950;letter-spacing:.5px;text-transform:uppercase;line-height:1;
+	}
+	.copa-games-page.v2 .copa-live-pal-pts.hit{background:linear-gradient(135deg,#10b981,#047857);color:#fff;border-color:#047857}
+	.copa-games-page.v2 .copa-live-pal-pts.good{background:linear-gradient(135deg,#3b82f6,#1e40af);color:#fff;border-color:#1e40af}
+	.copa-games-page.v2 .copa-live-pal-pts.zero{background:#e2e8f0;color:#475569;border-color:#cbd5e1}
+	.copa-games-page.v2 .copa-live-pal-pts.bad{background:linear-gradient(135deg,#ef4444,#991b1b);color:#fff;border-color:#991b1b}
+	.copa-games-page.v2 .copa-live-pal-pts.none{background:#fff;color:#94a3b8;border-color:#e2e8f0}
+
 	@media(max-width:760px){
 	  .copa-games-page.v2 .copa-games-shell{padding:14px;border-radius:14px}
 	  .copa-games-page.v2 .copa-games-shell:after{top:11px;right:12px;font-size:.5rem;padding:3px 8px}
@@ -2966,6 +3085,10 @@ body.chart-modal-open{overflow:hidden}
 	  .copa-games-page.v2 .copa-primary-score .copa-score b{min-width:30px;padding:6px 8px;font-size:.94rem}
 	  .copa-games-page.v2 .copa-game.is-live .copa-score b{min-width:38px;padding:8px 10px;font-size:1.18rem}
 	  .copa-games-page.v2 .copa-side-panel{padding:10px 11px}
+	  .copa-games-page.v2 .copa-live-panel{grid-template-columns:1fr;gap:10px;margin-top:2px;padding-top:11px}
+	  .copa-games-page.v2 .copa-live-pal-row{grid-template-columns:minmax(0,1fr) auto;row-gap:4px;column-gap:10px;padding:9px 12px}
+	  .copa-games-page.v2 .copa-live-pal-pick{grid-column:1 / -1;justify-content:flex-start}
+	  .copa-games-page.v2 .copa-live-others-list{max-height:240px}
 	}
 
 	@media(max-width:520px){
@@ -3068,6 +3191,9 @@ body.chart-modal-open{overflow:hidden}
   }
   .section-head h2{font-size:.96rem}
   .mini-action{width:max-content;max-width:100%;padding:8px 9px;font-size:.7rem}
+  .fixture-section-head{align-items:start}
+  .fixture-nav-actions{flex-direction:column-reverse;align-items:flex-end;gap:6px}
+  .fixture-nav-btn{width:32px;height:32px}
   .prize-head{align-items:flex-start;flex-direction:column;gap:8px}
   .fixture-list{gap:8px}
   .fixture-row{
@@ -5303,6 +5429,7 @@ let jFilter="all";
 let jogosSearch="";
 let jogosStatusFilter="all";
 let palStage="groups";
+let homeFixtureDateKey=null;
 let palFilter="all";
 let resultDrafts={};
 let authPanelOpen=false;
@@ -6916,44 +7043,81 @@ function isPredictionComplete(game,pal){
   if(!game?.ko||+pal.s1!==+pal.s2) return true;
   return koAdvancerComplete(game,pal);
 }
-function homeFixtureWindow(){
-  const today=todayKey();
-  const todays=GAMES.filter(g=>g.date===today).sort(compareGameSchedule);
-  if(todays.length){
-    // Espelha jogos ao vivo do dia primeiro, depois o restante por horário.
-    const liveTodayCount=todays.filter(g=>!S.results[g.id]&&copaLiveIsActive(copaLiveForGame(g.id))).length;
-    const sorted=todays.slice().sort((a,b)=>{
-      const la=!S.results[a.id]&&copaLiveIsActive(copaLiveForGame(a.id))?1:0;
-      const lb=!S.results[b.id]&&copaLiveIsActive(copaLiveForGame(b.id))?1:0;
-      if(la!==lb) return lb-la;
-      return compareGameSchedule(a,b);
-    });
-    const games=sorted.slice(0,6);
-    const parts=formatGameDateParts(today);
-    const total=`${games.length} ${games.length===1?"partida":"partidas"}`;
-    return {
-      title:liveTodayCount?"Ao vivo agora":"Jogos do dia",
-      headline:`${parts.weekdayLong}, ${parts.dayMonth}`,
-      detail:liveTodayCount?`${liveTodayCount} ao vivo · ${total} no dia`:total,
-      games,
-      showDates:new Set(games.map(game=>game.date)).size>1,
-      live:liveTodayCount>0
-    };
+function fixtureDateList(){
+  const set=new Set();
+  GAMES.forEach(g=>{ if(g.date) set.add(g.date); });
+  return Array.from(set).sort();
+}
+function adjacentFixtureDate(currentKey,dir){
+  const list=fixtureDateList();
+  if(!list.length||!currentKey) return null;
+  const idx=list.indexOf(currentKey);
+  if(idx<0){
+    if(dir>0) return list.find(d=>d>currentKey)||null;
+    const past=list.filter(d=>d<currentKey);
+    return past.length?past[past.length-1]:null;
   }
+  return list[idx+dir]||null;
+}
+function defaultHomeFixtureDate(){
+  const today=todayKey();
+  if(GAMES.some(g=>g.date===today)) return today;
   const pending=GAMES.filter(g=>!S.results[g.id]).sort(compareGameSchedule);
   const future=pending.filter(g=>g.date>=today);
   const source=future.length?future:pending;
-  if(!source.length) return {title:"Copa encerrada",headline:"Todos os jogos oficiais foram apurados.",detail:"",games:[]};
-  const date=source[0].date;
-  const games=source.filter(g=>g.date===date).slice(0,6);
-  const parts=formatGameDateParts(date);
+  if(source.length) return source[0].date;
+  const all=fixtureDateList();
+  return all.length?all[all.length-1]:null;
+}
+function homeFixtureWindow(){
+  const today=todayKey();
+  const fallback=defaultHomeFixtureDate();
+  const targetKey=homeFixtureDateKey||fallback;
+  if(!targetKey){
+    return {title:"Copa encerrada",headline:"Todos os jogos oficiais foram apurados.",detail:"",games:[],dateKey:null,prevKey:null,nextKey:null,isToday:false,canResetToday:false};
+  }
+  const dayGames=GAMES.filter(g=>g.date===targetKey).sort(compareGameSchedule);
+  const isToday=targetKey===today;
+  const isPast=targetKey<today;
+  const liveCount=isToday?dayGames.filter(g=>!S.results[g.id]&&copaLiveIsActive(copaLiveForGame(g.id))).length:0;
+  const sorted=isToday?dayGames.slice().sort((a,b)=>{
+    const la=!S.results[a.id]&&copaLiveIsActive(copaLiveForGame(a.id))?1:0;
+    const lb=!S.results[b.id]&&copaLiveIsActive(copaLiveForGame(b.id))?1:0;
+    if(la!==lb) return lb-la;
+    return compareGameSchedule(a,b);
+  }):dayGames;
+  const games=sorted.slice(0,6);
+  const parts=formatGameDateParts(targetKey);
+  const total=`${games.length} ${games.length===1?"partida":"partidas"}`;
+  let title;
+  if(isToday) title=liveCount?"Ao vivo agora":"Jogos do dia";
+  else if(isPast) title="Resultados";
+  else title="Próximos jogos";
+  const detail=isToday&&liveCount?`${liveCount} ao vivo · ${total} no dia`:total;
   return {
-    title:"Próximos jogos",
+    title,
     headline:`${parts.weekdayLong}, ${parts.dayMonth}`,
-    detail:`${games.length} ${games.length===1?"partida":"partidas"}`,
+    detail,
     games,
-    showDates:new Set(games.map(game=>game.date)).size>1
+    showDates:new Set(games.map(game=>game.date)).size>1,
+    live:isToday&&liveCount>0,
+    dateKey:targetKey,
+    prevKey:adjacentFixtureDate(targetKey,-1),
+    nextKey:adjacentFixtureDate(targetKey,1),
+    isToday,
+    canResetToday:homeFixtureDateKey!==null&&fallback!==null&&homeFixtureDateKey!==fallback
   };
+}
+function homeFixtureGo(dir){
+  const win=homeFixtureWindow();
+  const target=dir<0?win.prevKey:win.nextKey;
+  if(!target) return;
+  homeFixtureDateKey=target;
+  renderHome();
+}
+function homeFixtureReset(){
+  homeFixtureDateKey=null;
+  renderHome();
 }
 function renderFixtureRow(game,showDate){
   const res=S.results[game.id];
@@ -7436,16 +7600,27 @@ function renderHome(){
 
     <div class="home-layout">
       <section class="home-section ${fixtures.live?"has-live":""}">
-        <div class="section-head">
-          <div>
+        <div class="section-head fixture-section-head">
+          <div class="fixture-nav-info">
             <div class="section-kicker">${fixtures.live?`<span class="kicker-live-dot" aria-hidden="true"></span>`:""}${fixtures.title}</div>
             <h2>${fixtures.headline}</h2>
             ${fixtures.detail?`<div class="section-sub">${esc(fixtures.detail)}</div>`:""}
+            ${fixtures.canResetToday?`<button class="fixture-today-link" type="button" onclick="homeFixtureReset()">Voltar para hoje</button>`:""}
           </div>
-          <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
+          <div class="fixture-nav-actions">
+            <div class="fixture-nav-arrows" role="group" aria-label="Navegar entre dias de jogos">
+              <button class="fixture-nav-btn" type="button" onclick="homeFixtureGo(-1)" ${fixtures.prevKey?"":"disabled"} aria-label="Dia anterior com jogos">
+                <span aria-hidden="true">‹</span>
+              </button>
+              <button class="fixture-nav-btn" type="button" onclick="homeFixtureGo(1)" ${fixtures.nextKey?"":"disabled"} aria-label="Próximo dia com jogos">
+                <span aria-hidden="true">›</span>
+              </button>
+            </div>
+            <button class="mini-action" onclick="goTab('jogos')">Ver jogos</button>
+          </div>
         </div>
         <div class="fixture-list">
-          ${fixtures.games.length?fixtures.games.map(game=>renderFixtureRow(game,fixtures.showDates)).join(""):`<div class="fixture-empty">Todos os resultados oficiais já entraram no bolão.</div>`}
+          ${fixtures.games.length?fixtures.games.map(game=>renderFixtureRow(game,fixtures.showDates)).join(""):`<div class="fixture-empty">Nenhum jogo neste dia.</div>`}
         </div>
       </section>
 
@@ -7780,6 +7955,101 @@ function copaSelfPickHTML(game){
     ${badgeHTML}
   </div>`;
 }
+function copaLivePtsLabel(d){
+  if(!d) return {cls:"none",text:"—"};
+  if(d.exact) return {cls:"hit",text:`+${d.pts} cravou`};
+  if(d.pts>0) return {cls:"good",text:`+${d.pts}`};
+  if(d.pts===-2) return {cls:"bad",text:"−2 inv."};
+  return {cls:"zero",text:"0"};
+}
+function copaLivePalpiteRowHTML(game,pi,liveRes,opts){
+  opts=opts||{};
+  const pal=S.palpites[`${pi}_${game.id}`]||{};
+  const has=hasScore(pal);
+  const d=has&&liveRes?scoreDetails(pal,liveRes,game):null;
+  const pts=copaLivePtsLabel(d);
+  const tied=game.ko&&has&&+pal.s1===+pal.s2;
+  const advancer=tied&&pal.koWinner?`${teamFlag(pal.koWinner)} ${pal.koWinner} passa`:"";
+  const name=esc(S.participants[pi]||`Participante ${pi+1}`);
+  const scoreCell=has
+    ? `<span class="copa-live-pal-score"><b>${esc(pal.s1)}</b><span>×</span><b>${esc(pal.s2)}</b></span>`
+    : `<span class="copa-live-pal-score empty">— × —</span>`;
+  const advCell=advancer?`<span class="copa-live-pal-adv">${esc(advancer)}</span>`:"";
+  const meCls=opts.me?"is-me":"";
+  return `<div class="copa-live-pal-row ${meCls}">
+    <span class="copa-live-pal-name">${name}${opts.me?` <small>(você)</small>`:""}</span>
+    <span class="copa-live-pal-pick">${scoreCell}${advCell}</span>
+    <span class="copa-live-pal-pts ${pts.cls}">${esc(pts.text)}</span>
+  </div>`;
+}
+function copaLiveSelfCardHTML(game,liveRes){
+  const myIdx=myParticipantIndex();
+  if(!Number.isInteger(myIdx)) return "";
+  const pal=S.palpites[`${myIdx}_${game.id}`]||{};
+  const has=hasScore(pal);
+  const d=has&&liveRes?scoreDetails(pal,liveRes,game):null;
+  const pts=copaLivePtsLabel(d);
+  const tied=game.ko&&has&&+pal.s1===+pal.s2;
+  const advancer=tied&&pal.koWinner?`${teamFlag(pal.koWinner)} ${pal.koWinner} passa`:"";
+  const teams=gameTeams(game);
+  const pickHTML=has
+    ? `<div class="copa-live-self-pick">
+        <div class="copa-live-self-line"><span class="copa-live-self-team">${esc(teams.t1)}</span><strong>${esc(pal.s1)}</strong></div>
+        <div class="copa-live-self-line"><span class="copa-live-self-team">${esc(teams.t2)}</span><strong>${esc(pal.s2)}</strong></div>
+        ${advancer?`<div class="copa-live-self-adv">${esc(advancer)}</div>`:""}
+       </div>`
+    : `<div class="copa-live-self-empty">Você não registrou palpite para este jogo.</div>`;
+  return `<div class="copa-live-self">
+    <div class="copa-live-self-head">
+      <span class="copa-live-self-label">Seu palpite</span>
+      <span class="copa-live-self-pts ${pts.cls}">${esc(pts.text)}</span>
+    </div>
+    ${pickHTML}
+    ${has?`<div class="copa-live-self-foot">Pontuação parcial enquanto o jogo rola.</div>`:""}
+  </div>`;
+}
+function copaLiveOthersHTML(game,liveRes){
+  const myIdx=myParticipantIndex();
+  const rows=S.participants.map((name,i)=>({i,name}))
+    .filter(p=>p.i!==myIdx)
+    .map(p=>{
+      const pal=S.palpites[`${p.i}_${game.id}`]||{};
+      const has=hasScore(pal);
+      const d=has&&liveRes?scoreDetails(pal,liveRes,game):null;
+      return {...p,pal,has,pts:d?.pts};
+    })
+    .sort((a,b)=>{
+      const ap=Number.isFinite(a.pts)?a.pts:-Infinity;
+      const bp=Number.isFinite(b.pts)?b.pts:-Infinity;
+      if(ap!==bp) return bp-ap;
+      if(a.has!==b.has) return a.has?-1:1;
+      return String(a.name).localeCompare(String(b.name),"pt-BR");
+    });
+  if(!rows.length) return "";
+  const count=rows.length;
+  const summaryText=`${count} ${count===1?"palpite":"palpites"}`;
+  return `<details class="copa-live-others">
+    <summary>
+      <span class="copa-live-others-title">Palpites dos outros</span>
+      <span class="copa-live-others-meta">${esc(summaryText)}</span>
+      <span class="copa-live-others-chev" aria-hidden="true">›</span>
+    </summary>
+    <div class="copa-live-others-list">
+      ${rows.map(r=>copaLivePalpiteRowHTML(game,r.i,liveRes,{})).join("")}
+    </div>
+  </details>`;
+}
+function copaLivePanelHTML(game){
+  const liveRes=liveProvisionalResult(game);
+  const selfHTML=copaLiveSelfCardHTML(game,liveRes);
+  const othersHTML=copaLiveOthersHTML(game,liveRes);
+  if(!selfHTML&&!othersHTML) return "";
+  const cls=selfHTML?"copa-live-panel":"copa-live-panel no-self";
+  return `<div class="${cls}">
+    ${selfHTML}
+    ${othersHTML}
+  </div>`;
+}
 function renderGameRow(game){
   const res=S.results[game.id];
   const teams=gameTeams(game);
@@ -7791,13 +8061,21 @@ function renderGameRow(game){
   const draft=resultDrafts[game.id]||{s1:0,s2:0};
   const liveScore=copaLiveScoreForGame(game);
   const liveMinute=liveScore?copaLiveMinuteLabel(liveScore):"";
-  const selfPickHTML=copaSelfPickHTML(game);
+  const liveActive=liveScore&&copaLiveIsActive(liveScore);
+  const livePens=liveScore?copaLivePensSuffix(liveScore):"";
+  const isLiveState=!res&&state==="live";
+  const selfPickHTML=isLiveState?"":copaSelfPickHTML(game);
   const scoreCoreHTML=res
     ? copaScoreHTML(res.s1,res.s2)
     : liveScore
       ? copaScoreHTML(liveScore.goals_home,liveScore.goals_away)
       : `<span class="copa-versus">x</span>`;
   const mainScoreHTML=`<div class="copa-primary-score">${scoreCoreHTML}${selfPickHTML}</div>`;
+  let stateTagLabel=copaGameStateLabel(game);
+  if(state==="live"){
+    const minuteExtra=liveMinute&&!/^ao vivo$/i.test(liveMinute)?` · ${liveMinute}`:"";
+    stateTagLabel=`Ao vivo${minuteExtra}${livePens}`;
+  }
   let sidePanelHTML="";
   if(res){
     const outcome=koOutcomeLabel(game,res,teams);
@@ -7808,8 +8086,9 @@ function renderGameRow(game){
       ${canEdit?`<div class="copa-actions"><button class="copa-mini-action danger" onclick="clearRes(${jsAttr(game.id)})">Remover</button></div>`:""}
     </div>`;
   }else if(canEdit){
-    const liveInfoHTML=liveScore
-      ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result ${copaLiveIsActive(liveScore)?"live":"warn"}">${esc((copaLiveIsActive(liveScore)?"Ao vivo":"Encerrado")+(liveMinute&&copaLiveIsActive(liveScore)?` · ${liveMinute}`:"")+copaLivePensSuffix(liveScore))}</span></div>`
+    // Quando o jogo está ao vivo, o pill da esquerda já traz "Ao vivo · 23'" — só mostra a linha do robô quando ele já encerrou e ainda falta apurar.
+    const liveInfoHTML=liveScore&&!liveActive
+      ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result warn">${esc("Encerrado"+livePens)}</span></div>`
       : "";
     sidePanelHTML=`<div class="copa-side-panel">
       ${liveInfoHTML}
@@ -7825,21 +8104,26 @@ function renderGameRow(game){
       </div>
     </div>`;
   }else{
-    const pendingCls=state==="live"?"live":state==="closed"?"warn":"empty";
-    const pendingLabel=liveScore
-      ? (copaLiveIsActive(liveScore)
-        ? `Ao vivo${liveMinute?` · ${liveMinute}`:""}${copaLivePensSuffix(liveScore)}`
-        : "Encerrado · aguardando apuração")
-      : state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
-    sidePanelHTML=`<div class="copa-side-panel">
-      <div class="copa-side-row"><span class="copa-side-label">Resultado</span></div>
-      <div class="copa-side-result ${pendingCls}">${esc(pendingLabel)}</div>
-    </div>`;
+    // Para o ao vivo (com placar do robô) o pill da esquerda + painel "Seu palpite" cobrem tudo, então não duplica nada aqui.
+    if(liveScore&&liveActive){
+      sidePanelHTML="";
+    }else{
+      const pendingCls=state==="live"?"live":state==="closed"?"warn":"empty";
+      const pendingLabel=liveScore
+        ? "Encerrado · aguardando apuração"
+        : state==="live"?"Aguardando placar ao vivo":state==="closed"?"Falta apurar":"Aguardando placar";
+      sidePanelHTML=`<div class="copa-side-panel">
+        <div class="copa-side-row"><span class="copa-side-label">Resultado</span></div>
+        <div class="copa-side-result ${pendingCls}">${esc(pendingLabel)}</div>
+      </div>`;
+    }
   }
-  const cardCls=["copa-game",`is-${state}`,disabled?"is-locked":""].filter(Boolean).join(" ");
+  const noSidePanel=!sidePanelHTML;
+  const cardCls=["copa-game",`is-${state}`,disabled?"is-locked":"",noSidePanel?"is-noside":""].filter(Boolean).join(" ");
+  const livePanelHTML=isLiveState?copaLivePanelHTML(game):"";
   return `<article class="${cardCls}" data-tournament="copa" data-game-id="${esc(game.id)}">
     <div class="copa-meta">
-      <div class="copa-state-tag ${state}">${esc(copaGameStateLabel(game))}</div>
+      <div class="copa-state-tag ${state}">${esc(stateTagLabel)}</div>
       <div class="copa-time">${esc(game.time||"--:--")}</div>
       <div class="copa-round">${esc(copaRoundLabel(game))}</div>
       <div class="copa-game-id">${esc(game.id)}</div>
@@ -7850,6 +8134,7 @@ function renderGameRow(game){
       ${copaTeamHTML(t2,"away",!teams.ready)}
     </div>
     ${sidePanelHTML}
+    ${livePanelHTML}
   </article>`;
 }
 function koAdvancerControl(game,teams,draft,disabled){
