@@ -512,16 +512,21 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .fixture-row{
   position:relative;
   display:grid;
-  grid-template-columns:minmax(86px,auto) minmax(0,1fr);
+  grid-template-columns:minmax(78px,auto) minmax(0,1fr);
   align-items:center;
-  gap:14px;
+  gap:12px;
   padding:12px 14px;
   border:1px solid var(--border);
   border-radius:10px;
   background:#fff;
   box-shadow:0 8px 20px rgba(0,39,118,.05);
 }
-.fixture-row .fixture-live-pill{position:absolute;top:8px;right:10px}
+/* O status (AO VIVO · 45' / Encerrado) flutua no canto superior direito; as
+   linhas com status ganham uma faixa no topo para a partida centralizar logo
+   abaixo sem colidir e sem espremer os nomes dos times. */
+.fixture-status{position:absolute;top:9px;right:12px;display:flex}
+.fixture-row.is-live,
+.fixture-row.is-live-closed{padding-top:30px}
 .fixture-meta{
   display:flex;
   flex-direction:column;
@@ -584,11 +589,11 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   display:grid;
   grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
   align-items:center;
-  gap:6px;
+  gap:10px;
   min-width:0;
 }
 .fixture-row .team{
-  font-size:.96rem;
+  font-size:.95rem;
   font-weight:850;
 }
 .fixture-row .team.r{justify-content:flex-end;text-align:right}
@@ -607,20 +612,23 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:34px;
-  min-height:34px;
-  padding:0 7px;
+  min-width:30px;
+  min-height:30px;
+  padding:3px 8px;
   border-radius:999px;
   background:#f2f5f9;
   color:var(--muted);
-  font-size:.72rem;
+  font-size:.78rem;
   font-weight:950;
   line-height:1;
+  letter-spacing:.3px;
 }
 .fixture-row.is-result .fixture-vs{
-  min-width:58px;
+  min-width:auto;
+  padding:4px 12px;
   background:#edf9f0;
   color:var(--green);
+  font-size:.92rem;
 }
 .fixture-meta-time{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
 .fixture-row.is-live{
@@ -629,19 +637,23 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   box-shadow:0 0 0 3px rgba(16,185,129,.10),0 14px 32px -16px rgba(0,132,61,.32);
 }
 .fixture-row.is-live .fixture-vs{
-  min-width:62px;
+  min-width:auto;
+  padding:4px 13px;
   background:#e6fbef;
   color:var(--green-2,#047857);
   border:1px solid #b7e7c9;
+  font-size:.96rem;
 }
 .fixture-row.is-live-closed{
   border-color:#cbe4d2;
   background:linear-gradient(180deg,#f7fbf7,#fff);
 }
 .fixture-row.is-live-closed .fixture-vs{
-  min-width:58px;
+  min-width:auto;
+  padding:4px 12px;
   background:#eef6f0;
   color:#3f6b51;
+  font-size:.92rem;
 }
 .fixture-live-pill{
   display:inline-flex;
@@ -2966,6 +2978,11 @@ body.chart-modal-open{overflow:hidden}
 
 	/* === LIVE PILL — Seu palpite com dropdown dos outros === */
 	.copa-games-page.v2 .copa-game.is-noside{grid-template-columns:92px minmax(0,1fr)}
+	/* Com o dropdown aberto, o card sobe acima dos vizinhos e trava o hover-lift,
+	   senão o :hover do próprio card cria um stacking context que esconde o popover
+	   atrás do card de baixo (flicker). */
+	.copa-games-page.v2 .copa-game:has(.copa-self-pick-wrap[open]){z-index:50}
+	.copa-games-page.v2 .copa-game:has(.copa-self-pick-wrap[open]):hover{transform:none}
 	.copa-games-page.v2 .copa-self-pick-wrap{position:relative;display:inline-flex;max-width:100%}
 	.copa-games-page.v2 .copa-self-pick.has-chev{cursor:pointer;list-style:none;gap:7px;padding:4px 9px 4px 9px;border-color:rgba(16,185,129,.55);background:linear-gradient(180deg,#f1fdf5 0%,#fff 100%);box-shadow:0 2px 8px -3px rgba(0,132,61,.25);transition:background .15s ease,border-color .15s ease,box-shadow .15s ease}
 	.copa-games-page.v2 .copa-self-pick.has-chev::-webkit-details-marker{display:none}
@@ -3170,6 +3187,9 @@ body.chart-modal-open{overflow:hidden}
     gap:10px;
     padding:10px;
   }
+  .fixture-row.is-live,
+  .fixture-row.is-live-closed{padding-top:28px}
+  .fixture-status{right:10px}
   .fixture-meta{
     align-self:center;
     flex-direction:column;
@@ -3188,16 +3208,25 @@ body.chart-modal-open{overflow:hidden}
   }
   .fixture-row .team{font-size:.82rem;gap:5px}
   .fixture-row .team.r{justify-content:flex-end;text-align:right}
+  /* No mobile o espaço é curto: nomes quebram em vez de truncar e os placares de
+     estado viram texto colorido (sem chip) pra liberar largura. */
+  .fixture-row .team-name{white-space:normal;line-height:1.12}
   .fixture-vs{
     justify-self:center;
     min-width:0;
     min-height:0;
-    padding:0;
+    padding:0 2px;
     background:transparent;
+    border:0;
     color:var(--muted);
-    font-size:.66rem;
+    font-size:.72rem;
   }
-  .fixture-row.is-result .fixture-vs{min-width:0;background:transparent;color:var(--green)}
+  .fixture-row.is-result .fixture-vs,
+  .fixture-row.is-live .fixture-vs,
+  .fixture-row.is-live-closed .fixture-vs{min-width:0;padding:0 2px;background:transparent;border:0;font-size:.84rem}
+  .fixture-row.is-result .fixture-vs{color:var(--green)}
+  .fixture-row.is-live .fixture-vs{color:#047857}
+  .fixture-row.is-live-closed .fixture-vs{color:#3f6b51}
   .brazil-row{grid-template-columns:21px minmax(136px,1fr) 36px repeat(7,29px);font-size:.7rem;padding:8px 7px;min-width:483px}
   .brazil-row .team-cell{font-size:.74rem}
   .lb-row{grid-template-columns:auto 1fr auto}
@@ -7029,6 +7058,10 @@ function adjacentFixtureDate(currentKey,dir){
 }
 function defaultHomeFixtureDate(){
   const today=todayKey();
+  // Jogo ao vivo manda no foco, mesmo que tenha começado no dia anterior
+  // (ex.: 23:00 que entra pela madrugada) — segue "ao vivo" até acabar.
+  const live=GAMES.filter(g=>!S.results[g.id]&&copaLiveIsActive(copaLiveForGame(g.id))).sort(compareGameSchedule);
+  if(live.length) return live[0].date;
   if(GAMES.some(g=>g.date===today)) return today;
   const pending=GAMES.filter(g=>!S.results[g.id]).sort(compareGameSchedule);
   const future=pending.filter(g=>g.date>=today);
@@ -7047,28 +7080,31 @@ function homeFixtureWindow(){
   const dayGames=GAMES.filter(g=>g.date===targetKey).sort(compareGameSchedule);
   const isToday=targetKey===today;
   const isPast=targetKey<today;
-  const liveCount=isToday?dayGames.filter(g=>!S.results[g.id]&&copaLiveIsActive(copaLiveForGame(g.id))).length:0;
-  const sorted=isToday?dayGames.slice().sort((a,b)=>{
+  // "Ao vivo" não depende do calendário: um jogo que vira o dia segue ao vivo
+  // até terminar, então contamos/ordenamos pelo estado real em qualquer data.
+  const liveCount=dayGames.filter(g=>!S.results[g.id]&&copaLiveIsActive(copaLiveForGame(g.id))).length;
+  const sorted=dayGames.slice().sort((a,b)=>{
     const la=!S.results[a.id]&&copaLiveIsActive(copaLiveForGame(a.id))?1:0;
     const lb=!S.results[b.id]&&copaLiveIsActive(copaLiveForGame(b.id))?1:0;
     if(la!==lb) return lb-la;
     return compareGameSchedule(a,b);
-  }):dayGames;
+  });
   const games=sorted.slice(0,6);
   const parts=formatGameDateParts(targetKey);
   const total=`${games.length} ${games.length===1?"partida":"partidas"}`;
   let title;
-  if(isToday) title=liveCount?"Ao vivo agora":"Jogos do dia";
+  if(liveCount) title="Ao vivo agora";
+  else if(isToday) title="Jogos do dia";
   else if(isPast) title="Resultados";
   else title="Próximos jogos";
-  const detail=isToday&&liveCount?`${liveCount} ao vivo · ${total} no dia`:total;
+  const detail=liveCount?`${liveCount} ao vivo · ${total} no dia`:total;
   return {
     title,
     headline:`${parts.weekdayLong}, ${parts.dayMonth}`,
     detail,
     games,
     showDates:new Set(games.map(game=>game.date)).size>1,
-    live:isToday&&liveCount>0,
+    live:liveCount>0,
     dateKey:targetKey,
     prevKey:adjacentFixtureDate(targetKey,-1),
     nextKey:adjacentFixtureDate(targetKey,1),
@@ -7115,13 +7151,13 @@ function renderFixtureRow(game,showDate){
         ${showDate?`<div class="fixture-date-inline"><span class="fixture-weekday fixture-weekday-full">${esc(dateParts.weekdayLong)}</span><span class="fixture-weekday fixture-weekday-short">${esc(dateParts.weekdayShort)}</span><span class="fixture-day">${esc(dateParts.dayMonth)}</span></div>`:""}
         <span class="fixture-time">${esc(timeLabel)}</span>
       </div>
-      ${livePill}
     </div>
     <div class="fixture-match">
       ${teamHTML(teams.t1,"r",!teams.ready)}
       <span class="fixture-vs">${esc(versusLabel)}</span>
       ${teamHTML(teams.t2,"",!teams.ready)}
     </div>
+    ${livePill?`<div class="fixture-status">${livePill}</div>`:""}
   </div>`;
 }
 function nextBrazilGame(){
