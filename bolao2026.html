@@ -3144,6 +3144,11 @@ body.chart-modal-open{overflow:hidden}
 	.copa-games-page.v2 .copa-self-pick.has-chev.final:hover{border-color:rgba(255,223,0,.9);background:linear-gradient(180deg,#fff8e0 0%,#fff 100%)}
 	.copa-games-page.v2 .copa-self-pick.has-chev.final .copa-self-pick-label{color:#a16207}
 	.copa-games-page.v2 .copa-self-pick.has-chev.final .copa-self-pick-chev{background:rgba(160,120,0,.16);color:#a16207}
+	/* Variante "upcoming": jogo de grupo que ainda não começou usa azul neutro. */
+	.copa-games-page.v2 .copa-self-pick.has-chev.upcoming{border-color:rgba(10,42,138,.26);background:linear-gradient(180deg,#f3f7ff 0%,#fff 100%);box-shadow:0 1px 5px -2px rgba(10,42,138,.22)}
+	.copa-games-page.v2 .copa-self-pick.has-chev.upcoming:hover{border-color:rgba(10,42,138,.5);background:linear-gradient(180deg,#eaf1ff 0%,#fff 100%)}
+	.copa-games-page.v2 .copa-self-pick.has-chev.upcoming .copa-self-pick-label{color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-self-pick.has-chev.upcoming .copa-self-pick-chev{background:rgba(10,42,138,.12);color:var(--copa-blue)}
 	.copa-games-page.v2 .copa-self-pick-wrap[open]>.copa-self-pick .copa-self-pick-chev{transform:rotate(180deg)}
 	.copa-games-page.v2 .copa-self-pick-others{
 	  position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);
@@ -3176,6 +3181,7 @@ body.chart-modal-open{overflow:hidden}
 	  border-bottom:1px solid #f1f5f9;
 	  font-size:.76rem;
 	}
+	.copa-games-page.v2 .copa-live-pal-row.no-pts{grid-template-columns:minmax(0,1fr) auto}
 	.copa-games-page.v2 .copa-live-pal-row:last-child{border-bottom:0}
 	.copa-games-page.v2 .copa-live-pal-name{font-weight:900;color:var(--copa-ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 	.copa-games-page.v2 .copa-live-pal-pick{display:inline-flex;align-items:center;gap:6px;min-width:0}
@@ -8590,14 +8596,18 @@ function copaSelfPickOthersHTML(game,liveRes){
   return `<div class="copa-self-pick-others">
     <div class="copa-self-pick-others-head">Palpites dos outros</div>
     <div class="copa-self-pick-others-list">
-      ${rows.map(r=>copaLivePalpiteRowHTML(game,r.i,liveRes,{})).join("")}
+      ${rows.map(r=>copaLivePalpiteRowHTML(game,r.i,liveRes,{hidePts:!liveRes})).join("")}
     </div>
   </div>`;
 }
 function copaSelfPickHTML(game){
   const myIdx=myParticipantIndex();
   const started=!!(game.utc&&new Date()>=new Date(game.utc));
-  if(!started) return "";
+  // Mostra o "Seu palpite"/dropdown quando os palpites já podem ser revelados:
+  // jogo começou (ao vivo/encerrado) OU é fase de grupos (palpites de grupo são
+  // abertos no bolão, então aparecem mesmo nos jogos que ainda não começaram).
+  // Mata-mata segue oculto até o início do jogo.
+  if(!started&&game.ko) return "";
   const res=S.results[game.id];
   const isLiveState=!res&&copaGameState(game)==="live";
   const liveRes=isLiveState?liveProvisionalResult(game):null;
@@ -8605,8 +8615,8 @@ function copaSelfPickHTML(game){
   // palpite" quanto pra pontuar o dropdown dos outros (ao vivo OU encerrado).
   const scoringRes=res||liveRes;
   const othersHTML=copaSelfPickOthersHTML(game,scoringRes);
-  // Verde = ao vivo; dourado = encerrado/apurado.
-  const variantCls=isLiveState?"":"final";
+  // Verde = ao vivo; dourado = encerrado/apurado; azul = ainda sem placar (grupo futuro).
+  const variantCls=isLiveState?"":(started?"final":"upcoming");
   if(!Number.isInteger(myIdx)){
     if(!othersHTML) return "";
     return `<details class="copa-self-pick-wrap">
@@ -8633,7 +8643,7 @@ function copaSelfPickHTML(game){
         const lbl=d.exact?`Cravou +${d.pts}`:d.pts>0?`+${d.pts}`:d.pts===-2?"−2":"0";
         badgeHTML=`<span class="copa-self-pick-badge ${cls}">${esc(lbl)}</span>`;
       }
-    }else{
+    }else if(started){
       badgeHTML=`<span class="copa-self-pick-badge pending">Aguardando apuração</span>`;
     }
   }else{
@@ -8678,10 +8688,12 @@ function copaLivePalpiteRowHTML(game,pi,liveRes,opts){
     : `<span class="copa-live-pal-score empty">— × —</span>`;
   const advCell=advancer?`<span class="copa-live-pal-adv">${esc(advancer)}</span>`:"";
   const meCls=opts.me?"is-me":"";
-  return `<div class="copa-live-pal-row ${meCls}">
+  // Sem placar ainda (jogo de grupo que não começou) → esconde a coluna de pontos.
+  const showPts=!opts.hidePts;
+  return `<div class="copa-live-pal-row ${meCls} ${showPts?"":"no-pts"}">
     <span class="copa-live-pal-name">${name}${opts.me?` <small>(você)</small>`:""}</span>
     <span class="copa-live-pal-pick">${scoreCell}${advCell}</span>
-    <span class="copa-live-pal-pts ${pts.cls}">${esc(pts.text)}</span>
+    ${showPts?`<span class="copa-live-pal-pts ${pts.cls}">${esc(pts.text)}</span>`:""}
   </div>`;
 }
 function renderGameRow(game){
