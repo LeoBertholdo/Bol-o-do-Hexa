@@ -3568,14 +3568,14 @@ body.chart-modal-open{overflow:hidden}
 .filme-caption .filme-caption-date{font-size:12px;font-weight:500;opacity:.7;display:block}
 .filme-caption .filme-caption-live{font-size:11px;font-weight:700;color:#d83a34;text-transform:uppercase;letter-spacing:.4px}
 .filme-stage{position:relative;margin-top:10px;overflow:hidden}
-.filme-row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px;transition:transform .6s cubic-bezier(.22,.9,.35,1)}
+.filme-row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px}
 .filme-row .filme-posn{width:26px;text-align:right;font-weight:700;font-size:14px;opacity:.8;flex:none}
 .filme-row .filme-name{width:34%;max-width:190px;flex:none;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .filme-row .filme-trend{width:16px;flex:none;font-size:12px;text-align:center}
 .filme-trend.up{color:#15a36b}
 .filme-trend.down{color:#d83a34}
 .filme-row .filme-bar-wrap{flex:1;min-width:0}
-.filme-row .filme-bar{height:22px;border-radius:6px;transition:width .6s cubic-bezier(.22,.9,.35,1);min-width:2px}
+.filme-row .filme-bar{height:22px;border-radius:6px;min-width:2px}
 .filme-row .filme-pts{width:58px;flex:none;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px}
 .filme-row .filme-delta{font-size:11px;font-weight:600;margin-left:4px}
 .filme-delta.pos{color:#15a36b}
@@ -7357,17 +7357,22 @@ function filmeApplyFrame(data,idx,animate=true){
   if(!frame) return;
   filmeFrameIdx=idx;
   const rowH=30;
+  // Durante o play o movimento dura o intervalo entre lances (fica contínuo em
+  // qualquer velocidade, sem transição cortada no meio); num seek avulso usa um
+  // passo curto fixo. O cursor do gráfico varre linear, como uma agulha.
+  const stepMs=FILME_SPEED_MS[filmeSpeed]||900;
+  const moveMs=!animate?0:filmePlaying?Math.round(stepMs*0.92):420;
+  const sweepMs=!animate?0:filmePlaying?stepMs:420;
   frame.entries.forEach(e=>{
     const row=document.getElementById(`filmeRow-${e.i}`);
     if(!row) return;
-    if(!animate) row.style.transition="none";
+    row.style.transition=moveMs?`transform ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
     row.style.transform=`translateY(${e.pos*rowH}px)`;
     const bar=document.getElementById(`filmeBar-${e.i}`);
     if(bar){
-      if(!animate) bar.style.transition="none";
+      bar.style.transition=moveMs?`width ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
       bar.style.width=`${Math.max(0.5,Math.max(0,e.pts)/data.maxVal*100)}%`;
     }
-    if(!animate) requestAnimationFrame(()=>{row.style.transition="";if(bar)bar.style.transition="";});
     const posEl=document.getElementById(`filmePos-${e.i}`);
     if(posEl) posEl.textContent=`${e.pos+1}º`;
     const ptsEl=document.getElementById(`filmePts-${e.i}`);
@@ -7390,7 +7395,7 @@ function filmeApplyFrame(data,idx,animate=true){
   // os demais só pulam o recorte pro lugar certo, sem quebrar nada.
   [[clipRect,"width",chartX],[cursorRect,"x",chartX-1]].forEach(([elm,prop,val])=>{
     if(!elm) return;
-    elm.style.transition=animate?`${prop} .6s cubic-bezier(.22,.9,.35,1)`:"none";
+    elm.style.transition=sweepMs?`${prop} ${sweepMs}ms linear`:"none";
     elm.style[prop]=`${val.toFixed(1)}px`;
     elm.setAttribute(prop,val.toFixed(1));
   });
