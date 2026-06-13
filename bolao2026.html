@@ -3594,6 +3594,10 @@ body.chart-modal-open{overflow:hidden}
 .filme-speed button.active{outline:2px solid #002776}
 .filme-chart{margin-top:18px}
 .filme-chart svg{width:100%;height:auto;display:block}
+
+/* Chuva de confetes nos dias de jogo do Brasil (tela inicial) */
+.brazil-confetti-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483600}
+@media (prefers-reduced-motion:reduce){.brazil-confetti-canvas{display:none}}
 </style>
 </head>
 <body>
@@ -8196,7 +8200,149 @@ function renderHome(){
     </div>
   </div>`;
   document.getElementById("tab-home").innerHTML=h;
+  maybeCelebrateBrazilMatchday();
 }
+
+/* ===========================================================================
+   Confete de dia de jogo do Brasil
+   Quando o app abre num dia em que a Seleção entra em campo, a tela inicial
+   ganha uma chuva curta de confetes nas cores do Brasil (azul, verde e
+   amarelo). Dispara uma única vez por abertura do app, só na Início, e
+   respeita prefers-reduced-motion.
+   =========================================================================== */
+let brazilConfettiShown=false;
+let brazilConfettiActive=false;
+
+function brazilPlaysToday(){
+  const today=todayKey();
+  return GAMES.some(game=>{
+    if(game.date!==today) return false;
+    const {t1,t2}=gameTeams(game);
+    return t1==="Brasil"||t2==="Brasil";
+  });
+}
+
+function maybeCelebrateBrazilMatchday(){
+  if(brazilConfettiShown||activeTab!=="home") return;
+  if(!brazilPlaysToday()) return;
+  brazilConfettiShown=true;
+  requestAnimationFrame(launchBrazilConfetti);
+}
+
+function launchBrazilConfetti(){
+  if(brazilConfettiActive||!document.body) return;
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  brazilConfettiActive=true;
+
+  const canvas=document.createElement("canvas");
+  canvas.className="brazil-confetti-canvas";
+  canvas.setAttribute("aria-hidden","true");
+  const ctx=canvas.getContext("2d");
+  document.body.appendChild(canvas);
+
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  let width=0,height=0;
+  function resize(){
+    width=window.innerWidth;
+    height=window.innerHeight;
+    canvas.width=Math.floor(width*dpr);
+    canvas.height=Math.floor(height*dpr);
+    canvas.style.width=width+"px";
+    canvas.style.height=height+"px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  resize();
+  window.addEventListener("resize",resize);
+
+  // Azul, verde e amarelo do Brasil — duas tonalidades de cada para dar volume.
+  const COLORS=["#00843d","#1faa51","#ffdf00","#ffc62e","#002776","#2f6fe0"];
+  const SHAPES=["rect","ribbon","circle"];
+  const rand=(min,max)=>min+Math.random()*(max-min);
+  const pick=arr=>arr[(Math.random()*arr.length)|0];
+
+  // Densidade proporcional à largura (mais discreto no mobile).
+  const count=Math.round(Math.min(170,Math.max(70,width/7)));
+  const EMIT_MS=1250;  // janela em que as peças vão sendo lançadas
+  const FADE_MS=650;   // suavização final (rede de segurança)
+  const MAX_MS=6500;   // teto absoluto de duração
+
+  const pieces=[];
+  for(let i=0;i<count;i++){
+    const shape=pick(SHAPES);
+    const size=rand(6,12);
+    pieces.push({
+      shape,
+      color:pick(COLORS),
+      x:rand(-0.05,1.05)*width,
+      y:rand(-0.3,-0.02)*height,
+      w:shape==="ribbon"?size*0.42:size,
+      h:shape==="ribbon"?size*2.6:size,
+      delay:rand(0,EMIT_MS),
+      vx:rand(-28,28),
+      vy:rand(120,210),
+      grav:rand(60,120),
+      drift:rand(16,46),
+      driftSpeed:rand(0.8,2.2),
+      phase:rand(0,Math.PI*2),
+      spin:rand(-3.4,3.4),
+      angle:rand(0,Math.PI*2),
+      flip:rand(2.6,5.2)
+    });
+  }
+
+  const start=performance.now();
+  let last=start,raf=0;
+
+  function cleanup(){
+    cancelAnimationFrame(raf);
+    window.removeEventListener("resize",resize);
+    canvas.remove();
+    brazilConfettiActive=false;
+  }
+
+  function frame(now){
+    const elapsed=now-start;
+    let dt=(now-last)/1000;
+    last=now;
+    if(dt>0.05) dt=0.05; // evita saltos quando a aba volta do background
+
+    ctx.clearRect(0,0,width,height);
+    const globalFade=elapsed>MAX_MS-FADE_MS?Math.max(0,(MAX_MS-elapsed)/FADE_MS):1;
+
+    let alive=0;
+    for(const p of pieces){
+      if(elapsed<p.delay){alive++;continue;}
+      const t=(elapsed-p.delay)/1000;
+      p.vy=Math.min(p.vy+p.grav*dt,320);
+      p.y+=p.vy*dt;
+      p.x+=(p.vx+Math.sin(t*p.driftSpeed+p.phase)*p.drift)*dt;
+      p.angle+=p.spin*dt;
+      if(p.y-p.h>height+24) continue; // já saiu por baixo
+      alive++;
+
+      ctx.save();
+      ctx.globalAlpha=globalFade;
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.angle);
+      ctx.scale(1,Math.cos(t*p.flip+p.phase)); // giro 3D
+      ctx.fillStyle=p.color;
+      if(p.shape==="circle"){
+        ctx.beginPath();
+        ctx.arc(0,0,p.w/2,0,Math.PI*2);
+        ctx.fill();
+      }else{
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      }
+      ctx.restore();
+    }
+
+    if(alive>0&&elapsed<MAX_MS&&globalFade>0) raf=requestAnimationFrame(frame);
+    else cleanup();
+  }
+
+  raf=requestAnimationFrame(frame);
+}
+
 function renderRanking(){
   const r=ranking();
   const invTotal=r.reduce((acc,p)=>acc+p.inv,0);
