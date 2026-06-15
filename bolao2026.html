@@ -7629,7 +7629,7 @@ function renderFixtureRow(game,showDate){
 }
 function nextBrazilGame(){
   const today=todayKey();
-  const games=groupGames().filter(g=>g.group==="C"&&!S.results[g.id]).sort(compareGameSchedule);
+  const games=groupGames().filter(g=>g.group==="C"&&(g.t1==="Brasil"||g.t2==="Brasil")&&!S.results[g.id]).sort(compareGameSchedule);
   return games.find(g=>g.date>=today)||games[0]||null;
 }
 function renderBrazilMiniTable(){
