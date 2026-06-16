@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lab · Evolução dos pontos (protótipo)</title>
+<style>
+  :root{
+    --ink:#1f2a44; --ink-soft:#41516d; --ink-faint:#7b88a3;
+    --brasil-azul:#002776; --line:rgba(0,39,118,.12); --line-strong:rgba(0,39,118,.22);
+    --card-bg:#ffffff; --shell:#f4f7fb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:linear-gradient(180deg,#eef3fa,#e6edf6); padding:18px 14px 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:840px;margin:0 auto}
+  .lab-note{
+    font-size:12.5px;color:var(--ink-soft);background:#fff8e1;border:1px solid #f3e2a6;
+    border-radius:12px;padding:10px 13px;margin-bottom:16px;line-height:1.45;
+  }
+  .lab-note b{color:#7a5d00}
+  .chart-shell{
+    background:linear-gradient(180deg,#ffffff,#fbfdff);border:1px solid rgba(0,39,118,.08);
+    border-radius:20px;padding:18px 16px 14px;box-shadow:0 14px 40px -22px rgba(0,39,118,.4);
+  }
+  .chart-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px}
+  .section-kicker{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .chart-toolbar h3{margin:3px 0 0;font-size:16px;color:var(--ink)}
+  .chart-presets{display:flex;gap:6px;flex-shrink:0}
+  .mini-action{
+    border:1px solid rgba(0,39,118,.18);background:#fff;color:var(--ink-soft);border-radius:999px;
+    font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:.15s;
+  }
+  .mini-action.active{background:var(--brasil-azul);color:#fff;border-color:var(--brasil-azul)}
+  .chart-legend{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}
+  .chart-chip{
+    display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,39,118,.16);background:#fff;
+    border-radius:999px;padding:5px 11px 5px 8px;font-size:12px;font-weight:700;color:var(--ink-soft);
+    cursor:pointer;transition:.15s;opacity:.55;
+  }
+  .chart-chip.active{opacity:1;color:#fff;border-color:transparent}
+  .chart-chip .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px rgba(255,255,255,.6) inset}
+  .chart-stage{position:relative;touch-action:pan-y}
+  svg.chart{display:block;width:100%;height:auto;overflow:visible}
+  /* foco/hover: apaga as outras séries */
+  .series{transition:opacity .25s ease;cursor:pointer}
+  svg.chart.is-dim .series:not(.is-on){opacity:.13}
+  svg.chart.is-dim .endpoint:not(.is-on){opacity:.2}
+  /* ao vivo: formigas marchando — movimento que NUNCA se confunde com zigue-zague estático */
+  @keyframes ants{to{stroke-dashoffset:-22}}
+  .live-path{stroke-dasharray:7 6;animation:ants 1s linear infinite}
+  @keyframes livepulse{0%,100%{r:5;opacity:1}50%{r:7;opacity:.6}}
+  .live-dot{animation:livepulse 1.5s ease-in-out infinite}
+  @media (prefers-reduced-motion:reduce){.live-path{animation:none}.live-dot{animation:none}}
+  /* scrubber */
+  .guide{stroke:rgba(0,39,118,.45);stroke-width:1.4;stroke-dasharray:3 4;opacity:0;transition:opacity .12s}
+  .chart-stage.scrubbing .guide{opacity:1}
+  .mk{opacity:0;transition:opacity .12s}
+  .chart-stage.scrubbing .mk{opacity:1}
+  .scrub-card{
+    position:absolute;top:0;left:0;z-index:5;pointer-events:none;
+    min-width:150px;max-width:230px;background:var(--card-bg);border:1px solid rgba(0,39,118,.12);
+    border-radius:13px;box-shadow:0 16px 34px -14px rgba(0,39,118,.5);padding:9px 11px;
+    opacity:0;transform:translate(-50%,8px) scale(.96);transition:opacity .12s,transform .12s;
+  }
+  .chart-stage.scrubbing .scrub-card{opacity:1;transform:translate(-50%,0) scale(1)}
+  .scrub-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .scrub-score{font-size:15px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+  .scrub-score .flag{font-size:16px}
+  .scrub-min{font-size:10.5px;font-weight:800;color:var(--ink-faint);white-space:nowrap}
+  .scrub-min.live{color:#d83a34}
+  .scrub-min.live::before{content:"●";font-size:8px;margin-right:3px;vertical-align:1px}
+  .scrub-sub{font-size:10.5px;color:var(--ink-faint);margin:-2px 0 7px;font-weight:600}
+  .scrub-rows{display:flex;flex-direction:column;gap:3px}
+  .scrub-row{display:flex;align-items:center;gap:7px;font-size:12px}
+  .scrub-row .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .scrub-row .nm{color:var(--ink-soft);font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .scrub-row .pts{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .scrub-row .delta{font-size:10.5px;font-weight:800;margin-left:2px}
+  .scrub-row .delta.up{color:#15a36b}.scrub-row .delta.flat{color:var(--ink-faint)}
+  .scrub-row.lead .nm,.scrub-row.lead .pts{color:var(--ink)}
+  .hit{fill:transparent;cursor:crosshair}
+  .chart-axis{display:flex;flex-wrap:wrap;gap:5px 14px;margin-top:10px;font-size:11.5px;color:var(--ink-faint);font-weight:600}
+  .chart-axis b{color:var(--ink-soft)}
+  .modehint{font-size:11.5px;color:var(--ink-faint);margin-top:4px;text-align:center;font-weight:600}
+  .modehint b{color:var(--brasil-azul)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lab-note">
+    <b>Página de teste</b> — protótipo do redesenho do gráfico de evolução. Dados fictícios: <b id="noteDensity">—</b>.
+    Passe o dedo/mouse sobre o gráfico pra ver o <b>scrubber</b>. Toque num jogador (linha, chip ou nome) pra <b>focar</b> e abrir o gol a gol dele.
+    Densidade via URL: <code>?games=40&amp;goals=insane</code>.
+  </div>
+
+  <section class="chart-shell">
+    <div class="chart-toolbar">
+      <div>
+        <div class="section-kicker">Evolução dos pontos</div>
+        <h3>Compare um ou vários participantes</h3>
+      </div>
+      <div class="chart-presets">
+        <button class="mini-action active" id="btnAll">Todos</button>
+        <button class="mini-action" id="btnTop3">Top 3</button>
+      </div>
+    </div>
+    <div class="chart-legend" id="legend"></div>
+    <div class="chart-stage" id="stage">
+      <svg class="chart" id="svg" role="img" aria-label="Gráfico de evolução"></svg>
+      <div class="scrub-card" id="card"></div>
+    </div>
+    <div class="modehint" id="modehint"></div>
+    <div class="chart-axis" id="summary"></div>
+  </section>
+</div>
+
+<script>
+"use strict";
+/* ----------------------------------------------------------------------------
+   DADOS SINTÉTICOS — mesma forma do app real (games/events/series/states)
+   ---------------------------------------------------------------------------- */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};}
+const rng=mulberry32(20260615);
+
+const TEAMS=[
+  ["Brasil","🇧🇷"],["México","🇲🇽"],["França","🇫🇷"],["Argentina","🇦🇷"],
+  ["Portugal","🇵🇹"],["Alemanha","🇩🇪"],["Espanha","🇪🇸"],["Holanda","🇳🇱"],
+  ["Croácia","🇭🇷"],["Uruguai","🇺🇾"],["Bélgica","🇧🇪"],["Japão","🇯🇵"],
+  ["Marrocos","🇲🇦"],["EUA","🇺🇸"],["Coreia","🇰🇷"],["Senegal","🇸🇳"]
+];
+const COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
+const NAMES=["Luiz","Otávio","Gustavo","Vitão","Thyago","Leo","Gabriel","Leo C."];
+
+// Densidade configurável por URL: ?games=40&goals=heavy|insane|normal
+const params=new URLSearchParams(location.search);
+const NUM_GAMES=Math.max(3,Math.min(160,parseInt(params.get("games"))||40));
+const GOAL_MODE=params.get("goals")||"heavy";
+const GOAL_DIST=({
+  normal:[0,1,1,2,2,2,3,3,4,5],
+  heavy:[1,2,2,3,3,4,4,5,6,7,8],
+  insane:[4,5,6,6,7,8,8,9,10,12]
+})[GOAL_MODE]||[1,2,2,3,3,4,4,5,6,7,8];
+const GAMES_PER_DAY=6;
+function dayLabel(off){const M=[["jun",30],["jul",31],["ago",31]];let d=12+off,mi=0;while(d>M[mi][1]){d-=M[mi][1];mi++;}return d+"/"+M[mi][0];}
+
+// monta NUM_GAMES jogos com sequência de gols; o último é "ao vivo"
+function buildGames(){
+  const games=[]; let ti=0;
+  for(let g=0;g<NUM_GAMES;g++){
+    const day=Math.floor(g/GAMES_PER_DAY), firstOfDay=(g%GAMES_PER_DAY===0);
+    const t1=TEAMS[ti%TEAMS.length], t2=TEAMS[(ti+1)%TEAMS.length]; ti+=2;
+    const live=(g===NUM_GAMES-1);
+    const totalGoals=GOAL_DIST[Math.floor(rng()*GOAL_DIST.length)];
+    const goals=[]; let a=0,b=0;
+    const mins=[]; for(let i=0;i<totalGoals;i++) mins.push(6+Math.floor(rng()*84));
+    mins.sort((x,y)=>x-y);
+    const cut=live?Math.min(totalGoals,2+Math.floor(rng()*3)):totalGoals; // ao vivo entra em andamento
+    for(let i=0;i<cut;i++){
+      if(rng()<0.5)a++;else b++;
+      goals.push({score:[a,b],minute:mins[i]||(40+i*8),half:(mins[i]||50)<=45?1:2});
+    }
+    const finalScore=[a,b];
+    const finalMinute=live?(goals.length?Math.min(89,goals[goals.length-1].minute+3):34):90;
+    games.push({g,t1,t2,date:dayLabel(day),live,goals,finalScore,finalMinute,firstOfDay});
+  }
+  return games;
+}
+const GAMES=buildGames();
+
+// placar -> pontos (regra estilo bolão), para gerar oscilação crível
+function ptsFor(pred,score){
+  const pa=pred[0],pb=pred[1],a=score[0],b=score[1];
+  if(pa===a&&pb===b) return 5;
+  const wp=Math.sign(pa-pb), wa=Math.sign(a-b);
+  if(wp===wa){ return (pa-pb)===(a-b)?3:2; }
+  if(pa===a||pb===b) return 1;
+  return 0;
+}
+// palpite de cada jogador por jogo (semeado)
+const PLAYERS=NAMES.map((name,i)=>{
+  const preds=GAMES.map(()=>[Math.floor(rng()*4),Math.floor(rng()*4)]);
+  return {i,name,color:COLORS[i],preds};
+});
+
+// pontos acumulados após o FINAL do jogo g
+function cumAfterGame(p,g){let s=0;for(let k=0;k<=g;k++)s+=ptsFor(p.preds[k],GAMES[k].finalScore);return s;}
+// pontos acumulados num lance específico (gol a gol) dentro do jogo g
+function cumAtEvent(p,g,score){let s=0;for(let k=0;k<g;k++)s+=ptsFor(p.preds[k],GAMES[k].finalScore);return s+ptsFor(p.preds[g],score);}
+
+// lista global de lances (gol a gol) — para o modo foco
+const EVENTS=[]; // {x,g,score,minute,half,live,scoreTxt}
+GAMES.forEach(game=>{
+  const k=Math.max(1,game.goals.length); // nº de marcos no jogo (mínimo: o final)
+  if(game.goals.length===0){
+    EVENTS.push({x:game.g+1,g:game.g,score:game.finalScore,minute:game.finalMinute,half:2,live:game.live,isFinal:true});
+  }else{
+    game.goals.forEach((gl,j)=>{
+      EVENTS.push({x:game.g+(j+1)/k,g:game.g,score:gl.score,minute:gl.minute,half:gl.half,live:game.live,isFinal:j===game.goals.length-1});
+    });
+  }
+});
+
+/* ----------------------------------------------------------------------------
+   LAYOUT
+   ---------------------------------------------------------------------------- */
+const W=760, H=320, padX=44, padY=22, padRight=128, padBottom=42;
+const usableW=W-padX-padRight, usableH=H-padY-padBottom;
+const G=GAMES.length;
+const xDomainMax=G; // game g final em x=g+1; domínio 0..G
+const xFor=xv=>padX + usableW*(xv/xDomainMax);
+let yMin=0,yMax=1;
+function computeYRange(activeIds){
+  let mx=1;
+  PLAYERS.forEach(p=>{ if(!activeIds.includes(p.i))return; mx=Math.max(mx,cumAfterGame(p,G-1)); });
+  yMax=mx; yMin=0;
+}
+const yFor=v=>padY+usableH-(usableH*((v-yMin)/Math.max(1,yMax-yMin)));
+
+function isLight(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return (0.2126*r+0.7152*g+0.0722*b)>175;}
+
+/* ----------------------------------------------------------------------------
+   ESTADO
+   ---------------------------------------------------------------------------- */
+let selection=PLAYERS.map(p=>p.i); // visíveis
+let focusId=null;                   // jogador focado (abre gol a gol)
+const svg=document.getElementById("svg");
+const stage=document.getElementById("stage");
+const card=document.getElementById("card");
+
+/* ----------------------------------------------------------------------------
+   SÉRIES
+   ---------------------------------------------------------------------------- */
+// vértices por-jogo (padrão): início + final de cada jogo
+function perGameVerts(p){
+  const v=[{x:0,val:0}];
+  for(let g=0;g<G;g++) v.push({x:g+1,val:cumAfterGame(p,g),live:GAMES[g].live});
+  return v;
+}
+// vértices gol a gol (foco): início + cada lance
+function golAGolVerts(p){
+  const v=[{x:0,val:0}];
+  EVENTS.forEach(e=>v.push({x:e.x,val:cumAtEvent(p,e.g,e.score),live:e.live}));
+  return v;
+}
+// quebra em paths solid/dashed (dashed = trecho ao vivo)
+function pathsFor(verts){
+  let solid="",dashed="";
+  for(let k=1;k<verts.length;k++){
+    const a=verts[k-1],b=verts[k];
+    const seg=`M ${xFor(a.x).toFixed(1)} ${yFor(a.val).toFixed(1)} L ${xFor(b.x).toFixed(1)} ${yFor(b.val).toFixed(1)} `;
+    if(b.live) dashed+=seg; else solid+=seg;
+  }
+  return {solid,dashed};
+}
+
+/* ----------------------------------------------------------------------------
+   RENDER
+   ---------------------------------------------------------------------------- */
+function render(){
+  computeYRange(selection);
+  const dim = focusId!=null;
+  const parts=[];
+
+  // grade Y
+  const ticks=niceTicks(yMin,yMax,8);
+  ticks.forEach(t=>{
+    const y=yFor(t);
+    parts.push(`<line x1="${padX}" y1="${y.toFixed(1)}" x2="${(padX+usableW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(0,39,118,${t===0?".22":".10"})" stroke-width="1"/>`);
+    parts.push(`<text x="${padX-9}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11.5" fill="#7b88a3" font-weight="800">${t}</text>`);
+  });
+
+  // eixo X: SÓ datas + divisórias de jogo (limpo — sem placares amontoados).
+  // Com muitos dias, pula rótulos pra não amontoar (mínimo de folga em px).
+  let lastDateX=-999;
+  const dateGap=Math.max(46, usableW/12);
+  for(let g=0;g<G;g++){
+    const game=GAMES[g];
+    const xb=xFor(g); // limite esquerdo do jogo
+    if(game.firstOfDay && xb-lastDateX>=dateGap){
+      lastDateX=xb;
+      parts.push(`<line x1="${xb.toFixed(1)}" y1="${padY}" x2="${xb.toFixed(1)}" y2="${(padY+usableH).toFixed(1)}" stroke="rgba(0,39,118,.10)" stroke-width="1"/>`);
+      parts.push(`<text x="${(xb+6).toFixed(1)}" y="${(padY+usableH+18).toFixed(1)}" text-anchor="start" font-size="11.5" fill="#41516d" font-weight="850">${game.date}</text>`);
+    }
+    // tracinho discreto por jogo no eixo (some quando jogos ficam colados demais)
+    if(usableW/G>=7){
+      const xf=xFor(g+1);
+      parts.push(`<line x1="${xf.toFixed(1)}" y1="${(padY+usableH).toFixed(1)}" x2="${xf.toFixed(1)}" y2="${(padY+usableH+4).toFixed(1)}" stroke="rgba(0,39,118,.22)" stroke-width="1"/>`);
+    }
+  }
+
+  // séries
+  selection.forEach(id=>{
+    const p=PLAYERS[id];
+    const on = focusId==null || focusId===id;
+    const verts = (focusId===id)?golAGolVerts(p):perGameVerts(p);
+    const {solid,dashed}=pathsFor(verts);
+    const halo = isLight(p.color)?`<path d="${solid}${dashed}" fill="none" stroke="rgba(20,30,55,.28)" stroke-width="5.4" stroke-linecap="round" stroke-linejoin="round"/>`:"";
+    let dots="";
+    // bolinhas: só quando há espaço (>=20px entre vértices); senão a linha
+    // vira "pontilhado" e se confunde com o tracejado do ao vivo. Endpoint sempre.
+    const dotStep=usableW/Math.max(1,verts.length-1);
+    const showDots=dotStep>=20;
+    verts.forEach((v,idx)=>{
+      const last=idx===verts.length-1;
+      if(last){
+        dots+=`<circle class="${v.live?"live-dot":""}" cx="${xFor(v.x).toFixed(1)}" cy="${yFor(v.val).toFixed(1)}" r="5" fill="${p.color}" stroke="#fff" stroke-width="2.4"/>`;
+      }else if(showDots && idx>0){
+        const r=focusId===id?2.6:3;
+        dots+=`<circle cx="${xFor(v.x).toFixed(1)}" cy="${yFor(v.val).toFixed(1)}" r="${r}" fill="${p.color}" stroke="#fff" stroke-width="1.6"/>`;
+      }
+    });
+    parts.push(`<g class="series ${on?"is-on":""}" data-series="${id}">
+      ${halo}
+      ${solid?`<path d="${solid}" fill="none" stroke="${p.color}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`:""}
+      ${dashed?`<path class="live-path" d="${dashed}" fill="none" stroke="${p.color}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`:""}
+      ${dots}
+    </g>`);
+  });
+
+  // rótulos endpoint à direita
+  const labels=spreadLabels();
+  labels.forEach(L=>{
+    const on=focusId==null||focusId===L.id;
+    parts.push(`<g class="endpoint ${on?"is-on":""}" data-series="${L.id}" style="cursor:pointer">
+      <circle cx="${(padX+usableW+8).toFixed(1)}" cy="${L.y.toFixed(1)}" r="3.5" fill="${L.color}"/>
+      <text x="${(padX+usableW+16).toFixed(1)}" y="${(L.y+4).toFixed(1)}" font-size="12" font-weight="800" fill="#2b3a57">${L.name} · ${L.val}</text>
+    </g>`);
+  });
+
+  // scrubber: guia + marcadores + área de captura
+  parts.push(`<line class="guide" id="guide" x1="0" y1="${padY}" x2="0" y2="${(padY+usableH).toFixed(1)}"/>`);
+  parts.push(`<g class="mk" id="mk"></g>`);
+  parts.push(`<rect class="hit" id="hit" x="${padX}" y="${padY-6}" width="${usableW}" height="${usableH+12}"/>`);
+
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.classList.toggle("is-dim",dim);
+  svg.innerHTML=parts.join("");
+
+  wireSeriesClicks();
+  wireScrubber();
+  renderLegend();
+  renderSummary();
+  document.getElementById("modehint").innerHTML = focusId!=null
+    ? `Modo foco · <b>${PLAYERS[focusId].name}</b> gol a gol — toque de novo pra voltar ao por-jogo`
+    : `Padrão por-jogo · toque um jogador pra abrir o <b>gol a gol</b> dele`;
+}
+
+// distribui rótulos endpoint sem sobrepor
+function spreadLabels(){
+  const items=selection.map(id=>{const p=PLAYERS[id];const val=cumAfterGame(p,G-1);return {id,name:p.name,color:p.color,val,y:yFor(val)};});
+  items.sort((a,b)=>a.y-b.y);
+  const min=14;
+  for(let k=1;k<items.length;k++) if(items[k].y-items[k-1].y<min) items[k].y=items[k-1].y+min;
+  const bottom=padY+usableH;
+  for(let k=items.length-1;k>0;k--) if(items[k].y>bottom){items[k].y=bottom;if(items[k].y-items[k-1].y<min)items[k-1].y=items[k].y-min;}
+  return items;
+}
+
+function niceTicks(lo,hi,n){
+  const span=Math.max(1,hi-lo);const step=Math.max(1,Math.round(span/n));const out=[];
+  for(let v=0;v<=hi+step-1;v+=step) out.push(v);
+  if(out[out.length-1]<hi) out.push(out[out.length-1]+step);
+  return out.filter((v,i,a)=>a.indexOf(v)===i&&v<=hi+step);
+}
+
+/* ----------------------------------------------------------------------------
+   INTERAÇÃO: foco
+   ---------------------------------------------------------------------------- */
+function wireSeriesClicks(){
+  svg.querySelectorAll('.series, .endpoint').forEach(el=>{
+    el.addEventListener("click",e=>{
+      e.stopPropagation();
+      const id=+el.dataset.series;
+      focusId = (focusId===id)?null:id;
+      hideScrub();
+      render();
+    });
+    el.addEventListener("mouseenter",()=>{ if(focusId==null) softHighlight(+el.dataset.series,true); });
+    el.addEventListener("mouseleave",()=>{ if(focusId==null) softHighlight(+el.dataset.series,false); });
+  });
+}
+function softHighlight(id,on){
+  svg.classList.toggle("is-dim",on);
+  svg.querySelectorAll('[data-series]').forEach(n=>n.classList.toggle("is-on", +n.dataset.series===id ? on : !on));
+  if(!on) svg.querySelectorAll('[data-series]').forEach(n=>n.classList.remove("is-on"));
+}
+
+/* ----------------------------------------------------------------------------
+   INTERAÇÃO: scrubber (mouse + toque)
+   ---------------------------------------------------------------------------- */
+function snapPoints(){
+  if(focusId!=null){
+    return EVENTS.map(e=>({x:e.x,e}));
+  }
+  // por-jogo: snap nos finais de jogo
+  return GAMES.map(g=>({x:g.g+1,e:{x:g.g+1,g:g.g,score:g.finalScore,minute:g.finalMinute,half:2,live:g.live,isFinal:true}}));
+}
+function clientToUserX(clientX,clientY){
+  const pt=svg.createSVGPoint();pt.x=clientX;pt.y=clientY;
+  const ctm=svg.getScreenCTM();if(!ctm)return null;
+  return pt.matrixTransform(ctm.inverse()).x;
+}
+function userXToClientX(ux){
+  const pt=svg.createSVGPoint();pt.x=ux;pt.y=padY;
+  const ctm=svg.getScreenCTM();if(!ctm)return null;
+  return pt.matrixTransform(ctm).x;
+}
+let stickyTouch=false;
+function wireScrubber(){
+  const hit=document.getElementById("hit");
+  const move=ev=>{
+    const ux=clientToUserX(ev.clientX,ev.clientY);if(ux==null)return;
+    // converte px do svg-user de volta pra "x domínio"
+    const domX=(ux-padX)/usableW*xDomainMax;
+    const snaps=snapPoints();
+    let best=snaps[0],bd=1e9;
+    snaps.forEach(s=>{const d=Math.abs(s.x-domX);if(d<bd){bd=d;best=s;}});
+    showScrub(best);
+  };
+  hit.addEventListener("pointermove",move);
+  hit.addEventListener("pointerdown",ev=>{stickyTouch=ev.pointerType==="touch";move(ev);});
+  hit.addEventListener("pointerleave",ev=>{ if(ev.pointerType!=="touch") hideScrub(); });
+  hit.addEventListener("pointerup",ev=>{ if(ev.pointerType!=="touch") {} });
+}
+// fecha o scrubber ao tocar fora
+document.addEventListener("pointerdown",ev=>{
+  if(stickyTouch && !stage.contains(ev.target)){ hideScrub(); stickyTouch=false; }
+},true);
+
+function showScrub(snap){
+  const e=snap.e;
+  const gx=xFor(snap.x);
+  stage.classList.add("scrubbing");
+  const guide=document.getElementById("guide");
+  guide.setAttribute("x1",gx.toFixed(1));guide.setAttribute("x2",gx.toFixed(1));
+
+  // marcadores nas linhas ativas
+  const mk=document.getElementById("mk");
+  let mkHtml="";
+  const rows=[];
+  selection.forEach(id=>{
+    const p=PLAYERS[id];
+    if(focusId!=null && focusId!==id) return; // no modo foco, só o jogador focado
+    let val, prev;
+    if(focusId===id){
+      val=cumAtEvent(p,e.g,e.score);
+      prev = e.g>0 ? cumAfterGame(p,e.g-1) : 0;
+    }else{
+      val=cumAfterGame(p,e.g);
+      prev = e.g>0 ? cumAfterGame(p,e.g-1) : 0;
+    }
+    const y=yFor(val);
+    mkHtml+=`<circle cx="${gx.toFixed(1)}" cy="${y.toFixed(1)}" r="6" fill="#fff" stroke="${p.color}" stroke-width="3"/>`;
+    rows.push({name:p.name,color:p.color,val,delta:val-prev,lead:false});
+  });
+  mk.innerHTML=mkHtml;
+
+  // cartão
+  rows.sort((a,b)=>b.val-a.val); if(rows[0])rows[0].lead=true;
+  const g=GAMES[e.g];
+  const liveTxt = e.live?`<span class="scrub-min live">AO VIVO ${e.minute}'</span>`:`<span class="scrub-min">${e.isFinal?"Final":e.minute+"'"}</span>`;
+  const rowsHtml=rows.map(r=>{
+    const d=r.delta>0?`<span class="delta up">+${r.delta}</span>`:`<span class="delta flat">·</span>`;
+    return `<div class="scrub-row ${r.lead?"lead":""}"><span class="dot" style="background:${r.color}"></span><span class="nm">${r.name}</span><span class="pts">${r.val}</span>${d}</div>`;
+  }).join("");
+  card.innerHTML=`
+    <div class="scrub-head">
+      <span class="scrub-score"><span class="flag">${g.t1[1]}</span> ${e.score[0]}<span style="opacity:.4">×</span>${e.score[1]} <span class="flag">${g.t2[1]}</span></span>
+      ${liveTxt}
+    </div>
+    <div class="scrub-sub">${g.t1[0]} × ${g.t2[0]} · ${g.date}</div>
+    <div class="scrub-rows">${rowsHtml}</div>`;
+
+  // posiciona o cartão (px relativo ao container) — usa gx (unidade SVG), não snap.x (domínio)
+  const rect=stage.getBoundingClientRect();
+  const cx=userXToClientX(gx)-rect.left;
+  card.style.left=Math.max(80,Math.min(rect.width-80,cx))+"px";
+  card.style.top="6px";
+}
+function hideScrub(){stage.classList.remove("scrubbing");}
+
+/* ----------------------------------------------------------------------------
+   LEGENDA / RESUMO / PRESETS
+   ---------------------------------------------------------------------------- */
+function renderLegend(){
+  const el=document.getElementById("legend");
+  el.innerHTML=PLAYERS.map(p=>{
+    const active=selection.includes(p.i);
+    return `<button class="chart-chip ${active?"active":""}" data-id="${p.i}" style="${active?`background:${p.color};border-color:${p.color}`:""}">
+      <span class="dot" style="background:${active?'#fff':p.color}"></span>${p.name}</button>`;
+  }).join("");
+  el.querySelectorAll(".chart-chip").forEach(b=>b.addEventListener("click",()=>{
+    const id=+b.dataset.id;
+    if(selection.includes(id)){ if(selection.length>1) selection=selection.filter(x=>x!==id); }
+    else selection=[...selection,id].sort((a,b)=>a-b);
+    if(focusId!=null && !selection.includes(focusId)) focusId=null;
+    render();
+  }));
+}
+function renderSummary(){
+  const el=document.getElementById("summary");
+  const totalGoals=GAMES.reduce((s,g)=>s+g.goals.length,0);
+  el.innerHTML=[
+    `<b>${G}</b> jogos`,`<b>${G-1}</b> apurados`,`<b>1</b> ao vivo`,`<b>${totalGoals}</b> gols no total`,
+    `tracejado animado = parcial`,`scrubber = placar de cada lance`
+  ].map(s=>`<span>${s}</span>`).join("");
+  const note=document.getElementById("noteDensity");
+  if(note) note.textContent=`${G} jogos · ${totalGoals} gols (modo "${GOAL_MODE}") · 1 ao vivo`;
+}
+document.getElementById("btnAll").addEventListener("click",()=>{
+  selection=PLAYERS.map(p=>p.i);focusId=null;setPreset("all");render();
+});
+document.getElementById("btnTop3").addEventListener("click",()=>{
+  const top3=[...PLAYERS].sort((a,b)=>cumAfterGame(b,G-1)-cumAfterGame(a,G-1)).slice(0,3).map(p=>p.i);
+  selection=top3.sort((a,b)=>a-b);focusId=null;setPreset("top3");render();
+});
+function setPreset(which){
+  document.getElementById("btnAll").classList.toggle("active",which==="all");
+  document.getElementById("btnTop3").classList.toggle("active",which==="top3");
+}
+
+render();
+</script>
+</body>
+</html>

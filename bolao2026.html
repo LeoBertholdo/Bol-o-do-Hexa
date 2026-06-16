@@ -816,6 +816,34 @@ svg.chart-hover .chart-endpoint-name:not(.is-hovered),svg.chart-focus:not(.chart
   0%,100%{opacity:1;transform:scale(1);transform-origin:center;transform-box:fill-box}
   50%{opacity:.55;transform:scale(1.25);transform-origin:center;transform-box:fill-box}
 }
+/* ===== Gráfico v2 (prévia admin) ===== */
+@keyframes g2-ants{to{stroke-dashoffset:-22}}
+.g2-live{stroke-dasharray:7 6;animation:g2-ants 1s linear infinite}
+@media (prefers-reduced-motion:reduce){.g2-live{animation:none}}
+.g2-note{font-size:12px;color:#7a5d00;background:#fff8e1;border:1px solid #f3e2a6;border-radius:12px;padding:9px 12px;margin-bottom:12px;line-height:1.4}
+.g2-note b{color:#5f4a00}
+.g2-stage{position:relative}
+.g2-hit{fill:transparent;cursor:crosshair}
+.g2-guide{stroke:rgba(0,39,118,.45);stroke-width:1.4;stroke-dasharray:3 4;opacity:0;transition:opacity .12s;pointer-events:none}
+.g2-mk{opacity:0;transition:opacity .12s;pointer-events:none}
+.g2-stage.g2-scrubbing .g2-guide,.g2-stage.g2-scrubbing .g2-mk{opacity:1}
+.g2-card{position:absolute;top:6px;left:0;z-index:6;pointer-events:none;min-width:152px;max-width:230px;
+  background:#fff;border:1px solid rgba(0,39,118,.12);border-radius:13px;
+  box-shadow:0 16px 34px -14px rgba(0,39,118,.5);padding:9px 11px;
+  opacity:0;transform:translate(-50%,8px) scale(.96);transition:opacity .12s,transform .12s}
+.g2-stage.g2-scrubbing .g2-card{opacity:1;transform:translate(-50%,0) scale(1)}
+.g2-card .h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+.g2-card .sc{font-size:15px;font-weight:800;white-space:nowrap}
+.g2-card .mn{font-size:10.5px;font-weight:800;color:#7b88a3;white-space:nowrap}
+.g2-card .mn.lv{color:#d83a34}
+.g2-card .sub{font-size:10.5px;color:#7b88a3;margin:-2px 0 6px;font-weight:600}
+.g2-card .rw{display:flex;align-items:center;gap:7px;font-size:12px;margin-top:3px}
+.g2-card .rw .d{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.g2-card .rw .nm{color:#41516d;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.g2-card .rw .pt{font-weight:800;color:#1f2a44;font-variant-numeric:tabular-nums}
+.g2-card .rw .dl{font-size:10.5px;font-weight:800;color:#15a36b;margin-left:2px}
+.g2-hint{font-size:11.5px;color:#7b88a3;text-align:center;font-weight:600;margin-top:8px}
+.g2-hint b{color:var(--blue)}
 .chart-shell-compact{padding:12px;gap:10px}
 .chart-shell-compact .chart-stage{padding:10px 8px 6px}
 .chart-shell-compact h3{font-size:.9rem;line-height:1.15}
@@ -3633,6 +3661,7 @@ body.chart-modal-open{overflow:hidden}
   <button onclick="goTab('palpites')">Palpites</button>
   <button onclick="goTab('config')">Config</button>
   <button id="navFilmeBtn" hidden onclick="goTab('filme')">Histórico</button>
+  <button id="navGraf2Btn" hidden onclick="goTab('graf2')">Gráfico v2</button>
 </nav>
 
 <div id="tab-home" class="tab active"></div>
@@ -3642,6 +3671,7 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-palpites" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div id="tab-filme" class="tab"></div>
+<div id="tab-graf2" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
 
@@ -5631,6 +5661,10 @@ function gameTeams(game){
 
 const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
 let activeTab="home";
+let graf2Selection=[];
+let graf2Focus=null;
+let g2State=null;
+let graf2TouchSticky=false;
 let palPi=0;
 let jFilter="all";
 let jogosSearch="";
@@ -7476,7 +7510,8 @@ function goTab(t){
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
   if(t==="filme"&&!filmeAvailable()) t="home";
-  const tabs=["home","ranking","grupos","jogos","palpites","config","filme"];
+  if(t==="graf2"&&!graf2Available()) t="home";
+  const tabs=["home","ranking","grupos","jogos","palpites","config","filme","graf2"];
   if(!tabs.includes(t)) t="home";
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
@@ -7493,6 +7528,8 @@ function render(t){
   renderAuthControls();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
+  const graf2Btn=document.getElementById("navGraf2Btn");
+  if(graf2Btn) graf2Btn.hidden=!graf2Available();
   if(t==="home") renderHome();
   if(t==="ranking") renderRanking();
   if(t==="grupos") renderGrupos();
@@ -7500,6 +7537,7 @@ function render(t){
   if(t==="palpites") renderPalpites();
   if(t==="config") renderConfig();
   if(t==="filme") renderFilme();
+  if(t==="graf2") renderGraf2();
 }
 
 function predictionProgress(){
@@ -8082,6 +8120,174 @@ function renderRankingChart(rows,isExpanded=false){
     <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
   </section>`;
 }
+/* ============================================================================
+   GRÁFICO v2 (prévia só admin) — reusa rankingTimeline(rows) com dados reais.
+   Padrão: 1 vértice por jogo (fechamento). Foco num jogador: abre o gol a gol.
+   Scrubber com bandeirinhas + placar do lance + ranking no momento.
+   ========================================================================== */
+function graf2Available(){return isOnlineMode()&&isAdmin();}
+function graf2Flag(name){return TEAM_FLAGS[name]||"";}
+function graf2IsLight(hex){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return (0.2126*r+0.7152*g+0.0722*b)>175;}
+function graf2AllActive(rows){return rows.length&&rows.every(p=>graf2Selection.includes(p.i));}
+function graf2Top3Active(rows){const t=rows.slice(0,3).map(p=>p.i);return t.length&&t.every(id=>graf2Selection.includes(id));}
+function graf2Preset(mode){const rows=ranking();graf2Selection=mode==="top3"?rows.slice(0,3).map(p=>p.i):rows.map(p=>p.i);graf2Focus=null;renderGraf2();}
+function graf2ToggleSeries(id){if(graf2Selection.includes(id)){if(graf2Selection.length>1)graf2Selection=graf2Selection.filter(x=>x!==id);}else graf2Selection=[...graf2Selection,id];if(graf2Focus!=null&&!graf2Selection.includes(graf2Focus))graf2Focus=null;renderGraf2();}
+
+function renderGraf2(){
+  const el=document.getElementById("tab-graf2");
+  if(!el) return;
+  if(!graf2Available()){el.innerHTML="";g2State=null;return;}
+  el.innerHTML=renderRankingChartV2(ranking());
+  graf2WireScrubber();
+}
+
+function renderRankingChartV2(rows){
+  graf2Selection=graf2Selection.filter(id=>rows.some(p=>p.i===id));
+  if(!graf2Selection.length) graf2Selection=rows.map(p=>p.i);
+  if(graf2Focus!=null&&!graf2Selection.includes(graf2Focus)) graf2Focus=null;
+
+  const chart=rankingTimeline(rows);
+  const states=chart.states, evs=chart.events, N=states.length;
+
+  const shell=inner=>`<section class="chart-shell g2-shell">
+    <div class="g2-note"><b>Prévia (só admin)</b> — gráfico v2 com os dados reais do bolão. Passe o dedo/mouse pra ver o placar de cada lance; toque numa linha pra abrir o gol a gol dela.</div>
+    <div class="chart-toolbar">
+      <div><div class="section-kicker">Evolução dos pontos · v2</div>
+      <h3 style="margin-top:4px">Padrão por-jogo · foco abre o gol a gol</h3></div>
+      <div class="chart-presets">
+        <button class="mini-action chart-toggle ${graf2AllActive(rows)?"active":""}" onclick="graf2Preset('all')">Todos</button>
+        <button class="mini-action chart-toggle ${graf2Top3Active(rows)?"active":""}" onclick="graf2Preset('top3')">Top 3</button>
+      </div>
+    </div>
+    <div class="chart-legend">${rows.map((p,idx)=>{
+      const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
+      const active=graf2Selection.includes(p.i);
+      return `<button class="chart-chip ${active?"active":""}" onclick="graf2ToggleSeries(${p.i})" style="${active?`background:${color}`:""}"><span class="chart-dot" style="background:${color}"></span><span>${esc(p.name)}</span></button>`;
+    }).join("")}</div>
+    ${inner}
+    <div class="chart-axis"><span>${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados</span>${chart.liveGameCount?`<span>${chart.liveGameCount} ao vivo · tracejado anima</span>`:""}<span>scrubber = placar de cada lance</span></div>
+  </section>`;
+
+  if(N<=1){g2State=null;return shell(`<div class="chart-empty">Sem jogos apurados ainda — o gráfico aparece quando sair o primeiro resultado.</div>`);}
+
+  const W=760,H=320,padX=44,padY=22,padRight=150,padBottom=42;
+  const usableW=W-padX-padRight, usableH=H-padY-padBottom;
+  const range=Math.max(1,chart.maxVal-chart.minVal);
+  const xRel=chart.xRel||[];
+  const xFor=i=>padX+usableW*(xRel[i]??(i/Math.max(1,N-1)));
+  const yFor=v=>padY+usableH-(usableH*((v-chart.minVal)/range));
+
+  // fechamento de cada jogo = último evento daquele jogo (lida com jogos simultâneos)
+  const lastIdxByGame={};
+  for(let i=0;i<N;i++){ if(evs[i]&&evs[i].game) lastIdxByGame[evs[i].game.id]=i; }
+  let perGameIdx=[0,...Object.values(lastIdxByGame)];
+  if(chart.includePodio) perGameIdx.push(N-1);
+  perGameIdx=[...new Set(perGameIdx)].sort((a,b)=>a-b);
+
+  const selected=rows.filter(p=>graf2Selection.includes(p.i));
+  const focusOn=graf2Focus!=null&&selected.some(p=>p.i===graf2Focus);
+  const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
+
+  const ticks=chartIntegerTicks(chart.minVal,chart.maxVal,11);
+  const yAxis=`<line x1="${padX}" y1="${padY}" x2="${padX}" y2="${(padY+usableH).toFixed(1)}" stroke="rgba(0,39,118,.2)" stroke-width="1"></line>`+
+    ticks.map(v=>{const y=yFor(v);return `<line x1="${padX}" y1="${y.toFixed(1)}" x2="${(padX+usableW).toFixed(1)}" y2="${y.toFixed(1)}" stroke="rgba(0,39,118,${v===0?".22":".1"})" stroke-width="1"></line><text x="${(padX-8).toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11.5" fill="#7b88a3" font-weight="800">${v}</text>`;}).join("");
+
+  const axisIdx=chart.axisCandidates||[];
+  let lastLabelX=-999;
+  const xAxis=axisIdx.map(i=>{
+    const x=xFor(i); if(x-lastLabelX<54) return ""; lastLabelX=x;
+    const lbl=chart.labels[i]||"";
+    return `<line x1="${x.toFixed(1)}" y1="${padY}" x2="${x.toFixed(1)}" y2="${(padY+usableH).toFixed(1)}" stroke="rgba(0,39,118,.08)" stroke-width="1"></line><text x="${(x+5).toFixed(1)}" y="${(padY+usableH+17).toFixed(1)}" text-anchor="start" font-size="11.5" fill="#41516d" font-weight="850">${esc(lbl)}</text>`;
+  }).join("");
+
+  const seriesSvg=selected.map(p=>{
+    const s=chart.series.find(ss=>ss.i===p.i); if(!s) return "";
+    const color=s.color, vals=s.values;
+    const idxList=(graf2Focus===p.i)?Array.from({length:N},(_,i)=>i):perGameIdx;
+    const pts=idxList.map(i=>({x:xFor(i),y:yFor(vals[i]),live:states[i]==="live"}));
+    let solid="",dashed="";
+    for(let k=1;k<pts.length;k++){const seg=`M ${pts[k-1].x.toFixed(1)} ${pts[k-1].y.toFixed(1)} L ${pts[k].x.toFixed(1)} ${pts[k].y.toFixed(1)} `;if(pts[k].live)dashed+=seg;else solid+=seg;}
+    const halo=graf2IsLight(color)?`<path d="${solid}${dashed}" fill="none" stroke="rgba(20,30,55,.26)" stroke-width="5.6" stroke-linecap="round" stroke-linejoin="round"></path>`:"";
+    let dots="",lastDotX=-999;
+    pts.forEach((pt,k)=>{
+      const last=k===pts.length-1;
+      if(last){dots+=`<circle class="${pt.live?"chart-live-dot":""}" cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="5" fill="${color}" stroke="#fff" stroke-width="2.4"></circle>`;}
+      else if(k>0&&pt.x-lastDotX>=20){lastDotX=pt.x;dots+=`<circle cx="${pt.x.toFixed(1)}" cy="${pt.y.toFixed(1)}" r="${graf2Focus===p.i?2.6:3}" fill="${color}" stroke="#fff" stroke-width="1.6"></circle>`;}
+    });
+    return `<g class="chart-series ${graf2Focus===p.i?"is-focused":""}" data-series="${p.i}">${halo}${solid?`<path d="${solid}" fill="none" stroke="${color}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>`:""}${dashed?`<path class="g2-live" d="${dashed}" fill="none" stroke="${color}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"></path>`:""}${dots}</g>`;
+  }).join("");
+
+  const endItems=selected.map((l,idx)=>{const s=chart.series.find(ss=>ss.i===l.i);const v=s?s.values[N-1]:0;return {color:s?s.color:"#002776",name:uniqueLabels[idx],value:v,y:yFor(v)};});
+  const endLabels=chartEndpointLabelsSvg(endItems,{baseX:xFor(N-1),lineHeight:14,groupGap:16,topBound:padY+4,bottomBound:padY+usableH-2,maxChars:16,fontSize:11.5,dy:4});
+
+  const snapIdx=(focusOn?Array.from({length:N},(_,i)=>i):perGameIdx).filter(i=>evs[i]);
+
+  g2State={chart,N,padX,padY,usableW,usableH,range,xRel,snapIdx,focusOn,
+    selected:selected.map(p=>{const s=chart.series.find(ss=>ss.i===p.i);return {i:p.i,name:p.name,color:s?s.color:"#002776",values:s?s.values:[]};})};
+
+  const svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" id="g2Svg" class="${focusOn?"chart-focus":""}" role="img" aria-label="Gráfico de evolução v2">
+    ${yAxis}${xAxis}${seriesSvg}${endLabels}
+    <line class="g2-guide" id="g2Guide" x1="0" y1="${padY}" x2="0" y2="${(padY+usableH).toFixed(1)}"></line>
+    <g class="g2-mk" id="g2Mk"></g>
+    <rect class="g2-hit" id="g2Hit" x="${padX}" y="${(padY-6).toFixed(1)}" width="${usableW}" height="${(usableH+12).toFixed(1)}"></rect>
+  </svg>`;
+
+  const focusName=graf2Focus!=null?(rows.find(p=>p.i===graf2Focus)||{}).name||"":"";
+  const stageInner=`<div class="chart-stage g2-stage" id="g2Stage">${svg}<div class="g2-card" id="g2Card"></div></div>
+    <div class="g2-hint">${graf2Focus!=null?`Foco · <b>${esc(focusName)}</b> gol a gol — toque de novo pra voltar ao por-jogo`:`Padrão por-jogo · toque numa linha pra abrir o <b>gol a gol</b> dela`}</div>`;
+  return shell(stageInner);
+}
+
+function graf2XAt(i){const st=g2State;return st.padX+st.usableW*((st.xRel[i]??(i/Math.max(1,st.N-1))));}
+function graf2YAt(v){const st=g2State;return st.padY+st.usableH-(st.usableH*((v-st.chart.minVal)/st.range));}
+function graf2PointerUserXY(e){const svg=document.getElementById("g2Svg");if(!svg)return null;const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const ctm=svg.getScreenCTM();if(!ctm)return null;const u=pt.matrixTransform(ctm.inverse());return {x:u.x,y:u.y};}
+function graf2NearestSnap(ux){const st=g2State;let best=st.snapIdx[0],bd=1e9;st.snapIdx.forEach(i=>{const d=Math.abs(graf2XAt(i)-ux);if(d<bd){bd=d;best=i;}});return best;}
+function graf2WireScrubber(){
+  const hit=document.getElementById("g2Hit"); if(!hit||!g2State) return;
+  hit.addEventListener("pointermove",graf2ScrubMove);
+  hit.addEventListener("pointerdown",e=>{graf2TouchSticky=e.pointerType==="touch";graf2ScrubMove(e);});
+  hit.addEventListener("pointerleave",e=>{if(e.pointerType!=="touch")graf2ScrubHide();});
+  hit.addEventListener("click",graf2HitClick);
+}
+function graf2ScrubMove(e){if(!g2State||!g2State.snapIdx.length)return;const u=graf2PointerUserXY(e);if(!u)return;graf2ShowScrub(graf2NearestSnap(u.x));}
+function graf2ScrubHide(){const st=document.getElementById("g2Stage");if(st)st.classList.remove("g2-scrubbing");}
+function graf2HitClick(e){
+  if(!g2State||!g2State.snapIdx.length)return;
+  const u=graf2PointerUserXY(e);if(!u)return;
+  const idx=graf2NearestSnap(u.x);
+  let near=null,nd=16;
+  g2State.selected.forEach(p=>{const y=graf2YAt(p.values[idx]);const d=Math.abs(u.y-y);if(d<nd){nd=d;near=p.i;}});
+  graf2Focus=(near!=null&&graf2Focus===near)?null:near;
+  renderGraf2();
+}
+function graf2ShowScrub(idx){
+  const st=g2State;if(!st)return;
+  const stage=document.getElementById("g2Stage"),guide=document.getElementById("g2Guide"),mk=document.getElementById("g2Mk"),card=document.getElementById("g2Card"),svg=document.getElementById("g2Svg");
+  if(!stage||!guide||!mk||!card||!svg)return;
+  const ev=st.chart.events[idx];if(!ev||!ev.game)return;
+  const gx=graf2XAt(idx);
+  stage.classList.add("g2-scrubbing");
+  guide.setAttribute("x1",gx.toFixed(1));guide.setAttribute("x2",gx.toFixed(1));
+  const prev=st.snapIdx.filter(i=>i<idx).pop();
+  const stt=st.chart.states[idx];
+  const players=st.focusOn?st.selected.filter(p=>p.i===graf2Focus):st.selected;
+  let mkHtml="",rows=[];
+  players.forEach(p=>{
+    const val=p.values[idx],pv=prev!=null?p.values[prev]:0;
+    mkHtml+=`<circle cx="${gx.toFixed(1)}" cy="${graf2YAt(val).toFixed(1)}" r="6" fill="#fff" stroke="${p.color}" stroke-width="3"></circle>`;
+    rows.push({name:p.name,color:p.color,val,delta:val-pv});
+  });
+  mk.innerHTML=mkHtml;
+  rows.sort((a,b)=>b.val-a.val);
+  const stateLabel=stt==="final"?`<span class="mn">Final</span>`:stt==="live"?`<span class="mn lv">● ao vivo</span>`:ev.synthetic?`<span class="mn">0×0 no intervalo</span>`:`<span class="mn">parcial</span>`;
+  const rowsHtml=rows.map(r=>`<div class="rw"><span class="d" style="background:${r.color}"></span><span class="nm">${esc(r.name)}</span><span class="pt">${r.val}</span>${r.delta>0?`<span class="dl">+${r.delta}</span>`:r.delta<0?`<span class="dl" style="color:#d83a34">${r.delta}</span>`:`<span class="dl" style="color:#9aa6bd">·</span>`}</div>`).join("");
+  const dateTxt=ev.game.date?chartFormatDateKey(ev.game.date):"";
+  card.innerHTML=`<div class="h"><span class="sc">${graf2Flag(ev.game.t1)} ${ev.res.s1}<span style="opacity:.4">×</span>${ev.res.s2} ${graf2Flag(ev.game.t2)}</span>${stateLabel}</div><div class="sub">${esc(ev.game.t1)} × ${esc(ev.game.t2)}${dateTxt?` · ${esc(dateTxt)}`:""}</div>${rowsHtml}`;
+  const rect=stage.getBoundingClientRect();const ctm=svg.getScreenCTM();const pt=svg.createSVGPoint();pt.x=gx;pt.y=st.padY;const cx=ctm?pt.matrixTransform(ctm).x-rect.left:gx;
+  card.style.left=Math.max(86,Math.min(rect.width-86,cx))+"px";
+}
+document.addEventListener("pointerdown",e=>{if(graf2TouchSticky){const stage=document.getElementById("g2Stage");if(stage&&!stage.contains(e.target)){graf2ScrubHide();graf2TouchSticky=false;}}},true);
+
 function renderHome(){
   const r=ranking();
   const played=GAMES.filter(g=>S.results[g.id]).length;
