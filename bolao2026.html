@@ -771,8 +771,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   box-shadow:0 14px 34px rgba(0,39,118,.07);
 }
 .chart-toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.chart-presets,.chart-legend{display:flex;gap:8px;flex-wrap:wrap}
+.chart-presets,.chart-legend,.chart-mode-pills{display:flex;gap:8px;flex-wrap:wrap}
 .chart-toggle.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.chart-mode-pills{padding-bottom:2px}
 .chart-chip{
   display:inline-flex;
   align-items:center;
@@ -819,9 +820,6 @@ svg.chart-hover .chart-endpoint-name:not(.is-hovered),svg.chart-focus:not(.chart
 .chart-shell-compact{padding:12px;gap:10px}
 .chart-shell-compact .chart-stage{padding:10px 8px 6px}
 .chart-shell-compact h3{font-size:.9rem;line-height:1.15}
-.ranking-cut-list{display:grid;gap:12px}
-.ranking-cut-card .chart-axis{justify-content:flex-start}
-.ranking-cut-card .chart-empty{font-size:.76rem}
 .chart-expand-btn{
   display:inline-flex;align-items:center;gap:5px;
   border:1px solid var(--border);background:#fff;color:var(--blue);
@@ -5958,6 +5956,8 @@ let authMode="signin";
 let rankingChartSelection=[];
 let rankingChartTouched=false;
 let rankingChartFocus=null;
+let rankingChartPeriod="all";
+let rankingChartStep="goals";
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
 let chartExpanded=null;
@@ -8198,8 +8198,9 @@ function rankingCutTimeline(rows,games){
     fixtureCount:(games||[]).length,scoredCount:new Set(events.map(ev=>ev.game.id)).size,
     resolvedCount:resolvedIds.size,liveGameCount:liveIds.size,detailEventCount,dateCount:dateSet.size};
 }
-function rankingFinalWhistleTimeline(rows){
-  const games=GAMES.filter(game=>S.results[game.id]).sort(compareGameSchedule);
+function rankingFinalWhistleTimeline(rows,games=null){
+  const fixtures=(games||GAMES).slice().sort(compareGameSchedule);
+  const scoredGames=fixtures.filter(game=>S.results[game.id]).sort(compareGameSchedule);
   const totals={};
   const series=rows.map((p,idx)=>{
     totals[p.i]=0;
@@ -8207,7 +8208,7 @@ function rankingFinalWhistleTimeline(rows){
   });
   const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
   const dateSet=new Set();
-  games.forEach(game=>{
+  scoredGames.forEach(game=>{
     const res=S.results[game.id];
     series.forEach(line=>{
       const pal=S.palpites[`${line.i}_${game.id}`];
@@ -8232,7 +8233,7 @@ function rankingFinalWhistleTimeline(rows){
   const maxVal=Math.max(3,...allValues);
   const minVal=Math.min(0,...allValues);
   return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
-    fixtureCount:GAMES.length,scoredCount:games.length,resolvedCount:games.length,
+    fixtureCount:fixtures.length,scoredCount:scoredGames.length,resolvedCount:scoredGames.length,
     liveGameCount:0,detailEventCount:0,dateCount:dateSet.size};
 }
 function todayRankingCutDescriptor(){
@@ -8241,121 +8242,59 @@ function todayRankingCutDescriptor(){
   return {id:"today",title:"Hoje",subtitle:chartFormatDateKey(key),games,
     emptyText:games.length?"Sem placares hoje ainda.":"Hoje não tem jogo no calendário."};
 }
-function finalWhistleRankingCutDescriptor(){
-  return {id:"final-whistle",title:"Jogo a jogo",subtitle:"Após o apito final",
-    timeline:rankingFinalWhistleTimeline,emptyText:"Quando o primeiro resultado oficial entrar, este recorte aparece."};
+function rankingFirstRoundDescriptor(){
+  const games=groupGames().filter(g=>g.round===1).sort(compareGameSchedule);
+  return {id:"group-r1",title:"1ª rodada",subtitle:"Rodada 1 dos grupos",games,
+    emptyText:"Sem placares na 1ª rodada ainda."};
 }
-function renderRankingCutChart(rows,cut){
-  const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
-  const chart=cut.timeline?cut.timeline(rows):rankingCutTimeline(rows,cut.games);
-  const hasEvents=(chart.events||[]).some(Boolean);
-  const padX=38;
-  const padY=18;
-  const padRight=110;
-  const lineWidth=560;
-  const lineHeight=188;
-  const padBottom=34;
-  const usableWidth=lineWidth-padX-padRight;
-  const usableHeight=lineHeight-padY-padBottom;
-  const points=chart.labels.length;
-  const range=Math.max(1,chart.maxVal-chart.minVal);
-  const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
-  const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
-  const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,7);
-  const axisIdx=chart.axisCandidates&&chart.axisCandidates.length
-    ?chartAxisIndexesFromCandidates(chart.axisCandidates,5)
-    :chartAxisIndexes(points,5);
-  const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
-  const endpointItems=selected.map((line,idx)=>{
-    const s=chart.series.find(ss=>ss.i===line.i);
-    const values=s?.values||[0];
-    const v=values[values.length-1]||0;
-    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v),i:line.i,focused:rankingChartFocus===line.i};
-  });
-  const endpointLabels=chartEndpointLabelsSvg(endpointItems,{
-    baseX:xFor(points-1),
-    lineHeight:13,
-    groupGap:15,
-    topBound:padY+2,
-    bottomBound:padY+usableHeight-2,
-    maxChars:14,
-    fontSize:10.5,
-    dy:4
-  });
-  const eventTip=(index,name,value)=>{
-    const st=chart.states[index];
-    if(st==="start") return `Início — ${name}: 0 pts no recorte`;
-    const ev=chart.events?.[index];
-    if(!ev) return "";
-    const flag=ev.synthetic?" · 0x0 no intervalo":st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
-    return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts no recorte`;
-  };
-  const summary=[
-    cut.subtitle,
-    chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"}`:"",
-    chart.scoredCount?`${chart.scoredCount} com placar`:"",
-    chart.liveGameCount?`${chart.liveGameCount} ao vivo`:"",
-    chart.detailEventCount?"gol a gol":"",
-    selected.length?`${selected.length} no gráfico`:""
-  ].filter(Boolean);
-  return `<section class="chart-shell chart-shell-compact ranking-cut-card">
-    <div class="chart-toolbar">
-      <div>
-        <div class="section-kicker">Recorte rápido</div>
-        <h3 style="margin-top:4px">${esc(cut.title)}</h3>
-      </div>
-    </div>
-    ${selected.length&&hasEvents?`<div class="chart-stage">
-      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Recorte de pontuação do ranking: ${esc(cut.title)}">
-        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
-        ${tickValues.map(value=>{
-          const y=yFor(value);
-          const isZero=value===0;
-          return `<g>
-            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,${isZero?".22":".11"})" stroke-width="1"></line>
-            <text x="${(padX-7).toFixed(2)}" y="${(y+3.5).toFixed(2)}" text-anchor="end" font-size="10" fill="#5a6a82" font-weight="800">${value}</text>
-          </g>`;
-        }).join("")}
-        ${axisIdx.map(i=>{
-          const x=xFor(i);
-          const lbl=chart.labels[i]||"";
-          const isStart=i===0;
-          return `<g>
-            <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+4).toFixed(2)}" stroke="rgba(0,39,118,.23)" stroke-width="1"></line>
-            <text class="chart-axis-tick ${isStart?"is-start":""}" x="${(isStart?x+3:x).toFixed(2)}" y="${(padY+usableHeight+17).toFixed(2)}" text-anchor="${isStart?"start":"middle"}" font-size="10" fill="#41516d" font-weight="850">${esc(lbl)}</text>
-          </g>`;
-        }).join("")}
-        ${selected.map(line=>{
-          const seriesLine=chart.series.find(s=>s.i===line.i);
-          const color=seriesLine?.color||"#002776";
-          const values=seriesLine?.values||[0];
-          const name=seriesLine?.name||"";
-          const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
-          return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" data-series="${line.i}" onmouseenter="hoverRankingSeries(this,${line.i},true)" onmouseleave="hoverRankingSeries(this,${line.i},false)" onclick="focusRankingSeries(${line.i},event)">
-            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
-            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
-            ${values.map((value,index)=>{
-              const st=chart.states[index];
-              const isLast=index===values.length-1;
-              const x=xFor(index);
-              const y=yFor(value);
-              const title=`<title>${esc(eventTip(index,name,value))}</title>`;
-              if(isLast) return `<circle class="chart-endpoint-dot ${st==="live"?"is-live":""}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4.3" fill="${color}" stroke="#fff" stroke-width="2">${title}</circle>`;
-              if(st==="live") return `<circle class="chart-live-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.8" fill="#fff" stroke="${color}" stroke-width="2">${title}</circle>`;
-              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${st==="detail"?1.9:2.5}" fill="${color}" stroke="#fff" stroke-width="1.3">${title}</circle>`;
-            }).join("")}
-          </g>`;
-        }).join("")}
-        ${endpointLabels}
-      </svg>
-    </div>`:`<div class="chart-empty">${esc(selected.length?cut.emptyText:"Ative pelo menos um participante para desenhar este recorte.")}</div>`}
-    <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
-  </section>`;
+function rankingChartPeriodOptions(){
+  const today=todayRankingCutDescriptor();
+  const round=rankingCurrentRoundDescriptor();
+  const firstRound=rankingFirstRoundDescriptor();
+  return [
+    {id:"all",label:"Desde o início",subtitle:"Evolução completa",games:null,
+      emptyText:"Quando houver placar, a evolução aparece aqui.",drawWhenEmpty:true},
+    {id:"today",label:"Hoje",subtitle:today.subtitle,games:today.games,emptyText:today.emptyText},
+    {id:"round",label:"Essa rodada",subtitle:round?.subtitle||"Rodada atual",games:round?.games||[],
+      emptyText:round?.emptyText||"Sem jogos nessa rodada ainda."},
+    {id:"group-r1",label:"1ª rodada",subtitle:firstRound.subtitle,games:firstRound.games,emptyText:firstRound.emptyText}
+  ];
 }
-function renderRankingQuickCuts(rows){
-  const cuts=[finalWhistleRankingCutDescriptor(),todayRankingCutDescriptor(),rankingCurrentRoundDescriptor()].filter(Boolean);
-  if(!cuts.length) return "";
-  return `<div class="ranking-cut-list">${cuts.map(cut=>renderRankingCutChart(rows,cut)).join("")}</div>`;
+function rankingChartStepOptions(){
+  return [
+    {id:"goals",label:"Gol a gol",subtitle:"Gol a gol"},
+    {id:"game",label:"Jogo a jogo",subtitle:"Após o apito final"}
+  ];
+}
+function rankingActiveChartPeriod(){
+  const periods=rankingChartPeriodOptions();
+  return periods.find(period=>period.id===rankingChartPeriod)||periods[0];
+}
+function rankingActiveChartStep(){
+  const steps=rankingChartStepOptions();
+  return steps.find(step=>step.id===rankingChartStep)||steps[0];
+}
+function rankingChartForMode(rows,period,step){
+  if(step.id==="game") return rankingFinalWhistleTimeline(rows,period.games);
+  return period.id==="all"?rankingTimeline(rows):rankingCutTimeline(rows,period.games);
+}
+function rankingChartEmptyText(period,step){
+  if(step.id==="goals") return period.emptyText;
+  if(period.games&&!period.games.length) return period.emptyText;
+  if(period.id==="all") return "Quando o primeiro resultado oficial entrar, este recorte aparece.";
+  return "Quando houver resultado oficial nesse recorte, a evolução aparece aqui.";
+}
+function setRankingChartPeriod(period){
+  rankingChartPeriod=rankingChartPeriodOptions().some(item=>item.id===period)?period:"all";
+  rankingChartFocus=null;
+  if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
+}
+function setRankingChartStep(step){
+  rankingChartStep=rankingChartStepOptions().some(item=>item.id===step)?step:"goals";
+  rankingChartFocus=null;
+  if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
 }
 function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
   const usableWidth=width-padX*2;
@@ -8469,7 +8408,12 @@ function renderRankingChart(rows,isExpanded=false){
   const allIds=rows.map(p=>p.i);
   const top3Active=top3Ids.length>0&&top3Ids.every(id=>rankingChartSelection.includes(id));
   const allActive=allIds.length>0&&allIds.every(id=>rankingChartSelection.includes(id));
-  const chart=rankingTimeline(rows);
+  const periods=rankingChartPeriodOptions();
+  const steps=rankingChartStepOptions();
+  const activePeriod=periods.find(period=>period.id===rankingChartPeriod)||periods[0];
+  const activeStep=steps.find(step=>step.id===rankingChartStep)||steps[0];
+  const isFullOriginal=activePeriod.id==="all"&&activeStep.id==="goals";
+  const chart=rankingChartForMode(rows,activePeriod,activeStep);
   const padX=42;
   const padY=22;
   const padRight=isExpanded?160:124;
@@ -8477,6 +8421,7 @@ function renderRankingChart(rows,isExpanded=false){
   const usableWidth=lineWidth-padX-padRight;
   const points=chart.labels.length;
   const eventCount=chart.events?chart.events.filter(Boolean).length:0;
+  const drawChart=selected.length&&((isFullOriginal&&activePeriod.drawWhenEmpty)||eventCount>0);
   // Marcadores de lance sob o eixo X: o rótulo encolhe conforme a Copa acumula
   // eventos (bandeiras+placar -> só placar -> só tracinho com tooltip), pra
   // continuar legível dos primeiros jogos até a final.
@@ -8490,16 +8435,29 @@ function renderRankingChart(rows,isExpanded=false){
   const range=Math.max(1,chart.maxVal-chart.minVal);
   const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
   const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
-  const summary=[
-    chart.dateCount?`${chart.dateCount} ${chart.dateCount===1?"dia":"dias"} com jogo`:"Sem jogos apurados ainda",
-    chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"",
-    chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
-    chart.detailEventCount?"Inclui a oscilação gol a gol":"",
-    eventCount&&goalTier!=="tick"?"Placar de cada lance no eixo":"",
-    eventCount&&goalTier==="tick"?"Lances marcados como traços no eixo (toque para ver)":"",
-    chart.includePodio?"Pódio oficial incluído":"",
-    selected.length?`${selected.length} de ${rows.length} no gráfico`:""
-  ].filter(Boolean);
+  const activePeriodSummary=activePeriod.subtitle&&activePeriod.subtitle!==activePeriod.label
+    ?`${activePeriod.label} · ${activePeriod.subtitle}`
+    :activePeriod.label;
+  const summary=(isFullOriginal?[
+      chart.dateCount?`${chart.dateCount} ${chart.dateCount===1?"dia":"dias"} com jogo`:"Sem jogos apurados ainda",
+      chart.resolvedCount?`${chart.resolvedCount} ${chart.resolvedCount===1?"jogo":"jogos"} apurados`:"",
+      chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
+      chart.detailEventCount?"Inclui a oscilação gol a gol":"",
+      eventCount&&goalTier!=="tick"?"Placar de cada lance no eixo":"",
+      eventCount&&goalTier==="tick"?"Lances marcados como traços no eixo (toque para ver)":"",
+      chart.includePodio?"Pódio oficial incluído":"",
+      selected.length?`${selected.length} de ${rows.length} no gráfico`:""
+    ]:[
+      activePeriodSummary,
+      activeStep.subtitle,
+      chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"}`:"",
+      chart.scoredCount?`${chart.scoredCount} com placar`:"",
+      chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
+      chart.detailEventCount?"Inclui a oscilação gol a gol":"",
+      eventCount&&goalTier!=="tick"?"Placar de cada lance no eixo":"",
+      eventCount&&goalTier==="tick"?"Lances marcados como traços no eixo (toque para ver)":"",
+      selected.length?`${selected.length} de ${rows.length} no gráfico`:""
+    ]).filter(Boolean);
   const axisMax=isExpanded?14:9;
   const axisIdx=chart.axisCandidates&&chart.axisCandidates.length
     ?chartAxisIndexesFromCandidates(chart.axisCandidates,axisMax)
@@ -8508,12 +8466,13 @@ function renderRankingChart(rows,isExpanded=false){
   const dense=points>90;
   const eventTip=(index,name,value)=>{
     const st=chart.states[index];
-    if(st==="start") return `Início — ${name}: 0 pts`;
+    const recorteTip=activePeriod.id==="all"?"":" no recorte";
+    if(st==="start") return `Início — ${name}: 0 pts${recorteTip}`;
     if(st==="podio") return `Pódio — ${name}: ${value} pts`;
     const ev=chart.events?.[index];
     if(!ev) return "";
     const flag=ev.synthetic?" · 0x0 no intervalo":st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
-    return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts`;
+    return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts${recorteTip}`;
   };
   const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
   const endpointItems=selected.map((line,idx)=>{
@@ -8565,6 +8524,12 @@ function renderRankingChart(rows,isExpanded=false){
         ${!isExpanded?`<button class="chart-expand-btn" onclick="openChartModal('ranking')" aria-label="Expandir gráfico">⤢ Expandir</button>`:""}
       </div>
     </div>
+    <div class="chart-mode-pills" aria-label="Período do gráfico">
+      ${periods.map(period=>`<button type="button" class="mini-action chart-toggle ${period.id===activePeriod.id?"active":""}" onclick="setRankingChartPeriod('${period.id}')" aria-pressed="${period.id===activePeriod.id?"true":"false"}">${esc(period.label)}</button>`).join("")}
+    </div>
+    <div class="chart-mode-pills" aria-label="Tipo de evolução do gráfico">
+      ${steps.map(step=>`<button type="button" class="mini-action chart-toggle ${step.id===activeStep.id?"active":""}" onclick="setRankingChartStep('${step.id}')" aria-pressed="${step.id===activeStep.id?"true":"false"}">${esc(step.label)}</button>`).join("")}
+    </div>
     <div class="chart-legend">
       ${rows.map((p,idx)=>{
         const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
@@ -8575,8 +8540,8 @@ function renderRankingChart(rows,isExpanded=false){
         </button>`;
       }).join("")}
     </div>
-    ${selected.length?`<div class="chart-stage">
-      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking">
+    ${drawChart?`<div class="chart-stage">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking: ${esc(`${activePeriod.label} - ${activeStep.label}`)}">
         <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.2)" stroke-width="1"></line>
         ${tickValues.map(value=>{
           const y=yFor(value);
@@ -8629,7 +8594,7 @@ function renderRankingChart(rows,isExpanded=false){
         }).join("")}
         ${endpointLabels}
       </svg>
-    </div>`:`<div class="chart-empty">Ative pelo menos um participante para desenhar a curva de evolução.</div>`}
+    </div>`:`<div class="chart-empty">${esc(selected.length?rankingChartEmptyText(activePeriod,activeStep):"Ative pelo menos um participante para desenhar a curva de evolução.")}</div>`}
     <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
   </section>`;
 }
@@ -8952,7 +8917,6 @@ function renderRanking(){
 
       <div class="ranking-side">
         ${renderRankingChart(r)}
-        ${renderRankingQuickCuts(r)}
         ${renderBolaoGeneralStats()}
       </div>
     </div>
