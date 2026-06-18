@@ -790,6 +790,47 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-chip.active{border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(0,39,118,.14);padding:4px 11px}
 .chart-chip.active .chart-dot{display:none}
 .chart-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Chart controls — grouped & labeled so each control type reads distinctly:
+   segmented (pick one) for Período/Detalhe, chips (toggle many) for Participantes. */
+.chart-toolbar-head{flex:1;min-width:0}
+.chart-controls{
+  display:grid;
+  gap:13px;
+  padding:13px 14px;
+  background:linear-gradient(180deg,#fbfcfe,#f5f9fd);
+  border:1px solid #e7eef7;
+  border-radius:12px;
+}
+.chart-control{display:grid;gap:8px;min-width:0}
+.chart-control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.chart-control-label{
+  font-size:.6rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;
+  color:#8090a8;line-height:1;
+}
+/* Segmented control = choose ONE */
+.chart-seg{
+  display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;
+  background:#eaeff7;border:1px solid #e0e8f3;border-radius:11px;
+  width:max-content;max-width:100%;
+}
+.chart-seg-btn{
+  border:0;background:transparent;cursor:pointer;
+  padding:7px 13px;border-radius:8px;
+  font-size:.74rem;font-weight:900;color:#56657e;white-space:nowrap;
+  transition:background .15s ease,color .15s ease,box-shadow .15s ease;
+}
+.chart-seg-btn:hover{color:var(--blue)}
+.chart-seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 4px 12px rgba(0,39,118,.13)}
+/* Quick selectors that drive the participant chips */
+.chart-presets-inline{display:flex;gap:6px;flex-wrap:wrap}
+.chart-preset-btn{
+  border:1px solid var(--border);background:#fff;cursor:pointer;
+  padding:5px 12px;border-radius:999px;
+  font-size:.64rem;font-weight:950;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--blue);transition:background .15s ease,border-color .15s ease,color .15s ease;
+}
+.chart-preset-btn:hover{background:#f1f6ff;border-color:#c4d6ef}
+.chart-preset-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
 .chart-stage{
   border:1px solid #e5edf8;
   border-radius:10px;
@@ -8514,31 +8555,44 @@ function renderRankingChart(rows,isExpanded=false){
   }).join("");
   return `<section class="chart-shell">
     <div class="chart-toolbar">
-      <div>
+      <div class="chart-toolbar-head">
         <div class="section-kicker">Evolução dos pontos</div>
         <h3 style="margin-top:4px">Compare um ou vários participantes ao mesmo tempo</h3>
       </div>
-      <div class="chart-presets">
-        <button class="mini-action chart-toggle ${allActive?"active":""}" onclick="setRankingChartPreset('all')">Todos</button>
-        <button class="mini-action chart-toggle ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')">Top 3</button>
-        ${!isExpanded?`<button class="chart-expand-btn" onclick="openChartModal('ranking')" aria-label="Expandir gráfico">⤢ Expandir</button>`:""}
+      ${!isExpanded?`<button class="chart-expand-btn" onclick="openChartModal('ranking')" aria-label="Expandir gráfico">⤢ Expandir</button>`:""}
+    </div>
+    <div class="chart-controls">
+      <div class="chart-control">
+        <span class="chart-control-label">Período</span>
+        <div class="chart-seg" role="group" aria-label="Período do gráfico">
+          ${periods.map(period=>`<button type="button" class="chart-seg-btn ${period.id===activePeriod.id?"active":""}" onclick="setRankingChartPeriod('${period.id}')" aria-pressed="${period.id===activePeriod.id?"true":"false"}">${esc(period.label)}</button>`).join("")}
+        </div>
       </div>
-    </div>
-    <div class="chart-mode-pills" aria-label="Período do gráfico">
-      ${periods.map(period=>`<button type="button" class="mini-action chart-toggle ${period.id===activePeriod.id?"active":""}" onclick="setRankingChartPeriod('${period.id}')" aria-pressed="${period.id===activePeriod.id?"true":"false"}">${esc(period.label)}</button>`).join("")}
-    </div>
-    <div class="chart-mode-pills" aria-label="Tipo de evolução do gráfico">
-      ${steps.map(step=>`<button type="button" class="mini-action chart-toggle ${step.id===activeStep.id?"active":""}" onclick="setRankingChartStep('${step.id}')" aria-pressed="${step.id===activeStep.id?"true":"false"}">${esc(step.label)}</button>`).join("")}
-    </div>
-    <div class="chart-legend">
-      ${rows.map((p,idx)=>{
-        const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
-        const active=rankingChartSelection.includes(p.i);
-        return `<button class="chart-chip ${active?"active":""}" onclick="toggleRankingSeries(${p.i})" style="${active?`background:${color}`:""}">
-          <span class="chart-dot" style="background:${color}"></span>
-          <span>${esc(p.name)}</span>
-        </button>`;
-      }).join("")}
+      <div class="chart-control">
+        <span class="chart-control-label">Detalhe</span>
+        <div class="chart-seg" role="group" aria-label="Tipo de evolução do gráfico">
+          ${steps.map(step=>`<button type="button" class="chart-seg-btn ${step.id===activeStep.id?"active":""}" onclick="setRankingChartStep('${step.id}')" aria-pressed="${step.id===activeStep.id?"true":"false"}">${esc(step.label)}</button>`).join("")}
+        </div>
+      </div>
+      <div class="chart-control">
+        <div class="chart-control-head">
+          <span class="chart-control-label">Participantes</span>
+          <div class="chart-presets-inline">
+            <button type="button" class="chart-preset-btn ${allActive?"active":""}" onclick="setRankingChartPreset('all')" aria-pressed="${allActive?"true":"false"}">Todos</button>
+            <button type="button" class="chart-preset-btn ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')" aria-pressed="${top3Active?"true":"false"}">Top 3</button>
+          </div>
+        </div>
+        <div class="chart-legend">
+          ${rows.map((p,idx)=>{
+            const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
+            const active=rankingChartSelection.includes(p.i);
+            return `<button class="chart-chip ${active?"active":""}" onclick="toggleRankingSeries(${p.i})" style="${active?`background:${color}`:""}">
+              <span class="chart-dot" style="background:${color}"></span>
+              <span>${esc(p.name)}</span>
+            </button>`;
+          }).join("")}
+        </div>
+      </div>
     </div>
     ${drawChart?`<div class="chart-stage">
       <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking: ${esc(`${activePeriod.label} - ${activeStep.label}`)}">
