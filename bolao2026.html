@@ -896,11 +896,44 @@ body.chart-modal-open{overflow:hidden}
   min-width:0;
 }
 .bolao-stat-tile strong{display:block;font-size:1.1rem;line-height:1.05;color:var(--blue);font-weight:950}
-.bolao-stat-tile span{display:block;margin-top:6px;font-size:.58rem;text-transform:uppercase;letter-spacing:.56px;color:var(--muted);font-weight:950}
+.bolao-stat-label{display:block;margin-top:6px;font-size:.58rem;text-transform:uppercase;letter-spacing:.56px;color:var(--muted);font-weight:950}
 .bolao-stat-tile small{display:block;margin-top:7px;font-size:.7rem;line-height:1.35;color:#52617a;font-weight:750}
+.bolao-stat-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.bolao-stat-title-row strong{min-width:0}
+.bolao-stat-expand{
+  border:1px solid #cfe0d1;
+  border-radius:999px;
+  background:#fff;
+  color:var(--green);
+  padding:4px 8px;
+  font-size:.58rem;
+  line-height:1;
+  text-transform:uppercase;
+  letter-spacing:.48px;
+  font-weight:950;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.bolao-stat-expand:hover{background:#f3fbf5;border-color:#a9cfb0}
+.bolao-game-line{margin-top:8px;font-size:.75rem;line-height:1.28;color:#52617a;font-weight:850}
+.bolao-top-list{display:grid;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid #e5edf8}
+.bolao-top-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:start}
+.bolao-top-rank{
+  display:grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  background:#eef5ff;
+  color:var(--blue);
+  font-size:.62rem;
+  font-weight:950;
+}
+.bolao-top-meta{min-width:0}
+.bolao-top-meta b{display:block;font-size:.7rem;line-height:1.2;color:var(--text);font-weight:950}
+.bolao-top-meta em{display:block;margin-top:2px;font-style:normal;font-size:.68rem;line-height:1.25;color:#52617a;font-weight:760}
 .bolao-stat-tile.highlight strong{color:var(--green)}
 .bolao-stat-tile.warn strong{color:var(--red)}
-.bolao-stats-note{font-size:.68rem;line-height:1.4;color:var(--muted);font-weight:750}
 .lb-row{display:grid;grid-template-columns:auto minmax(86px,.62fr) minmax(220px,1.7fr) auto;align-items:center;gap:10px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 @media(hover:hover){.lb-row:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,39,118,.12);border-color:#cdd9ea}}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
@@ -5377,6 +5410,15 @@ function compactGameLabel(game,res){
   const f2=teamFlag(t2);
   return `${f1?`${f1} `:""}${t1} ${resultLabel(game,res,teams)} ${f2?`${f2} `:""}${t2}`;
 }
+function bolaoGameMisses(row){
+  return row.err+row.inv;
+}
+function bolaoGameMissPct(row){
+  return pctInt(bolaoGameMisses(row),row.evaluated);
+}
+function bolaoHardRatio(row){
+  return bolaoGameMisses(row)/Math.max(1,row.evaluated);
+}
 function bolaoGeneralStats(){
   const resolvedGames=GAMES.filter(game=>S.results[game.id]);
   const expected=resolvedGames.length*S.participants.length;
@@ -5415,27 +5457,77 @@ function bolaoGeneralStats(){
   stats.missPct=stats.evaluated?100-stats.hitPct:0;
   stats.coveragePct=pctInt(stats.evaluated,stats.expected);
   const evaluatedGames=stats.games.filter(row=>row.evaluated);
-  stats.mostExact=evaluatedGames.slice().sort((a,b)=>
+  const exactSorted=evaluatedGames.slice().sort((a,b)=>
     b.crav-a.crav||
     (b.crav+b.corr)-(a.crav+a.corr)||
     compareGameSchedule(a.game,b.game)
-  )[0]||null;
-  stats.hardest=evaluatedGames.slice().sort((a,b)=>{
-    const missA=(a.err+a.inv)/Math.max(1,a.evaluated);
-    const missB=(b.err+b.inv)/Math.max(1,b.evaluated);
+  );
+  const hardSorted=evaluatedGames.slice().sort((a,b)=>{
+    const missA=bolaoHardRatio(a);
+    const missB=bolaoHardRatio(b);
     return missB-missA||
-      (b.err+b.inv)-(a.err+a.inv)||
+      bolaoGameMisses(b)-bolaoGameMisses(a)||
       b.inv-a.inv||
       compareGameSchedule(a.game,b.game);
-  })[0]||null;
+  });
+  stats.topExact=exactSorted.slice(0,3);
+  stats.topHard=hardSorted.slice(0,3);
+  stats.mostExact=stats.topExact[0]||null;
+  stats.hardest=stats.topHard[0]||null;
+  stats.exactLeaderTieCount=stats.mostExact
+    ? evaluatedGames.filter(row=>row.crav===stats.mostExact.crav).length
+    : 0;
+  stats.hardLeaderTieCount=stats.hardest
+    ? evaluatedGames.filter(row=>Math.abs(bolaoHardRatio(row)-bolaoHardRatio(stats.hardest))<0.000001).length
+    : 0;
   return stats;
+}
+function toggleBolaoStatsList(kind){
+  if(!["exact","hard"].includes(kind)) return;
+  bolaoStatsExpanded[kind]=!bolaoStatsExpanded[kind];
+  if(activeTab==="ranking") renderRanking();
+}
+function bolaoTopGameValue(row,kind){
+  if(!row) return "0";
+  return kind==="exact"?row.crav:`${bolaoGameMissPct(row)}%`;
+}
+function bolaoTopGameDetail(row,kind){
+  if(!row) return "";
+  if(kind==="exact") return pluralPt(row.crav,"cravada","cravadas");
+  return `${bolaoGameMisses(row)}/${row.evaluated} erros ou invertidas`;
+}
+function bolaoTopGamesListHTML(rows,kind){
+  return `<div class="bolao-top-list">
+    ${rows.map((row,idx)=>`<div class="bolao-top-row">
+      <span class="bolao-top-rank">${idx+1}</span>
+      <span class="bolao-top-meta">
+        <b>${esc(bolaoTopGameDetail(row,kind))}</b>
+        <em>${esc(compactGameLabel(row.game,row.res))}</em>
+      </span>
+    </div>`).join("")}
+  </div>`;
+}
+function renderBolaoTopGamesTile(kind,title,rows,tieCount){
+  const row=rows[0]||null;
+  const expanded=Boolean(bolaoStatsExpanded[kind]);
+  const cls=kind==="exact"?"highlight":"warn";
+  const button=rows.length>1
+    ? `<button class="bolao-stat-expand" type="button" onclick="toggleBolaoStatsList('${kind}')" aria-expanded="${expanded?"true":"false"}">${expanded?"Fechar":"Top 3"}</button>`
+    : "";
+  const tieNote=tieCount>1?`<small>${pluralPt(tieCount,"jogo empatado","jogos empatados")} no topo</small>`:"";
+  return `<div class="bolao-stat-tile ${cls}">
+    <div class="bolao-stat-title-row">
+      <div>
+        <strong>${bolaoTopGameValue(row,kind)}</strong>
+        <span class="bolao-stat-label">${title}</span>
+      </div>
+      ${button}
+    </div>
+    ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${tieNote}${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">Aguardando</div>`}
+  </div>`;
 }
 function renderBolaoGeneralStats(){
   const s=bolaoGeneralStats();
-  const exactGame=s.mostExact?compactGameLabel(s.mostExact.game,s.mostExact.res):"Aguardando";
-  const hardGame=s.hardest?compactGameLabel(s.hardest.game,s.hardest.res):"Aguardando";
-  const hardMisses=s.hardest?s.hardest.err+s.hardest.inv:0;
-  const hardPct=s.hardest?pctInt(hardMisses,s.hardest.evaluated):0;
   return `<section class="ranking-card bolao-stats-card">
     <div>
       <div class="section-kicker">Consolidado do bolão</div>
@@ -5463,27 +5555,16 @@ function renderBolaoGeneralStats(){
       </div>
       <div class="bolao-stats-grid">
         <div class="bolao-stat-tile">
-          <strong>${s.coveragePct}%</strong>
-          <span>Cobertura</span>
-          <small>${s.evaluated}/${s.expected} palpites nos jogos apurados</small>
+          <strong>${s.pts}</strong>
+          <span class="bolao-stat-label">Pontos nas partidas</span>
         </div>
         <div class="bolao-stat-tile">
           <strong>${signedAverage(s.pts,s.evaluated)}</strong>
-          <span>Média por palpite</span>
-          <small>Pontos dos jogos, sem pódio</small>
+          <span class="bolao-stat-label">Média por palpite</span>
         </div>
-        <div class="bolao-stat-tile highlight">
-          <strong>${s.mostExact?s.mostExact.crav:0}</strong>
-          <span>Jogo mais cravado</span>
-          <small>${esc(exactGame)}</small>
-        </div>
-        <div class="bolao-stat-tile warn">
-          <strong>${hardPct}%</strong>
-          <span>Jogo mais difícil</span>
-          <small>${s.hardest?`${hardMisses}/${s.hardest.evaluated} erros ou invertidas · ${esc(hardGame)}`:esc(hardGame)}</small>
-        </div>
+        ${renderBolaoTopGamesTile("exact","Jogos mais cravados",s.topExact,s.exactLeaderTieCount)}
+        ${renderBolaoTopGamesTile("hard","Jogos mais difíceis",s.topHard,s.hardLeaderTieCount)}
       </div>
-      <div class="bolao-stats-note">A barra considera só palpites preenchidos em partidas com resultado oficial. Palpite em branco fica fora da proporção.</div>
     `:`<div class="chart-empty">Quando houver resultado oficial e palpites avaliados, as estatísticas consolidadas aparecem aqui.</div>`}
   </section>`;
 }
@@ -5820,6 +5901,7 @@ let rankingChartFocus=null;
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
 let chartExpanded=null;
+let bolaoStatsExpanded={exact:false,hard:false};
 
 // ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ====
 const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
