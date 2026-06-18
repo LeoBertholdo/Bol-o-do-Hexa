@@ -8448,11 +8448,8 @@ function toggleRankingSeries(participantIndex){
 function setRankingChartPreset(mode){
   rankingChartTouched=true;
   const rows=ranking();
-  const presetIds=mode==="top3"?rows.slice(0,3).map(p=>p.i):rows.map(p=>p.i);
-  const hasAllPreset=presetIds.every(id=>rankingChartSelection.includes(id));
-  rankingChartSelection=hasAllPreset
-    ?rankingChartSelection.filter(id=>!presetIds.includes(id))
-    :Array.from(new Set([...rankingChartSelection,...presetIds]));
+  rankingChartSelection=(mode==="top3"?rows.slice(0,3):rows).map(p=>p.i);
+  rankingChartFocus=null;
   if(activeTab==="ranking") renderRanking();
   if(chartExpanded==="ranking") renderChartModal();
 }
