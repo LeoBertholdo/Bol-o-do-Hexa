@@ -795,42 +795,43 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-toolbar-head{flex:1;min-width:0}
 .chart-controls{
   display:grid;
-  gap:13px;
-  padding:13px 14px;
-  background:linear-gradient(180deg,#fbfcfe,#f5f9fd);
-  border:1px solid #e7eef7;
+  gap:15px;
+  padding:15px 16px;
+  background:#f7f9fc;
+  border:1px solid #ebeff7;
   border-radius:12px;
 }
-.chart-control{display:grid;gap:8px;min-width:0}
-.chart-control-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+/* Tight label↔control, airier group↔group: grouping reads via proximity */
+.chart-control{display:grid;gap:7px;min-width:0}
+.chart-control-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .chart-control-label{
-  font-size:.6rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;
-  color:#8090a8;line-height:1;
+  font-size:.62rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;
+  color:#7c8aa4;line-height:1;
 }
 /* Segmented control = choose ONE */
 .chart-seg{
   display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;
-  background:#eaeff7;border:1px solid #e0e8f3;border-radius:11px;
+  background:#edf1f8;border:1px solid #e6ebf4;border-radius:10px;
   width:max-content;max-width:100%;
 }
 .chart-seg-btn{
   border:0;background:transparent;cursor:pointer;
-  padding:7px 13px;border-radius:8px;
-  font-size:.74rem;font-weight:900;color:#56657e;white-space:nowrap;
+  padding:7px 14px;border-radius:8px;
+  font-size:.73rem;font-weight:850;color:#5a6880;white-space:nowrap;
   transition:background .15s ease,color .15s ease,box-shadow .15s ease;
 }
 .chart-seg-btn:hover{color:var(--blue)}
-.chart-seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 4px 12px rgba(0,39,118,.13)}
-/* Quick selectors that drive the participant chips */
+.chart-seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 2px rgba(0,39,118,.18)}
+/* Quick selectors for the participant chips — secondary, quiet (don't outshout the chips) */
 .chart-presets-inline{display:flex;gap:6px;flex-wrap:wrap}
 .chart-preset-btn{
   border:1px solid var(--border);background:#fff;cursor:pointer;
-  padding:5px 12px;border-radius:999px;
-  font-size:.64rem;font-weight:950;letter-spacing:.4px;text-transform:uppercase;
-  color:var(--blue);transition:background .15s ease,border-color .15s ease,color .15s ease;
+  padding:5px 11px;border-radius:999px;
+  font-size:.62rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;
+  color:var(--muted);transition:background .15s ease,border-color .15s ease,color .15s ease;
 }
-.chart-preset-btn:hover{background:#f1f6ff;border-color:#c4d6ef}
-.chart-preset-btn.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.chart-preset-btn:hover{background:#f4f7fc;border-color:#cdd9ea;color:var(--blue)}
+.chart-preset-btn.active{background:#e9f0fb;border-color:#cadaf3;color:var(--blue)}
 .chart-stage{
   border:1px solid #e5edf8;
   border-radius:10px;
@@ -5501,10 +5502,36 @@ function bolaoGameMissPct(row){
 function bolaoHardRatio(row){
   return bolaoGameMisses(row)/Math.max(1,row.evaluated);
 }
+function bolaoGameKickoffMs(game){
+  const direct=game?.utc?new Date(game.utc).getTime():NaN;
+  if(Number.isFinite(direct)) return direct;
+  if(!game?.date) return NaN;
+  const base=parseDateKey(game.date);
+  const [h,m]=String(game.time||"00:00").split(":").map(Number);
+  base.setHours(Number.isFinite(h)?h:0,Number.isFinite(m)?m:0,0,0);
+  return base.getTime();
+}
+function bolaoDayDeltaLabel(dayKey,today=todayKey()){
+  if(dayKey===today) return "hoje";
+  if(dayKey===addDaysKey(today,-1)) return "ontem";
+  return formatGameDate(dayKey);
+}
+function bolaoCurrentDeltaDayKey(rows){
+  const today=todayKey();
+  const todayGames=GAMES.filter(game=>game.date===today);
+  if(todayGames.length){
+    const firstKickoff=Math.min(...todayGames.map(bolaoGameKickoffMs).filter(Number.isFinite));
+    if(Number.isFinite(firstKickoff)&&Date.now()>=firstKickoff) return today;
+  }
+  const pastKeys=Array.from(new Set(rows
+    .filter(row=>row.evaluated&&row.game.date&&row.game.date<today)
+    .map(row=>row.game.date)
+  )).sort();
+  return pastKeys[pastKeys.length-1]||today;
+}
 function bolaoGeneralStats(){
   const scoredGames=bolaoScoringGames();
   const expected=scoredGames.length*S.participants.length;
-  const today=todayKey();
   const stats={
     scoredGames:scoredGames.length,
     resolvedGames:scoredGames.length,
@@ -5519,6 +5546,8 @@ function bolaoGeneralStats(){
     totalPts:0,
     dayPts:0,
     dayGames:0,
+    dayKey:"",
+    dayLabel:"",
     games:[]
   };
   scoredGames.forEach(({game,res,live})=>{
@@ -5536,12 +5565,15 @@ function bolaoGeneralStats(){
       if(details.base===0){stats.err++;row.err++;}
       if(details.base===-2){stats.inv++;row.inv++;}
     });
-    if(game.date===today){
-      stats.dayPts+=row.pts;
-      stats.dayGames++;
-    }
     row.live=live;
     stats.games.push(row);
+  });
+  stats.dayKey=bolaoCurrentDeltaDayKey(stats.games);
+  stats.dayLabel=bolaoDayDeltaLabel(stats.dayKey);
+  stats.games.forEach(row=>{
+    if(row.game.date!==stats.dayKey) return;
+    stats.dayPts+=row.pts;
+    stats.dayGames++;
   });
   stats.matchPts=stats.pts;
   stats.totalPts=S.participants.reduce((total,_,pi)=>total+playerStats(pi).pts,0);
@@ -5617,10 +5649,11 @@ function renderBolaoTopGamesTile(kind,title,rows,tieCount){
     ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">Aguardando</div>`}
   </div>`;
 }
-function bolaoDailyDeltaHTML(value){
+function bolaoDailyDeltaHTML(value,label="hoje"){
   if(!value) return "";
   const cls=value>0?"up":"down";
-  return `<span class="bolao-points-delta ${cls}">${value>0?`+${value}`:value} hoje</span>`;
+  const labelText=label&&label!=="hoje"?` ${esc(label)}`:"";
+  return `<span class="bolao-points-delta ${cls}">${value>0?`+${value}`:value}${labelText}</span>`;
 }
 function renderBolaoGeneralStats(){
   const s=bolaoGeneralStats();
@@ -5653,7 +5686,7 @@ function renderBolaoGeneralStats(){
         <div class="bolao-stat-tile">
           <div class="bolao-points-main">
             <strong>${s.totalPts}</strong>
-            ${bolaoDailyDeltaHTML(s.dayPts)}
+            ${bolaoDailyDeltaHTML(s.dayPts,s.dayLabel)}
           </div>
           <span class="bolao-stat-label">Pontos totais</span>
         </div>
