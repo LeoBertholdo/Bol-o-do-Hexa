@@ -790,51 +790,53 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 .chart-chip.active{border-color:transparent;color:#fff;box-shadow:0 6px 14px rgba(0,39,118,.14);padding:4px 11px}
 .chart-chip.active .chart-dot{display:none}
 .chart-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-/* Chart controls — grouped & labeled so each control type reads distinctly:
-   segmented (pick one) for Período/Detalhe, chips (toggle many) for Participantes. */
+/* Chart controls — grouped & labeled, kept visually lighter than the chart itself
+   so the graph stays the focal point. Segmented (pick one) for Período/Detalhe. */
 .chart-toolbar-head{flex:1;min-width:0}
 .chart-controls{
   display:grid;
-  gap:15px;
-  padding:15px 16px;
+  gap:10px;
+  padding:11px 12px;
   background:#f7f9fc;
   border:1px solid #ebeff7;
-  border-radius:12px;
+  border-radius:11px;
 }
-/* Tight label↔control, airier group↔group: grouping reads via proximity */
-.chart-control{display:grid;gap:7px;min-width:0}
-.chart-control-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.chart-control{display:grid;gap:5px;min-width:0}
+.chart-control-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .chart-control-label{
-  font-size:.62rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;
-  color:#7c8aa4;line-height:1;
+  font-size:.56rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+  color:#8492aa;line-height:1;
 }
 /* Segmented control = choose ONE */
 .chart-seg{
-  display:inline-flex;flex-wrap:wrap;gap:3px;padding:3px;
-  background:#edf1f8;border:1px solid #e6ebf4;border-radius:10px;
+  display:inline-flex;flex-wrap:wrap;gap:2px;padding:2px;
+  background:#edf1f8;border:1px solid #e6ebf4;border-radius:9px;
   width:max-content;max-width:100%;
 }
 .chart-seg-btn{
   border:0;background:transparent;cursor:pointer;
-  padding:7px 14px;border-radius:8px;
-  font-size:.73rem;font-weight:850;color:#5a6880;white-space:nowrap;
+  padding:5px 11px;border-radius:7px;
+  font-size:.68rem;font-weight:800;color:#5e6c85;white-space:nowrap;
   transition:background .15s ease,color .15s ease,box-shadow .15s ease;
 }
 .chart-seg-btn:hover{color:var(--blue)}
-.chart-seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 2px rgba(0,39,118,.18)}
-/* Quick selectors for the participant chips — secondary, quiet (don't outshout the chips) */
+.chart-seg-btn.active{background:#fff;color:var(--blue);box-shadow:0 1px 2px rgba(0,39,118,.16)}
+/* Quick selectors for the participant chips — secondary, quiet */
 .chart-presets-inline{display:flex;gap:6px;flex-wrap:wrap}
 .chart-preset-btn{
   border:1px solid var(--border);background:#fff;cursor:pointer;
-  padding:5px 11px;border-radius:999px;
-  font-size:.62rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;
+  font-size:.57rem;font-weight:800;letter-spacing:.4px;text-transform:uppercase;
   color:var(--muted);transition:background .15s ease,border-color .15s ease,color .15s ease;
 }
 .chart-preset-btn:hover{background:#f4f7fc;border-color:#cdd9ea;color:var(--blue)}
 .chart-preset-btn.active{background:#e9f0fb;border-color:#cadaf3;color:var(--blue)}
-/* Participant filter strip below the chart */
-.chart-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-.chart-filter-sep{width:1px;align-self:stretch;min-height:20px;background:#dfe6f1;margin:0 4px}
+/* Participant filter strip below the chart — compact, lighter than the chart */
+.chart-filter{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.chart-filter-sep{width:1px;align-self:stretch;min-height:18px;background:#dfe6f1;margin:0 3px}
+.chart-filter .chart-chip{padding:3px 9px;font-size:.64rem;font-weight:800}
+.chart-filter .chart-chip.active{padding:3px 10px}
+.chart-filter .chart-dot{width:7px;height:7px}
 .chart-stage{
   border:1px solid #e5edf8;
   border-radius:10px;
@@ -8504,7 +8506,7 @@ function renderRankingChart(rows,isExpanded=false){
   const goalTier=!eventCount?"tick":stepPx>=24?"full":stepPx>=11?"score":"tick";
   const goalBand=goalTier==="full"?40:goalTier==="score"?22:0;
   const padBottom=(isExpanded?50:44)+goalBand;
-  const lineHeight=(isExpanded?320:300)+goalBand;
+  const lineHeight=(isExpanded?400:360)+goalBand;
   const usableHeight=lineHeight-padY-padBottom;
   const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,isExpanded?14:11);
   const range=Math.max(1,chart.maxVal-chart.minVal);
