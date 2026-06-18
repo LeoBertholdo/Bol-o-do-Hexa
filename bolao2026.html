@@ -1014,6 +1014,15 @@ body.chart-modal-open{overflow:hidden}
 .bolao-top-meta em{display:block;margin-top:2px;font-style:normal;font-size:.68rem;line-height:1.25;color:#52617a;font-weight:760}
 .bolao-stat-tile.highlight strong{color:var(--green)}
 .bolao-stat-tile.warn strong{color:var(--red)}
+/* Seletor de período do card de estatísticas — próprio, com rolagem horizontal quando acumula rodadas */
+.bolao-period-seg{
+  display:flex;gap:2px;padding:2px;margin-top:2px;
+  background:#edf1f8;border:1px solid #e6ebf4;border-radius:9px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.bolao-period-seg::-webkit-scrollbar{display:none}
+.bolao-period-seg .chart-seg-btn{flex:0 0 auto}
+.bolao-tile-wide{grid-column:1/-1}
 .lb-row{display:grid;grid-template-columns:auto minmax(86px,.62fr) minmax(220px,1.7fr) auto;align-items:center;gap:10px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 @media(hover:hover){.lb-row:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,39,118,.12);border-color:#cdd9ea}}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
@@ -5534,10 +5543,124 @@ function bolaoCurrentDeltaDayKey(rows){
   )).sort();
   return pastKeys[pastKeys.length-1]||today;
 }
-function bolaoGeneralStats(){
-  const scoredGames=bolaoScoringGames();
+function maxScoreForGame(game){
+  // Máximo que um palpite pode marcar num jogo: 3 (cravada) + 1 de bônus "quem passa" no mata-mata.
+  return game&&game.ko?4:3;
+}
+function bolaoPodioSlots(){
+  const finalGame=GAMES.find(g=>g.phaseKey==="final")||null;
+  const thirdGame=GAMES.find(g=>g.phaseKey==="p3")||null;
+  return [
+    {key:"p1",value:20,decide:finalGame},
+    {key:"p2",value:10,decide:finalGame},
+    {key:"p3",value:5,decide:thirdGame},
+    {key:"p4",value:3,decide:thirdGame}
+  ];
+}
+function bolaoPodioForSlice(sliceIds){
+  // Pódio entra só quando a posição é apurada, atribuído ao recorte do jogo que a decidiu
+  // (Final -> 1º/2º; disputa de 3º -> 3º/4º). sliceIds=null => "desde o início" (conta tudo apurado).
+  const actual=normalizePodio(S.actualPodio||{});
+  const out={earned:0,possible:0,perPlayer:{},slots:[]};
+  bolaoPodioSlots().forEach(slot=>{
+    const winner=actual[slot.key];
+    if(!winner) return;
+    const decideId=slot.decide&&slot.decide.id;
+    if(sliceIds&&!(decideId&&sliceIds.has(decideId))) return;
+    let guessers=0,earned=0;
+    S.participants.forEach((_,pi)=>{
+      const guess=normalizePodio(S.podio[pi]||{});
+      if(!guess[slot.key]) return;
+      guessers++;
+      const got=guess[slot.key]===winner?slot.value:0;
+      earned+=got;
+      out.perPlayer[pi]=(out.perPlayer[pi]||0)+got;
+    });
+    out.earned+=earned;
+    out.possible+=slot.value*guessers;
+    out.slots.push(slot.key);
+  });
+  return out;
+}
+function bolaoPointsForDate(dateKey){
+  // Pontos de placar do bolão num dia (para comparar "hoje" com "ontem").
+  let pts=0;
+  bolaoScoringGames().forEach(({game,res})=>{
+    if(game.date!==dateKey) return;
+    S.participants.forEach((_,pi)=>{
+      const d=scoreDetails(S.palpites[`${pi}_${game.id}`],res,game);
+      if(d) pts+=d.pts;
+    });
+  });
+  return pts;
+}
+function bolaoBestPlayers(playerPts){
+  // Melhor jogador da fatia (destaque/campeão), com tratamento de empate.
+  const entries=S.participants.map((name,pi)=>({name,pts:playerPts[pi]||0}));
+  const max=entries.reduce((m,e)=>Math.max(m,e.pts),-Infinity);
+  if(!isFinite(max)) return {pts:0,names:[],tieCount:0};
+  const top=entries.filter(e=>e.pts===max);
+  return {pts:max,names:top.map(e=>e.name),tieCount:top.length};
+}
+function bolaoStatsPeriodOptions(){
+  // Recortes próprios do card (independentes do gráfico): fixos + um chip por rodada/fase concluída.
+  const today=todayKey();
+  const todayGames=GAMES.filter(g=>g.date===today).sort(compareGameSchedule);
+  const cur=rankingCurrentRoundDescriptor();
+  const curRealId=cur?cur.id:null;
+  const opts=[
+    {id:"all",label:"Desde o início",subtitle:"",games:null,
+      emptyText:"Quando houver resultado oficial e palpites avaliados, as estatísticas aparecem aqui."},
+    {id:"today",label:"Hoje",subtitle:chartFormatDateKey(today),games:todayGames,
+      emptyText:todayGames.length?"Sem placares hoje ainda.":"Hoje não tem jogo no calendário."}
+  ];
+  if(cur) opts.push({id:"round",label:"Essa rodada",subtitle:cur.subtitle||"",games:cur.games||[],
+    emptyText:cur.emptyText||"Sem placares nessa rodada ainda.",realId:curRealId});
+  [1,2,3].forEach(r=>{
+    const id=`group-r${r}`;
+    if(id===curRealId) return;
+    const games=groupGames().filter(g=>g.round===r).sort(compareGameSchedule);
+    if(games.length&&games.every(g=>S.results[g.id]))
+      opts.push({id,label:`${r}ª rodada`,subtitle:`Rodada ${r} dos grupos`,games,
+        emptyText:`Sem placares na ${r}ª rodada.`});
+  });
+  KO_PHASES.forEach(ph=>{
+    const id=`ko-${ph.k}`;
+    if(id===curRealId) return;
+    const games=koGames().filter(g=>g.phaseKey===ph.k).sort(compareGameSchedule);
+    if(games.length&&games.every(g=>S.results[g.id]))
+      opts.push({id,label:ph.l,subtitle:ph.full,games,ko:true,
+        emptyText:`Sem placares em ${ph.full.toLowerCase()}.`});
+  });
+  return opts;
+}
+function bolaoActiveStatsPeriod(){
+  const opts=bolaoStatsPeriodOptions();
+  return opts.find(o=>o.id===bolaoStatsPeriod)||opts[0];
+}
+function setBolaoStatsPeriod(id){
+  const opts=bolaoStatsPeriodOptions();
+  bolaoStatsPeriod=opts.some(o=>o.id===id)?id:"all";
+  if(activeTab==="ranking") renderRanking();
+}
+function renderBolaoLeaderTile(leader,label){
+  if(!leader||!leader.names.length||leader.pts<=0)
+    return `<div class="bolao-stat-tile"><strong>—</strong><span class="bolao-stat-label">${esc(label)} · aguardando</span></div>`;
+  let who;
+  if(leader.names.length>=S.participants.length) who="Todos empatados";
+  else if(leader.names.length===1) who=esc(leader.names[0]);
+  else if(leader.names.length===2) who=`${esc(leader.names[0])} e ${esc(leader.names[1])}`;
+  else who=`${esc(leader.names[0])} +${leader.names.length-1}`;
+  return `<div class="bolao-stat-tile"><strong>${who}</strong><span class="bolao-stat-label">${esc(label)} · ${pluralPt(leader.pts,"ponto","pontos")}</span></div>`;
+}
+function bolaoGeneralStats(period){
+  const sliceGames=period&&period.games?period.games:null;
+  const sliceIds=sliceGames?new Set(sliceGames.map(g=>g.id)):null;
+  const allScored=bolaoScoringGames();
+  const scoredGames=sliceIds?allScored.filter(item=>sliceIds.has(item.game.id)):allScored;
   const expected=scoredGames.length*S.participants.length;
   const stats={
+    periodId:period?period.id:"all",
     scoredGames:scoredGames.length,
     resolvedGames:scoredGames.length,
     liveGames:scoredGames.filter(item=>item.liveActive).length,
@@ -5553,8 +5676,11 @@ function bolaoGeneralStats(){
     dayGames:0,
     dayKey:"",
     dayLabel:"",
+    maxPlacar:0,
+    playerPts:{},
     games:[]
   };
+  S.participants.forEach((_,pi)=>{stats.playerPts[pi]=0;});
   scoredGames.forEach(({game,res,live})=>{
     const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0};
     S.participants.forEach((_,pi)=>{
@@ -5565,14 +5691,20 @@ function bolaoGeneralStats(){
       row.evaluated++;
       stats.pts+=details.pts;
       row.pts+=details.pts;
+      stats.playerPts[pi]+=details.pts;
       if(details.exact){stats.crav++;row.crav++;}
       if(details.base===1){stats.corr++;row.corr++;}
       if(details.base===0){stats.err++;row.err++;}
       if(details.base===-2){stats.inv++;row.inv++;}
     });
+    stats.maxPlacar+=maxScoreForGame(game)*row.evaluated;
     row.live=live;
     stats.games.push(row);
   });
+  const podio=bolaoPodioForSlice(sliceIds);
+  Object.entries(podio.perPlayer).forEach(([pi,pp])=>{stats.playerPts[pi]=(stats.playerPts[pi]||0)+pp;});
+  stats.podioPts=podio.earned;
+  stats.podioSlots=podio.slots;
   stats.dayKey=bolaoCurrentDeltaDayKey(stats.games);
   stats.dayLabel=bolaoDayDeltaLabel(stats.dayKey);
   stats.games.forEach(row=>{
@@ -5581,12 +5713,16 @@ function bolaoGeneralStats(){
     stats.dayGames++;
   });
   stats.matchPts=stats.pts;
+  stats.periodPts=stats.pts+stats.podioPts;
   stats.totalPts=S.participants.reduce((total,_,pi)=>total+playerStats(pi).pts,0);
+  stats.maxPts=stats.maxPlacar+podio.possible;
+  stats.aproveitamentoPct=pctInt(stats.periodPts,stats.maxPts);
   stats.hits=stats.crav+stats.corr;
   stats.misses=stats.err+stats.inv;
   stats.hitPct=pctInt(stats.hits,stats.evaluated);
   stats.missPct=stats.evaluated?100-stats.hitPct:0;
   stats.coveragePct=pctInt(stats.evaluated,stats.expected);
+  stats.leader=bolaoBestPlayers(stats.playerPts);
   const evaluatedGames=stats.games.filter(row=>row.evaluated);
   const exactSorted=evaluatedGames.slice().sort((a,b)=>
     b.crav-a.crav||
@@ -5661,48 +5797,93 @@ function bolaoDailyDeltaHTML(value,label="hoje"){
   return `<span class="bolao-points-delta ${cls}">${value>0?`+${value}`:value}${labelText}</span>`;
 }
 function renderBolaoGeneralStats(){
-  const s=bolaoGeneralStats();
-  return `<section class="ranking-card bolao-stats-card">
-    <div>
+  const period=bolaoActiveStatsPeriod();
+  const s=bolaoGeneralStats(period);
+  const periods=bolaoStatsPeriodOptions();
+  const kind=period.id==="all"?"all":period.id==="today"?"today":period.id==="round"?"round":"history";
+  const isKo=Boolean(period.ko||String(period.id).startsWith("ko-"));
+  const sliceConcluded=Boolean(period.games&&period.games.length&&period.games.every(g=>S.results[g.id]));
+  const selector=`<div class="bolao-period-seg" role="group" aria-label="Período das estatísticas">
+      ${periods.map(p=>`<button type="button" class="chart-seg-btn ${p.id===period.id?"active":""}" onclick="setBolaoStatsPeriod('${p.id}')" aria-pressed="${p.id===period.id?"true":"false"}">${esc(p.label)}</button>`).join("")}
+    </div>`;
+  const head=`<div>
       <div class="section-kicker">Consolidado do bolão</div>
       <h3 style="margin-top:4px">Estatísticas gerais</h3>
-      <p>${pluralPt(s.scoredGames,"partida com placar","partidas com placar")} · ${pluralPt(s.evaluated,"palpite avaliado","palpites avaliados")}${s.liveGames?` · ${s.liveGames} ao vivo`:""}</p>
+      <p>${pluralPt(s.scoredGames,"partida com placar","partidas com placar")} · ${pluralPt(s.evaluated,"palpite avaliado","palpites avaliados")}${s.liveGames?` · ${s.liveGames} ao vivo`:""}${period.id!=="all"&&period.subtitle?` · ${esc(period.subtitle)}`:""}</p>
     </div>
-    ${s.evaluated?`
-      <div class="bolao-rate-head">
-        <div>
-          <div class="bolao-rate-value">${s.hitPct}%</div>
-          <div class="bolao-rate-label">cravadas + acertos</div>
-        </div>
-        <div>
-          <div class="bolao-rate-value" style="color:var(--red);text-align:right">${s.missPct}%</div>
-          <div class="bolao-rate-label">erros + invertidas</div>
-        </div>
-      </div>
-      <div class="bolao-rate-bar" title="${s.hitPct}% cravadas/acertos e ${s.missPct}% erros/invertidas">
-        <span class="bolao-rate-hit" style="width:${s.hitPct}%"></span>
-        <span class="bolao-rate-miss" style="width:${s.missPct}%"></span>
-      </div>
-      <div class="bolao-rate-legend">
-        <div class="bolao-rate-pill"><span>Cravadas + acertos</span><strong>${s.hits}</strong></div>
-        <div class="bolao-rate-pill"><span>Erros + invertidas</span><strong>${s.misses}</strong></div>
-      </div>
-      <div class="bolao-stats-grid">
-        <div class="bolao-stat-tile">
+    ${selector}`;
+  if(!s.evaluated)
+    return `<section class="ranking-card bolao-stats-card">
+    ${head}
+    <div class="chart-empty">${esc(period.emptyText||"Sem dados nesse recorte ainda.")}</div>
+  </section>`;
+  const aproTile=`<div class="bolao-stat-tile${kind==="all"?" bolao-tile-wide":""}">
+          <strong>${s.periodPts} <span style="color:var(--muted);font-weight:800">de ${s.maxPts}</span></strong>
+          <span class="bolao-stat-label">Aproveitamento · ${s.aproveitamentoPct}% dos pontos possíveis</span>
+        </div>`;
+  let pointsTile;
+  if(kind==="all")
+    pointsTile=`<div class="bolao-stat-tile">
           <div class="bolao-points-main">
             <strong>${s.totalPts}</strong>
             ${bolaoDailyDeltaHTML(s.dayPts,s.dayLabel)}
           </div>
           <span class="bolao-stat-label">Pontos totais</span>
-        </div>
-        <div class="bolao-stat-tile">
+        </div>`;
+  else if(kind==="today")
+    pointsTile=`<div class="bolao-stat-tile">
+          <div class="bolao-points-main">
+            <strong>${s.periodPts}</strong>
+            ${bolaoDailyDeltaHTML(s.matchPts-bolaoPointsForDate(addDaysKey(todayKey(),-1)),"vs ontem")}
+          </div>
+          <span class="bolao-stat-label">Pontos de hoje</span>
+        </div>`;
+  else
+    pointsTile=`<div class="bolao-stat-tile">
+          <strong>${s.periodPts}</strong>
+          <span class="bolao-stat-label">${isKo?"Pontos da fase":"Pontos da rodada"}</span>
+        </div>`;
+  const mediaTile=`<div class="bolao-stat-tile">
           <strong>${signedAverage(s.matchPts,s.evaluated)}</strong>
           <span class="bolao-stat-label">Média por palpite</span>
-        </div>
+        </div>`;
+  let body;
+  if(kind==="all")
+    body=`${pointsTile}
+        ${mediaTile}
+        ${aproTile}
         ${renderBolaoTopGamesTile("exact","Jogos mais cravados",s.topExact,s.exactLeaderTieCount)}
-        ${renderBolaoTopGamesTile("hard","Jogos mais difíceis",s.topHard,s.hardLeaderTieCount)}
+        ${renderBolaoTopGamesTile("hard","Jogos mais difíceis",s.topHard,s.hardLeaderTieCount)}`;
+  else{
+    const leaderLabel=kind==="today"?"Destaque de hoje":(sliceConcluded?(isKo?"Campeão da fase":"Campeão da rodada"):"Campeão parcial");
+    body=`${pointsTile}
+        ${mediaTile}
+        ${aproTile}
+        ${renderBolaoLeaderTile(s.leader,leaderLabel)}`;
+  }
+  return `<section class="ranking-card bolao-stats-card">
+    ${head}
+    <div class="bolao-rate-head">
+      <div>
+        <div class="bolao-rate-value">${s.hitPct}%</div>
+        <div class="bolao-rate-label">cravadas + acertos</div>
       </div>
-    `:`<div class="chart-empty">Quando houver resultado oficial e palpites avaliados, as estatísticas consolidadas aparecem aqui.</div>`}
+      <div>
+        <div class="bolao-rate-value" style="color:var(--red);text-align:right">${s.missPct}%</div>
+        <div class="bolao-rate-label">erros + invertidas</div>
+      </div>
+    </div>
+    <div class="bolao-rate-bar" title="${s.hitPct}% cravadas/acertos e ${s.missPct}% erros/invertidas">
+      <span class="bolao-rate-hit" style="width:${s.hitPct}%"></span>
+      <span class="bolao-rate-miss" style="width:${s.missPct}%"></span>
+    </div>
+    <div class="bolao-rate-legend">
+      <div class="bolao-rate-pill"><span>Cravadas + acertos</span><strong>${s.hits}</strong></div>
+      <div class="bolao-rate-pill"><span>Erros + invertidas</span><strong>${s.misses}</strong></div>
+    </div>
+    <div class="bolao-stats-grid">
+        ${body}
+    </div>
   </section>`;
 }
 
@@ -6036,6 +6217,7 @@ let rankingChartSelection=[];
 let rankingChartTouched=false;
 let rankingChartFocus=null;
 let rankingChartPeriod="all";
+let bolaoStatsPeriod="all";
 let rankingChartStep="goals";
 let rankingChartBaseline="zero";
 let apiTestChartSelection=[];
