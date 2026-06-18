@@ -819,6 +819,9 @@ svg.chart-hover .chart-endpoint-name:not(.is-hovered),svg.chart-focus:not(.chart
 .chart-shell-compact{padding:12px;gap:10px}
 .chart-shell-compact .chart-stage{padding:10px 8px 6px}
 .chart-shell-compact h3{font-size:.9rem;line-height:1.15}
+.ranking-cut-list{display:grid;gap:12px}
+.ranking-cut-card .chart-axis{justify-content:flex-start}
+.ranking-cut-card .chart-empty{font-size:.76rem}
 .chart-expand-btn{
   display:inline-flex;align-items:center;gap:5px;
   border:1px solid var(--border);background:#fff;color:var(--blue);
@@ -900,12 +903,33 @@ body.chart-modal-open{overflow:hidden}
 .bolao-stat-tile small{display:block;margin-top:7px;font-size:.7rem;line-height:1.35;color:#52617a;font-weight:750}
 .bolao-stat-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .bolao-stat-title-row strong{min-width:0}
+.bolao-points-main{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.bolao-points-delta{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  border:1px solid currentColor;
+  border-radius:999px;
+  padding:4px 7px;
+  font-size:.62rem;
+  line-height:1;
+  font-weight:950;
+  white-space:nowrap;
+}
+.bolao-points-delta.up{color:var(--green);background:#f1fbf5}
+.bolao-points-delta.down{color:var(--red);background:#fff4f3}
+.bolao-points-delta:before{content:"";width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent}
+.bolao-points-delta.up:before{border-bottom:7px solid currentColor}
+.bolao-points-delta.down:before{border-top:7px solid currentColor}
 .bolao-stat-expand{
   border:1px solid #cfe0d1;
   border-radius:999px;
   background:#fff;
   color:var(--green);
-  padding:4px 8px;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:5px 8px;
   font-size:.58rem;
   line-height:1;
   text-transform:uppercase;
@@ -915,6 +939,17 @@ body.chart-modal-open{overflow:hidden}
   cursor:pointer;
 }
 .bolao-stat-expand:hover{background:#f3fbf5;border-color:#a9cfb0}
+.bolao-stat-expand .chev{
+  width:7px;
+  height:7px;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  transition:transform .16s ease;
+}
+.bolao-stat-expand[aria-expanded="true"] .chev{transform:rotate(225deg);margin-top:4px}
+.bolao-game-heading{display:block;font-size:.86rem;line-height:1.12;color:var(--text);font-weight:950}
+.bolao-game-summary{margin-top:7px;font-size:.66rem;line-height:1.32;color:#52617a;font-weight:850}
 .bolao-game-line{margin-top:8px;font-size:.75rem;line-height:1.28;color:#52617a;font-weight:850}
 .bolao-top-list{display:grid;gap:7px;margin-top:9px;padding-top:8px;border-top:1px solid #e5edf8}
 .bolao-top-row{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px;align-items:start}
@@ -5410,6 +5445,14 @@ function compactGameLabel(game,res){
   const f2=teamFlag(t2);
   return `${f1?`${f1} `:""}${t1} ${resultLabel(game,res,teams)} ${f2?`${f2} `:""}${t2}`;
 }
+function bolaoScoringGames(){
+  return GAMES.map(game=>{
+    const official=S.results[game.id]||null;
+    const live=official?null:liveProvisionalResult(game);
+    const res=official||live;
+    return res?{game,res,live:Boolean(live&&!official),liveActive:Boolean(live&&!official&&copaLiveIsActive(copaLiveForGame(game.id)))}:null;
+  }).filter(Boolean);
+}
 function bolaoGameMisses(row){
   return row.err+row.inv;
 }
@@ -5420,10 +5463,13 @@ function bolaoHardRatio(row){
   return bolaoGameMisses(row)/Math.max(1,row.evaluated);
 }
 function bolaoGeneralStats(){
-  const resolvedGames=GAMES.filter(game=>S.results[game.id]);
-  const expected=resolvedGames.length*S.participants.length;
+  const scoredGames=bolaoScoringGames();
+  const expected=scoredGames.length*S.participants.length;
+  const today=todayKey();
   const stats={
-    resolvedGames:resolvedGames.length,
+    scoredGames:scoredGames.length,
+    resolvedGames:scoredGames.length,
+    liveGames:scoredGames.filter(item=>item.liveActive).length,
     expected,
     evaluated:0,
     crav:0,
@@ -5431,10 +5477,12 @@ function bolaoGeneralStats(){
     err:0,
     inv:0,
     pts:0,
+    totalPts:0,
+    dayPts:0,
+    dayGames:0,
     games:[]
   };
-  resolvedGames.forEach(game=>{
-    const res=S.results[game.id];
+  scoredGames.forEach(({game,res,live})=>{
     const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0};
     S.participants.forEach((_,pi)=>{
       const pal=S.palpites[`${pi}_${game.id}`];
@@ -5449,8 +5497,15 @@ function bolaoGeneralStats(){
       if(details.base===0){stats.err++;row.err++;}
       if(details.base===-2){stats.inv++;row.inv++;}
     });
+    if(game.date===today){
+      stats.dayPts+=row.pts;
+      stats.dayGames++;
+    }
+    row.live=live;
     stats.games.push(row);
   });
+  stats.matchPts=stats.pts;
+  stats.totalPts=S.participants.reduce((total,_,pi)=>total+playerStats(pi).pts,0);
   stats.hits=stats.crav+stats.corr;
   stats.misses=stats.err+stats.inv;
   stats.hitPct=pctInt(stats.hits,stats.evaluated);
@@ -5470,8 +5525,8 @@ function bolaoGeneralStats(){
       b.inv-a.inv||
       compareGameSchedule(a.game,b.game);
   });
-  stats.topExact=exactSorted.slice(0,3);
-  stats.topHard=hardSorted.slice(0,3);
+  stats.topExact=exactSorted.slice(0,5);
+  stats.topHard=hardSorted.slice(0,5);
   stats.mostExact=stats.topExact[0]||null;
   stats.hardest=stats.topHard[0]||null;
   stats.exactLeaderTieCount=stats.mostExact
@@ -5486,10 +5541,6 @@ function toggleBolaoStatsList(kind){
   if(!["exact","hard"].includes(kind)) return;
   bolaoStatsExpanded[kind]=!bolaoStatsExpanded[kind];
   if(activeTab==="ranking") renderRanking();
-}
-function bolaoTopGameValue(row,kind){
-  if(!row) return "0";
-  return kind==="exact"?row.crav:`${bolaoGameMissPct(row)}%`;
 }
 function bolaoTopGameDetail(row,kind){
   if(!row) return "";
@@ -5511,20 +5562,26 @@ function renderBolaoTopGamesTile(kind,title,rows,tieCount){
   const row=rows[0]||null;
   const expanded=Boolean(bolaoStatsExpanded[kind]);
   const cls=kind==="exact"?"highlight":"warn";
+  const listCount=Math.min(5,rows.length);
   const button=rows.length>1
-    ? `<button class="bolao-stat-expand" type="button" onclick="toggleBolaoStatsList('${kind}')" aria-expanded="${expanded?"true":"false"}">${expanded?"Fechar":"Top 3"}</button>`
+    ? `<button class="bolao-stat-expand" type="button" onclick="toggleBolaoStatsList('${kind}')" aria-expanded="${expanded?"true":"false"}" aria-label="${expanded?"Ocultar lista":"Mostrar lista"} de ${title.toLowerCase()}">${expanded?"Ocultar":`Ver ${listCount}`}<span class="chev" aria-hidden="true"></span></button>`
     : "";
-  const tieNote=tieCount>1?`<small>${pluralPt(tieCount,"jogo empatado","jogos empatados")} no topo</small>`:"";
-  return `<div class="bolao-stat-tile ${cls}">
+  const tieNote=tieCount>1?`${pluralPt(tieCount,"jogo empatado","jogos empatados")} no topo`:"";
+  return `<div class="bolao-stat-tile ${cls} bolao-game-tile">
     <div class="bolao-stat-title-row">
       <div>
-        <strong>${bolaoTopGameValue(row,kind)}</strong>
-        <span class="bolao-stat-label">${title}</span>
+        <strong class="bolao-game-heading">${title}</strong>
+        ${row?`<span class="bolao-game-summary">${esc(bolaoTopGameDetail(row,kind))}${tieNote?` · ${esc(tieNote)}`:""}</span>`:""}
       </div>
       ${button}
     </div>
-    ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${tieNote}${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">Aguardando</div>`}
+    ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">Aguardando</div>`}
   </div>`;
+}
+function bolaoDailyDeltaHTML(value){
+  if(!value) return "";
+  const cls=value>0?"up":"down";
+  return `<span class="bolao-points-delta ${cls}">${value>0?`+${value}`:value} hoje</span>`;
 }
 function renderBolaoGeneralStats(){
   const s=bolaoGeneralStats();
@@ -5532,7 +5589,7 @@ function renderBolaoGeneralStats(){
     <div>
       <div class="section-kicker">Consolidado do bolão</div>
       <h3 style="margin-top:4px">Estatísticas gerais</h3>
-      <p>${pluralPt(s.resolvedGames,"partida apurada","partidas apuradas")} · ${pluralPt(s.evaluated,"palpite avaliado","palpites avaliados")}</p>
+      <p>${pluralPt(s.scoredGames,"partida com placar","partidas com placar")} · ${pluralPt(s.evaluated,"palpite avaliado","palpites avaliados")}${s.liveGames?` · ${s.liveGames} ao vivo`:""}</p>
     </div>
     ${s.evaluated?`
       <div class="bolao-rate-head">
@@ -5555,11 +5612,14 @@ function renderBolaoGeneralStats(){
       </div>
       <div class="bolao-stats-grid">
         <div class="bolao-stat-tile">
-          <strong>${s.pts}</strong>
-          <span class="bolao-stat-label">Pontos nas partidas</span>
+          <div class="bolao-points-main">
+            <strong>${s.totalPts}</strong>
+            ${bolaoDailyDeltaHTML(s.dayPts)}
+          </div>
+          <span class="bolao-stat-label">Pontos totais</span>
         </div>
         <div class="bolao-stat-tile">
-          <strong>${signedAverage(s.pts,s.evaluated)}</strong>
+          <strong>${signedAverage(s.matchPts,s.evaluated)}</strong>
           <span class="bolao-stat-label">Média por palpite</span>
         </div>
         ${renderBolaoTopGamesTile("exact","Jogos mais cravados",s.topExact,s.exactLeaderTieCount)}
@@ -8061,6 +8121,242 @@ function rankingTimeline(rows){
     resolvedCount:resolvedIds.size,liveGameCount:liveIds.size,detailEventCount,
     dateCount:dateSet.size,includePodio};
 }
+function rankingRoundDescriptorForGame(game){
+  if(!game) return null;
+  if(!game.ko){
+    const round=game.round||1;
+    const games=groupGames().filter(g=>g.round===round).sort(compareGameSchedule);
+    return {id:`group-r${round}`,title:"Essa rodada",subtitle:`Rodada ${round} dos grupos`,games,emptyText:`Sem placares na rodada ${round} ainda.`};
+  }
+  const phase=KO_PHASES.find(p=>p.k===game.phaseKey);
+  const label=phase?.full||game.phase||"Mata-mata";
+  const games=koGames().filter(g=>g.phaseKey===game.phaseKey).sort(compareGameSchedule);
+  return {id:`ko-${game.phaseKey}`,title:"Essa rodada",subtitle:label,games,emptyText:`Sem placares em ${label.toLowerCase()} ainda.`};
+}
+function rankingCurrentRoundDescriptor(){
+  const today=todayKey();
+  for(const round of [1,2,3]){
+    const games=groupGames().filter(g=>g.round===round&&g.date).sort(compareGameSchedule);
+    if(!games.length) continue;
+    const first=games[0].date;
+    const last=games[games.length-1].date;
+    if(today>=first&&today<=last) return rankingRoundDescriptorForGame(games[0]);
+  }
+  for(const phase of KO_PHASES){
+    const games=koGames().filter(g=>g.phaseKey===phase.k&&g.date).sort(compareGameSchedule);
+    if(!games.length) continue;
+    const first=games[0].date;
+    const last=games[games.length-1].date;
+    if(today>=first&&today<=last) return rankingRoundDescriptorForGame(games[0]);
+  }
+  const ordered=GAMES.filter(g=>g.date).sort(compareGameSchedule);
+  const context=ordered.find(g=>g.date>=today)||ordered.slice().reverse().find(g=>g.date<=today)||null;
+  return rankingRoundDescriptorForGame(context);
+}
+function rankingCutTimeline(rows,games){
+  const gameIds=new Set((games||[]).map(g=>g.id));
+  const events=rankingGameEvents().filter(ev=>gameIds.has(ev.game.id));
+  const totals={};
+  const perGame={};
+  const series=rows.map((p,idx)=>{
+    totals[p.i]=0;
+    perGame[p.i]={};
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+  });
+  const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
+  const resolvedIds=new Set(),liveIds=new Set(),dateSet=new Set();
+  let detailEventCount=0;
+  events.forEach(ev=>{
+    series.forEach(line=>{
+      const pal=S.palpites[`${line.i}_${ev.game.id}`];
+      const v=ev.zeroGate?0:score(pal,ev.res,ev.game);
+      const cur=v==null?0:v;
+      totals[line.i]+=cur-(perGame[line.i][ev.game.id]||0);
+      perGame[line.i][ev.game.id]=cur;
+      line.values.push(totals[line.i]);
+    });
+    if(ev.state==="final") resolvedIds.add(ev.game.id);
+    if(ev.state==="live") liveIds.add(ev.game.id);
+    if(ev.state==="detail") detailEventCount++;
+    if(ev.game.date) dateSet.add(ev.game.date);
+    positions.push({label:"",state:ev.state,dateKey:ev.game.date||"",event:ev});
+  });
+  let prevDate=null;
+  positions.forEach(p=>{
+    if(!p.event||!p.dateKey) return;
+    if(p.dateKey!==prevDate){p.label=chartFormatDateKey(p.dateKey);prevDate=p.dateKey;}
+  });
+  const labels=positions.map(p=>p.label);
+  const states=positions.map(p=>p.state);
+  const eventsMeta=positions.map(p=>p.event);
+  const axisCandidates=positions.map((p,idx)=>p.label?idx:-1).filter(i=>i>=0);
+  const xRel=positions.map((_,i)=>positions.length>1?i/(positions.length-1):0);
+  const allValues=series.flatMap(line=>line.values);
+  const maxVal=Math.max(3,...allValues);
+  const minVal=Math.min(0,...allValues);
+  return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
+    fixtureCount:(games||[]).length,scoredCount:new Set(events.map(ev=>ev.game.id)).size,
+    resolvedCount:resolvedIds.size,liveGameCount:liveIds.size,detailEventCount,dateCount:dateSet.size};
+}
+function rankingFinalWhistleTimeline(rows){
+  const games=GAMES.filter(game=>S.results[game.id]).sort(compareGameSchedule);
+  const totals={};
+  const series=rows.map((p,idx)=>{
+    totals[p.i]=0;
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+  });
+  const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
+  const dateSet=new Set();
+  games.forEach(game=>{
+    const res=S.results[game.id];
+    series.forEach(line=>{
+      const pal=S.palpites[`${line.i}_${game.id}`];
+      const v=score(pal,res,game);
+      totals[line.i]+=v==null?0:v;
+      line.values.push(totals[line.i]);
+    });
+    if(game.date) dateSet.add(game.date);
+    positions.push({label:"",state:"final",dateKey:game.date||"",event:{game,res,state:"final"}});
+  });
+  let prevDate=null;
+  positions.forEach(p=>{
+    if(!p.event||!p.dateKey) return;
+    if(p.dateKey!==prevDate){p.label=chartFormatDateKey(p.dateKey);prevDate=p.dateKey;}
+  });
+  const labels=positions.map(p=>p.label);
+  const states=positions.map(p=>p.state);
+  const eventsMeta=positions.map(p=>p.event);
+  const axisCandidates=positions.map((p,idx)=>p.label?idx:-1).filter(i=>i>=0);
+  const xRel=positions.map((_,i)=>positions.length>1?i/(positions.length-1):0);
+  const allValues=series.flatMap(line=>line.values);
+  const maxVal=Math.max(3,...allValues);
+  const minVal=Math.min(0,...allValues);
+  return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
+    fixtureCount:GAMES.length,scoredCount:games.length,resolvedCount:games.length,
+    liveGameCount:0,detailEventCount:0,dateCount:dateSet.size};
+}
+function todayRankingCutDescriptor(){
+  const key=todayKey();
+  const games=GAMES.filter(g=>g.date===key).sort(compareGameSchedule);
+  return {id:"today",title:"Hoje",subtitle:chartFormatDateKey(key),games,
+    emptyText:games.length?"Sem placares hoje ainda.":"Hoje não tem jogo no calendário."};
+}
+function finalWhistleRankingCutDescriptor(){
+  return {id:"final-whistle",title:"Jogo a jogo",subtitle:"Após o apito final",
+    timeline:rankingFinalWhistleTimeline,emptyText:"Quando o primeiro resultado oficial entrar, este recorte aparece."};
+}
+function renderRankingCutChart(rows,cut){
+  const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
+  const chart=cut.timeline?cut.timeline(rows):rankingCutTimeline(rows,cut.games);
+  const hasEvents=(chart.events||[]).some(Boolean);
+  const padX=38;
+  const padY=18;
+  const padRight=110;
+  const lineWidth=560;
+  const lineHeight=188;
+  const padBottom=34;
+  const usableWidth=lineWidth-padX-padRight;
+  const usableHeight=lineHeight-padY-padBottom;
+  const points=chart.labels.length;
+  const range=Math.max(1,chart.maxVal-chart.minVal);
+  const xFor=index=>padX+(usableWidth*(chart.xRel?.[index]??(index/Math.max(1,points-1))));
+  const yFor=value=>padY+usableHeight-(usableHeight*((value-chart.minVal)/range));
+  const tickValues=chartIntegerTicks(chart.minVal,chart.maxVal,7);
+  const axisIdx=chart.axisCandidates&&chart.axisCandidates.length
+    ?chartAxisIndexesFromCandidates(chart.axisCandidates,5)
+    :chartAxisIndexes(points,5);
+  const uniqueLabels=chartUniqueLabels(selected.map(l=>l.name));
+  const endpointItems=selected.map((line,idx)=>{
+    const s=chart.series.find(ss=>ss.i===line.i);
+    const values=s?.values||[0];
+    const v=values[values.length-1]||0;
+    return {color:s?.color||"#002776",name:uniqueLabels[idx],value:v,y:yFor(v),i:line.i,focused:rankingChartFocus===line.i};
+  });
+  const endpointLabels=chartEndpointLabelsSvg(endpointItems,{
+    baseX:xFor(points-1),
+    lineHeight:13,
+    groupGap:15,
+    topBound:padY+2,
+    bottomBound:padY+usableHeight-2,
+    maxChars:14,
+    fontSize:10.5,
+    dy:4
+  });
+  const eventTip=(index,name,value)=>{
+    const st=chart.states[index];
+    if(st==="start") return `Início — ${name}: 0 pts no recorte`;
+    const ev=chart.events?.[index];
+    if(!ev) return "";
+    const flag=ev.synthetic?" · 0x0 no intervalo":st==="live"?" · ao vivo (parcial)":st==="detail"?" · parcial durante o jogo":"";
+    return `${ev.game.t1} ${ev.res.s1}x${ev.res.s2} ${ev.game.t2}${flag} — ${name}: ${value} pts no recorte`;
+  };
+  const summary=[
+    cut.subtitle,
+    chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"}`:"",
+    chart.scoredCount?`${chart.scoredCount} com placar`:"",
+    chart.liveGameCount?`${chart.liveGameCount} ao vivo`:"",
+    chart.detailEventCount?"gol a gol":"",
+    selected.length?`${selected.length} no gráfico`:""
+  ].filter(Boolean);
+  return `<section class="chart-shell chart-shell-compact ranking-cut-card">
+    <div class="chart-toolbar">
+      <div>
+        <div class="section-kicker">Recorte rápido</div>
+        <h3 style="margin-top:4px">${esc(cut.title)}</h3>
+      </div>
+    </div>
+    ${selected.length&&hasEvents?`<div class="chart-stage">
+      <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Recorte de pontuação do ranking: ${esc(cut.title)}">
+        <line x1="${padX}" y1="${padY}" x2="${padX}" y2="${padY+usableHeight}" stroke="rgba(0,39,118,.18)" stroke-width="1"></line>
+        ${tickValues.map(value=>{
+          const y=yFor(value);
+          const isZero=value===0;
+          return `<g>
+            <line x1="${padX}" y1="${y.toFixed(2)}" x2="${(padX+usableWidth).toFixed(2)}" y2="${y.toFixed(2)}" stroke="rgba(0,39,118,${isZero?".22":".11"})" stroke-width="1"></line>
+            <text x="${(padX-7).toFixed(2)}" y="${(y+3.5).toFixed(2)}" text-anchor="end" font-size="10" fill="#5a6a82" font-weight="800">${value}</text>
+          </g>`;
+        }).join("")}
+        ${axisIdx.map(i=>{
+          const x=xFor(i);
+          const lbl=chart.labels[i]||"";
+          const isStart=i===0;
+          return `<g>
+            <line x1="${x.toFixed(2)}" y1="${(padY+usableHeight).toFixed(2)}" x2="${x.toFixed(2)}" y2="${(padY+usableHeight+4).toFixed(2)}" stroke="rgba(0,39,118,.23)" stroke-width="1"></line>
+            <text class="chart-axis-tick ${isStart?"is-start":""}" x="${(isStart?x+3:x).toFixed(2)}" y="${(padY+usableHeight+17).toFixed(2)}" text-anchor="${isStart?"start":"middle"}" font-size="10" fill="#41516d" font-weight="850">${esc(lbl)}</text>
+          </g>`;
+        }).join("")}
+        ${selected.map(line=>{
+          const seriesLine=chart.series.find(s=>s.i===line.i);
+          const color=seriesLine?.color||"#002776";
+          const values=seriesLine?.values||[0];
+          const name=seriesLine?.name||"";
+          const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
+          return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" data-series="${line.i}" onmouseenter="hoverRankingSeries(this,${line.i},true)" onmouseleave="hoverRankingSeries(this,${line.i},false)" onclick="focusRankingSeries(${line.i},event)">
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
+            ${values.map((value,index)=>{
+              const st=chart.states[index];
+              const isLast=index===values.length-1;
+              const x=xFor(index);
+              const y=yFor(value);
+              const title=`<title>${esc(eventTip(index,name,value))}</title>`;
+              if(isLast) return `<circle class="chart-endpoint-dot ${st==="live"?"is-live":""}" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="4.3" fill="${color}" stroke="#fff" stroke-width="2">${title}</circle>`;
+              if(st==="live") return `<circle class="chart-live-dot" cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="2.8" fill="#fff" stroke="${color}" stroke-width="2">${title}</circle>`;
+              return `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${st==="detail"?1.9:2.5}" fill="${color}" stroke="#fff" stroke-width="1.3">${title}</circle>`;
+            }).join("")}
+          </g>`;
+        }).join("")}
+        ${endpointLabels}
+      </svg>
+    </div>`:`<div class="chart-empty">${esc(selected.length?cut.emptyText:"Ative pelo menos um participante para desenhar este recorte.")}</div>`}
+    <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+  </section>`;
+}
+function renderRankingQuickCuts(rows){
+  const cuts=[finalWhistleRankingCutDescriptor(),todayRankingCutDescriptor(),rankingCurrentRoundDescriptor()].filter(Boolean);
+  if(!cuts.length) return "";
+  return `<div class="ranking-cut-list">${cuts.map(cut=>renderRankingCutChart(rows,cut)).join("")}</div>`;
+}
 function rankingLinePath(values,width,height,padX,padY,minVal,maxVal){
   const usableWidth=width-padX*2;
   const usableHeight=height-padY*2;
@@ -8656,6 +8952,7 @@ function renderRanking(){
 
       <div class="ranking-side">
         ${renderRankingChart(r)}
+        ${renderRankingQuickCuts(r)}
         ${renderBolaoGeneralStats()}
       </div>
     </div>
