@@ -6037,6 +6037,7 @@ let rankingChartTouched=false;
 let rankingChartFocus=null;
 let rankingChartPeriod="all";
 let rankingChartStep="goals";
+let rankingChartBaseline="zero";
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
 let chartExpanded=null;
@@ -8230,15 +8231,16 @@ function rankingCurrentRoundDescriptor(){
   const context=ordered.find(g=>g.date>=today)||ordered.slice().reverse().find(g=>g.date<=today)||null;
   return rankingRoundDescriptorForGame(context);
 }
-function rankingCutTimeline(rows,games){
+function rankingCutTimeline(rows,games,baseline=null){
   const gameIds=new Set((games||[]).map(g=>g.id));
   const events=rankingGameEvents().filter(ev=>gameIds.has(ev.game.id));
   const totals={};
   const perGame={};
   const series=rows.map((p,idx)=>{
-    totals[p.i]=0;
+    const seed=baseline?(baseline[p.i]||0):0;
+    totals[p.i]=seed;
     perGame[p.i]={};
-    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[seed]};
   });
   const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
   const resolvedIds=new Set(),liveIds=new Set(),dateSet=new Set();
@@ -8270,18 +8272,19 @@ function rankingCutTimeline(rows,games){
   const xRel=positions.map((_,i)=>positions.length>1?i/(positions.length-1):0);
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
-  const minVal=Math.min(0,...allValues);
+  const minVal=baseline?Math.min(...allValues):Math.min(0,...allValues);
   return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
     fixtureCount:(games||[]).length,scoredCount:new Set(events.map(ev=>ev.game.id)).size,
     resolvedCount:resolvedIds.size,liveGameCount:liveIds.size,detailEventCount,dateCount:dateSet.size};
 }
-function rankingFinalWhistleTimeline(rows,games=null){
+function rankingFinalWhistleTimeline(rows,games=null,baseline=null){
   const fixtures=(games||GAMES).slice().sort(compareGameSchedule);
   const scoredGames=fixtures.filter(game=>S.results[game.id]).sort(compareGameSchedule);
   const totals={};
   const series=rows.map((p,idx)=>{
-    totals[p.i]=0;
-    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[0]};
+    const seed=baseline?(baseline[p.i]||0):0;
+    totals[p.i]=seed;
+    return {i:p.i,name:p.name,color:RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length],values:[seed]};
   });
   const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
   const dateSet=new Set();
@@ -8308,7 +8311,7 @@ function rankingFinalWhistleTimeline(rows,games=null){
   const xRel=positions.map((_,i)=>positions.length>1?i/(positions.length-1):0);
   const allValues=series.flatMap(line=>line.values);
   const maxVal=Math.max(3,...allValues);
-  const minVal=Math.min(0,...allValues);
+  const minVal=baseline?Math.min(...allValues):Math.min(0,...allValues);
   return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
     fixtureCount:fixtures.length,scoredCount:scoredGames.length,resolvedCount:scoredGames.length,
     liveGameCount:0,detailEventCount:0,dateCount:dateSet.size};
@@ -8343,6 +8346,43 @@ function rankingChartStepOptions(){
     {id:"game",label:"Jogo a jogo",subtitle:"Após o apito final"}
   ];
 }
+function rankingChartBaselineOptions(){
+  return [
+    {id:"zero",label:"Do zero",subtitle:"Só os pontos do período"},
+    {id:"carry",label:"Acumulado",subtitle:"Começa do total anterior"}
+  ];
+}
+// Pontos que cada participante já tinha ANTES da janela escolhida (ex.: o total
+// acumulado até a véspera quando o período é "Hoje"). Usa só resultados oficiais
+// dos jogos anteriores à janela, pra a curva do recorte começar de onde a pessoa
+// realmente estava — e não do zero.
+function rankingChartBaselineBefore(rows,games){
+  const base={};
+  rows.forEach(p=>{base[p.i]=0;});
+  const windowGames=(games||[]).filter(Boolean);
+  if(!windowGames.length) return base;
+  const windowIds=new Set(windowGames.map(g=>g.id));
+  const ordered=GAMES.slice().sort(compareGameSchedule);
+  let firstIdx=Infinity;
+  ordered.forEach((g,idx)=>{ if(windowIds.has(g.id)&&idx<firstIdx) firstIdx=idx; });
+  if(!isFinite(firstIdx)) return base;
+  for(let idx=0;idx<firstIdx;idx++){
+    const game=ordered[idx];
+    if(windowIds.has(game.id)) continue;
+    const res=S.results[game.id];
+    if(!res) continue;
+    rows.forEach(p=>{
+      const pal=S.palpites[`${p.i}_${game.id}`];
+      const v=score(pal,res,game);
+      base[p.i]+=(v==null?0:v);
+    });
+  }
+  return base;
+}
+function rankingActiveChartBaseline(){
+  const modes=rankingChartBaselineOptions();
+  return modes.find(mode=>mode.id===rankingChartBaseline)||modes[0];
+}
 function rankingActiveChartPeriod(){
   const periods=rankingChartPeriodOptions();
   return periods.find(period=>period.id===rankingChartPeriod)||periods[0];
@@ -8352,8 +8392,10 @@ function rankingActiveChartStep(){
   return steps.find(step=>step.id===rankingChartStep)||steps[0];
 }
 function rankingChartForMode(rows,period,step){
-  if(step.id==="game") return rankingFinalWhistleTimeline(rows,period.games);
-  return period.id==="all"?rankingTimeline(rows):rankingCutTimeline(rows,period.games);
+  const carry=rankingChartBaseline==="carry"&&period.id!=="all";
+  const baseline=carry?rankingChartBaselineBefore(rows,period.games):null;
+  if(step.id==="game") return rankingFinalWhistleTimeline(rows,period.games,baseline);
+  return period.id==="all"?rankingTimeline(rows):rankingCutTimeline(rows,period.games,baseline);
 }
 function rankingChartEmptyText(period,step){
   if(step.id==="goals") return period.emptyText;
@@ -8369,6 +8411,12 @@ function setRankingChartPeriod(period){
 }
 function setRankingChartStep(step){
   rankingChartStep=rankingChartStepOptions().some(item=>item.id===step)?step:"goals";
+  rankingChartFocus=null;
+  if(activeTab==="ranking") renderRanking();
+  if(chartExpanded==="ranking") renderChartModal();
+}
+function setRankingChartBaseline(mode){
+  rankingChartBaseline=rankingChartBaselineOptions().some(item=>item.id===mode)?mode:"zero";
   rankingChartFocus=null;
   if(activeTab==="ranking") renderRanking();
   if(chartExpanded==="ranking") renderChartModal();
@@ -8492,6 +8540,9 @@ function renderRankingChart(rows,isExpanded=false){
   const steps=rankingChartStepOptions();
   const activePeriod=periods.find(period=>period.id===rankingChartPeriod)||periods[0];
   const activeStep=steps.find(step=>step.id===rankingChartStep)||steps[0];
+  const baselineModes=rankingChartBaselineOptions();
+  const activeBaseline=baselineModes.find(mode=>mode.id===rankingChartBaseline)||baselineModes[0];
+  const showBaseline=activePeriod.id!=="all";
   const isFullOriginal=activePeriod.id==="all"&&activeStep.id==="goals";
   const chart=rankingChartForMode(rows,activePeriod,activeStep);
   const padX=42;
@@ -8531,6 +8582,7 @@ function renderRankingChart(rows,isExpanded=false){
     ]:[
       activePeriodSummary,
       activeStep.subtitle,
+      showBaseline&&activeBaseline.id==="carry"?"Começa do total anterior":"",
       chart.fixtureCount?`${chart.fixtureCount} ${chart.fixtureCount===1?"jogo":"jogos"}`:"",
       chart.scoredCount?`${chart.scoredCount} com placar`:"",
       chart.liveGameCount?`${chart.liveGameCount} ao vivo · tracejado = parcial`:"",
@@ -8614,6 +8666,12 @@ function renderRankingChart(rows,isExpanded=false){
           ${steps.map(step=>`<button type="button" class="chart-seg-btn ${step.id===activeStep.id?"active":""}" onclick="setRankingChartStep('${step.id}')" aria-pressed="${step.id===activeStep.id?"true":"false"}">${esc(step.label)}</button>`).join("")}
         </div>
       </div>
+      ${showBaseline?`<div class="chart-control">
+        <span class="chart-control-label">Base</span>
+        <div class="chart-seg" role="group" aria-label="Base do gráfico">
+          ${baselineModes.map(mode=>`<button type="button" class="chart-seg-btn ${mode.id===activeBaseline.id?"active":""}" onclick="setRankingChartBaseline('${mode.id}')" aria-pressed="${mode.id===activeBaseline.id?"true":"false"}" title="${esc(mode.subtitle)}">${esc(mode.label)}</button>`).join("")}
+        </div>
+      </div>`:""}
     </div>
     ${drawChart?`<div class="chart-stage">
       <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking: ${esc(`${activePeriod.label} - ${activeStep.label}`)}">
