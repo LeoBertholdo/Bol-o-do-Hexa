@@ -832,6 +832,9 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
 }
 .chart-preset-btn:hover{background:#f4f7fc;border-color:#cdd9ea;color:var(--blue)}
 .chart-preset-btn.active{background:#e9f0fb;border-color:#cadaf3;color:var(--blue)}
+/* Participant filter strip below the chart */
+.chart-filter{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.chart-filter-sep{width:1px;align-self:stretch;min-height:20px;background:#dfe6f1;margin:0 4px}
 .chart-stage{
   border:1px solid #e5edf8;
   border-radius:10px;
@@ -8052,9 +8055,7 @@ function renderBrazilMiniTable(){
   </div>`;
 }
 function rankingChartDefaultSelection(rows){
-  const mine=myParticipantIndex();
-  if(Number.isInteger(mine)) return [mine];
-  return rows.slice(0,3).map(p=>p.i);
+  return rows.map(p=>p.i);
 }
 // Eventos de pontuação da Copa em ordem cronológica:
 // - cada mudança de placar registrada pelo robô (live_score_history) vira um evento;
@@ -8480,7 +8481,7 @@ function renderRankingChart(rows,isExpanded=false){
   const selected=rows.filter(p=>rankingChartSelection.includes(p.i));
   const top3Ids=rows.slice(0,3).map(p=>p.i);
   const allIds=rows.map(p=>p.i);
-  const top3Active=top3Ids.length>0&&top3Ids.every(id=>rankingChartSelection.includes(id));
+  const top3Active=top3Ids.length>0&&rankingChartSelection.length===top3Ids.length&&top3Ids.every(id=>rankingChartSelection.includes(id));
   const allActive=allIds.length>0&&allIds.every(id=>rankingChartSelection.includes(id));
   const periods=rankingChartPeriodOptions();
   const steps=rankingChartStepOptions();
@@ -8607,25 +8608,6 @@ function renderRankingChart(rows,isExpanded=false){
           ${steps.map(step=>`<button type="button" class="chart-seg-btn ${step.id===activeStep.id?"active":""}" onclick="setRankingChartStep('${step.id}')" aria-pressed="${step.id===activeStep.id?"true":"false"}">${esc(step.label)}</button>`).join("")}
         </div>
       </div>
-      <div class="chart-control">
-        <div class="chart-control-head">
-          <span class="chart-control-label">Participantes</span>
-          <div class="chart-presets-inline">
-            <button type="button" class="chart-preset-btn ${allActive?"active":""}" onclick="setRankingChartPreset('all')" aria-pressed="${allActive?"true":"false"}">Todos</button>
-            <button type="button" class="chart-preset-btn ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')" aria-pressed="${top3Active?"true":"false"}">Top 3</button>
-          </div>
-        </div>
-        <div class="chart-legend">
-          ${rows.map((p,idx)=>{
-            const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
-            const active=rankingChartSelection.includes(p.i);
-            return `<button class="chart-chip ${active?"active":""}" onclick="toggleRankingSeries(${p.i})" style="${active?`background:${color}`:""}">
-              <span class="chart-dot" style="background:${color}"></span>
-              <span>${esc(p.name)}</span>
-            </button>`;
-          }).join("")}
-        </div>
-      </div>
     </div>
     ${drawChart?`<div class="chart-stage">
       <svg viewBox="0 0 ${lineWidth} ${lineHeight}" preserveAspectRatio="xMidYMid meet" class="${rankingChartFocus!=null&&selected.some(p=>p.i===rankingChartFocus)?"chart-focus":""}" role="img" aria-label="Gráfico de evolução da pontuação do ranking: ${esc(`${activePeriod.label} - ${activeStep.label}`)}">
@@ -8682,7 +8664,19 @@ function renderRankingChart(rows,isExpanded=false){
         ${endpointLabels}
       </svg>
     </div>`:`<div class="chart-empty">${esc(selected.length?rankingChartEmptyText(activePeriod,activeStep):"Ative pelo menos um participante para desenhar a curva de evolução.")}</div>`}
-    <div class="chart-axis">${summary.map(label=>`<span>${esc(label)}</span>`).join("")}</div>
+    <div class="chart-filter" role="group" aria-label="Filtrar participantes">
+      <button type="button" class="chart-preset-btn ${allActive?"active":""}" onclick="setRankingChartPreset('all')" aria-pressed="${allActive?"true":"false"}">Todos</button>
+      <button type="button" class="chart-preset-btn ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')" aria-pressed="${top3Active?"true":"false"}">Top 3</button>
+      <span class="chart-filter-sep" aria-hidden="true"></span>
+      ${rows.map((p,idx)=>{
+        const color=RANKING_SERIES_COLORS[idx%RANKING_SERIES_COLORS.length];
+        const active=rankingChartSelection.includes(p.i);
+        return `<button class="chart-chip ${active?"active":""}" onclick="toggleRankingSeries(${p.i})" style="${active?`background:${color}`:""}">
+          <span class="chart-dot" style="background:${color}"></span>
+          <span>${esc(p.name)}</span>
+        </button>`;
+      }).join("")}
+    </div>
   </section>`;
 }
 function renderHome(){
