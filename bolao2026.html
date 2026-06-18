@@ -8448,7 +8448,13 @@ function toggleRankingSeries(participantIndex){
 function setRankingChartPreset(mode){
   rankingChartTouched=true;
   const rows=ranking();
-  rankingChartSelection=(mode==="top3"?rows.slice(0,3):rows).map(p=>p.i);
+  if(mode==="top3"){
+    rankingChartSelection=rows.slice(0,3).map(p=>p.i);
+  }else{
+    const allIds=rows.map(p=>p.i);
+    const allOn=allIds.length>0&&allIds.every(id=>rankingChartSelection.includes(id));
+    rankingChartSelection=allOn?[]:allIds;
+  }
   rankingChartFocus=null;
   if(activeTab==="ranking") renderRanking();
   if(chartExpanded==="ranking") renderChartModal();
@@ -8495,7 +8501,8 @@ function renderRankingChart(rows,isExpanded=false){
   const usableWidth=lineWidth-padX-padRight;
   const points=chart.labels.length;
   const eventCount=chart.events?chart.events.filter(Boolean).length:0;
-  const drawChart=selected.length&&((isFullOriginal&&activePeriod.drawWhenEmpty)||eventCount>0);
+  // Frame (eixos, grade, datas) sempre desenha quando há dados; sem ninguém selecionado, só somem as linhas.
+  const drawChart=(isFullOriginal&&activePeriod.drawWhenEmpty)||eventCount>0;
   // Marcadores de lance sob o eixo X: o rótulo encolhe conforme a Copa acumula
   // eventos (bandeiras+placar -> só placar -> só tracinho com tooltip), pra
   // continuar legível dos primeiros jogos até a final.
@@ -8662,7 +8669,7 @@ function renderRankingChart(rows,isExpanded=false){
         }).join("")}
         ${endpointLabels}
       </svg>
-    </div>`:`<div class="chart-empty">${esc(selected.length?rankingChartEmptyText(activePeriod,activeStep):"Ative pelo menos um participante para desenhar a curva de evolução.")}</div>`}
+    </div>`:`<div class="chart-empty">${esc(rankingChartEmptyText(activePeriod,activeStep))}</div>`}
     <div class="chart-filter" role="group" aria-label="Filtrar participantes">
       <button type="button" class="chart-preset-btn ${allActive?"active":""}" onclick="setRankingChartPreset('all')" aria-pressed="${allActive?"true":"false"}">Todos</button>
       <button type="button" class="chart-preset-btn ${top3Active?"active":""}" onclick="setRankingChartPreset('top3')" aria-pressed="${top3Active?"true":"false"}">Top 3</button>
