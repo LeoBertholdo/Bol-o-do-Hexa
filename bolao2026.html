@@ -858,6 +858,49 @@ body.chart-modal-open{overflow:hidden}
 .ranking-card h3{font-size:1rem;line-height:1.1;color:var(--text);font-weight:950}
 .ranking-card p{margin-top:6px;font-size:.76rem;color:var(--muted);line-height:1.45}
 .ranking-card .mini-action{margin-top:12px}
+.bolao-stats-card{display:grid;gap:13px}
+.bolao-rate-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.bolao-rate-value{font-size:2rem;line-height:1;font-weight:950;color:var(--green)}
+.bolao-rate-label{margin-top:4px;font-size:.58rem;text-transform:uppercase;letter-spacing:.72px;color:var(--muted);font-weight:950}
+.bolao-rate-bar{
+  display:flex;
+  width:100%;
+  height:16px;
+  border-radius:999px;
+  overflow:hidden;
+  background:#eef2f7;
+  box-shadow:inset 0 0 0 1px rgba(0,39,118,.08);
+}
+.bolao-rate-hit{background:linear-gradient(90deg,var(--green),#54c98e)}
+.bolao-rate-miss{background:linear-gradient(90deg,#e0615c,var(--red))}
+.bolao-rate-legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bolao-rate-pill{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:baseline;
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fff;
+  padding:8px 9px;
+  min-width:0;
+}
+.bolao-rate-pill span{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:950}
+.bolao-rate-pill strong{font-size:.95rem;color:var(--text);font-weight:950;white-space:nowrap}
+.bolao-stats-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bolao-stat-tile{
+  border:1px solid var(--border);
+  border-radius:8px;
+  background:#fbfcff;
+  padding:10px;
+  min-width:0;
+}
+.bolao-stat-tile strong{display:block;font-size:1.1rem;line-height:1.05;color:var(--blue);font-weight:950}
+.bolao-stat-tile span{display:block;margin-top:6px;font-size:.58rem;text-transform:uppercase;letter-spacing:.56px;color:var(--muted);font-weight:950}
+.bolao-stat-tile small{display:block;margin-top:7px;font-size:.7rem;line-height:1.35;color:#52617a;font-weight:750}
+.bolao-stat-tile.highlight strong{color:var(--green)}
+.bolao-stat-tile.warn strong{color:var(--red)}
+.bolao-stats-note{font-size:.68rem;line-height:1.4;color:var(--muted);font-weight:750}
 .lb-row{display:grid;grid-template-columns:auto minmax(86px,.62fr) minmax(220px,1.7fr) auto;align-items:center;gap:10px;padding:12px;border-radius:8px;margin-bottom:8px;background:#fff;border:1px solid var(--border);box-shadow:0 8px 18px rgba(0,39,118,.05);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
 @media(hover:hover){.lb-row:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(0,39,118,.12);border-color:#cdd9ea}}
 .podium-row{position:relative;padding:15px 14px;border-width:2px;box-shadow:0 16px 34px rgba(0,39,118,.12)}
@@ -3553,6 +3596,8 @@ body.chart-modal-open{overflow:hidden}
   .stat{padding:5px 4px;border-radius:8px}
   .sv{font-size:.94rem}
   .sl{font-size:.48rem;letter-spacing:.24px}
+  .bolao-rate-legend,.bolao-stats-grid{grid-template-columns:1fr}
+  .bolao-rate-value{font-size:1.62rem}
   .cfg-row{align-items:flex-start;flex-direction:column;gap:8px}
   .cfg-inp{width:100%;max-width:180px}
   .podium-cards{grid-template-columns:1fr}
@@ -5313,6 +5358,134 @@ function prize(rank){
   if(rank===2) return Math.round(total*p[1]/100);
   if(rank===3) return Math.round(total*p[2]/100);
   return 0;
+}
+function pluralPt(n,singular,plural){
+  return `${n} ${n===1?singular:plural}`;
+}
+function pctInt(value,total){
+  return total?Math.round((value/total)*100):0;
+}
+function signedAverage(value,total){
+  if(!total) return "0,00";
+  return (value/total).toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function compactGameLabel(game,res){
+  const teams=gameTeams(game);
+  const t1=teams.t1||game.t1||"Time 1";
+  const t2=teams.t2||game.t2||"Time 2";
+  const f1=teamFlag(t1);
+  const f2=teamFlag(t2);
+  return `${f1?`${f1} `:""}${t1} ${resultLabel(game,res,teams)} ${f2?`${f2} `:""}${t2}`;
+}
+function bolaoGeneralStats(){
+  const resolvedGames=GAMES.filter(game=>S.results[game.id]);
+  const expected=resolvedGames.length*S.participants.length;
+  const stats={
+    resolvedGames:resolvedGames.length,
+    expected,
+    evaluated:0,
+    crav:0,
+    corr:0,
+    err:0,
+    inv:0,
+    pts:0,
+    games:[]
+  };
+  resolvedGames.forEach(game=>{
+    const res=S.results[game.id];
+    const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0};
+    S.participants.forEach((_,pi)=>{
+      const pal=S.palpites[`${pi}_${game.id}`];
+      const details=scoreDetails(pal,res,game);
+      if(!details) return;
+      stats.evaluated++;
+      row.evaluated++;
+      stats.pts+=details.pts;
+      row.pts+=details.pts;
+      if(details.exact){stats.crav++;row.crav++;}
+      if(details.base===1){stats.corr++;row.corr++;}
+      if(details.base===0){stats.err++;row.err++;}
+      if(details.base===-2){stats.inv++;row.inv++;}
+    });
+    stats.games.push(row);
+  });
+  stats.hits=stats.crav+stats.corr;
+  stats.misses=stats.err+stats.inv;
+  stats.hitPct=pctInt(stats.hits,stats.evaluated);
+  stats.missPct=stats.evaluated?100-stats.hitPct:0;
+  stats.coveragePct=pctInt(stats.evaluated,stats.expected);
+  const evaluatedGames=stats.games.filter(row=>row.evaluated);
+  stats.mostExact=evaluatedGames.slice().sort((a,b)=>
+    b.crav-a.crav||
+    (b.crav+b.corr)-(a.crav+a.corr)||
+    compareGameSchedule(a.game,b.game)
+  )[0]||null;
+  stats.hardest=evaluatedGames.slice().sort((a,b)=>{
+    const missA=(a.err+a.inv)/Math.max(1,a.evaluated);
+    const missB=(b.err+b.inv)/Math.max(1,b.evaluated);
+    return missB-missA||
+      (b.err+b.inv)-(a.err+a.inv)||
+      b.inv-a.inv||
+      compareGameSchedule(a.game,b.game);
+  })[0]||null;
+  return stats;
+}
+function renderBolaoGeneralStats(){
+  const s=bolaoGeneralStats();
+  const exactGame=s.mostExact?compactGameLabel(s.mostExact.game,s.mostExact.res):"Aguardando";
+  const hardGame=s.hardest?compactGameLabel(s.hardest.game,s.hardest.res):"Aguardando";
+  const hardMisses=s.hardest?s.hardest.err+s.hardest.inv:0;
+  const hardPct=s.hardest?pctInt(hardMisses,s.hardest.evaluated):0;
+  return `<section class="ranking-card bolao-stats-card">
+    <div>
+      <div class="section-kicker">Consolidado do bolão</div>
+      <h3 style="margin-top:4px">Estatísticas gerais</h3>
+      <p>${pluralPt(s.resolvedGames,"partida apurada","partidas apuradas")} · ${pluralPt(s.evaluated,"palpite avaliado","palpites avaliados")}</p>
+    </div>
+    ${s.evaluated?`
+      <div class="bolao-rate-head">
+        <div>
+          <div class="bolao-rate-value">${s.hitPct}%</div>
+          <div class="bolao-rate-label">cravadas + acertos</div>
+        </div>
+        <div>
+          <div class="bolao-rate-value" style="color:var(--red);text-align:right">${s.missPct}%</div>
+          <div class="bolao-rate-label">erros + invertidas</div>
+        </div>
+      </div>
+      <div class="bolao-rate-bar" title="${s.hitPct}% cravadas/acertos e ${s.missPct}% erros/invertidas">
+        <span class="bolao-rate-hit" style="width:${s.hitPct}%"></span>
+        <span class="bolao-rate-miss" style="width:${s.missPct}%"></span>
+      </div>
+      <div class="bolao-rate-legend">
+        <div class="bolao-rate-pill"><span>Cravadas + acertos</span><strong>${s.hits}</strong></div>
+        <div class="bolao-rate-pill"><span>Erros + invertidas</span><strong>${s.misses}</strong></div>
+      </div>
+      <div class="bolao-stats-grid">
+        <div class="bolao-stat-tile">
+          <strong>${s.coveragePct}%</strong>
+          <span>Cobertura</span>
+          <small>${s.evaluated}/${s.expected} palpites nos jogos apurados</small>
+        </div>
+        <div class="bolao-stat-tile">
+          <strong>${signedAverage(s.pts,s.evaluated)}</strong>
+          <span>Média por palpite</span>
+          <small>Pontos dos jogos, sem pódio</small>
+        </div>
+        <div class="bolao-stat-tile highlight">
+          <strong>${s.mostExact?s.mostExact.crav:0}</strong>
+          <span>Jogo mais cravado</span>
+          <small>${esc(exactGame)}</small>
+        </div>
+        <div class="bolao-stat-tile warn">
+          <strong>${hardPct}%</strong>
+          <span>Jogo mais difícil</span>
+          <small>${s.hardest?`${hardMisses}/${s.hardest.evaluated} erros ou invertidas · ${esc(hardGame)}`:esc(hardGame)}</small>
+        </div>
+      </div>
+      <div class="bolao-stats-note">A barra considera só palpites preenchidos em partidas com resultado oficial. Palpite em branco fica fora da proporção.</div>
+    `:`<div class="chart-empty">Quando houver resultado oficial e palpites avaliados, as estatísticas consolidadas aparecem aqui.</div>`}
+  </section>`;
 }
 
 function officialGroupResultForGame(game){
@@ -8401,6 +8574,7 @@ function renderRanking(){
 
       <div class="ranking-side">
         ${renderRankingChart(r)}
+        ${renderBolaoGeneralStats()}
       </div>
     </div>
   </div>`;
