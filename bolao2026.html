@@ -2751,13 +2751,17 @@ body.chart-modal-open{overflow:hidden}
 	  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
 	  padding:18px;
 	  box-shadow:var(--copa-shadow-md);
-	  overflow:hidden;
+	  /* overflow:visible para o position:sticky da barra de fases poder grudar
+	     no topo da janela (overflow:hidden prenderia o sticky dentro do shell). */
+	  overflow:visible;
 	}
 	.copa-games-page.v2 .copa-games-shell:before{
 	  content:"";
 	  position:absolute;
 	  inset:0 0 auto 0;
 	  height:6px;
+	  /* acompanha o arredondamento do shell já que não há mais clip por overflow */
+	  border-radius:18px 18px 0 0;
 	  background:linear-gradient(90deg,var(--copa-green) 0%,var(--copa-yellow) 50%,var(--copa-blue) 100%);
 	}
 	.copa-games-page.v2 .copa-games-shell:after{
@@ -2915,6 +2919,13 @@ body.chart-modal-open{overflow:hidden}
 	  border:1px solid var(--copa-line);
 	  border-radius:14px;
 	  background:#eef4ff;
+	  /* Fixa a barra de fases logo abaixo do menu de abas ao rolar a lista,
+	     pra trocar de fase de qualquer ponto sem precisar subir. --copa-nav-h
+	     é medido em JS (updateCopaNavOffset); 56px é só o fallback. */
+	  position:sticky;
+	  top:var(--copa-nav-h,56px);
+	  z-index:6;
+	  box-shadow:0 10px 22px -14px rgba(0,39,118,.45);
 	}
 	.copa-games-page.v2 .copa-phase-row{
 	  display:flex;
@@ -9541,6 +9552,17 @@ function setupCopaTodayFab(){
   },{rootMargin:"-64px 0px 0px 0px"});
   copaTodayObserver.observe(target);
 }
+// Mede a altura do menu de abas (nav sticky) e expõe como --copa-nav-h, usado
+// pelo top: da barra de fases sticky pra ela grudar exatamente abaixo da nav.
+function updateCopaNavOffset(){
+  const nav=document.querySelector("nav");
+  const h=nav?Math.round(nav.getBoundingClientRect().height):56;
+  document.documentElement.style.setProperty("--copa-nav-h",h+"px");
+}
+if(typeof window!=="undefined"&&!window.__copaNavOffsetBound){
+  window.__copaNavOffsetBound=true;
+  window.addEventListener("resize",updateCopaNavOffset);
+}
 function renderJogos(){
   const groupChips=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`g-${g}`,l:g}))];
   const koChips=KO_PHASES.map(p=>({k:p.k,l:p.l}));
@@ -9589,6 +9611,7 @@ function renderJogos(){
     }
   }
   setupCopaTodayFab();
+  updateCopaNavOffset();
   // Mantém o chip de fase ativo visível na faixa rolável.
   document.querySelectorAll("#tab-jogos .copa-phase-chips").forEach(wrap=>{
     const active=wrap.querySelector(".fbtn.active");
