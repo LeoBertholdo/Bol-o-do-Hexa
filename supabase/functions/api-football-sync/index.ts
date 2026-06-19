@@ -912,13 +912,6 @@ Deno.serve(async (req) => {
     byComp.get(c.competitionId)!.push(c);
   }
 
-  // Free tier football-data = 10 req/min. Cada competição custa 1 chamada-base;
-  // reservamos essas (mais 1 de folga) pra o orçamento de detalhes nunca estourar
-  // o teto quando há mais de uma competição no mesmo minuto. Com 1 competição dá 8,
-  // idêntico ao comportamento anterior. (ESPN é outro host e não conta nesse teto.)
-  const FD_MINUTE_CEILING = 10;
-  const detailBudget = Math.max(0, Math.min(MAX_DETAIL_CALLS_PER_RUN, FD_MINUTE_CEILING - 1 - byComp.size));
-
   // Janela de datas pra a chamada (cobre overnight games)
   const dateFrom = toIsoDate(new Date(now - 86400000)); // ontem
   const dateTo = toIsoDate(new Date(now + 86400000));   // amanhã
@@ -1010,12 +1003,12 @@ Deno.serve(async (req) => {
         POLL_FINAL_MATCH_DETAILS &&
         (storedFinalStatus || preliminaryFinalStatus) &&
         detailCalls < MAX_FINAL_MATCH_DETAIL_CALLS_PER_RUN &&
-        detailCalls < detailBudget;
+        detailCalls < MAX_DETAIL_CALLS_PER_RUN;
       const shouldFetchLiveDetails =
         POLL_MATCH_DETAILS &&
         !shouldFetchFinalDetails &&
         detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN &&
-        detailCalls < detailBudget &&
+        detailCalls < MAX_DETAIL_CALLS_PER_RUN &&
         (
           candidate.minutesAfterKickoff >= 0 ||
           LIVE_STATUSES.has(m.status) ||
@@ -1073,7 +1066,7 @@ Deno.serve(async (req) => {
         (!hasCardCounts(cards) || (decision.pen && !penaltyShootout)) &&
         (LIVE_STATUSES.has(match.status) || LIVE_STATUSES.has(finalStatus) || FINAL_STATUSES.has(finalStatus)) &&
         detailCalls < MAX_MATCH_DETAIL_CALLS_PER_RUN &&
-        detailCalls < detailBudget;
+        detailCalls < MAX_DETAIL_CALLS_PER_RUN;
 
       if (shouldFetchDetails) {
         const detailUrl = new URL(`${FD_BASE_URL}/matches/${m.id}`);

@@ -406,35 +406,13 @@ Deno.serve(async (req) => {
 
   const insertRows = rows.map(({ mapping_confidence, mapped_to_bolao_game_id, ...row }: any) => row);
 
-  // Re-import sem destruir dados filhos: NÃO apagamos game_ids que continuam no
-  // mapa. live_scores, live_score_history (gol a gol) e test_predictions têm
-  // ON DELETE CASCADE em game_id, então um delete-tudo-e-reinsere apagaria o
-  // histórico do gráfico, os palpites e o placar travado pelo admin. Em vez
-  // disso lemos o que já existe, removemos só os game_ids que sumiram do import
-  // (liberando o api_fixture_id deles antes do upsert) e fazemos upsert do resto.
-  const keepIds = new Set(insertRows.map((r: any) => r.game_id));
-
-  const { data: existingRows, error: existingErr } = await supa
+  const { error: deleteErr } = await supa
     .from("api_fixture_map")
-    .select("game_id")
+    .delete()
     .eq("tournament", tournament)
     .eq("league_id", comp.id)
     .eq("season", season);
-  if (existingErr) return json(500, { error: "Falha lendo mapa antigo.", detail: existingErr.message });
-
-  const staleIds = (existingRows || [])
-    .map((r: any) => r.game_id)
-    .filter((id: string) => !keepIds.has(id));
-  if (staleIds.length) {
-    const { error: deleteErr } = await supa
-      .from("api_fixture_map")
-      .delete()
-      .eq("tournament", tournament)
-      .eq("league_id", comp.id)
-      .eq("season", season)
-      .in("game_id", staleIds);
-    if (deleteErr) return json(500, { error: "Falha limpando mapa antigo.", detail: deleteErr.message });
-  }
+  if (deleteErr) return json(500, { error: "Falha limpando mapa antigo.", detail: deleteErr.message });
 
   const { error: upErr } = await supa
     .from("api_fixture_map")
