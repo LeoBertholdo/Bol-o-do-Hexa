@@ -4012,6 +4012,26 @@ let copaLive={};
 let copaLiveHistory={};
 let copaLiveRealtimeChannel=null;
 let copaLiveRefreshTimer=null;
+// Dropdowns "Palpites dos outros" (<details>) que o usuário deixou abertos, por game.id.
+// O re-render troca o innerHTML e recria os <details> sem o estado nativo "open",
+// então registramos quais estão abertos pra reabri-los — senão o dropdown fecha
+// "sozinho" durante o ao vivo (poll de 30s + realtime de live_scores).
+const copaOpenPickGames=new Set();
+let copaPickToggleBound=false;
+function bindCopaPickToggle(){
+  if(copaPickToggleBound) return;
+  copaPickToggleBound=true;
+  // O evento "toggle" do <details> não borbulha → escuta na fase de captura.
+  document.addEventListener("toggle",e=>{
+    const el=e.target;
+    if(!(el instanceof Element)||!el.classList.contains("copa-self-pick-wrap")) return;
+    const id=el.getAttribute("data-game-id");
+    if(!id) return;
+    if(el.open) copaOpenPickGames.add(id);
+    else copaOpenPickGames.delete(id);
+  },true);
+}
+bindCopaPickToggle();
 let authReady=false;
 // null = não verificado ainda; 'loading' = buscando; 'not_invited' = não encontrado; number = participant_index autorizado
 let inviteSlot=null;
@@ -8891,8 +8911,8 @@ function renderRankingChart(rows,isExpanded=false){
           const name=seriesLine?.name||"";
           const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
           return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" data-series="${line.i}" onmouseenter="hoverRankingSeries(this,${line.i},true)" onmouseleave="hoverRankingSeries(this,${line.i},false)" onclick="focusRankingSeries(${line.i},event)">
-            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
-            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
             ${values.map((value,index)=>{
               const st=chart.states[index];
               const isLast=index===values.length-1;
@@ -9619,7 +9639,7 @@ function copaSelfPickHTML(game){
   const variantCls=isLiveState?"":(started?"final":"upcoming");
   if(!Number.isInteger(myIdx)){
     if(!othersHTML) return "";
-    return `<details class="copa-self-pick-wrap">
+    return `<details class="copa-self-pick-wrap" data-game-id="${esc(game.id)}"${copaOpenPickGames.has(game.id)?" open":""}>
       <summary class="copa-self-pick has-chev solo ${variantCls}">
         <span class="copa-self-pick-label">Palpites dos outros</span>
         <span class="copa-self-pick-chev" aria-hidden="true">▾</span>
@@ -9657,7 +9677,7 @@ function copaSelfPickHTML(game){
       ${badgeHTML}
     </div>`;
   }
-  return `<details class="copa-self-pick-wrap">
+  return `<details class="copa-self-pick-wrap" data-game-id="${esc(game.id)}"${copaOpenPickGames.has(game.id)?" open":""}>
     <summary class="copa-self-pick has-chev ${variantCls}">
       <span class="copa-self-pick-label">Seu palpite</span>
       ${bodyHTML}
