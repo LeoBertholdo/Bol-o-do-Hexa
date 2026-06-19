@@ -8492,7 +8492,15 @@ function rankingCutTimeline(rows,games,baseline=null){
 }
 function rankingFinalWhistleTimeline(rows,games=null,baseline=null){
   const fixtures=(games||GAMES).slice().sort(compareGameSchedule);
-  const scoredGames=fixtures.filter(game=>S.results[game.id]).sort(compareGameSchedule);
+  // Um ponto por jogo: o resultado oficial fecha o jogo (estado "final"); o jogo
+  // em andamento entra como parcial (estado "live", tracejado), igual ao gol a gol.
+  // O oficial sempre manda — o ao vivo só vale enquanto não há resultado fechado.
+  const playedGames=fixtures.map(game=>{
+    const official=S.results[game.id]||null;
+    const res=official||liveProvisionalResult(game);
+    if(!res) return null;
+    return {game,res,state:official?"final":"live"};
+  }).filter(Boolean).sort((a,b)=>compareGameSchedule(a.game,b.game));
   const totals={};
   const series=rows.map((p,idx)=>{
     const seed=baseline?(baseline[p.i]||0):0;
@@ -8501,16 +8509,17 @@ function rankingFinalWhistleTimeline(rows,games=null,baseline=null){
   });
   const positions=[{label:"Início",state:"start",dateKey:"",event:null}];
   const dateSet=new Set();
-  scoredGames.forEach(game=>{
-    const res=S.results[game.id];
+  const liveIds=new Set();
+  playedGames.forEach(({game,res,state})=>{
     series.forEach(line=>{
       const pal=S.palpites[`${line.i}_${game.id}`];
       const v=score(pal,res,game);
       totals[line.i]+=v==null?0:v;
       line.values.push(totals[line.i]);
     });
+    if(state==="live") liveIds.add(game.id);
     if(game.date) dateSet.add(game.date);
-    positions.push({label:"",state:"final",dateKey:game.date||"",event:{game,res,state:"final"}});
+    positions.push({label:"",state,dateKey:game.date||"",event:{game,res,state}});
   });
   let prevDate=null;
   positions.forEach(p=>{
@@ -8526,8 +8535,9 @@ function rankingFinalWhistleTimeline(rows,games=null,baseline=null){
   const maxVal=Math.max(3,...allValues);
   const minVal=baseline?Math.min(...allValues):Math.min(0,...allValues);
   return {labels,states,xRel,series,maxVal,minVal,events:eventsMeta,axisCandidates,
-    fixtureCount:fixtures.length,scoredCount:scoredGames.length,resolvedCount:scoredGames.length,
-    liveGameCount:0,detailEventCount:0,dateCount:dateSet.size};
+    fixtureCount:fixtures.length,scoredCount:playedGames.length,
+    resolvedCount:playedGames.length-liveIds.size,
+    liveGameCount:liveIds.size,detailEventCount:0,dateCount:dateSet.size};
 }
 function todayRankingCutDescriptor(){
   const key=todayKey();
