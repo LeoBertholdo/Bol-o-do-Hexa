@@ -6,7 +6,7 @@
 <title>Bolão da Copa 2026</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html{overflow-x:hidden}
+html{overflow-x:clip}
 :root{
   --green:#00843d;
   --green-2:#005f2f;
@@ -30,7 +30,7 @@ body{
   font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   min-height:100vh;
   color:var(--text);
-  overflow-x:hidden;
+  overflow-x:clip;
   background:
     linear-gradient(135deg,rgba(0,132,61,.1) 0 16%,transparent 16% 100%),
     linear-gradient(180deg,#f8fbf1 0%,#eef5ff 52%,#f7f9f1 100%);
@@ -4470,7 +4470,7 @@ const COPA_LIVE_GAME_ID_RE=/^(G[A-L][1-6]|R32_\d{2}|R16_\d{2}|QF_\d{2}|SF_\d{2}|
 async function fetchCopaLiveRemote(){
   if(!remoteClient) return null;
   return remoteClient.from("live_scores")
-    .select("game_id,status_short,elapsed,goals_home,goals_away,after_extra_goals_home,after_extra_goals_away,pens_home,pens_away,yellow_cards_home,yellow_cards_away,yellow_red_cards_home,yellow_red_cards_away,red_cards_home,red_cards_away,last_synced_at");
+    .select("game_id,status_short,status_long,elapsed,goals_home,goals_away,after_extra_goals_home,after_extra_goals_away,pens_home,pens_away,yellow_cards_home,yellow_cards_away,yellow_red_cards_home,yellow_red_cards_away,red_cards_home,red_cards_away,last_synced_at");
 }
 function applyCopaLiveRows(rows){
   if(!Array.isArray(rows)) return;
@@ -4790,7 +4790,12 @@ function saveResultRemote(id){
     updated_by:remoteSession.user.id
   },res);
   return remoteWrite(()=>remoteClient.from("results").upsert(row,{onConflict:"game_id"})).then(ok=>{
-    if(ok) dirtyResultKeys.delete(id);
+    if(ok){
+      dirtyResultKeys.delete(id);
+      // Apuração manual trava o placar ao vivo: o robô para de reescrever este jogo.
+      if(COPA_LIVE_GAME_ID_RE.test(String(id||"")))
+        remoteClient.from("live_scores").update({is_locked_by_admin:true,last_synced_at:new Date().toISOString()}).eq("game_id",id).then(()=>{},()=>{});
+    }
     return ok;
   }).finally(()=>pendingResultWrites.delete(id));
 }
@@ -4800,7 +4805,12 @@ function deleteResultRemote(id){
   dirtyResultKeys.add(id);
   pendingResultWrites.add(id);
   return remoteWrite(()=>remoteClient.from("results").delete().eq("game_id",id)).then(ok=>{
-    if(ok) dirtyResultKeys.delete(id);
+    if(ok){
+      dirtyResultKeys.delete(id);
+      // Remover o resultado oficial destrava o placar ao vivo p/ o robô voltar a sincronizar.
+      if(COPA_LIVE_GAME_ID_RE.test(String(id||"")))
+        remoteClient.from("live_scores").update({is_locked_by_admin:false,last_synced_at:new Date(0).toISOString()}).eq("game_id",id).then(()=>{},()=>{});
+    }
     return ok;
   }).finally(()=>pendingResultWrites.delete(id));
 }
@@ -9786,8 +9796,11 @@ function renderGameRow(game){
     </div>`;
   }else if(canEdit){
     // Quando o jogo está ao vivo, o pill da esquerda já traz "Ao vivo · 23'" — só mostra a linha do robô quando ele já encerrou e ainda falta apurar.
+    const robotClosedLabel=liveScore&&liveScore.status_long&&/^Conferir:/i.test(String(liveScore.status_long))
+      ? liveScore.status_long
+      : "Encerrado"+livePens;
     const liveInfoHTML=liveScore&&!liveActive
-      ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result warn">${esc("Encerrado"+livePens)}</span></div>`
+      ? `<div class="copa-side-row"><span class="copa-side-label">Robô</span><span class="copa-side-result warn">${esc(robotClosedLabel)}</span></div>`
       : "";
     sidePanelHTML=`<div class="copa-side-panel">
       ${liveInfoHTML}

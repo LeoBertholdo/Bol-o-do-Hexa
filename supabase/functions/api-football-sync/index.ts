@@ -919,6 +919,7 @@ Deno.serve(async (req) => {
   let totalUpdated = 0;
   let totalCopaResultsWritten = 0;
   let totalCopaResultsSkippedManual = 0;
+  let totalCopaResultsHeldDivergence = 0;
   let lastRateMinute: string | null = null;
   let detailCalls = 0;
   let espnOverlays = 0;
@@ -1174,6 +1175,36 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Conferência cruzada ESPN × football-data no apito final (tempo normal).
+      // Se a ESPN tiver placar final divergente da football-data, NÃO fecha sozinho:
+      // segura como "a confirmar" (sem gravar em results) e mantém no placar ao vivo o
+      // número da ESPN — fonte que reflete VAR/anulação mais rápido — pro admin apurar
+      // no modo manual. Mata-mata em prorrogação/pênaltis (AET/PEN) segue 100% football-data.
+      let heldByDivergence = false;
+      if (candidate.tournament === "copa" && scoreOrientation !== "unknown" && isFinalStatus && finalStatus === "FT" && espnEvents?.length) {
+        const espnFound = findEspnEvent(espnEvents, candidate.bolaoHome, candidate.bolaoAway);
+        if (espnFound) {
+          const espnScore = espnOrientedScore(espnFound.event, espnFound.reversed);
+          const espnStatus = espnStatusShort(espnFound.event);
+          const fdHome = numberOrNull(liveRow.goals_home);
+          const fdAway = numberOrNull(liveRow.goals_away);
+          if (
+            espnStatus && ESPN_REGULAR_TIME_STATUSES.has(espnStatus) &&
+            espnScore.home != null && espnScore.away != null &&
+            fdHome != null && fdAway != null &&
+            (espnScore.home !== fdHome || espnScore.away !== fdAway)
+          ) {
+            heldByDivergence = true;
+            liveRow.goals_home = espnScore.home;
+            liveRow.goals_away = espnScore.away;
+            liveRow.regular_goals_home = espnScore.home;
+            liveRow.regular_goals_away = espnScore.away;
+            liveRow.status_long = `Conferir: ESPN ${espnScore.home}-${espnScore.away} x FD ${fdHome}-${fdAway}`;
+            totalCopaResultsHeldDivergence += 1;
+          }
+        }
+      }
+
       upserts.push(liveRow);
 
       // Histórico gol a gol: registra cada mudança de placar observada, com o
@@ -1200,7 +1231,7 @@ Deno.serve(async (req) => {
 
       // Resultado oficial só com final confirmado pela football-data — o
       // overlay ESPN pode marcar FT no live, mas nunca grava em `results`.
-      if (candidate.tournament === "copa" && scoreOrientation !== "unknown" && isFinalStatus) {
+      if (candidate.tournament === "copa" && scoreOrientation !== "unknown" && isFinalStatus && !heldByDivergence) {
         const built = buildCopaResultRow(liveRow, match, {
           bolaoHome: candidate.bolaoHome,
           bolaoAway: candidate.bolaoAway,
@@ -1262,6 +1293,7 @@ Deno.serve(async (req) => {
     fixtures_updated: totalUpdated,
     copa_results_written: totalCopaResultsWritten,
     copa_results_skipped_manual: totalCopaResultsSkippedManual,
+    copa_results_held_divergence: totalCopaResultsHeldDivergence,
     requests_available_minute: lastRateMinute,
     espn_events: espnEvents ? espnEvents.length : 0,
     espn_overlays: espnOverlays,
