@@ -8561,17 +8561,35 @@ function rankingFirstRoundDescriptor(){
     emptyText:"Sem placares na 1ª rodada ainda."};
 }
 function rankingChartPeriodOptions(){
+  // Recortes do gráfico: fixos + um botão por rodada/fase concluída (espelha o card,
+  // bolaoStatsPeriodOptions). Sem isso, só a 1ª rodada aparecia e a 2ª/3ª nunca eram geradas.
   const today=todayRankingCutDescriptor();
   const round=rankingCurrentRoundDescriptor();
-  const firstRound=rankingFirstRoundDescriptor();
-  return [
+  const curRealId=round?round.id:null;
+  const opts=[
     {id:"all",label:"Desde o início",subtitle:"Evolução completa",games:null,
       emptyText:"Quando houver placar, a evolução aparece aqui.",drawWhenEmpty:true},
-    {id:"today",label:"Hoje",subtitle:today.subtitle,games:today.games,emptyText:today.emptyText},
-    {id:"round",label:"Essa rodada",subtitle:round?.subtitle||"Rodada atual",games:round?.games||[],
-      emptyText:round?.emptyText||"Sem jogos nessa rodada ainda."},
-    {id:"group-r1",label:"1ª rodada",subtitle:firstRound.subtitle,games:firstRound.games,emptyText:firstRound.emptyText}
+    {id:"today",label:"Hoje",subtitle:today.subtitle,games:today.games,emptyText:today.emptyText}
   ];
+  if(round) opts.push({id:"round",label:"Essa rodada",subtitle:round.subtitle||"Rodada atual",games:round.games||[],
+    emptyText:round.emptyText||"Sem jogos nessa rodada ainda.",realId:curRealId});
+  [1,2,3].forEach(r=>{
+    const id=`group-r${r}`;
+    if(id===curRealId) return;
+    const games=groupGames().filter(g=>g.round===r).sort(compareGameSchedule);
+    if(games.length&&games.every(g=>S.results[g.id]))
+      opts.push({id,label:`${r}ª rodada`,subtitle:`Rodada ${r} dos grupos`,games,
+        emptyText:`Sem placares na ${r}ª rodada.`});
+  });
+  KO_PHASES.forEach(ph=>{
+    const id=`ko-${ph.k}`;
+    if(id===curRealId) return;
+    const games=koGames().filter(g=>g.phaseKey===ph.k).sort(compareGameSchedule);
+    if(games.length&&games.every(g=>S.results[g.id]))
+      opts.push({id,label:ph.l,subtitle:ph.full,games,ko:true,
+        emptyText:`Sem placares em ${ph.full.toLowerCase()}.`});
+  });
+  return opts;
 }
 function rankingChartStepOptions(){
   return [
