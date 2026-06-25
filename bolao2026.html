@@ -8581,6 +8581,12 @@ function rankingChartPeriodOptions(){
       opts.push({id,label:`${r}ª rodada`,subtitle:`Rodada ${r} dos grupos`,games,
         emptyText:`Sem placares na ${r}ª rodada.`});
   });
+  // Visão consolidada do mata-mata: todo o KO numa curva só, com divisórias por fase
+  // (ver rankingChartPhaseDividers). Dorme até o 1º jogo de mata-mata ter placar oficial.
+  if(koGames().some(g=>S.results[g.id]))
+    opts.push({id:"ko",label:"Mata-mata",subtitle:"Todo o mata-mata",
+      games:koGames().slice().sort(compareGameSchedule),ko:true,
+      emptyText:"Sem placares no mata-mata ainda."});
   KO_PHASES.forEach(ph=>{
     const id=`ko-${ph.k}`;
     if(id===curRealId) return;
@@ -8590,6 +8596,36 @@ function rankingChartPeriodOptions(){
         emptyText:`Sem placares em ${ph.full.toLowerCase()}.`});
   });
   return opts;
+}
+// Divisórias verticais de fase no gráfico. Em "Desde o início" (all): só UMA linha,
+// na virada fase de grupos -> mata-mata. Na visão "Mata-mata" (ko): uma linha entre
+// cada fase (16-avos|oitavas|quartas|semis|3º|final) e o nome de cada trecho no topo.
+// Devolve índices na timeline; o x é calculado no render (meio dos dois pontos da virada).
+function rankingChartPhaseDividers(chart,period){
+  const evs=chart.events||[];
+  const koLabel=pk=>{const ph=KO_PHASES.find(p=>p.k===pk);return ph?ph.l:"Mata-mata";};
+  const lines=[],segLabels=[];
+  if(period.id==="all"){
+    let sawGroup=false;
+    for(let i=0;i<evs.length;i++){
+      const g=evs[i]&&evs[i].game;if(!g)continue;
+      if(!g.ko){sawGroup=true;}
+      else if(sawGroup){lines.push({index:i,label:"Mata-mata"});break;}
+    }
+  }else if(period.id==="ko"){
+    let segStart=-1,curPhase=null;
+    const flush=end=>{if(segStart>=0&&curPhase!=null&&end>=segStart)segLabels.push({from:segStart,to:end,text:koLabel(curPhase)});};
+    for(let i=0;i<evs.length;i++){
+      const g=evs[i]&&evs[i].game;if(!g||!g.ko)continue;
+      if(g.phaseKey!==curPhase){
+        if(curPhase!=null){lines.push({index:i,label:""});flush(i-1);}
+        curPhase=g.phaseKey;segStart=i;
+      }
+    }
+    let lastKo=-1;for(let i=evs.length-1;i>=0;i--){const g=evs[i]&&evs[i].game;if(g&&g.ko){lastKo=i;break;}}
+    if(lastKo>=0)flush(lastKo);
+  }
+  return {lines,segLabels};
 }
 function rankingChartStepOptions(){
   return [
@@ -8935,6 +8971,23 @@ function renderRankingChart(rows,isExpanded=false){
             <text x="${(padX-8).toFixed(2)}" y="${(y+4).toFixed(2)}" text-anchor="end" font-size="12" fill="#5a6a82" font-weight="800">${value}</text>
           </g>`;
         }).join("")}
+        ${(()=>{
+          // Divisórias de fase (grupos->KO em "all"; entre fases em "ko"). Desenha atrás das
+          // curvas (vem antes das séries no SVG). Some sozinho quando não há jogo de KO.
+          const dv=rankingChartPhaseDividers(chart,activePeriod);
+          if(!dv.lines.length&&!dv.segLabels.length) return "";
+          const topY=padY,botY=padY+usableHeight;
+          const lineSvg=dv.lines.map(d=>{
+            const x=(xFor(d.index-1)+xFor(d.index))/2;
+            return `<line x1="${x.toFixed(2)}" y1="${topY}" x2="${x.toFixed(2)}" y2="${botY.toFixed(2)}" stroke="rgba(0,39,118,.3)" stroke-width="1" stroke-dasharray="4 4"></line>`
+              +(d.label?`<text x="${(x+3).toFixed(2)}" y="${(topY+11).toFixed(2)}" font-size="9.5" fill="#5a6a82" font-weight="800" text-anchor="start">${esc(d.label)}</text>`:"");
+          }).join("");
+          const segSvg=dv.segLabels.map(s=>{
+            const cx=(xFor(s.from)+xFor(s.to))/2;
+            return `<text x="${cx.toFixed(2)}" y="${(topY+11).toFixed(2)}" font-size="9.5" fill="#41516d" font-weight="850" text-anchor="middle">${esc(s.text)}</text>`;
+          }).join("");
+          return lineSvg+segSvg;
+        })()}
         ${axisIdx.map(i=>{
           const x=xFor(i);
           const lbl=chart.labels[i]||"";
