@@ -738,6 +738,49 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   color:#31415f;
   line-height:1.45;
 }
+/* Brasil no mata-mata (Início) */
+.brazil-ko{display:flex;flex-direction:column;gap:12px;flex:1}
+.bk-next{
+  border:1px solid #cfe3d6;
+  border-radius:12px;
+  background:linear-gradient(180deg,#f3fff5,#ffffff);
+  padding:14px 15px;
+}
+.bk-next-top{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bk-next-phase{
+  font-size:.64rem;text-transform:uppercase;letter-spacing:.6px;font-weight:950;
+  color:var(--green);display:inline-flex;align-items:center;gap:6px;
+}
+.bk-next-when{font-size:.74rem;font-weight:800;color:var(--muted)}
+.bk-next-match{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.bk-team{display:inline-flex;align-items:center;gap:7px;font-weight:900;font-size:1.02rem;color:var(--text)}
+.bk-team .flag{font-size:1.35rem}
+.bk-team.bk-br{color:var(--green)}
+.bk-vs{font-weight:950;color:var(--muted);font-size:.85rem}
+.bk-opp-tbd{font-weight:900;color:var(--blue);font-size:.95rem}
+.bk-possibles{border:1px solid #d8e5ff;border-radius:10px;background:#f7fbff;padding:11px 12px}
+.bk-possibles-label{
+  font-size:.62rem;text-transform:uppercase;letter-spacing:.55px;font-weight:950;
+  color:#31415f;margin-bottom:8px;
+}
+.bk-poss-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bk-poss{
+  display:inline-flex;align-items:center;gap:6px;background:#fff;
+  border:1px solid #d8e5ff;border-radius:999px;padding:5px 11px;
+  font-weight:850;font-size:.82rem;color:var(--text);
+}
+.bk-poss .flag{font-size:1.05rem}
+.bk-poss-sep{font-size:.7rem;font-weight:800;color:var(--muted)}
+.bk-poss-src{margin-top:9px;font-size:.7rem;color:var(--muted);font-weight:700}
+.brazil-ko-status{
+  display:flex;align-items:center;gap:12px;border:1px solid var(--border);
+  border-radius:12px;background:#fff;padding:16px;
+}
+.brazil-ko-status .bk-emoji{font-size:1.9rem;line-height:1;flex-shrink:0}
+.brazil-ko-status strong{display:block;font-size:1rem;color:var(--text);font-weight:950;margin-bottom:2px}
+.brazil-ko-status span{font-size:.8rem;color:var(--muted);line-height:1.4}
+.brazil-ko-status.is-champ{border-color:#ffe08a;background:linear-gradient(180deg,#fffdf2,#ffffff)}
+.brazil-ko-status.is-champ strong{color:#b8860b}
 .home-insights{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .home-insights.single{grid-template-columns:1fr}
 .quick-insight{
@@ -1014,6 +1057,10 @@ body.chart-modal-open{overflow:hidden}
 .bolao-top-meta em{display:block;margin-top:2px;font-style:normal;font-size:.68rem;line-height:1.25;color:#52617a;font-weight:760}
 .bolao-stat-tile.highlight strong{color:var(--green)}
 .bolao-stat-tile.warn strong{color:var(--red)}
+.bolao-crav-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:8px}
+.bolao-crav-tag{font-size:.54rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:950;margin-right:1px}
+.bolao-crav-chip{display:inline-flex;align-items:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem;line-height:1;font-weight:850;color:var(--green);background:#eafaf0;border:1px solid #c5e8d0;border-radius:999px;padding:3px 7px}
+.bolao-crav-chip.more{color:var(--muted);background:#eef2f8;border-color:#dbe3ef}
 /* Seletor de período do card de estatísticas — próprio, com rolagem horizontal quando acumula rodadas */
 .bolao-period-seg{
   display:flex;gap:2px;padding:2px;margin-top:2px;
@@ -3058,6 +3105,77 @@ body.chart-modal-open{overflow:hidden}
 	  text-transform:uppercase;
 	}
 	.copa-games-page.v2 .copa-games-day-games{display:grid;gap:12px}
+	/* Gaveta "Fase de grupos": comprime os 72 jogos de grupo num dropdown depois
+	   da apuração, deixando o mata-mata acessível no topo da lista. */
+	.copa-games-page.v2 .copa-group-archive{
+	  border:1px solid var(--copa-line);
+	  border-radius:18px;
+	  background:linear-gradient(180deg,#fff 0%,#fbfdff 100%);
+	  box-shadow:var(--copa-shadow-sm);
+	  overflow:hidden;
+	}
+	.copa-games-page.v2 .copa-group-archive[open]{background:#fff}
+	.copa-games-page.v2 .copa-group-archive-head{
+	  display:flex;
+	  align-items:center;
+	  justify-content:space-between;
+	  gap:10px;
+	  padding:15px 18px;
+	  cursor:pointer;
+	  list-style:none;
+	  -webkit-user-select:none;
+	  user-select:none;
+	}
+	.copa-games-page.v2 .copa-group-archive-head::-webkit-details-marker{display:none}
+	.copa-games-page.v2 .copa-group-archive-head:hover .copa-group-archive-title{color:var(--copa-blue)}
+	.copa-games-page.v2 .copa-group-archive-title{
+	  display:flex;
+	  align-items:center;
+	  gap:10px;
+	  color:var(--copa-ink);
+	  font-size:.95rem;
+	  font-weight:950;
+	  transition:color .15s;
+	}
+	.copa-games-page.v2 .copa-group-archive-ic{font-size:1.05rem;line-height:1}
+	.copa-games-page.v2 .copa-group-archive-badge{
+	  padding:4px 10px;
+	  border-radius:999px;
+	  background:linear-gradient(135deg,var(--copa-green),#0c7a36);
+	  color:#fff;
+	  font-size:.54rem;
+	  font-weight:950;
+	  letter-spacing:.9px;
+	  text-transform:uppercase;
+	}
+	.copa-games-page.v2 .copa-group-archive-meta{
+	  display:flex;
+	  align-items:center;
+	  gap:10px;
+	  color:var(--copa-mute);
+	  font-size:.72rem;
+	  font-weight:850;
+	  letter-spacing:.3px;
+	  white-space:nowrap;
+	}
+	.copa-games-page.v2 .copa-group-archive-chev{font-size:.8rem;color:var(--copa-mute);transition:transform .2s}
+	.copa-games-page.v2 .copa-group-archive[open] .copa-group-archive-chev{transform:rotate(180deg)}
+	.copa-games-page.v2 .copa-group-archive-body{
+	  display:grid;
+	  gap:14px;
+	  padding:6px 14px 16px;
+	  border-top:1px dashed var(--copa-line-strong);
+	}
+	.copa-games-page.v2 .copa-group-archive-body .copa-games-day{
+	  background:var(--copa-surface-2);
+	  border-radius:14px;
+	  box-shadow:none;
+	}
+	@media(max-width:760px){
+	  .copa-games-page.v2 .copa-group-archive-head{padding:13px 14px}
+	  .copa-games-page.v2 .copa-group-archive-title{font-size:.86rem}
+	  .copa-games-page.v2 .copa-group-archive-body{padding:6px 10px 12px}
+	}
 	.copa-games-page.v2 .copa-game{
 	  position:relative;
 	  display:grid;
@@ -5723,8 +5841,8 @@ function bolaoGeneralStats(period){
   };
   S.participants.forEach((_,pi)=>{stats.playerPts[pi]=0;});
   scoredGames.forEach(({game,res,live})=>{
-    const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0};
-    S.participants.forEach((_,pi)=>{
+    const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0,cravadores:[]};
+    S.participants.forEach((name,pi)=>{
       const pal=S.palpites[`${pi}_${game.id}`];
       const details=scoreDetails(pal,res,game);
       if(!details) return;
@@ -5733,7 +5851,7 @@ function bolaoGeneralStats(period){
       stats.pts+=details.pts;
       row.pts+=details.pts;
       stats.playerPts[pi]+=details.pts;
-      if(details.exact){stats.crav++;row.crav++;}
+      if(details.exact){stats.crav++;row.crav++;row.cravadores.push(name);}
       if(details.base===1){stats.corr++;row.corr++;}
       if(details.base===0){stats.err++;row.err++;}
       if(details.base===-2){stats.inv++;row.inv++;}
@@ -5765,40 +5883,54 @@ function bolaoGeneralStats(period){
   stats.coveragePct=pctInt(stats.evaluated,stats.expected);
   stats.leader=bolaoBestPlayers(stats.playerPts);
   const evaluatedGames=stats.games.filter(row=>row.evaluated);
-  const exactSorted=evaluatedGames.slice().sort((a,b)=>
+  const exactSorted=evaluatedGames.filter(row=>row.crav>0).slice().sort((a,b)=>
     b.crav-a.crav||
     (b.crav+b.corr)-(a.crav+a.corr)||
     compareGameSchedule(a.game,b.game)
   );
-  const hardSorted=evaluatedGames.slice().sort((a,b)=>{
-    const missA=bolaoHardRatio(a);
-    const missB=bolaoHardRatio(b);
-    return missB-missA||
-      bolaoGameMisses(b)-bolaoGameMisses(a)||
-      b.inv-a.inv||
-      compareGameSchedule(a.game,b.game);
-  });
+  // Jogos com mais palpites invertidos (placar exatamente ao contrario, -2 pts).
+  const invSorted=evaluatedGames.filter(row=>row.inv>0).slice().sort((a,b)=>
+    b.inv-a.inv||
+    b.evaluated-a.evaluated||
+    compareGameSchedule(a.game,b.game)
+  );
+  // Jogos que ninguem acertou: zero cravadas e zero acertos (todos erraram ou inverteram). Ao vivo nao entra.
+  const noHitSorted=evaluatedGames.filter(row=>!row.live&&row.crav===0&&row.corr===0).slice().sort((a,b)=>
+    compareGameSchedule(b.game,a.game)||
+    b.inv-a.inv
+  );
   stats.topExact=exactSorted.slice(0,5);
-  stats.topHard=hardSorted.slice(0,5);
+  stats.topInv=invSorted.slice(0,5);
+  stats.topNoHit=noHitSorted.slice(0,5);
   stats.mostExact=stats.topExact[0]||null;
-  stats.hardest=stats.topHard[0]||null;
+  stats.mostInv=stats.topInv[0]||null;
+  stats.noHitCount=noHitSorted.length;
   stats.exactLeaderTieCount=stats.mostExact
     ? evaluatedGames.filter(row=>row.crav===stats.mostExact.crav).length
     : 0;
-  stats.hardLeaderTieCount=stats.hardest
-    ? evaluatedGames.filter(row=>Math.abs(bolaoHardRatio(row)-bolaoHardRatio(stats.hardest))<0.000001).length
+  stats.invLeaderTieCount=stats.mostInv
+    ? evaluatedGames.filter(row=>row.inv===stats.mostInv.inv).length
     : 0;
   return stats;
 }
 function toggleBolaoStatsList(kind){
-  if(!["exact","hard"].includes(kind)) return;
+  if(!["exact","inv","noHit"].includes(kind)) return;
   bolaoStatsExpanded[kind]=!bolaoStatsExpanded[kind];
   if(activeTab==="ranking") renderRanking();
 }
 function bolaoTopGameDetail(row,kind){
   if(!row) return "";
   if(kind==="exact") return pluralPt(row.crav,"cravada","cravadas");
+  if(kind==="inv") return pluralPt(row.inv,"invertida","invertidas");
+  if(kind==="noHit") return `${pluralPt(row.evaluated,"palpite","palpites")} · nenhum acerto`;
   return `${bolaoGameMisses(row)}/${row.evaluated} erros ou invertidas`;
+}
+function bolaoCravadoresHTML(row){
+  if(!row||!row.cravadores||!row.cravadores.length) return "";
+  const max=4;
+  const shown=row.cravadores.slice(0,max).map(n=>`<span class="bolao-crav-chip">${esc(n)}</span>`).join("");
+  const extra=row.cravadores.length>max?`<span class="bolao-crav-chip more">+${row.cravadores.length-max}</span>`:"";
+  return `<div class="bolao-crav-row" title="Cravou: ${esc(row.cravadores.join(", "))}"><span class="bolao-crav-tag">Cravou</span>${shown}${extra}</div>`;
 }
 function bolaoTopGamesListHTML(rows,kind){
   return `<div class="bolao-top-list">
@@ -5807,11 +5939,13 @@ function bolaoTopGamesListHTML(rows,kind){
       <span class="bolao-top-meta">
         <b>${esc(bolaoTopGameDetail(row,kind))}</b>
         <em>${esc(compactGameLabel(row.game,row.res))}</em>
+        ${kind==="exact"?bolaoCravadoresHTML(row):""}
       </span>
     </div>`).join("")}
   </div>`;
 }
-function renderBolaoTopGamesTile(kind,title,rows,tieCount){
+function renderBolaoTopGamesTile(kind,title,rows,tieCount,opts={}){
+  const {emptyLine="Aguardando"}=opts;
   const row=rows[0]||null;
   const expanded=Boolean(bolaoStatsExpanded[kind]);
   const cls=kind==="exact"?"highlight":"warn";
@@ -5820,6 +5954,7 @@ function renderBolaoTopGamesTile(kind,title,rows,tieCount){
     ? `<button class="bolao-stat-expand" type="button" onclick="toggleBolaoStatsList('${kind}')" aria-expanded="${expanded?"true":"false"}" aria-label="${expanded?"Ocultar lista":"Mostrar lista"} de ${title.toLowerCase()}">${expanded?"Ocultar":`Ver ${listCount}`}<span class="chev" aria-hidden="true"></span></button>`
     : "";
   const tieNote=tieCount>1?`${pluralPt(tieCount,"jogo empatado","jogos empatados")} no topo`:"";
+  const cravadores=kind==="exact"?bolaoCravadoresHTML(row):"";
   return `<div class="bolao-stat-tile ${cls} bolao-game-tile">
     <div class="bolao-stat-title-row">
       <div>
@@ -5828,7 +5963,7 @@ function renderBolaoTopGamesTile(kind,title,rows,tieCount){
       </div>
       ${button}
     </div>
-    ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">Aguardando</div>`}
+    ${row?`<div class="bolao-game-line">${esc(compactGameLabel(row.game,row.res))}</div>${cravadores}${expanded?bolaoTopGamesListHTML(rows,kind):""}`:`<div class="bolao-game-line">${esc(emptyLine)}</div>`}
   </div>`;
 }
 function bolaoDailyDeltaHTML(value,label="hoje"){
@@ -5893,8 +6028,9 @@ function renderBolaoGeneralStats(){
     body=`${pointsTile}
         ${mediaTile}
         ${aproTile}
-        ${renderBolaoTopGamesTile("exact","Jogos mais cravados",s.topExact,s.exactLeaderTieCount)}
-        ${renderBolaoTopGamesTile("hard","Jogos mais difíceis",s.topHard,s.hardLeaderTieCount)}`;
+        ${renderBolaoTopGamesTile("exact","Jogos mais cravados",s.topExact,s.exactLeaderTieCount,{emptyLine:"Nenhuma cravada ainda"})}
+        ${renderBolaoTopGamesTile("inv","Jogos com mais invertidas",s.topInv,s.invLeaderTieCount,{emptyLine:"Nenhuma invertida ainda"})}
+        ${renderBolaoTopGamesTile("noHit","Jogos sem acerto",s.topNoHit,0,{emptyLine:"Todo jogo teve acerto"})}`;
   else{
     const leaderLabel=kind==="today"?"Destaque de hoje":(sliceConcluded?(isKo?"Campeão da fase":"Campeão da rodada"):"Campeão parcial");
     body=`${pointsTile}
@@ -6242,12 +6378,43 @@ function gameTeams(game){
   return {t1:"A definir",t2:"A definir",ready:false};
 }
 
+// Conjunto de seleções que ainda podem ocupar um slot de um confronto de
+// mata-mata (semente da fase de grupos ou vencedor/perdedor de um confronto
+// anterior). Reaproveita a mesma cadeia de resolução do chaveamento, então
+// respeita classificação dos grupos, alocação dos 8 melhores 3os e os
+// resultados já lançados. Usado para mostrar "possíveis adversários" do Brasil.
+function koSlotPossibleTeams(game,slotIdx){
+  if(!game) return [];
+  if(game.phaseKey==="r32"){
+    const team=resolveSeed(game.seeds?.[slotIdx],game.thirdOwner);
+    return team?[team]:[];
+  }
+  return koMatchPossibleResults(game.sources?.[slotIdx],game.sourceKind==="loser"?"loser":"winner");
+}
+function koMatchPossibleResults(matchNo,kind){
+  const id=matchId(matchNo);
+  const game=id?gameById(id):null;
+  if(!game) return [];
+  const decided=kind==="loser"?loserOfMatch(matchNo):winnerOfMatch(matchNo);
+  if(decided) return [decided];
+  // Sem resultado: qualquer um dos dois lados ainda pode avançar (ou cair, no
+  // caso do 3o lugar), então a recursão sobe pelos dois alimentadores.
+  const out=[];
+  [0,1].forEach(i=>koSlotPossibleTeams(game,i).forEach(team=>{
+    if(team&&!out.includes(team)) out.push(team);
+  }));
+  return out;
+}
+
 const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
 let activeTab="home";
 let palPi=0;
 let jFilter="all";
 let jogosSearch="";
 let jogosStatusFilter="all";
+// Aberto/fechado da gaveta "Fase de grupos" na aba Jogos. Recolhida por padrão
+// depois que os grupos são apurados; persiste entre re-renders (ex.: digitar na busca).
+let copaGroupStageOpen=false;
 let palStage="groups";
 let homeFixtureDateKey=null;
 let palFilter="all";
@@ -6264,7 +6431,7 @@ let rankingChartBaseline="zero";
 let apiTestChartSelection=[];
 let apiTestChartTouched=false;
 let chartExpanded=null;
-let bolaoStatsExpanded={exact:false,hard:false};
+let bolaoStatsExpanded={exact:false,inv:false,noHit:false};
 
 // ==== BRASILEIRAO TEST LAB: remove this block after the Copa integration is ready ====
 const API_TEST_STORAGE_KEY="bolao2026BrasileiraoLabV2";
@@ -8093,6 +8260,8 @@ function goTab(t){
   if(t==="api-test") t="home";
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
+  // Chaveamento do mata-mata vive na página de Palpites, estágio "ko"
+  if(t==="chaveamento"){palStage="ko";t="palpites";}
   if(t==="filme"&&!filmeAvailable()) t="home";
   const tabs=["home","ranking","grupos","jogos","palpites","config","filme"];
   if(!tabs.includes(t)) t="home";
@@ -8279,6 +8448,106 @@ function renderBrazilMiniTable(){
     </div>`).join("")}
     ${next?`<div class="brazil-next"><strong>Próximo do Brasil:</strong> ${formatGameDate(next.date)}, ${esc(next.time)} · ${esc(next.t1)} x ${esc(next.t2)}</div>`:`<div class="brazil-next"><strong>Brasil:</strong> todos os jogos do grupo foram apurados.</div>`}
   </div>`;
+}
+// Visão do Brasil no mata-mata para a Início (depois que a fase de grupos
+// fecha). Mostra o próximo jogo do Brasil — data, horário e adversário — e,
+// quando o adversário ainda não saiu, os possíveis adversários. Também cobre
+// os finais de linha: não classificado, eliminado, vice, 3o/4o e campeão.
+function renderBrazilKnockout(){
+  const flagFor=name=>teamFlag(name)?`<span class="flag">${teamFlag(name)}</span>`:"";
+  const statusCard=(emoji,title,sub,cls="")=>`<div class="brazil-ko"><div class="brazil-ko-status ${cls}">
+      <span class="bk-emoji">${emoji}</span>
+      <div><strong>${esc(title)}</strong><span>${esc(sub)}</span></div>
+    </div></div>`;
+
+  // Confrontos do KO em que o Brasil já está confirmado (slot resolvido).
+  const brGames=koGames().filter(g=>{
+    const t=gameTeams(g);
+    return t.t1==="Brasil"||t.t2==="Brasil";
+  }).sort(compareGameSchedule);
+
+  if(!brGames.length){
+    return statusCard("😔","O Brasil não avançou ao mata-mata","A campanha terminou na fase de grupos.");
+  }
+
+  const next=brGames.find(g=>!S.results[g.id]);
+
+  if(!next){
+    // Todos os jogos do Brasil já têm resultado oficial: fim de linha.
+    const last=brGames[brGames.length-1];
+    const lastTeams=gameTeams(last);
+    const opp=lastTeams.t1==="Brasil"?lastTeams.t2:lastTeams.t1;
+    const won=winnerOf(last.id)==="Brasil";
+    if(last.phaseKey==="final"){
+      return won
+        ? statusCard("🏆","Brasil HEXACAMPEÃO!","Acabou a espera — é o sexto título.","is-champ")
+        : statusCard("🥈","Brasil vice-campeão",`Derrota na final${opp&&opp!=="Brasil"?` para ${opp}`:""}.`);
+    }
+    if(last.phaseKey==="p3"){
+      return won
+        ? statusCard("🥉","Brasil em 3º lugar","Fechou o pódio da Copa.")
+        : statusCard("😔","Brasil em 4º lugar",`Ficou fora do pódio${opp&&opp!=="Brasil"?` (derrota para ${opp})`:""}.`);
+    }
+    const phase=KO_PHASES.find(p=>p.k===last.phaseKey)?.full||"mata-mata";
+    return statusCard("😢","O Brasil foi eliminado",`${phase}${opp&&opp!=="Brasil"?` · derrota para ${opp}`:""}.`);
+  }
+
+  // Próximo jogo do Brasil.
+  const teams=gameTeams(next);
+  const oppSlot=teams.t1==="Brasil"?1:0;
+  const phase=KO_PHASES.find(p=>p.k===next.phaseKey)?.full||next.phase;
+  const possibles=koSlotPossibleTeams(next,oppSlot);
+  const decided=possibles.length===1;
+  const oppName=decided?possibles[0]:null;
+
+  const matchHTML=`<div class="bk-next-match">
+        <span class="bk-team bk-br">${flagFor("Brasil")}Brasil</span>
+        <span class="bk-vs">×</span>
+        ${decided
+          ? `<span class="bk-team">${flagFor(oppName)}${esc(oppName)}</span>`
+          : `<span class="bk-opp-tbd">A definir</span>`}
+      </div>`;
+
+  let possiblesHTML="";
+  if(!decided){
+    const feederNo=next.phaseKey!=="r32"?next.sources?.[oppSlot]:null;
+    const feeder=feederNo?gameById(matchId(feederNo)):null;
+    const list=possibles.length
+      ? possibles.map(t=>`<span class="bk-poss">${flagFor(t)}${esc(t)}</span>`).join(`<span class="bk-poss-sep">ou</span>`)
+      : `<span class="bk-poss">A definir</span>`;
+    const feederPhase=feeder?(KO_PHASES.find(p=>p.k===feeder.phaseKey)?.full||feeder.phase):"";
+    const srcLine=feeder?`<div class="bk-poss-src">Sai de ${esc(feederPhase)} · ${esc(formatGameDate(feeder.date))}</div>`:"";
+    possiblesHTML=`<div class="bk-possibles">
+      <div class="bk-possibles-label">Possíveis adversários</div>
+      <div class="bk-poss-list">${list}</div>
+      ${srcLine}
+    </div>`;
+  }
+
+  return `<div class="brazil-ko">
+    <div class="bk-next">
+      <div class="bk-next-top">
+        <span class="bk-next-phase">⚔️ ${esc(phase)}</span>
+        <span class="bk-next-when">${esc(formatGameDate(next.date))} · ${esc(next.time)}</span>
+      </div>
+      ${matchHTML}
+    </div>
+    ${possiblesHTML}
+  </div>`;
+}
+// Cabeçalho + corpo do quadro do Brasil na Início. Vira "Brasil no mata-mata"
+// (com link pro chaveamento) assim que a fase de grupos é apurada por completo.
+function renderBrazilHomeSection(){
+  const ko=groupPhaseComplete();
+  return `<section class="home-section">
+        <div class="section-head">
+          <div>
+            <h2>${ko?"Brasil no mata-mata":"Brasil no Grupo C"}</h2>
+          </div>
+          <button class="mini-action" onclick="goTab('${ko?"chaveamento":"grupos"}')">${ko?"Ver chaveamento":"Ver grupos"}</button>
+        </div>
+        ${ko?renderBrazilKnockout():renderBrazilMiniTable()}
+      </section>`;
 }
 function rankingChartDefaultSelection(rows){
   return rows.map(p=>p.i);
@@ -9163,15 +9432,7 @@ function renderHome(){
         </div>
       </section>
 
-      <section class="home-section">
-        <div class="section-head">
-          <div>
-            <h2>Brasil no Grupo C</h2>
-          </div>
-          <button class="mini-action" onclick="goTab('grupos')">Ver grupos</button>
-        </div>
-        ${renderBrazilMiniTable()}
-      </section>
+      ${renderBrazilHomeSection()}
     </div>
   </div>`;
   document.getElementById("tab-home").innerHTML=h;
@@ -9588,17 +9849,18 @@ function copaCurrentDayKey(games){
   if(keys.includes(today)) return today;
   return keys.find(k=>k>today)||null;
 }
-function renderCopaGamesList(games){
-  if(!games.length) return `<div class="copa-empty">Nenhum jogo bate com esse filtro.</div>`;
-  const currentKey=copaCurrentDayKey(games);
+// Renderiza uma lista de jogos agrupada por dia (cada dia vira uma seção).
+// currentKey marca qual dia leva o destaque "Hoje/Próximos"; passe null nos
+// blocos que nunca devem ser "atuais" (ex.: o arquivo recolhido dos grupos).
+function copaDaySections(list,currentKey){
   const today=todayKey();
-  const groups=games.reduce((acc,game)=>{
+  const groups=list.reduce((acc,game)=>{
     const key=game.date||"sem-data";
     if(!acc[key]) acc[key]=[];
     acc[key].push(game);
     return acc;
   },{});
-  return `<div class="copa-games-list">${Object.entries(groups).sort(([a],[b])=>a.localeCompare(b)).map(([key,dayGames])=>{
+  return Object.entries(groups).sort(([a],[b])=>a.localeCompare(b)).map(([key,dayGames])=>{
     const isCurrent=key===currentKey;
     const todayPill=isCurrent?`<span class="copa-games-day-now">${key===today?"Hoje":"Próximos"}</span>`:"";
     return `
@@ -9610,7 +9872,32 @@ function renderCopaGamesList(games){
       <div class="copa-games-day-games">
         ${dayGames.map(game=>renderGameRow(game)).join("")}
       </div>
-    </section>`;}).join("")}</div>`;
+    </section>`;}).join("");
+}
+function renderCopaGamesList(games){
+  if(!games.length) return `<div class="copa-empty">Nenhum jogo bate com esse filtro.</div>`;
+  // Depois que a fase de grupos é apurada por completo, comprime todos os jogos
+  // de grupo numa "gaveta" (dropdown) recolhida e mantém o mata-mata aberto no
+  // topo, acessível sem rolar. Só na visão "Todos": ao escolher uma fase nos
+  // chips, a lista volta a ser plana (o usuário pediu aquela fase de propósito).
+  const koList=games.filter(g=>g.ko);
+  const groupList=games.filter(g=>!g.ko);
+  if(jFilter==="all"&&groupPhaseComplete()&&koList.length&&groupList.length){
+    // Busca ativa que casa jogos de grupo abre a gaveta pra revelar os acertos.
+    const open=copaGroupStageOpen||!!jogosSearch.trim();
+    const n=groupList.length;
+    return `<div class="copa-games-list">
+      <details class="copa-group-archive"${open?" open":""} ontoggle="copaGroupStageOpen=this.open">
+        <summary class="copa-group-archive-head">
+          <span class="copa-group-archive-title"><span class="copa-group-archive-ic" aria-hidden="true">📁</span>Fase de grupos<span class="copa-group-archive-badge">encerrada</span></span>
+          <span class="copa-group-archive-meta">${n} ${n===1?"jogo":"jogos"}<span class="copa-group-archive-chev" aria-hidden="true">▾</span></span>
+        </summary>
+        <div class="copa-group-archive-body">${copaDaySections(groupList,null)}</div>
+      </details>
+      ${copaDaySections(koList,copaCurrentDayKey(koList))}
+    </div>`;
+  }
+  return `<div class="copa-games-list">${copaDaySections(games,copaCurrentDayKey(games))}</div>`;
 }
 function scrollCopaToCurrent(smooth=true){
   const target=document.querySelector("#tab-jogos .copa-games-day.is-current");
