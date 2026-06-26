@@ -1057,10 +1057,9 @@ body.chart-modal-open{overflow:hidden}
 .bolao-top-meta em{display:block;margin-top:2px;font-style:normal;font-size:.68rem;line-height:1.25;color:#52617a;font-weight:760}
 .bolao-stat-tile.highlight strong{color:var(--green)}
 .bolao-stat-tile.warn strong{color:var(--red)}
-.bolao-crav-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:8px}
-.bolao-crav-tag{font-size:.54rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:950;margin-right:1px}
-.bolao-crav-chip{display:inline-flex;align-items:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem;line-height:1;font-weight:850;color:var(--green);background:#eafaf0;border:1px solid #c5e8d0;border-radius:999px;padding:3px 7px}
-.bolao-crav-chip.more{color:var(--muted);background:#eef2f8;border-color:#dbe3ef}
+.bolao-crav-row{display:flex;align-items:baseline;gap:5px;margin-top:7px;min-width:0}
+.bolao-crav-tag{flex:0 0 auto;font-size:.54rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:950}
+.bolao-crav-names{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.66rem;line-height:1.25;color:#52617a;font-weight:800}
 /* Seletor de período do card de estatísticas — próprio, com rolagem horizontal quando acumula rodadas */
 .bolao-period-seg{
   display:flex;gap:2px;padding:2px;margin-top:2px;
@@ -5927,10 +5926,8 @@ function bolaoTopGameDetail(row,kind){
 }
 function bolaoCravadoresHTML(row){
   if(!row||!row.cravadores||!row.cravadores.length) return "";
-  const max=4;
-  const shown=row.cravadores.slice(0,max).map(n=>`<span class="bolao-crav-chip">${esc(n)}</span>`).join("");
-  const extra=row.cravadores.length>max?`<span class="bolao-crav-chip more">+${row.cravadores.length-max}</span>`:"";
-  return `<div class="bolao-crav-row" title="Cravou: ${esc(row.cravadores.join(", "))}"><span class="bolao-crav-tag">Cravou</span>${shown}${extra}</div>`;
+  const nomes=row.cravadores.join(", ");
+  return `<div class="bolao-crav-row" title="Cravou: ${esc(nomes)}"><span class="bolao-crav-tag">Cravou</span><span class="bolao-crav-names">${esc(nomes)}</span></div>`;
 }
 function bolaoTopGamesListHTML(rows,kind){
   return `<div class="bolao-top-list">
