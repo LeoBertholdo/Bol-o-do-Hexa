@@ -5004,7 +5004,6 @@ function saveConfigRemote(){
     id:"main",
     entry_value:S.config.entryValue,
     prize_percents:S.config.prizePercents,
-    knockout_predictions_open:S.config.knockoutOpen===true,
     updated_by:remoteSession.user.id
   },{onConflict:"id"})).then(ok=>{
     if(ok) dirtyConfig=false;
@@ -5075,7 +5074,7 @@ async function pushLocalStateToRemote(){
   }).filter(row=>Number.isInteger(row.participant_index));
   const actualPodioRow=normalizePodio(S.actualPodio||{});
   const writes=[
-    remoteClient.from("settings").upsert({id:"main",entry_value:S.config.entryValue,prize_percents:S.config.prizePercents,knockout_predictions_open:S.config.knockoutOpen===true,updated_by:remoteSession.user.id},{onConflict:"id"}),
+    remoteClient.from("settings").upsert({id:"main",entry_value:S.config.entryValue,prize_percents:S.config.prizePercents,updated_by:remoteSession.user.id},{onConflict:"id"}),
     remoteClient.from("actual_podium").upsert({
       id:"main",
       p1:actualPodioRow.p1||null,
@@ -5770,6 +5769,16 @@ function bolaoBestPlayers(playerPts){
   const top=entries.filter(e=>e.pts===max);
   return {pts:max,names:top.map(e=>e.name),tieCount:top.length};
 }
+function bolaoWorstPlayers(playerPts,eligible){
+  // Pior jogador da fatia, só entre quem palpitou (eligible = índices com >=1 palpite avaliado).
+  // Quem não palpitou na rodada ficaria com 0 e cairia como "pior" injustamente — por isso o filtro.
+  const idxs=Array.isArray(eligible)?eligible:S.participants.map((_,pi)=>pi);
+  const entries=idxs.map(pi=>({name:S.participants[pi],pts:playerPts[pi]||0}));
+  if(!entries.length) return {pts:0,names:[],tieCount:0,pool:0};
+  const min=entries.reduce((m,e)=>Math.min(m,e.pts),Infinity);
+  const bottom=entries.filter(e=>e.pts===min);
+  return {pts:min,names:bottom.map(e=>e.name),tieCount:bottom.length,pool:entries.length};
+}
 function bolaoStatsPeriodOptions(){
   // Recortes próprios do card (independentes do gráfico): fixos + um chip por rodada/fase concluída.
   const today=todayKey();
@@ -5821,6 +5830,16 @@ function renderBolaoLeaderTile(leader,label){
   else who=`${esc(leader.names[0])} +${leader.names.length-1}`;
   return `<div class="bolao-stat-tile"><strong>${who}</strong><span class="bolao-stat-label">${esc(label)} · ${pluralPt(leader.pts,"ponto","pontos")}</span></div>`;
 }
+function renderBolaoWorstTile(worst,label){
+  // Espelha o tile do campeão, mas em vermelho (.warn) e aceitando pts<=0 (invertidas podem zerar/negativar).
+  if(!worst||!worst.names.length)
+    return `<div class="bolao-stat-tile warn"><strong>—</strong><span class="bolao-stat-label">${esc(label)} · aguardando</span></div>`;
+  let who;
+  if(worst.names.length===1) who=esc(worst.names[0]);
+  else if(worst.names.length===2) who=`${esc(worst.names[0])} e ${esc(worst.names[1])}`;
+  else who=`${esc(worst.names[0])} +${worst.names.length-1}`;
+  return `<div class="bolao-stat-tile warn"><strong>${who}</strong><span class="bolao-stat-label">${esc(label)} · ${pluralPt(worst.pts,"ponto","pontos")}</span></div>`;
+}
 function bolaoGeneralStats(period){
   const sliceGames=period&&period.games?period.games:null;
   const sliceIds=sliceGames?new Set(sliceGames.map(g=>g.id)):null;
@@ -5846,9 +5865,10 @@ function bolaoGeneralStats(period){
     dayLabel:"",
     maxPlacar:0,
     playerPts:{},
+    playerEval:{},
     games:[]
   };
-  S.participants.forEach((_,pi)=>{stats.playerPts[pi]=0;});
+  S.participants.forEach((_,pi)=>{stats.playerPts[pi]=0;stats.playerEval[pi]=0;});
   scoredGames.forEach(({game,res,live})=>{
     const row={game,res,evaluated:0,crav:0,corr:0,err:0,inv:0,pts:0,cravadores:[]};
     S.participants.forEach((name,pi)=>{
@@ -5860,6 +5880,7 @@ function bolaoGeneralStats(period){
       stats.pts+=details.pts;
       row.pts+=details.pts;
       stats.playerPts[pi]+=details.pts;
+      stats.playerEval[pi]++;
       if(details.exact){stats.crav++;row.crav++;row.cravadores.push(name);}
       if(details.base===1){stats.corr++;row.corr++;}
       if(details.base===0){stats.err++;row.err++;}
@@ -5891,6 +5912,9 @@ function bolaoGeneralStats(period){
   stats.missPct=stats.evaluated?100-stats.hitPct:0;
   stats.coveragePct=pctInt(stats.evaluated,stats.expected);
   stats.leader=bolaoBestPlayers(stats.playerPts);
+  const eligibleIdx=S.participants.map((_,pi)=>pi).filter(pi=>stats.playerEval[pi]>0);
+  stats.eligibleCount=eligibleIdx.length;
+  stats.worst=bolaoWorstPlayers(stats.playerPts,eligibleIdx);
   const evaluatedGames=stats.games.filter(row=>row.evaluated);
   const exactSorted=evaluatedGames.filter(row=>row.crav>0).slice().sort((a,b)=>
     b.crav-a.crav||
@@ -6040,10 +6064,20 @@ function renderBolaoGeneralStats(){
         ${renderBolaoTopGamesTile("noHit","Jogos sem acerto",s.topNoHit,0,{emptyLine:"Todo jogo teve acerto"})}`;
   else{
     const leaderLabel=kind==="today"?"Destaque de hoje":(sliceConcluded?(isKo?"Campeão da fase":"Campeão da rodada"):"Campeão parcial");
-    body=`${pointsTile}
+    const worstLabel=sliceConcluded?(isKo?"Pior da fase":"Pior da rodada"):"Pior parcial";
+    // Pior só em rodadas/fases (não em "Hoje"), com 2+ palpitantes e sem todo mundo empatado no fundo.
+    const showWorst=kind!=="today"&&s.eligibleCount>=2&&s.worst&&s.worst.tieCount<s.eligibleCount;
+    const leaderTile=renderBolaoLeaderTile(s.leader,leaderLabel);
+    body=showWorst
+      ?`${pointsTile}
+        ${mediaTile}
+        ${leaderTile}
+        ${renderBolaoWorstTile(s.worst,worstLabel)}
+        ${aproTile}`
+      :`${pointsTile}
         ${mediaTile}
         ${aproTile}
-        ${renderBolaoLeaderTile(s.leader,leaderLabel)}`;
+        ${leaderTile}`;
   }
   return `<section class="ranking-card bolao-stats-card">
     ${head}
@@ -11216,14 +11250,6 @@ function renderConfig(){
         <div><strong>Mata-mata:</strong> com vencedor no tempo normal, cravada vale 3+1 e acerto do vencedor sem cravar vale 1+1; erro vale 0 e invertida vale −2. Se empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 3 e empate não cravado vale 1, com +1 se acertar quem passa.</div>
       </div>
     </div>
-    ${canEditResults()?`<div class="card">
-      <div class="card-title">Mata-mata</div>
-      <div class="cfg-row">
-        <div class="cfg-lbl"><strong>Palpites do mata-mata</strong><span>${S.config.knockoutOpen?"Liberados — participantes já podem palpitar nos confrontos definidos.":"Bloqueados — os confrontos já definidos aparecem, mas ninguém palpita ainda."}</span></div>
-        <button class="action-btn ${S.config.knockoutOpen?"secondary":""}" onclick="toggleKnockoutPredictions()">${S.config.knockoutOpen?"Bloquear palpites":"Liberar palpites"}</button>
-      </div>
-      <div class="microcopy" style="margin-top:8px">Enquanto bloqueado, cada confronto dos 16-avos é revelado conforme o grupo dele encerra, mas o palpite fica travado até você liberar.</div>
-    </div>`:""}
     <div class="card">
       <div class="card-title">Backup de dados</div>
       <div class="action-row">
@@ -11253,14 +11279,6 @@ function updPrize(i,v){
   save();
   saveConfigRemote();
   renderConfig();
-}
-function toggleKnockoutPredictions(){
-  if(!canEditResults()){toast("Só o administrador altera as configurações.");renderConfig();return;}
-  S.config.knockoutOpen=!S.config.knockoutOpen;
-  save();
-  saveConfigRemote();
-  toast(S.config.knockoutOpen?"Palpites do mata-mata liberados.":"Palpites do mata-mata bloqueados.");
-  render(activeTab);
 }
 // ── Gerenciamento de convidados (invited_emails) ──────────────────────────
 async function loadInvitedEmails(){
