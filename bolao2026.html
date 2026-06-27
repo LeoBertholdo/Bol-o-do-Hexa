@@ -10675,9 +10675,7 @@ function renderPodioBody(){
 }
 // ===== KNOCKOUT BRACKET =====
 function renderKnockoutBody(){
-  if(!groupPhaseComplete()){
-    return `<div class="panel"><div class="pal-stage-note"><span class="ic">⏳</span><span>Os palpites do mata-mata aparecem com os confrontos calculados assim que a fase de grupos estiver completa.</span></div></div>`;
-  }
+  const koLocked=knockoutPredictionsLocked();
   const r32=koGames().filter(g=>g.phaseKey==="r32");
   const finalGame=GAMES.find(g=>g.phaseKey==="final");
   const p3Game=GAMES.find(g=>g.phaseKey==="p3");
@@ -10768,10 +10766,11 @@ function renderKnockoutBody(){
   </div>`;
 
   return `<div class="panel" style="padding:14px">
+    ${koLocked?`<div class="pal-stage-note"><span class="ic">⏳</span><span>Os confrontos aparecem conforme cada grupo encerra. Os palpites do mata-mata ainda não foram liberados.</span></div>`:""}
     <div class="pal-filters">
       <div style="display:flex;flex-direction:column;gap:2px">
         <div style="font-size:.95rem;font-weight:950;color:var(--text);letter-spacing:.2px">Chaveamento do mata-mata</div>
-        <div class="microcopy">Edite os placares direto na chave. ${koGames().length} confrontos até o título.</div>
+        <div class="microcopy">${koLocked?`Palpites do mata-mata bloqueados por enquanto. ${koGames().length} confrontos até o título.`:`Edite os placares direto na chave. ${koGames().length} confrontos até o título.`}</div>
       </div>
       <div class="progress-pill">${filledFiltered}/${koGames().length} preenchidos</div>
     </div>
