@@ -8876,21 +8876,36 @@ function rankingChartPeriodOptions(){
   });
   return opts;
 }
-// Divisórias verticais de fase no gráfico. Em "Desde o início" (all): só UMA linha,
-// na virada fase de grupos -> mata-mata. Na visão "Mata-mata" (ko): uma linha entre
-// cada fase (16-avos|oitavas|quartas|semis|3º|final) e o nome de cada trecho no topo.
-// Devolve índices na timeline; o x é calculado no render (meio dos dois pontos da virada).
+// Divisórias verticais de fase no gráfico. Em "Desde o início" (all): uma linha em cada
+// virada de rodada de grupos (1ª|2ª|3ª) e na entrada do mata-mata, com o nome dos três
+// trechos de grupos centralizado no topo (o mata-mata fica só com a linha, sem rótulo).
+// Na visão "Mata-mata" (ko): uma linha entre cada fase (16-avos|oitavas|quartas|semis|3º|
+// final) e o nome de cada trecho no topo. Devolve índices na timeline; o x é calculado no
+// render (meio dos dois pontos da virada).
 function rankingChartPhaseDividers(chart,period){
   const evs=chart.events||[];
   const koLabel=pk=>{const ph=KO_PHASES.find(p=>p.k===pk);return ph?ph.l:"Mata-mata";};
   const lines=[],segLabels=[];
   if(period.id==="all"){
-    let sawGroup=false;
+    // Linha em cada virada (1ª→2ª, 2ª→3ª, grupos→mata-mata). Rótulo centralizado só nos
+    // três trechos de grupos; o mata-mata recebe só a linha separadora, sem nome.
+    let maxRound=0,koDone=false,segStart=-1,segRound=0,lastGroupIdx=-1;
+    const flushSeg=end=>{if(segRound>0&&segStart>=0&&end>=segStart)segLabels.push({from:segStart,to:end,text:`${segRound}ª rodada`});};
     for(let i=0;i<evs.length;i++){
       const g=evs[i]&&evs[i].game;if(!g)continue;
-      if(!g.ko){sawGroup=true;}
-      else if(sawGroup){lines.push({index:i,label:"Mata-mata"});break;}
+      if(!g.ko){
+        lastGroupIdx=i;
+        const r=g.round||0;
+        if(r>maxRound){
+          if(maxRound>0){lines.push({index:i,label:""});flushSeg(i-1);}
+          maxRound=r;segStart=i;segRound=r;
+        }
+      }else if(!koDone){
+        lines.push({index:i,label:""});flushSeg(i-1);
+        koDone=true;segRound=0;
+      }
     }
+    if(segRound>0)flushSeg(lastGroupIdx);
   }else if(period.id==="ko"){
     let segStart=-1,curPhase=null;
     const flush=end=>{if(segStart>=0&&curPhase!=null&&end>=segStart)segLabels.push({from:segStart,to:end,text:koLabel(curPhase)});};
