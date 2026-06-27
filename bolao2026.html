@@ -11228,6 +11228,7 @@ function renderConfig(){
       <div class="card-title">Backup de dados</div>
       <div class="action-row">
         <button class="action-btn" onclick="saveBackup()">Exportar JSON</button>
+        <button class="action-btn" onclick="exportReportPDF()">Exportar PDF</button>
         <label class="action-label">Importar JSON<input type="file" accept=".json" style="display:none" onchange="importBackup(this)"></label>
         ${isOnlineMode()&&isAdmin()?`<button class="action-btn secondary" onclick="pushLocalStateToRemote()">Publicar dados locais no Supabase</button>`:""}
         ${canEditResults()?`<button class="action-btn secondary" onclick="resetCompetitionData()">Resetar competição</button>`:""}
@@ -11341,6 +11342,163 @@ function saveBackup(){
   a.click();
   URL.revokeObjectURL(url);
   toast("Backup exportado.");
+}
+// ===== Relatório em PDF (via impressão do navegador, sem bibliotecas) =====
+function reportPtLabel(n){return n>0?`+${n}`:(n<0?`−${Math.abs(n)}`:"0");}
+function reportPlayerMaxPossible(pi){
+  let m=0;
+  GAMES.forEach(g=>{
+    const res=S.results[g.id]||liveProvisionalResult(g);
+    const pal=S.palpites[`${pi}_${g.id}`];
+    if(scoreDetails(pal,res,g)) m+=maxScoreForGame(g);
+  });
+  return m;
+}
+function reportOutcome(pi,g){
+  const res=S.results[g.id]||liveProvisionalResult(g);
+  const pal=S.palpites[`${pi}_${g.id}`];
+  const d=scoreDetails(pal,res,g);
+  if(!pal) return {cls:"rp-none",txt:"—"};
+  if(!d)   return {cls:"rp-pend",txt:`${pal.s1}–${pal.s2}`}; // palpite sem resultado
+  const cls=d.exact?"rp-crav":d.base===1?"rp-ok":d.base===-2?"rp-inv":"rp-err";
+  return {cls,txt:`<b>${pal.s1}–${pal.s2}</b> <span class="rp-pt">${reportPtLabel(d.pts)}</span>`};
+}
+function buildBolaoReportHTML(){
+  const rk=ranking();
+  const order=rk.map(r=>r.i);
+  const pool=S.participants.length*S.config.entryValue;
+  const grupos=[...new Set(GAMES.filter(g=>g.phaseKey==="groups").map(g=>g.group))];
+  const groupGames=GAMES.filter(g=>g.phaseKey==="groups");
+  const comResultado=groupGames.filter(g=>S.results[g.id]).length;
+  const pendentes=groupGames.length-comResultado;
+  const fmt=n=>n.toLocaleString("pt-BR");
+  const podioReal=S.actualPodio&&(S.actualPodio.p1||S.actualPodio.p2||S.actualPodio.p3||S.actualPodio.p4);
+
+  // --- Classificação ---
+  const rkRows=rk.map((r,idx)=>{
+    const m=reportPlayerMaxPossible(r.i);
+    const aprov=m?Math.round((r.pts-r.pp)/m*1000)/10:0;
+    const medal=idx===0?"rp-gold":idx===1?"rp-silver":idx===2?"rp-bronze":"";
+    return `<tr class="${medal}"><td class="rp-c"><b>${idx+1}</b></td><td>${esc(r.name)}</td>
+      <td class="rp-c"><b>${r.pts}</b></td><td class="rp-c">${r.crav}</td><td class="rp-c">${r.corr}</td>
+      <td class="rp-c">${r.err}</td><td class="rp-c">${r.inv}</td><td class="rp-c">${aprov.toLocaleString("pt-BR")}%</td></tr>`;
+  }).join("");
+
+  // --- Premiação ---
+  const lugares=["1º lugar","2º lugar","3º lugar"];
+  const przRows=[0,1,2].map(i=>`<tr class="${["rp-gold","rp-silver","rp-bronze"][i]}">
+    <td><b>${lugares[i]}</b> <span class="rp-muted">(hoje: ${esc(rk[i]?rk[i].name:"—")})</span></td>
+    <td class="rp-c">${S.config.prizePercents[i]}%</td><td class="rp-c"><b>R$ ${fmt(prize(i+1))}</b></td></tr>`).join("");
+
+  // --- Pódios palpitados ---
+  const pdRows=rk.map(r=>{const p=S.podio[r.i]||{};return `<tr><td><b>${esc(r.name)}</b></td>
+    <td class="rp-c">${esc(p.p1||"—")}</td><td class="rp-c">${esc(p.p2||"—")}</td>
+    <td class="rp-c">${esc(p.p3||"—")}</td><td class="rp-c">${esc(p.p4||"—")}</td></tr>`;}).join("");
+
+  // --- Resultados por grupo ---
+  const resBlocks=grupos.map(grp=>{
+    const rows=groupGames.filter(g=>g.group===grp).map(g=>{
+      const r=S.results[g.id];
+      const t=gameTeams(g);
+      let lab;
+      if(!r) lab='<span class="rp-pendtxt">A jogar</span>';
+      else if(+r.s1>+r.s2) lab=`Vitória: ${esc(t.t1)}`;
+      else if(+r.s1<+r.s2) lab=`Vitória: ${esc(t.t2)}`;
+      else lab="Empate";
+      return `<tr><td class="rp-c">${g.id}</td><td class="rp-c">${g.round}</td>
+        <td>${esc(t.t1)} <span class="rp-muted">x</span> ${esc(t.t2)}</td>
+        <td class="rp-c ${r?"":"rp-err"}"><b>${r?`${r.s1}–${r.s2}`:"—"}</b></td><td>${lab}</td></tr>`;
+    }).join("");
+    return `<h3>Grupo ${grp}</h3><table class="rp-res"><thead><tr>
+      <th>Jogo</th><th>Rod.</th><th>Confronto</th><th>Placar</th><th>Resultado</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }).join("");
+
+  // --- Matriz de palpites ---
+  const mxHead=order.map((pi,idx)=>`<th>${esc(S.participants[pi])}<br><span class="rp-rank">${idx+1}º</span></th>`).join("");
+  const mxBody=grupos.map(grp=>{
+    const sep=`<tr class="rp-grp"><td colspan="${3+order.length}">Grupo ${grp}</td></tr>`;
+    const rows=groupGames.filter(g=>g.group===grp).map(g=>{
+      const r=S.results[g.id];const t=gameTeams(g);
+      const cells=order.map(pi=>{const o=reportOutcome(pi,g);return `<td class="${o.cls}">${o.txt}</td>`;}).join("");
+      return `<tr><td class="rp-c">${g.id}</td><td>${esc(t.t1)} <span class="rp-muted">x</span> ${esc(t.t2)}</td>
+        <td class="rp-c ${r?"":"rp-err"}"><b>${r?`${r.s1}–${r.s2}`:"—"}</b></td>${cells}</tr>`;
+    }).join("");
+    return sep+rows;
+  }).join("");
+
+  const css=`
+    *{box-sizing:border-box} body{font:13px/1.45 Arial,Helvetica,sans-serif;color:#1b2430;margin:24px;}
+    h1{font-size:24px;color:#12233B;margin:0 0 2px} h2{font-size:17px;color:#12233B;border-bottom:2px solid #2E75B6;padding-bottom:3px;margin:22px 0 10px}
+    h3{font-size:14px;color:#1F4E79;margin:14px 0 5px} .rp-sub{color:#2E75B6;font-size:15px;margin:0 0 8px}
+    .rp-meta{color:#666;font-size:12px;margin:0 0 4px} table{border-collapse:collapse;width:100%;margin:0 0 6px}
+    th,td{border:1px solid #BFC7D1;padding:4px 7px;text-align:left;vertical-align:middle}
+    thead th{background:#1F4E79;color:#fff;font-size:12px;text-align:center}
+    .rp-c{text-align:center} .rp-muted{color:#888} .rp-pendtxt{color:#B00020;font-style:italic}
+    .rp-gold{background:#FFF2CC} .rp-silver{background:#ECECEC} .rp-bronze{background:#F6E2D3}
+    .rp-note{color:#666;font-size:11px;font-style:italic;margin:4px 0 0}
+    .rp-rules td:first-child{font-weight:bold;width:170px}
+    .rp-crav{background:#C6EFCE} .rp-ok{background:#DDEBF7} .rp-err{background:#F2F2F2} .rp-inv{background:#FFC7CE}
+    .rp-none{color:#aaa;text-align:center} .rp-pend{color:#555;text-align:center}
+    .rp-legend span{display:inline-block;padding:2px 8px;margin:0 4px 4px 0;border:1px solid #BFC7D1;font-size:11px}
+    /* Matriz */
+    .rp-matrix-wrap{page:landscapePg}
+    table.rp-matrix{font-size:9px} table.rp-matrix th,table.rp-matrix td{padding:2px 4px;text-align:center}
+    table.rp-matrix td:nth-child(2){text-align:left;white-space:nowrap}
+    table.rp-matrix .rp-pt{color:#333;font-size:8px} .rp-rank{color:#cfe0f0;font-weight:normal;font-size:8px}
+    tr.rp-grp td{background:#12233B;color:#fff;font-weight:bold;text-align:left}
+    .no-print{margin:0 0 16px} .no-print button{font:13px Arial;padding:8px 14px;margin-right:8px;cursor:pointer;border:1px solid #2E75B6;background:#2E75B6;color:#fff;border-radius:6px}
+    .no-print button.sec{background:#fff;color:#2E75B6}
+    @page{size:A4 portrait;margin:12mm} @page landscapePg{size:A4 landscape;margin:9mm}
+    @media print{.no-print{display:none}}
+  `;
+  return `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+  <title>Bolão do Hexa 2026 — Relatório</title><style>${css}</style></head><body>
+  <div class="no-print"><button onclick="window.print()">Imprimir / Salvar PDF</button><button class="sec" onclick="window.close()">Fechar</button></div>
+  <h1>Bolão do Hexa 2026</h1>
+  <p class="rp-sub">Relatório de palpites, resultados e pontuação — fase de grupos</p>
+  <p class="rp-meta">Gerado em ${new Date().toLocaleString("pt-BR")}. ${comResultado} de ${groupGames.length} jogos com resultado oficial${pendentes?`; ${pendentes} ainda a jogar`:""}.${podioReal?"":" Pódio real ainda não definido (pontos de pódio = 0)."}</p>
+
+  <h2>Como funciona a pontuação</h2>
+  <table class="rp-rules"><tbody>
+    <tr class="rp-crav"><td>+3 — Cravada</td><td>Acertou o placar exato.</td></tr>
+    <tr class="rp-ok"><td>+1 — Acerto</td><td>Acertou o resultado (vitória do mesmo time ou empate), mas não o placar.</td></tr>
+    <tr class="rp-err"><td>0 — Erro</td><td>Errou o resultado.</td></tr>
+    <tr class="rp-inv"><td>−2 — Invertido</td><td>Cravou o placar ao contrário (ex.: palpite 2–1, deu 1–2). Não vale para empates.</td></tr>
+  </tbody></table>
+  <p class="rp-note">Pódio (quando definido): campeão +20, vice +10, 3º +5, 4º +3. Mata-mata pode dar +1 de bônus por acertar quem avança. Desempate: pontos → cravadas → menos invertidos → ordem alfabética.</p>
+
+  <h2>Classificação geral</h2>
+  <table><thead><tr><th>#</th><th style="text-align:left">Jogador</th><th>Pontos</th><th>Cravadas</th><th>Acertos</th><th>Erros</th><th>Invertidos</th><th>Aproveit.</th></tr></thead><tbody>${rkRows}</tbody></table>
+  <p class="rp-note">Aproveitamento = pontos ÷ máximo possível nos jogos avaliados.</p>
+
+  <h2>Premiação</h2>
+  <p>Entrada de <b>R$ ${fmt(S.config.entryValue)}</b> por pessoa · ${S.participants.length} jogadores · bolo de <b>R$ ${fmt(pool)}</b>.</p>
+  <table><thead><tr><th style="text-align:left">Colocação</th><th>Percentual</th><th>Prêmio</th></tr></thead><tbody>${przRows}</tbody></table>
+  <p class="rp-note">"Hoje" reflete a classificação parcial atual, não o resultado final.</p>
+
+  <h2>Pódios palpitados</h2>
+  <table><thead><tr><th style="text-align:left">Jogador</th><th>Campeão</th><th>Vice</th><th>3º lugar</th><th>4º lugar</th></tr></thead><tbody>${pdRows}</tbody></table>
+
+  <h2>Resultados dos jogos</h2>
+  ${resBlocks}
+
+  <div class="rp-matrix-wrap">
+  <h2>Palpites de todos, jogo a jogo</h2>
+  <p class="rp-legend"><span class="rp-crav">Cravada +3</span><span class="rp-ok">Acerto +1</span><span class="rp-err">Erro 0</span><span class="rp-inv">Invertido −2</span><span>— sem palpite</span> <span class="rp-muted">Colunas em ordem de classificação.</span></p>
+  <table class="rp-matrix"><thead><tr><th>Jogo</th><th style="text-align:left">Confronto</th><th>Placar</th>${mxHead}</tr></thead><tbody>${mxBody}</tbody></table>
+  </div>
+  </body></html>`;
+}
+function exportReportPDF(){
+  let html;
+  try{ html=buildBolaoReportHTML(); }
+  catch(err){ toast("Não foi possível gerar o relatório."); return; }
+  const win=window.open("","_blank");
+  if(!win){ toast("Permita pop-ups para gerar o PDF."); return; }
+  win.document.open(); win.document.write(html); win.document.close();
+  win.focus();
+  setTimeout(()=>{ try{win.print();}catch(e){} },350);
+  toast("Relatório aberto — use Imprimir e escolha \"Salvar como PDF\".");
 }
 function importBackup(input){
   const f=input.files[0];
