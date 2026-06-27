@@ -4187,7 +4187,7 @@ function defaultState(){
     palpites:{},
     podio:{},
     actualPodio:{},
-    config:{entryValue:200,prizePercents:[60,25,15]},
+    config:{entryValue:200,prizePercents:[60,25,15],knockoutOpen:false},
     participants:[...DEFAULT_PARTICIPANTS]
   };
 }
@@ -4507,6 +4507,7 @@ function applyRemoteData(payload){
     const parsedEntry=Number(settings.entry_value);
     next.config.entryValue=Number.isFinite(parsedEntry)?parsedEntry:next.config.entryValue;
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
+    next.config.knockoutOpen=settings.knockout_predictions_open===true;
   }
   (payload.results||[]).forEach(row=>{
     next.results[row.game_id]=normalizeResult(row.game_id,{
@@ -4654,7 +4655,7 @@ async function loadRemoteData(showToast=false,options={}){
   setSyncStatus("warn","Sincronizando...");
   const [profiles,settings,results,predictions,podium,actualPodio,liveScores,liveHistory]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
-    remoteClient.from("settings").select("entry_value,prize_percents").eq("id","main").maybeSingle(),
+    remoteClient.from("settings").select("entry_value,prize_percents,knockout_predictions_open").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
     fetchPredictionsRemote(),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
@@ -5003,6 +5004,7 @@ function saveConfigRemote(){
     id:"main",
     entry_value:S.config.entryValue,
     prize_percents:S.config.prizePercents,
+    knockout_predictions_open:S.config.knockoutOpen===true,
     updated_by:remoteSession.user.id
   },{onConflict:"id"})).then(ok=>{
     if(ok) dirtyConfig=false;
@@ -5073,7 +5075,7 @@ async function pushLocalStateToRemote(){
   }).filter(row=>Number.isInteger(row.participant_index));
   const actualPodioRow=normalizePodio(S.actualPodio||{});
   const writes=[
-    remoteClient.from("settings").upsert({id:"main",entry_value:S.config.entryValue,prize_percents:S.config.prizePercents,updated_by:remoteSession.user.id},{onConflict:"id"}),
+    remoteClient.from("settings").upsert({id:"main",entry_value:S.config.entryValue,prize_percents:S.config.prizePercents,knockout_predictions_open:S.config.knockoutOpen===true,updated_by:remoteSession.user.id},{onConflict:"id"}),
     remoteClient.from("actual_podium").upsert({
       id:"main",
       p1:actualPodioRow.p1||null,
@@ -5468,7 +5470,13 @@ function predictionDeadlineMs(game){
 function deadlineClosed(ms){
   return Number.isFinite(ms)&&Date.now()>=ms;
 }
+// Trava manual do mata-mata: enquanto o admin não liberar, nenhum palpite de
+// confronto eliminatório pode ser editado (mesmo com o confronto já revelado).
+function knockoutPredictionsLocked(){
+  return !(S.config&&S.config.knockoutOpen===true);
+}
 function predictionDeadlineClosed(game){
+  if(game&&game.ko&&knockoutPredictionsLocked()) return true;
   return deadlineClosed(predictionDeadlineMs(game));
 }
 function podioPredictionDeadlineClosed(){
@@ -5497,6 +5505,9 @@ function predictionClosedMessage(game){
   if(game&&!game.ko){
     const label=formatPredictionDeadline(groupAndPodioDeadlineMs());
     return label?`Palpites dos grupos encerrados em ${label}.`:"Palpites dos grupos encerrados.";
+  }
+  if(game&&game.ko&&knockoutPredictionsLocked()&&!deadlineClosed(predictionDeadlineMs(game))){
+    return "Palpites do mata-mata ainda não foram liberados.";
   }
   return "Este jogo já começou. Palpites encerrados.";
 }
@@ -6324,13 +6335,23 @@ function thirdPlaceContext(){
   if(!allocation) return null;
   return {allocation,thirdByGroup:Object.fromEntries(thirds.map(row=>[row.group,row]))};
 }
+// Um grupo está encerrado quando todos os seus 6 jogos têm resultado. Aí a
+// classificação dele já é final, mesmo que outros grupos ainda joguem.
+function groupComplete(group){
+  return groupGames().every(g=>g.group!==group||Boolean(S.results[g.id]));
+}
 function resolveSeed(seed,thirdOwner){
-  if(!groupPhaseComplete()) return "";
-  const tables=groupStandings();
+  // Sementes diretas (1X/2X) são reveladas assim que o grupo X encerra.
   const direct=String(seed||"").match(/^([12])([A-L])$/);
-  if(direct) return tables[direct[2]]?.[Number(direct[1])-1]?.team||"";
+  if(direct){
+    if(!groupComplete(direct[2])) return "";
+    return groupStandings()[direct[2]]?.[Number(direct[1])-1]?.team||"";
+  }
+  // Terceiros colocados só saem com a fase de grupos inteira encerrada, porque
+  // a alocação dos 8 melhores 3os depende de todos os 12 grupos.
   const third=String(seed||"").match(/^3([A-L]+)$/);
   if(third){
+    if(!groupPhaseComplete()) return "";
     const context=thirdPlaceContext();
     const group=context?.allocation?.[thirdOwner];
     if(!group||!third[1].includes(group)) return "";
@@ -11195,6 +11216,14 @@ function renderConfig(){
         <div><strong>Mata-mata:</strong> com vencedor no tempo normal, cravada vale 3+1 e acerto do vencedor sem cravar vale 1+1; erro vale 0 e invertida vale −2. Se empatar no tempo regulamentar, só pontua quem também palpitou empate: empate cravado vale 3 e empate não cravado vale 1, com +1 se acertar quem passa.</div>
       </div>
     </div>
+    ${canEditResults()?`<div class="card">
+      <div class="card-title">Mata-mata</div>
+      <div class="cfg-row">
+        <div class="cfg-lbl"><strong>Palpites do mata-mata</strong><span>${S.config.knockoutOpen?"Liberados — participantes já podem palpitar nos confrontos definidos.":"Bloqueados — os confrontos já definidos aparecem, mas ninguém palpita ainda."}</span></div>
+        <button class="action-btn ${S.config.knockoutOpen?"secondary":""}" onclick="toggleKnockoutPredictions()">${S.config.knockoutOpen?"Bloquear palpites":"Liberar palpites"}</button>
+      </div>
+      <div class="microcopy" style="margin-top:8px">Enquanto bloqueado, cada confronto dos 16-avos é revelado conforme o grupo dele encerra, mas o palpite fica travado até você liberar.</div>
+    </div>`:""}
     <div class="card">
       <div class="card-title">Backup de dados</div>
       <div class="action-row">
@@ -11223,6 +11252,14 @@ function updPrize(i,v){
   save();
   saveConfigRemote();
   renderConfig();
+}
+function toggleKnockoutPredictions(){
+  if(!canEditResults()){toast("Só o administrador altera as configurações.");renderConfig();return;}
+  S.config.knockoutOpen=!S.config.knockoutOpen;
+  save();
+  saveConfigRemote();
+  toast(S.config.knockoutOpen?"Palpites do mata-mata liberados.":"Palpites do mata-mata bloqueados.");
+  render(activeTab);
 }
 // ── Gerenciamento de convidados (invited_emails) ──────────────────────────
 async function loadInvitedEmails(){
