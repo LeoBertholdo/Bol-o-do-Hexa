@@ -1542,150 +1542,109 @@ body.chart-modal-open{overflow:hidden}
 .b0{background:linear-gradient(135deg,#e5e7eb,#cbd5e1);color:#475569}
 .bem{background:#f3f4f6;color:#a3aab6;box-shadow:none}
 
-/* ==== KNOCKOUT BRACKET ==== */
+/* ==== KNOCKOUT BRACKET (flow-based, self-centering) ==== */
 .bracket-wrap{
-  position:relative;
-  display:grid;
-  grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr) minmax(0,.96fr) minmax(0,1.2fr) minmax(0,.96fr) minmax(0,.96fr) minmax(0,1.04fr);
-  align-items:start;
-  gap:clamp(10px,1.2vw,18px);
-  width:100%;
-  min-width:0;
-  min-height:620px;
-  padding:18px 8px 12px;
+  display:flex;align-items:stretch;
+  gap:clamp(14px,1.5vw,26px);
+  min-width:1180px;width:100%;
+  padding:6px 6px 10px;
 }
-.bracket-col{
-  position:relative;
-  min-width:0;
-  min-height:590px;
-}
+.bracket-col{flex:1 1 0;min-width:0;display:flex;flex-direction:column}
 .bracket-col-head{
-  position:absolute;top:0;left:0;right:0;
-  font-size:.58rem;font-weight:900;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--blue);text-align:center;
-  padding:5px 0 8px;border-bottom:1.5px dashed #cfdcf0;
+  font-size:.62rem;font-weight:900;letter-spacing:1px;text-transform:uppercase;
+  color:var(--blue);text-align:center;padding-bottom:9px;margin-bottom:6px;
+  border-bottom:1.5px dashed #cfdcf0;
 }
+.bracket-col-body{
+  flex:1 1 auto;display:flex;flex-direction:column;
+  justify-content:space-around;gap:12px;position:relative;
+}
+/* connector ticks: each match emits a short inward line toward the next round */
+.bracket-col--left  .bracket-card::after,
+.bracket-col--right .bracket-card::after{
+  content:"";position:absolute;top:50%;width:clamp(12px,1.1vw,20px);height:2px;
+  background:#c2d2ea;border-radius:2px;
+}
+.bracket-col--left  .bracket-card::after{left:100%}
+.bracket-col--right .bracket-card::after{right:100%}
+
 .bracket-card{
-  position:relative;
-  border:1.5px solid var(--border);background:#fff;border-radius:10px;
-  padding:6px 8px;display:flex;flex-direction:column;gap:4px;
+  position:relative;border:1.5px solid var(--border);background:#fff;border-radius:11px;
+  padding:8px 9px;display:flex;flex-direction:column;gap:5px;
   box-shadow:0 4px 12px rgba(0,39,118,.06);
-  transition:transform .15s,box-shadow .2s,border-color .2s;
-  min-width:0;
+  transition:transform .15s,box-shadow .2s,border-color .2s;min-width:0;
 }
 .bracket-card:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,39,118,.1);border-color:#cbd9eb}
-.bracket-card.waiting{background:#fafbfd;border-style:dashed;opacity:.85}
-.bracket-card.hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
+.bracket-card.waiting{background:#fafbfd;border-style:dashed;opacity:.9}
 .bracket-card.live{border-color:#7ed1a1;background:linear-gradient(180deg,#f7fff9,#fff)}
-.bracket-card.final{border-color:#f0d77e;background:linear-gradient(180deg,#fffaea,#fff);box-shadow:0 12px 28px rgba(245,197,66,.18)}
+.bracket-card.hit{border-color:#7ed1a1;background:linear-gradient(180deg,#f3fff6,#fff)}
+.bracket-card.final{border-color:#f0d77e;background:linear-gradient(180deg,#fffaea,#fff);
+  box-shadow:0 12px 28px rgba(245,197,66,.18);border-width:2px}
+
 .bracket-card .bk-meta{
-  display:flex;justify-content:space-between;align-items:center;gap:6px;
-  font-size:.5rem;font-weight:900;letter-spacing:.45px;color:var(--muted);text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  font-size:.52rem;font-weight:900;letter-spacing:.4px;color:var(--muted);text-transform:uppercase;
 }
 .bracket-card .bk-meta span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bracket-card .bk-meta .date{color:var(--blue);font-weight:950;white-space:nowrap;flex-shrink:0;text-align:right}
+
 .bracket-card .bk-row{
-  display:grid;grid-template-columns:minmax(0,1fr) 38px;
-  align-items:center;gap:6px;font-size:.74rem;font-weight:850;color:var(--text);min-width:0;
+  display:grid;grid-template-columns:minmax(0,1fr) 40px;align-items:center;gap:7px;
+  font-size:.76rem;font-weight:800;color:var(--text);min-width:0;
 }
 .bracket-card .bk-row.muted{color:var(--muted);font-weight:700}
-.bracket-card .bk-row .nm{
-  display:flex;align-items:center;gap:5px;min-width:0;overflow:hidden;
+.bracket-card .bk-row .nm{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden}
+.bracket-card .bk-row .nm .flag{font-size:.95rem;flex-shrink:0;line-height:1}
+.bracket-card .bk-row .nm .txt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* placeholder rows ("Vencedor M73") wrap to 2 lines instead of clipping to "Venced..." */
+.bracket-card .bk-row.muted .nm .txt{
+  white-space:normal;overflow:visible;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.15;
 }
-.bracket-card .bk-row .nm .flag{font-size:.95rem;flex-shrink:0}
-.bracket-card .bk-row .nm .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .bracket-card .bk-row input{
-  width:100%;height:26px;border:1.2px solid var(--border);border-radius:6px;
-  text-align:center;font-size:.78rem;font-weight:950;color:var(--text);background:#fff;
-  -moz-appearance:textfield;
+  width:100%;height:30px;border:1.2px solid var(--border);border-radius:7px;
+  text-align:center;font-size:.82rem;font-weight:950;color:var(--text);background:#fff;-moz-appearance:textfield;
 }
 .bracket-card .bk-row input::-webkit-outer-spin-button,
 .bracket-card .bk-row input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.bracket-card .bk-row input:disabled{background:#f4f7f5;color:#8792a3}
+.bracket-card .bk-row input:disabled{background:#f4f7f5;color:#9aa3b2}
 .bracket-card .bk-divider{height:1px;background:#eef2f7}
 .bracket-card .bk-badge{
-  position:absolute;top:-7px;right:8px;
-  font-size:.55rem;font-weight:950;letter-spacing:.35px;
-  padding:2px 7px;border-radius:99px;color:#fff;
-  background:linear-gradient(135deg,var(--blue),#003a9e);
-  box-shadow:0 4px 10px rgba(0,39,118,.18);
+  position:absolute;top:-8px;right:10px;font-size:.55rem;font-weight:950;letter-spacing:.35px;
+  padding:2px 8px;border-radius:99px;color:#fff;
+  background:linear-gradient(135deg,var(--blue),#003a9e);box-shadow:0 4px 10px rgba(0,39,118,.18);
 }
 .bracket-card.hit .bk-badge{background:linear-gradient(135deg,#22c55e,#047857)}
 .bracket-card.final .bk-badge{background:linear-gradient(135deg,#f5c542,#b48400);color:#3a2700}
+/* soften the repeated deadline chip so 15 of them don't read as alarms */
+.bracket-card .pal-state-chip.closed{background:#f4f6fa;border-color:#e4e9f1;color:#8a93a3}
 
-.bracket-col > .bracket-card,
-.bracket-final-col > .bk-final-top,
-.bracket-final-col > .bracket-third-card{
-  position:absolute;
-  left:0;
-  right:0;
-}
-.bracket-wrap > .bracket-col:nth-child(1) > .bracket-card:nth-of-type(2),
-.bracket-wrap > .bracket-col:nth-child(7) > .bracket-card:nth-of-type(2){top:52px}
-.bracket-wrap > .bracket-col:nth-child(1) > .bracket-card:nth-of-type(3),
-.bracket-wrap > .bracket-col:nth-child(7) > .bracket-card:nth-of-type(3){top:158px}
-.bracket-wrap > .bracket-col:nth-child(1) > .bracket-card:nth-of-type(4),
-.bracket-wrap > .bracket-col:nth-child(7) > .bracket-card:nth-of-type(4){top:336px}
-.bracket-wrap > .bracket-col:nth-child(1) > .bracket-card:nth-of-type(5),
-.bracket-wrap > .bracket-col:nth-child(7) > .bracket-card:nth-of-type(5){top:442px}
-.bracket-wrap > .bracket-col:nth-child(2) > .bracket-card:nth-of-type(2),
-.bracket-wrap > .bracket-col:nth-child(6) > .bracket-card:nth-of-type(2){top:105px}
-.bracket-wrap > .bracket-col:nth-child(2) > .bracket-card:nth-of-type(3),
-.bracket-wrap > .bracket-col:nth-child(6) > .bracket-card:nth-of-type(3){top:389px}
-.bracket-wrap > .bracket-col:nth-child(3) > .bracket-card:nth-of-type(2),
-.bracket-wrap > .bracket-col:nth-child(5) > .bracket-card:nth-of-type(2){top:247px}
-
-.bracket-final-col{
-  grid-column:4;
-  min-height:590px;
-}
-.bracket-final-col > .bk-final-top{
-  top:166px;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-}
-.bracket-final-col .bracket-col-head{
-  position:static;
-  width:100%;
-}
-.bracket-final-col > .bracket-card.final{
-  top:242px;
-  left:3px;
-  right:3px;
-  width:auto;
-  border-width:2px;
-  padding:8px 10px;
-}
-.bracket-final-col > .bracket-third-card{
-  top:358px;
-  left:14px;
-  right:14px;
-}
+/* final column: trophy + final + 3rd place, centered as a group */
+.bracket-col--final .bracket-col-body{justify-content:center;gap:10px}
 .bracket-trophy{
-  text-align:center;font-size:1.8rem;line-height:1;
+  text-align:center;font-size:1.7rem;line-height:1;
   filter:drop-shadow(0 6px 12px rgba(245,197,66,.45));
   animation:trophyFloat 4s ease-in-out infinite;
 }
 @keyframes trophyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-
 .bracket-third-card{
   background:linear-gradient(180deg,#fffdf9,#fff);
-  border:1.5px dashed #e7d2bc;border-radius:12px;padding:9px;
+  border:1.5px dashed #e7d2bc;border-radius:12px;padding:9px;margin-top:4px;
   box-shadow:0 6px 14px rgba(201,135,71,.08);
 }
 .bracket-third-head{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:8px;font-size:.6rem;font-weight:900;color:#9a6a41;
-  letter-spacing:.5px;text-transform:uppercase;
+  display:flex;align-items:center;gap:6px;margin-bottom:7px;
+  font-size:.58rem;font-weight:900;color:#9a6a41;letter-spacing:.5px;text-transform:uppercase;
 }
 .bracket-third-head .ic{font-size:.92rem}
-.bracket-third-card .bracket-card{box-shadow:none}
+.bracket-third-card .bracket-card{box-shadow:none;border-style:dashed}
 
 .bracket-stage{
   background:rgba(255,253,244,.86);
   border:1px solid rgba(220,229,216,.9);
   border-radius:12px;padding:14px;
   box-shadow:var(--shadow);
-  overflow:hidden;
+  overflow-x:auto;overflow-y:hidden;
   scrollbar-width:thin;
 }
 .bracket-stage::-webkit-scrollbar{height:6px}
@@ -10702,40 +10661,40 @@ function renderKnockoutBody(){
 
   const bracketHTML=`
     <div class="bracket-wrap">
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--left">
         <div class="bracket-col-head">Oitavas</div>
-        ${r16Left.map(g=>bracketCard(g)).join("")}
+        <div class="bracket-col-body">${r16Left.map(g=>bracketCard(g)).join("")}</div>
       </div>
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--left">
         <div class="bracket-col-head">Quartas</div>
-        ${qfLeft.map(g=>bracketCard(g)).join("")}
+        <div class="bracket-col-body">${qfLeft.map(g=>bracketCard(g)).join("")}</div>
       </div>
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--left">
         <div class="bracket-col-head">Semi</div>
-        ${bracketCard(sfLeft)}
+        <div class="bracket-col-body">${bracketCard(sfLeft)}</div>
       </div>
-      <div class="bracket-col bracket-final-col">
-        <div class="bk-final-top">
-          <div class="bracket-col-head">Final</div>
+      <div class="bracket-col bracket-col--final">
+        <div class="bracket-col-head">Final</div>
+        <div class="bracket-col-body">
           <div class="bracket-trophy">\u{1F3C6}</div>
+          ${bracketCard(finalGame,{accent:"final"})}
+          ${p3Game?`<div class="bracket-third-card">
+            <div class="bracket-third-head"><span class="ic">\u{1F948}</span> Disputa de 3º lugar</div>
+            ${bracketCard(p3Game,{accent:"bronze"})}
+          </div>`:""}
         </div>
-        ${bracketCard(finalGame,{accent:"final"})}
-        ${p3Game?`<div class="bracket-third-card">
-          <div class="bracket-third-head"><span><span class="ic">\u{1F948}</span> Disputa de 3º lugar</span></div>
-          ${bracketCard(p3Game,{accent:"bronze"})}
-        </div>`:""}
       </div>
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--right">
         <div class="bracket-col-head">Semi</div>
-        ${bracketCard(sfRight)}
+        <div class="bracket-col-body">${bracketCard(sfRight)}</div>
       </div>
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--right">
         <div class="bracket-col-head">Quartas</div>
-        ${qfRight.map(g=>bracketCard(g)).join("")}
+        <div class="bracket-col-body">${qfRight.map(g=>bracketCard(g)).join("")}</div>
       </div>
-      <div class="bracket-col">
+      <div class="bracket-col bracket-col--right">
         <div class="bracket-col-head">Oitavas</div>
-        ${r16Right.map(g=>bracketCard(g)).join("")}
+        <div class="bracket-col-body">${r16Right.map(g=>bracketCard(g)).join("")}</div>
       </div>
     </div>`;
 
