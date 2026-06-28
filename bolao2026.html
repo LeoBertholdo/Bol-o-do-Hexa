@@ -3989,6 +3989,21 @@ const KO_PHASES = [
   {k:"p3",l:"3º lugar",full:"Disputa de 3º lugar"},
   {k:"final",l:"Final",full:"Final"}
 ];
+// Janela em cascata dos palpites do mata-mata: cada fase abre quando a fase
+// anterior encerra (todos os jogos com resultado oficial) e fecha 30 min antes
+// do 1º jogo da própria fase.
+const KO_CLOSE_LEAD_MS = 30*60*1000;
+const KO_PHASE_ORDER = ["r32","r16","qf","sf","p3","final"];
+const KO_PHASE_PREV = {r32:"groups",r16:"r32",qf:"r16",sf:"qf",p3:"sf",final:"sf"};
+const KO_SCOPE_LABEL = {r32:"dos 16-avos",r16:"das oitavas",qf:"das quartas",sf:"das semifinais",p3:"da disputa de 3º",final:"da final"};
+const KO_OPEN_HINT = {
+  r32:"quando a fase de grupos encerrar",
+  r16:"quando os 16-avos de final encerrarem",
+  qf:"quando as oitavas encerrarem",
+  sf:"quando as quartas encerrarem",
+  p3:"quando as semifinais encerrarem",
+  final:"quando as semifinais encerrarem"
+};
 const BR_TIME_ZONE = "America/Sao_Paulo";
 const BR_DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-CA",{
   timeZone:BR_TIME_ZONE,
@@ -4146,7 +4161,7 @@ function defaultState(){
     palpites:{},
     podio:{},
     actualPodio:{},
-    config:{entryValue:200,prizePercents:[60,25,15],knockoutOpen:false},
+    config:{entryValue:200,prizePercents:[60,25,15],knockoutOpen:false,knockoutOverrides:{}},
     participants:[...DEFAULT_PARTICIPANTS]
   };
 }
@@ -4467,6 +4482,7 @@ function applyRemoteData(payload){
     next.config.entryValue=Number.isFinite(parsedEntry)?parsedEntry:next.config.entryValue;
     next.config.prizePercents=Array.isArray(settings.prize_percents)?settings.prize_percents:next.config.prizePercents;
     next.config.knockoutOpen=settings.knockout_predictions_open===true;
+    next.config.knockoutOverrides=(settings.knockout_phase_overrides&&typeof settings.knockout_phase_overrides==="object")?settings.knockout_phase_overrides:{};
   }
   (payload.results||[]).forEach(row=>{
     next.results[row.game_id]=normalizeResult(row.game_id,{
@@ -4614,7 +4630,7 @@ async function loadRemoteData(showToast=false,options={}){
   setSyncStatus("warn","Sincronizando...");
   const [profiles,settings,results,predictions,podium,actualPodio,liveScores,liveHistory]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
-    remoteClient.from("settings").select("entry_value,prize_percents,knockout_predictions_open").eq("id","main").maybeSingle(),
+    remoteClient.from("settings").select("entry_value,prize_percents,knockout_predictions_open,knockout_phase_overrides").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
     fetchPredictionsRemote(),
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
@@ -4968,6 +4984,17 @@ function saveConfigRemote(){
     if(ok) dirtyConfig=false;
     return ok;
   }).finally(()=>{pendingConfigWrite=false;});
+}
+// Liberação/trava manual do mata-mata por fase (override do admin). Grava só a
+// coluna knockout_phase_overrides — o upsert mantém entry_value/prize_percents.
+function saveKnockoutOverridesRemote(){
+  if(!remoteClient) return;
+  if(!isAdmin()){toast("Só o administrador libera ou trava o mata-mata.");loadRemoteData(false);return;}
+  return remoteWrite(()=>remoteClient.from("settings").upsert({
+    id:"main",
+    knockout_phase_overrides:S.config.knockoutOverrides||{},
+    updated_by:remoteSession.user.id
+  },{onConflict:"id"}));
 }
 
 // Empurra os horários estáticos do calendário pra tabela game_kickoffs.
@@ -5423,18 +5450,60 @@ function groupAndPodioDeadlineMs(){
 function predictionDeadlineMs(game){
   if(!game) return NaN;
   if(!game.ko) return groupAndPodioDeadlineMs();
-  return gameKickoffMs(game);
+  return koPhaseCloseMs(game.phaseKey);
 }
 function deadlineClosed(ms){
   return Number.isFinite(ms)&&Date.now()>=ms;
 }
-// Trava manual do mata-mata: enquanto o admin não liberar, nenhum palpite de
-// confronto eliminatório pode ser editado (mesmo com o confronto já revelado).
-function knockoutPredictionsLocked(){
-  return !(S.config&&S.config.knockoutOpen===true);
+// ===== Janela em cascata dos palpites do mata-mata =====
+// Cada fase do KO abre quando a fase anterior encerra (todos os jogos com
+// resultado oficial) e fecha 30 min antes do 1º jogo da própria fase. O admin
+// pode forçar abrir/fechar cada fase via S.config.knockoutOverrides[phase].
+function koPhaseGames(phaseKey){return koGames().filter(g=>g.phaseKey===phaseKey);}
+function koPhaseFirstKickoffMs(phaseKey){
+  const ms=koPhaseGames(phaseKey).map(gameKickoffMs).filter(Number.isFinite);
+  return ms.length?Math.min(...ms):NaN;
+}
+function koPhaseCloseMs(phaseKey){
+  const first=koPhaseFirstKickoffMs(phaseKey);
+  return Number.isFinite(first)?first-KO_CLOSE_LEAD_MS:NaN;
+}
+// Fase encerrada = todos os seus jogos têm resultado oficial lançado.
+function koPhaseComplete(phaseKey){
+  const games=koPhaseGames(phaseKey);
+  return games.length>0&&games.every(g=>S.results[g.id]);
+}
+// A fase anterior (que libera esta) já encerrou? Para o R32, é a fase de grupos.
+function koPhasePrevDone(phaseKey){
+  const prev=KO_PHASE_PREV[phaseKey];
+  if(prev==="groups") return groupPhaseComplete();
+  return prev?koPhaseComplete(prev):true;
+}
+// Override do admin: 'open' | 'closed' | null(automático).
+function koPhaseOverride(phaseKey){
+  const ov=S.config&&S.config.knockoutOverrides&&S.config.knockoutOverrides[phaseKey];
+  return ov==="open"||ov==="closed"?ov:null;
+}
+// Fase liberada para palpite agora?
+function koPhaseOpen(phaseKey){
+  const ov=koPhaseOverride(phaseKey);
+  if(ov==="open") return true;
+  if(ov==="closed") return false;
+  const close=koPhaseCloseMs(phaseKey);
+  const beforeClose=!Number.isFinite(close)||Date.now()<close;
+  return koPhasePrevDone(phaseKey)&&beforeClose;
+}
+// Motivo da trava: 'before' (fase anterior não encerrou), 'after' (passou do
+// fechamento), 'forced' (admin fechou) ou null (aberta).
+function koPhaseLockReason(phaseKey){
+  if(koPhaseOpen(phaseKey)) return null;
+  if(koPhaseOverride(phaseKey)==="closed") return "forced";
+  const close=koPhaseCloseMs(phaseKey);
+  if(Number.isFinite(close)&&Date.now()>=close) return "after";
+  return "before";
 }
 function predictionDeadlineClosed(game){
-  if(game&&game.ko&&knockoutPredictionsLocked()) return true;
+  if(game&&game.ko) return !koPhaseOpen(game.phaseKey);
   return deadlineClosed(predictionDeadlineMs(game));
 }
 function podioPredictionDeadlineClosed(){
@@ -5464,8 +5533,13 @@ function predictionClosedMessage(game){
     const label=formatPredictionDeadline(groupAndPodioDeadlineMs());
     return label?`Palpites dos grupos encerrados em ${label}.`:"Palpites dos grupos encerrados.";
   }
-  if(game&&game.ko&&knockoutPredictionsLocked()&&!deadlineClosed(predictionDeadlineMs(game))){
-    return "Palpites do mata-mata ainda não foram liberados.";
+  if(game&&game.ko){
+    const scope=KO_SCOPE_LABEL[game.phaseKey]||"do mata-mata";
+    const reason=koPhaseLockReason(game.phaseKey);
+    if(reason==="before") return `Os palpites ${scope} abrem ${KO_OPEN_HINT[game.phaseKey]||"quando a fase anterior encerrar"}.`;
+    if(reason==="forced") return `Os palpites ${scope} estão fechados pelo administrador.`;
+    const label=formatPredictionDeadline(koPhaseCloseMs(game.phaseKey));
+    return label?`Os palpites ${scope} encerraram em ${label}.`:`Os palpites ${scope} estão encerrados.`;
   }
   return "Este jogo já começou. Palpites encerrados.";
 }
@@ -10647,9 +10721,53 @@ function renderPodioBody(){
     ${boardCard}
   </div>`;
 }
+// Aviso de estado da janela do mata-mata (topo da aba). Mostra o que está
+// liberado agora e quando a próxima fase abre.
+function koWindowNoteHTML(openPhases){
+  if(openPhases&&openPhases.length){
+    const parts=openPhases.map(p=>{
+      const full=KO_PHASES.find(x=>x.k===p)?.full||p;
+      const label=formatPredictionDeadline(koPhaseCloseMs(p));
+      return label?`${full} — fecha ${label}`:full;
+    });
+    return `<div class="pal-stage-note"><span class="ic">✅</span><span>Liberado agora: ${parts.join(" · ")}. As próximas fases abrem conforme cada fase encerra.</span></div>`;
+  }
+  const next=KO_PHASE_ORDER.find(p=>koPhaseGames(p).length&&koPhaseLockReason(p)==="before");
+  const hint=next?` Os palpites ${KO_SCOPE_LABEL[next]} abrem ${KO_OPEN_HINT[next]}.`:"";
+  return `<div class="pal-stage-note"><span class="ic">⏳</span><span>Os confrontos aparecem conforme cada grupo encerra. Cada fase libera quando a anterior termina e fecha 30 min antes do seu 1º jogo.${hint}</span></div>`;
+}
+// Painel só do admin: estado de cada fase + botões Auto/Abrir/Fechar.
+function koAdminPanelHTML(){
+  const rows=KO_PHASE_ORDER.filter(p=>koPhaseGames(p).length).map(p=>{
+    const full=KO_PHASES.find(x=>x.k===p)?.full||p;
+    const ov=koPhaseOverride(p);
+    const open=koPhaseOpen(p);
+    const reason=koPhaseLockReason(p);
+    const closeLabel=formatPredictionDeadline(koPhaseCloseMs(p));
+    const stateTxt=open?(ov==="open"?"Aberta (forçado)":"Aberta"):reason==="forced"?"Fechada (forçado)":reason==="after"?"Encerrada":"Aguardando fase anterior";
+    const stateColor=open?"#15a36b":(reason==="forced"?"#d83a34":"#9ca3af");
+    const btn=(val,txt)=>{
+      const active=(val==="auto"&&!ov)||ov===val;
+      return `<button type="button" class="pass-btn ${active?"active":""}" style="padding:3px 10px;font-size:.72rem" onclick="setKoPhaseOverride('${p}','${val}')">${txt}</button>`;
+    };
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:7px 0;border-top:1px solid rgba(127,127,127,.18)">
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:150px">
+        <span style="font-weight:850;font-size:.82rem;color:var(--text)">${esc(full)}</span>
+        <span style="font-size:.69rem;color:${stateColor};font-weight:800">${esc(stateTxt)}${closeLabel?` · fecha ${esc(closeLabel)}`:""}</span>
+      </div>
+      <div style="display:flex;gap:4px">${btn("auto","Auto")}${btn("open","Abrir")}${btn("closed","Fechar")}</div>
+    </div>`;
+  }).join("");
+  return `<div style="margin:10px 0;padding:10px 12px;border:1px solid rgba(127,127,127,.22);border-radius:12px">
+    <div style="font-weight:900;font-size:.8rem;color:var(--text);display:flex;align-items:center;gap:6px">🛠️ Controle do mata-mata <span style="font-weight:700;color:var(--muted)">· admin</span></div>
+    ${rows}
+    <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45">Auto segue a regra: abre quando a fase anterior encerra e fecha 30 min antes do 1º jogo da fase. "Abrir"/"Fechar" forçam manualmente (vale para todos).</div>
+  </div>`;
+}
 // ===== KNOCKOUT BRACKET =====
 function renderKnockoutBody(){
-  const koLocked=knockoutPredictionsLocked();
+  const openPhases=KO_PHASE_ORDER.filter(p=>koPhaseGames(p).length&&koPhaseOpen(p));
+  const anyOpen=openPhases.length>0;
   const r32=koGames().filter(g=>g.phaseKey==="r32");
   const finalGame=GAMES.find(g=>g.phaseKey==="final");
   const p3Game=GAMES.find(g=>g.phaseKey==="p3");
@@ -10740,11 +10858,12 @@ function renderKnockoutBody(){
   </div>`;
 
   return `<div class="panel" style="padding:14px">
-    ${koLocked?`<div class="pal-stage-note"><span class="ic">⏳</span><span>Os confrontos aparecem conforme cada grupo encerra. Os palpites do mata-mata ainda não foram liberados.</span></div>`:""}
+    ${koWindowNoteHTML(openPhases)}
+    ${isAdmin()?koAdminPanelHTML():""}
     <div class="pal-filters">
       <div style="display:flex;flex-direction:column;gap:2px">
         <div style="font-size:.95rem;font-weight:950;color:var(--text);letter-spacing:.2px">Chaveamento do mata-mata</div>
-        <div class="microcopy">${koLocked?`Palpites do mata-mata bloqueados por enquanto. ${koGames().length} confrontos até o título.`:`Edite os placares direto na chave. ${koGames().length} confrontos até o título.`}</div>
+        <div class="microcopy">${anyOpen?`Edite os placares direto na chave. ${koGames().length} confrontos até o título.`:`Cada fase libera quando a anterior encerra. ${koGames().length} confrontos até o título.`}</div>
       </div>
       <div class="progress-pill">${filledFiltered}/${koGames().length} preenchidos</div>
     </div>
@@ -10777,9 +10896,14 @@ function predictionStateChipsHTML(key,game,pal,opts={}){
     chips.push(`<span class="pal-state-chip ${cls}" title="${esc(title)}"><span class="dot"></span>${esc(label)}</span>`);
   }
   if(closed){
-    const label=formatPredictionDeadline(predictionDeadlineMs(game));
-    const title=label?`Prazo encerrado em ${label}.`:"Prazo encerrado.";
-    chips.push(`<span class="pal-state-chip closed" title="${esc(title)}"><span class="dot"></span>Prazo encerrado</span>`);
+    if(game&&game.ko&&koPhaseLockReason(game.phaseKey)==="before"){
+      const hint=KO_OPEN_HINT[game.phaseKey]||"quando a fase anterior encerrar";
+      chips.push(`<span class="pal-state-chip closed" title="${esc("Abre "+hint+".")}"><span class="dot"></span>Aguardando liberação</span>`);
+    }else{
+      const label=formatPredictionDeadline(predictionDeadlineMs(game));
+      const title=label?`Prazo encerrado em ${label}.`:"Prazo encerrado.";
+      chips.push(`<span class="pal-state-chip closed" title="${esc(title)}"><span class="dot"></span>Prazo encerrado</span>`);
+    }
   }
   if(!chips.length) return "";
   return `<div class="pal-state-chips ${opts.compact?"compact":""}">${chips.join("")}</div>`;
@@ -11029,6 +11153,16 @@ function renderPalpiteRow(game){
 }
 function selPal(i){palPi=i;palSelectionTouched=true;renderPalpites();}
 function setPalStage(stage){palStage=stage;palFilter="all";renderPalpites();}
+// Admin força abrir/fechar uma fase do mata-mata (ou volta pro automático).
+function setKoPhaseOverride(phase,val){
+  if(!isAdmin()){toast("Só o administrador libera ou trava o mata-mata.");return;}
+  if(!S.config.knockoutOverrides) S.config.knockoutOverrides={};
+  if(val==="auto") delete S.config.knockoutOverrides[phase];
+  else if(val==="open"||val==="closed") S.config.knockoutOverrides[phase]=val;
+  save();
+  saveKnockoutOverridesRemote();
+  renderPalpites();
+}
 function setPalFilter(k){palFilter=k;renderPalpites();}
 function setPal(pi,gid,w,v){
   if(!canEditParticipant(pi)){toast("Você só pode alterar seus próprios palpites.");renderPalpites();return;}

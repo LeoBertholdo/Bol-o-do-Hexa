@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab — Filme da Copa (animações)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#00843d;--green-2:#005f2f;--yellow:#ffdf00;--blue:#002776;--blue-2:#071c4d;
+  --sky:#e9f4ff;--bg:#f6f8ee;--surface:#fffdf4;--surface-2:#ffffff;--border:#dce5d8;
+  --text:#172033;--muted:#697589;--gold:#f5c542;--silver:#b9c3cf;--bronze:#c98747;--red:#d83a34;
+  --shadow:0 18px 50px rgba(0,39,118,.12);
+}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);
+  background:linear-gradient(180deg,#f8fbf1 0%,#eef5ff 52%,#f7f9f1 100%);min-height:100vh;padding:24px}
+.wrap{max-width:860px;margin:0 auto}
+.lab-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;font-size:13px}
+.lab-bar button{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;font-weight:700;cursor:pointer}
+.lab-bar button.on{outline:2px solid var(--blue)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 18px 20px;box-shadow:var(--shadow)}
+.section-kicker{font-size:11px;font-weight:900;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+h2{font-size:20px;margin-bottom:6px}
+.microcopy{font-size:13px;color:var(--muted)}
+.action-btn{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:#fff;font-weight:800;cursor:pointer;color:var(--blue)}
+.action-btn.secondary{background:#f4f7ff}
+input[type=range]{accent-color:var(--blue)}
+
+/* ===== Filme da Copa (corrida do ranking) — CSS REAL copiado de bolao2026.html ===== */
+.filme-caption{min-height:48px;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;flex-wrap:wrap}
+.filme-caption .filme-caption-date{font-size:12px;font-weight:500;opacity:.7;display:block}
+.filme-caption .filme-caption-live{font-size:11px;font-weight:700;color:#d83a34;text-transform:uppercase;letter-spacing:.4px}
+.filme-stage{position:relative;margin-top:10px;overflow:hidden}
+.filme-row{position:absolute;left:0;right:0;display:flex;align-items:center;gap:10px}
+.filme-row .filme-posn{width:26px;text-align:right;font-weight:700;font-size:14px;opacity:.8;flex:none}
+.filme-row .filme-name{width:34%;max-width:190px;flex:none;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filme-row .filme-trend{width:16px;flex:none;font-size:12px;text-align:center}
+.filme-trend.up{color:#15a36b}
+.filme-trend.down{color:#d83a34}
+.filme-row .filme-bar-wrap{flex:1;min-width:0}
+.filme-row .filme-bar{height:22px;border-radius:6px;min-width:2px}
+.filme-row .filme-pts{width:58px;flex:none;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px}
+.filme-row .filme-delta{font-size:11px;font-weight:600;margin-left:4px}
+.filme-delta.pos{color:#15a36b}
+.filme-delta.neg{color:#d83a34}
+.filme-controls{display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap}
+.filme-controls input[type=range]{flex:1;min-width:160px}
+.filme-progress{font-size:12px;opacity:.75;font-variant-numeric:tabular-nums;white-space:nowrap}
+.filme-speed{display:flex;gap:4px}
+.filme-speed button{padding:4px 10px;font-size:12px;border-radius:8px}
+.filme-speed button.active{outline:2px solid #002776}
+.filme-chart{margin-top:18px}
+.filme-chart svg{width:100%;height:auto;display:block}
+
+/* ===== NOVAS ANIMAÇÕES (preenchido a partir do spec) — INÍCIO ===== */
+/* (placeholder) */
+/* ===== NOVAS ANIMAÇÕES — FIM ===== */
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="lab-bar">
+    <strong>Lab Filme</strong>
+    <button onclick="labRebuild()">↻ regenerar dados</button>
+    <button id="rmBtn" onclick="labToggleRM()">prefers-reduced-motion: off</button>
+    <span class="microcopy" id="labHint">harness de animação · dados fictícios</span>
+  </div>
+  <div id="tab-filme"></div>
+</div>
+
+<script>
+/* ===================== STUBS / HELPERS (cópia fiel) ===================== */
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));}
+function formatGameDate(key){
+  if(!key) return "";
+  const p=String(key).split("-");
+  const meses=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  if(p.length<3) return key;
+  return `${p[2]}/${meses[(+p[1])-1]||"?"}`;
+}
+const TEAM_FLAGS={Brasil:"🇧🇷",Sérvia:"🇷🇸",Argentina:"🇦🇷",México:"🇲🇽",França:"🇫🇷",Croácia:"🇭🇷",Espanha:"🇪🇸",Japão:"🇯🇵",Inglaterra:"🏴",Alemanha:"🇩🇪",Portugal:"🇵🇹",Uruguai:"🇺🇾"};
+function hoverRankingSeries(){}
+function focusRankingSeries(){}
+
+const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
+
+/* --- cópia fiel das funções de gráfico de bolao2026.html --- */
+function chartShortPlayerLabel(name){
+  if(!name) return "?";
+  const trimmed=String(name).trim();
+  if(!trimmed) return "?";
+  const firstWord=trimmed.split(/\s+/)[0];
+  return firstWord.length>10?firstWord.slice(0,10)+"…":firstWord;
+}
+function chartUniqueLabels(names){
+  const labels=names.map(n=>chartShortPlayerLabel(n));
+  const counts={};
+  labels.forEach(l=>{counts[l]=(counts[l]||0)+1;});
+  return labels.map((label,idx)=>{
+    if(counts[label]<=1) return label;
+    const parts=String(names[idx]||"").trim().split(/\s+/);
+    const suffix=(parts[1]||parts[0].slice(1,2)||"").trim();
+    const initial=suffix?suffix[0].toUpperCase():"";
+    return initial?`${label} ${initial}.`:label;
+  });
+}
+function chartIntegerTicks(minVal,maxVal,maxTicks){
+  maxTicks=Math.max(4,maxTicks||12);
+  const range=Math.max(1,maxVal-minVal);
+  const candidates=[1,2,5,10,20,25,50,100,200,500];
+  let step=candidates[candidates.length-1];
+  for(const s of candidates){
+    if(Math.floor(range/s)+1<=maxTicks){ step=s; break; }
+  }
+  const start=Math.floor(minVal/step)*step;
+  const end=Math.ceil(maxVal/step)*step;
+  const ticks=[];
+  for(let v=start;v<=end+1e-9;v+=step){
+    if(v>=minVal-1e-9&&v<=maxVal+1e-9) ticks.push(Math.round(v));
+  }
+  if(!ticks.length) ticks.push(Math.round(minVal),Math.round(maxVal));
+  return Array.from(new Set(ticks));
+}
+function chartEndpointGroupLayout(items,lineHeight,groupGap,topBound,bottomBound,maxChars){
+  if(!items.length) return [];
+  const byValue=new Map();
+  items.forEach(item=>{
+    if(!byValue.has(item.value)) byValue.set(item.value,{value:item.value,trueY:item.y,members:[]});
+    byValue.get(item.value).members.push(item);
+  });
+  const groups=Array.from(byValue.values()).sort((a,b)=>a.trueY-b.trueY);
+  groups.forEach(group=>{
+    const valueLen=` · ${group.value}`.length;
+    const lines=[];
+    let line=[],lineLen=0;
+    group.members.forEach((member,i)=>{
+      const tokenLen=member.name.length+(i===group.members.length-1?valueLen:2);
+      if(line.length&&lineLen+tokenLen>maxChars){lines.push(line);line=[];lineLen=0;}
+      line.push(member);
+      lineLen+=tokenLen;
+    });
+    if(line.length) lines.push(line);
+    group.lines=lines;
+    group.height=(lines.length-1)*lineHeight;
+    group.y=group.trueY-group.height/2;
+  });
+  for(let i=1;i<groups.length;i++){
+    const minY=groups[i-1].y+groups[i-1].height+groupGap;
+    if(groups[i].y<minY) groups[i].y=minY;
+  }
+  const last=groups[groups.length-1];
+  if(last.y+last.height>bottomBound){
+    let overflow=last.y+last.height-bottomBound;
+    for(let i=groups.length-1;i>=0;i--){
+      groups[i].y-=overflow;
+      if(i===0) break;
+      const gap=groups[i].y-(groups[i-1].y+groups[i-1].height);
+      if(gap<groupGap) overflow=Math.max(0,groupGap-gap);
+      else break;
+    }
+  }
+  if(groups[0].y<topBound){
+    let shift=topBound-groups[0].y;
+    for(let i=0;i<groups.length;i++){
+      groups[i].y+=shift;
+      if(i===groups.length-1) break;
+      const gap=groups[i+1].y-(groups[i].y+groups[i].height);
+      if(gap<groupGap) shift=Math.max(0,groupGap-gap);
+      else break;
+    }
+  }
+  return groups;
+}
+function chartEndpointLabelsSvg(items,opts){
+  const groups=chartEndpointGroupLayout(items,opts.lineHeight,opts.groupGap,opts.topBound,opts.bottomBound,opts.maxChars);
+  return groups.map(group=>{
+    const centerY=group.y+group.height/2;
+    const connector=Math.abs(centerY-group.trueY)>2
+      ?`<path d="M ${(opts.baseX+5).toFixed(2)} ${group.trueY.toFixed(2)} L ${(opts.baseX+10).toFixed(2)} ${centerY.toFixed(2)}" fill="none" stroke="${group.members[0].color}" stroke-width="1" opacity=".45"></path>`
+      :"";
+    const multi=group.members.length>1;
+    let memberCount=0;
+    const linesSvg=group.lines.map((line,li)=>{
+      const y=group.y+li*opts.lineHeight;
+      const isLastLine=li===group.lines.length-1;
+      const spans=line.map(member=>{
+        memberCount++;
+        const sep=memberCount<group.members.length?`<tspan fill="#94a3b8" font-weight="800">, </tspan>`:"";
+        const focusAttrs=member.i!=null?` class="chart-endpoint-name" data-series="${member.i}"`:"";
+        return `<tspan fill="${member.color}"${focusAttrs}>${esc(member.name)}</tspan>${sep}`;
+      }).join("");
+      const valueSpan=isLastLine?`<tspan fill="${multi?"#41516d":group.members[0].color}"> · ${group.value}</tspan>`:"";
+      return `<text x="${(opts.baseX+13).toFixed(2)}" y="${(y+opts.dy).toFixed(2)}" font-size="${opts.fontSize}" font-weight="900">${spans}${valueSpan}</text>`;
+    }).join("");
+    return `<g class="chart-endpoint-label">${connector}${linesSvg}</g>`;
+  }).join("");
+}
+function rankingLinePathSegmentedFlex(values,states,xFor,yFor){
+  const pt=(value,index)=>`${xFor(index).toFixed(2)} ${yFor(value).toFixed(2)}`;
+  const solid=[],dashed=[];
+  for(let i=1;i<values.length;i++){
+    const seg=`M ${pt(values[i-1],i-1)} L ${pt(values[i],i)}`;
+    if(states[i]==="live") dashed.push(seg); else solid.push(seg);
+  }
+  return {solid:solid.join(" "),dashed:dashed.join(" ")};
+}
+
+/* ===================== MOCK DATA ===================== */
+function mockFilmeData(){
+  const people=[
+    {i:0,name:"Leonardo",color:RANKING_SERIES_COLORS[0]},
+    {i:1,name:"Mariana",color:RANKING_SERIES_COLORS[1]},
+    {i:2,name:"Rafael",color:RANKING_SERIES_COLORS[2]},
+    {i:3,name:"Beatriz",color:RANKING_SERIES_COLORS[3]},
+    {i:4,name:"Gustavo",color:RANKING_SERIES_COLORS[4]},
+    {i:5,name:"Camila",color:RANKING_SERIES_COLORS[5]},
+    {i:6,name:"Thiago",color:RANKING_SERIES_COLORS[6]},
+    {i:7,name:"Aline",color:RANKING_SERIES_COLORS[7]},
+  ];
+  const games=[
+    {t1:"Brasil",t2:"Sérvia",s1:2,s2:0,date:"2026-06-14"},
+    {t1:"Argentina",t2:"México",s1:1,s2:1,date:"2026-06-15"},
+    {t1:"França",t2:"Croácia",s1:3,s2:1,date:"2026-06-16"},
+    {t1:"Espanha",t2:"Japão",s1:0,s2:2,date:"2026-06-17"},
+    {t1:"Inglaterra",t2:"Alemanha",s1:1,s2:2,date:"2026-06-18"},
+    {t1:"Portugal",t2:"Uruguai",s1:2,s2:2,date:"2026-06-19"},
+    {t1:"Brasil",t2:"França",s1:1,s2:0,date:"2026-06-22"},
+    {t1:"Argentina",t2:"Espanha",s1:2,s2:1,date:"2026-06-23"},
+  ];
+  const series=people.map(p=>({i:p.i,name:p.name,color:p.color,values:[0]}));
+  const states=["start"];
+  const events=[null];
+  const totals={}; people.forEach(p=>totals[p.i]=0);
+  // pseudo-random determinístico
+  let seed=42; const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  const liveIdx=games.length-1; // último jogo entra "ao vivo"
+  games.forEach((g,gi)=>{
+    const isLive=gi===liveIdx;
+    // frame parcial (ao vivo) com metade dos pontos
+    const partial=people.map(()=>Math.round(rnd()*3));
+    if(isLive){
+      people.forEach((p,pi)=>{series[pi].values.push(totals[p.i]+Math.max(0,partial[pi]-1));});
+      states.push("live");
+      events.push({game:g,res:{s1:Math.max(0,g.s1-1),s2:Math.max(0,g.s2)}});
+    }
+    // frame final
+    people.forEach((p,pi)=>{
+      const gain=isLive?partial[pi]:Math.round(rnd()*5);
+      totals[p.i]+=gain;
+      series[pi].values.push(totals[p.i]);
+    });
+    states.push(isLive?"live":"final");
+    events.push({game:g,res:{s1:g.s1,s2:g.s2}});
+  });
+
+  // monta frames com a MESMA lógica de filmeFrames()
+  const count=series.length?series[0].values.length:0;
+  const frames=[];
+  let prevPos={},prevPts={};
+  people.forEach((r,idx)=>{prevPos[r.i]=idx;prevPts[r.i]=0;});
+  for(let k=0;k<count;k++){
+    const entries=series.map(s=>({i:s.i,name:s.name,color:s.color,pts:s.values[k]}));
+    entries.sort((a,b)=>b.pts-a.pts||prevPos[a.i]-prevPos[b.i]||a.name.localeCompare(b.name));
+    const pos={};
+    entries.forEach((e,idx)=>{
+      pos[e.i]=idx;e.pos=idx;
+      e.delta=e.pts-(prevPts[e.i]||0);
+      e.moved=idx-(prevPos[e.i]!=null?prevPos[e.i]:idx);
+    });
+    frames.push({entries,state:states[k],event:events[k]});
+    prevPos=pos;prevPts={};entries.forEach(e=>{prevPts[e.i]=e.pts;});
+  }
+  const allVals=series.flatMap(s=>s.values);
+  return {frames,maxVal:Math.max(3,...allVals),minVal:Math.min(0,...allVals),series,states};
+}
+
+let LAB_DATA=mockFilmeData();
+function filmeFrames(){return LAB_DATA;}
+function filmeAvailable(){return true;}
+
+/* ===================== CÓDIGO REAL DO FILME (cópia fiel) ===================== */
+let filmePlaying=false,filmeFrameIdx=null,filmeTimer=null,filmeSpeed=1;
+let activeTab="filme";
+const FILME_SPEED_MS={1:900,2:450,4:220};
+const FILME_CHART={W:760,H:240,padX:42,padR:110,padY:12,padB:22};
+function filmeChartY(data,v){
+  const {H,padY,padB}=FILME_CHART;
+  const uh=H-padY-padB;
+  const range=Math.max(1,data.maxVal-data.minVal);
+  return padY+uh-uh*((v-data.minVal)/range);
+}
+function filmeChartX(data,idx){
+  const n=data.frames.length;
+  return FILME_CHART.padX+(FILME_CHART.W-FILME_CHART.padX-FILME_CHART.padR)*(n>1?idx/(n-1):0);
+}
+function filmeChartSvg(data){
+  const {W,H,padX,padR,padY,padB}=FILME_CHART;
+  const uw=W-padX-padR,uh=H-padY-padB;
+  const range=Math.max(1,data.maxVal-data.minVal);
+  const xFor=i=>filmeChartX(data,i);
+  const yFor=v=>padY+uh-uh*((v-data.minVal)/range);
+  const ticks=chartIntegerTicks(data.minVal,data.maxVal,8);
+  const grid=ticks.map(t=>`<g><line x1="${padX}" x2="${W-padR}" y1="${yFor(t).toFixed(1)}" y2="${yFor(t).toFixed(1)}" stroke="rgba(15,23,42,.08)"></line><text x="${padX-8}" y="${yFor(t).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="rgba(15,23,42,.55)">${t}</text></g>`).join("");
+  const lines=data.series.map(s=>{
+    const seg=rankingLinePathSegmentedFlex(s.values,data.states,xFor,yFor);
+    return `${seg.solid?`<path d="${seg.solid}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linecap="round"></path>`:""}
+      ${seg.dashed?`<path d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-dasharray="5 5" stroke-linecap="round"></path>`:""}`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação até o lance atual">
+    <defs><clipPath id="filmeChartClip"><rect id="filmeClipRect" x="0" y="0" width="${padX}" height="${H}"></rect></clipPath></defs>
+    ${grid}
+    <g clip-path="url(#filmeChartClip)">${lines}</g>
+    <g id="filmeChartLabels"></g>
+    <rect id="filmeCursorRect" x="${(padX-1).toFixed(1)}" y="${padY}" width="2" height="${uh}" rx="1" fill="rgba(0,39,118,.45)"></rect>
+  </svg>`;
+}
+function filmeCaptionHtml(frame){
+  if(frame.state==="start") return `<span>Início da Copa — todo mundo com 0 ponto</span>`;
+  if(frame.state==="podio") return `<span>Pódio oficial somado</span>`;
+  const ev=frame.event;
+  if(!ev) return "";
+  const f1=TEAM_FLAGS[ev.game.t1]||"",f2=TEAM_FLAGS[ev.game.t2]||"";
+  const liveTag=frame.state==="live"?`<span class="filme-caption-live">ao vivo · parcial</span>`:"";
+  return `<span>${f1} ${esc(ev.game.t1)} <strong>${ev.res.s1} x ${ev.res.s2}</strong> ${esc(ev.game.t2)} ${f2}
+    <span class="filme-caption-date">${ev.game.date?formatGameDate(ev.game.date):""}</span></span>${liveTag}`;
+}
+function renderFilme(){
+  const el=document.getElementById("tab-filme");
+  if(!el) return;
+  if(!filmeAvailable()){el.innerHTML="";return;}
+  const data=filmeFrames();
+  const total=data.frames.length;
+  if(!total||total<2){
+    el.innerHTML=`<div class="card"><div class="section-kicker">Histórico da Copa</div>
+      <h2>Corrida do ranking</h2>
+      <p class="microcopy">Quando o primeiro jogo tiver placar, a animação aparece aqui.</p></div>`;
+    return;
+  }
+  if(filmeFrameIdx==null||filmeFrameIdx>total-1) filmeFrameIdx=total-1;
+  const rowH=30;
+  const n=data.frames[0].entries.length;
+  el.innerHTML=`<div class="card">
+    <div class="section-kicker">Histórico da Copa</div>
+    <h2 style="margin-bottom:6px">Corrida do ranking, gol a gol</h2>
+    <div class="filme-caption" id="filmeCaption"></div>
+    <div class="filme-stage" id="filmeStage" style="height:${n*rowH}px">
+      ${data.frames[0].entries.map(e=>`<div class="filme-row" id="filmeRow-${e.i}">
+        <span class="filme-posn" id="filmePos-${e.i}"></span>
+        <span class="filme-trend" id="filmeTrend-${e.i}"></span>
+        <span class="filme-name">${esc(e.name)}</span>
+        <span class="filme-bar-wrap"><span class="filme-bar" id="filmeBar-${e.i}" style="display:block;background:${e.color}"></span></span>
+        <span class="filme-pts"><span id="filmePts-${e.i}">0</span><span class="filme-delta" id="filmeDelta-${e.i}"></span></span>
+      </div>`).join("")}
+    </div>
+    <div class="filme-chart">${filmeChartSvg(data)}</div>
+    <div class="filme-controls">
+      <button class="action-btn" id="filmePlayBtn" onclick="filmeTogglePlay()">▶ Assistir</button>
+      <div class="filme-speed">
+        ${[1,2,4].map(s=>`<button class="action-btn secondary${filmeSpeed===s?" active":""}" onclick="filmeSetSpeed(${s})">${s}x</button>`).join("")}
+      </div>
+      <input type="range" min="0" max="${total-1}" step="1" value="${filmeFrameIdx}" id="filmeSlider"
+        oninput="filmeSeek(+this.value)" aria-label="Posição no histórico">
+      <span class="filme-progress" id="filmeProgress"></span>
+    </div>
+  </div>`;
+  filmeApplyFrame(data,filmeFrameIdx,false);
+}
+function filmeApplyFrame(data,idx,animate=true){
+  const frame=data.frames[idx];
+  if(!frame) return;
+  filmeFrameIdx=idx;
+  const rowH=30;
+  const stepMs=FILME_SPEED_MS[filmeSpeed]||900;
+  const moveMs=!animate?0:filmePlaying?Math.round(stepMs*0.92):420;
+  const sweepMs=!animate?0:filmePlaying?stepMs:420;
+  frame.entries.forEach(e=>{
+    const row=document.getElementById(`filmeRow-${e.i}`);
+    if(!row) return;
+    row.style.transition=moveMs?`transform ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
+    row.style.transform=`translateY(${e.pos*rowH}px)`;
+    const bar=document.getElementById(`filmeBar-${e.i}`);
+    if(bar){
+      bar.style.transition=moveMs?`width ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
+      bar.style.width=`${Math.max(0.5,Math.max(0,e.pts)/data.maxVal*100)}%`;
+    }
+    const posEl=document.getElementById(`filmePos-${e.i}`);
+    if(posEl) posEl.textContent=`${e.pos+1}º`;
+    const ptsEl=document.getElementById(`filmePts-${e.i}`);
+    if(ptsEl) ptsEl.textContent=e.pts;
+    const deltaEl=document.getElementById(`filmeDelta-${e.i}`);
+    if(deltaEl){
+      deltaEl.textContent=e.delta?`${e.delta>0?"+":""}${e.delta}`:"";
+      deltaEl.className=`filme-delta ${e.delta>0?"pos":e.delta<0?"neg":""}`;
+    }
+    const trendEl=document.getElementById(`filmeTrend-${e.i}`);
+    if(trendEl){
+      trendEl.textContent=e.moved<0?"▲":e.moved>0?"▼":"";
+      trendEl.className=`filme-trend ${e.moved<0?"up":e.moved>0?"down":""}`;
+    }
+  });
+  const chartX=filmeChartX(data,idx);
+  const clipRect=document.getElementById("filmeClipRect");
+  const cursorRect=document.getElementById("filmeCursorRect");
+  [[clipRect,"width",chartX],[cursorRect,"x",chartX-1]].forEach(([elm,prop,val])=>{
+    if(!elm) return;
+    elm.style.transition=sweepMs?`${prop} ${sweepMs}ms linear`:"none";
+    elm.style[prop]=`${val.toFixed(1)}px`;
+    elm.setAttribute(prop,val.toFixed(1));
+  });
+  const labelsEl=document.getElementById("filmeChartLabels");
+  if(labelsEl){
+    const uniq=chartUniqueLabels(data.series.map(s=>s.name));
+    const items=data.series.map((s,si)=>({color:s.color,name:uniq[si],value:s.values[idx],y:filmeChartY(data,s.values[idx]),i:s.i}));
+    labelsEl.innerHTML=chartEndpointLabelsSvg(items,{
+      baseX:chartX,lineHeight:13,groupGap:14,
+      topBound:FILME_CHART.padY+2,bottomBound:FILME_CHART.H-FILME_CHART.padB-2,
+      maxChars:12,fontSize:11,dy:4
+    });
+  }
+  const cap=document.getElementById("filmeCaption");
+  if(cap) cap.innerHTML=filmeCaptionHtml(frame);
+  const slider=document.getElementById("filmeSlider");
+  if(slider&&+slider.value!==idx) slider.value=idx;
+  const prog=document.getElementById("filmeProgress");
+  if(prog) prog.textContent=`lance ${idx+1} de ${data.frames.length}`;
+}
+function filmeStop(){
+  filmePlaying=false;
+  if(filmeTimer){clearTimeout(filmeTimer);filmeTimer=null;}
+  const btn=document.getElementById("filmePlayBtn");
+  if(btn) btn.textContent="▶ Assistir";
+}
+function filmeTogglePlay(){
+  if(filmePlaying){filmeStop();return;}
+  const data=filmeFrames();
+  if(data.frames.length<2) return;
+  if(filmeFrameIdx==null||filmeFrameIdx>=data.frames.length-1){
+    filmeApplyFrame(data,0,false);
+  }
+  filmePlaying=true;
+  const btn=document.getElementById("filmePlayBtn");
+  if(btn) btn.textContent="⏸ Pausar";
+  const tick=()=>{
+    if(!filmePlaying||activeTab!=="filme"){filmeStop();return;}
+    if(filmeFrameIdx>=data.frames.length-1){filmeStop();return;}
+    filmeApplyFrame(data,filmeFrameIdx+1,true);
+    filmeTimer=setTimeout(tick,FILME_SPEED_MS[filmeSpeed]||900);
+  };
+  filmeTimer=setTimeout(tick,FILME_SPEED_MS[filmeSpeed]||900);
+}
+function filmeSetSpeed(s){
+  filmeSpeed=FILME_SPEED_MS[s]?s:1;
+  document.querySelectorAll(".filme-speed button").forEach(b=>{
+    b.classList.toggle("active",b.textContent===`${filmeSpeed}x`);
+  });
+}
+function filmeSeek(idx){
+  filmeStop();
+  filmeApplyFrame(filmeFrames(),idx,true);
+}
+
+/* ===================== LAB CONTROLS ===================== */
+function labRebuild(){filmeStop();LAB_DATA=mockFilmeData();filmeFrameIdx=null;renderFilme();}
+function labToggleRM(){
+  const html=document.documentElement;
+  const on=html.classList.toggle("force-rm");
+  document.getElementById("rmBtn").textContent="prefers-reduced-motion: "+(on?"ON (simulado)":"off");
+}
+renderFilme();
+</script>
+</body>
+</html>
