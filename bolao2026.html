@@ -3865,50 +3865,32 @@ body.chart-modal-open{overflow:hidden}
   --filme-ease-emph:cubic-bezier(.34,1.56,.64,1);
   --filme-dur-seek:420ms;
   --filme-dur-ui:180ms;
-  --filme-flow-dur:1.15s; /* reescrito por frame via JS conforme a velocidade */
+  --filme-flow-dur:1.5s; /* reescrito por frame via JS conforme a velocidade */
 }
-/* Barra mantém o comprimento por width; o fluxo de energia (E→D, viva mesmo
-   parada) é um ::after com sheen diagonal em px fixo — não distorce quando a
-   largura anima nem quando a row se reordena. */
+/* Barra "viva" mesmo parada: um ::after com onda de brilho diagonal em px fixo
+   (não distorce quando a largura anima nem quando a row se reordena). */
 .filme-row .filme-bar{position:relative;overflow:hidden}
 .filme-row .filme-bar::after{
   content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background-image:repeating-linear-gradient(115deg,
-    rgba(255,255,255,0) 0px,rgba(255,255,255,0) 14px,
-    rgba(255,255,255,.16) 22px,rgba(255,255,255,.22) 26px,
-    rgba(255,255,255,.16) 30px,rgba(255,255,255,0) 38px);
-  background-size:52px 100%;background-repeat:repeat;
+  background-image:repeating-linear-gradient(110deg,
+    rgba(255,255,255,0) 0px,rgba(255,255,255,.24) 40px,rgba(255,255,255,0) 80px);
+  background-size:80px 100%;background-repeat:repeat;
   opacity:0;transition:opacity .35s ease;
 }
-.filme-row.is-flowing .filme-bar::after{opacity:1;animation:filmeBarFlow var(--filme-flow-dur,1.15s) linear infinite;will-change:background-position}
-@keyframes filmeBarFlow{from{background-position-x:0}to{background-position-x:-52px}}
-/* Lances ao vivo: sheen mais forte + leve pulso de brilho + anel vermelho */
-@keyframes filmeBarLivePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
-.filme-row.is-live .filme-bar::after{
-  background-image:repeating-linear-gradient(115deg,
-    rgba(255,255,255,0) 0px,rgba(255,255,255,0) 12px,
-    rgba(255,255,255,.24) 20px,rgba(255,255,255,.34) 26px,
-    rgba(255,255,255,.24) 32px,rgba(255,255,255,0) 40px);
-  opacity:1;
-  animation:filmeBarFlow calc(var(--filme-flow-dur,1.15s) * .55) linear infinite,
-            filmeBarLivePulse 1.6s ease-in-out infinite;
-}
-.filme-row.is-live .filme-bar{box-shadow:0 0 0 1.5px rgba(216,58,52,.55),0 0 0 4px rgba(216,58,52,.12)}
+.filme-row.is-flowing .filme-bar::after{opacity:1;animation:filmeBarFlow var(--filme-flow-dur,1.5s) linear infinite;will-change:background-position}
+@keyframes filmeBarFlow{from{background-position-x:0}to{background-position-x:-80px}}
 /* Containment + promoção de camada só durante o play */
 .filme-stage{contain:layout paint}
 .filme-chart{contain:layout paint}
 .filme-stage.is-playing .filme-row{will-change:translate}
-/* Pop de ultrapassagem: posição da row usa `translate` (transição = deslize);
-   o pop usa `scale` (animação) — propriedades independentes, sem cortar o deslize. */
-@keyframes filmeOvertake{0%{scale:1;box-shadow:none}30%{scale:1.05;box-shadow:0 6px 22px var(--row-glow,rgba(0,39,118,.35))}100%{scale:1;box-shadow:none}}
+/* Pop de ultrapassagem CONTIDO na barra (sem glow de largura total) */
+@keyframes filmeOvertake{0%{transform:scale(1)}40%{transform:scale(1.05)}100%{transform:scale(1)}}
 @keyframes filmeDeltaIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes filmeTrendPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
-.filme-row.filme-overtake{z-index:3;animation:filmeOvertake .5s var(--filme-ease-emph,cubic-bezier(.34,1.56,.64,1))}
+.filme-row.filme-overtake{z-index:3}
+.filme-row.filme-overtake .filme-bar{transform-origin:left center;animation:filmeOvertake .5s var(--filme-ease-emph,cubic-bezier(.34,1.56,.64,1))}
 .filme-delta.show{animation:filmeDeltaIn .32s ease-out}
 .filme-trend.show{display:inline-block;animation:filmeTrendPop .36s var(--filme-ease-emph,cubic-bezier(.34,1.56,.64,1))}
-/* Ripple de gol sincronizado com o lance */
-@keyframes filmeGoalPulse{0%{box-shadow:0 0 0 0 var(--row-glow,rgba(0,39,118,.5))}70%{box-shadow:0 0 0 10px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
-.filme-row .filme-bar.goal{animation:filmeGoalPulse .55s ease-out}
 /* Gráfico: formigas marchando no trecho ao vivo + agulha com glow/pulso */
 @keyframes filmeAnts{to{stroke-dashoffset:-26}}
 @keyframes filmeCursorPulse{0%,100%{opacity:.45}50%{opacity:.75}}
@@ -3925,15 +3907,12 @@ body.chart-modal-open{overflow:hidden}
 .filme-controls input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,39,118,.3);cursor:pointer}
 .filme-controls input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:2px solid var(--blue);cursor:pointer}
 .filme-controls input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(0,39,118,.25)}
-/* Reduced-motion: neutraliza todo o movimento, mantém o dado e o anel ao vivo */
+/* Reduced-motion: neutraliza todo o movimento, mantém os dados */
 @media (prefers-reduced-motion:reduce){
   .filme-row,.filme-row .filme-bar{transition:none !important}
   .filme-row .filme-bar::after,
-  .filme-row.is-flowing .filme-bar::after,
-  .filme-row.is-live .filme-bar::after{animation:none !important;opacity:0 !important}
-  .filme-row.is-live .filme-bar{box-shadow:0 0 0 1.5px rgba(216,58,52,.55) !important}
-  .filme-row.filme-overtake,
-  .filme-row .filme-bar.goal,
+  .filme-row.is-flowing .filme-bar::after{animation:none !important;opacity:0 !important}
+  .filme-row.filme-overtake .filme-bar,
   .filme-delta.show,
   .filme-trend.show{animation:none !important}
   #filmeClipRect,#filmeCursorRect{transition:none !important}
@@ -6577,7 +6556,7 @@ function koMatchPossibleResults(matchNo,kind){
   return out;
 }
 
-const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0f766e","#be185d"];
+const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#ff8a00","#0891b2","#db2777"];
 let activeTab="home";
 let palPi=0;
 let jFilter="all";
@@ -8082,8 +8061,8 @@ function renderApiTestRankingChart(rows,isExpanded=false){
           const values=seriesLine?.values||[0];
           const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
           return `<g>
-            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".96"></path>`:""}
-            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".82"></path>`:""}
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="#fff" stroke-width="3.9" stroke-linecap="round" stroke-linejoin="round" opacity=".9"></path><path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" opacity=".97"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".84"></path>`:""}
             ${values.map((value,index)=>{
               const isLive=chart.states[index]==="live";
               const isLast=index===values.length-1;
@@ -8283,8 +8262,8 @@ function filmeChartSvg(data){
   const grid=ticks.map(t=>`<g><line x1="${padX}" x2="${W-padR}" y1="${yFor(t).toFixed(1)}" y2="${yFor(t).toFixed(1)}" stroke="rgba(15,23,42,.08)"></line><text x="${padX-8}" y="${yFor(t).toFixed(1)}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="rgba(15,23,42,.55)">${t}</text></g>`).join("");
   const lines=data.series.map(s=>{
     const seg=rankingLinePathSegmentedFlex(s.values,data.states,xFor,yFor);
-    return `${seg.solid?`<path d="${seg.solid}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linecap="round"></path>`:""}
-      ${seg.dashed?`<path class="filme-line-live" d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-dasharray="7 6" stroke-linecap="round"></path>`:""}`;
+    return `${seg.solid?`<path d="${seg.solid}" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"></path><path d="${seg.solid}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".97"></path>`:""}
+      ${seg.dashed?`<path class="filme-line-live" d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2" stroke-dasharray="7 6" stroke-linecap="round"></path>`:""}`;
   }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação até o lance atual">
     <defs><clipPath id="filmeChartClip"><rect id="filmeClipRect" x="0" y="0" width="${padX}" height="${H}"></rect></clipPath></defs>
@@ -8360,28 +8339,22 @@ function filmeApplyFrame(data,idx,animate=true){
   // Duração do fluxo ambiente reescrita por frame conforme a velocidade, pra um
   // clique em 4x retemporizar o brilho na hora, sem reiniciar nenhum timer.
   const card=document.getElementById("filmeCard");
-  if(card) card.style.setProperty("--filme-flow-dur",(filmeSpeed>=4?".8s":filmeSpeed>=2?"1s":"1.15s"));
+  if(card) card.style.setProperty("--filme-flow-dur",(filmeSpeed>=4?"1s":filmeSpeed>=2?"1.25s":"1.5s"));
   frame.entries.forEach(e=>{
     const row=document.getElementById(`filmeRow-${e.i}`);
     if(!row) return;
     // Posição via propriedade `translate` (transição = deslize). O pop de
-    // ultrapassagem anima `scale` (independente), então o deslize não é cortado.
-    row.style.setProperty("--row-glow",e.color);
+    // ultrapassagem anima `scale` na barra (independente), sem cortar o deslize.
     row.style.transition=moveMs?`translate ${moveMs}ms ${FILME_EASE}`:"none";
     row.style.translate=`0 ${e.pos*rowH}px`;
-    if(animate&&!rm&&e.moved<0){
-      row.classList.remove("filme-overtake");void row.offsetWidth;row.classList.add("filme-overtake");
-      row.addEventListener("animationend",()=>row.classList.remove("filme-overtake"),{once:true});
-    }
     const bar=document.getElementById(`filmeBar-${e.i}`);
     if(bar){
       bar.style.transition=moveMs?`width ${moveMs}ms ${FILME_EASE}`:"none";
       bar.style.width=`${Math.max(0.5,Math.max(0,e.pts)/data.maxVal*100)}%`;
-      if(animate&&!rm&&frame.event&&e.delta>0){
-        bar.style.setProperty("--row-glow",e.color);
-        bar.classList.remove("goal");void bar.offsetWidth;bar.classList.add("goal");
-        bar.addEventListener("animationend",()=>bar.classList.remove("goal"),{once:true});
-      }
+    }
+    if(animate&&!rm&&e.moved<0&&bar){
+      row.classList.remove("filme-overtake");void row.offsetWidth;row.classList.add("filme-overtake");
+      bar.addEventListener("animationend",()=>row.classList.remove("filme-overtake"),{once:true});
     }
     const posEl=document.getElementById(`filmePos-${e.i}`);
     if(posEl) posEl.textContent=`${e.pos+1}º`;
@@ -8399,10 +8372,8 @@ function filmeApplyFrame(data,idx,animate=true){
       trendEl.className=`filme-trend ${e.moved<0?"up":e.moved>0?"down":""}`;
       if(animate&&!rm&&e.moved){void trendEl.offsetWidth;trendEl.classList.add("show");}
     }
-    // Fluxo ambiente em todas as barras (vivas mesmo paradas); o tratamento
-    // mais forte (sheen + brilho + anel vermelho) só nos lances ao vivo tocando.
+    // Fluxo ambiente em todas as barras (vivas mesmo paradas)
     row.classList.toggle("is-flowing",true);
-    row.classList.toggle("is-live",filmePlaying&&frame.state==="live"&&e.delta!==0);
   });
   const chartX=filmeChartX(data,idx);
   const clipRect=document.getElementById("filmeClipRect");
@@ -9515,8 +9486,8 @@ function renderRankingChart(rows,isExpanded=false){
           const name=seriesLine?.name||"";
           const paths=rankingLinePathSegmentedFlex(values,chart.states,xFor,yFor);
           return `<g class="chart-series${rankingChartFocus===line.i?" is-focused":""}" data-series="${line.i}" onmouseenter="hoverRankingSeries(this,${line.i},true)" onmouseleave="hoverRankingSeries(this,${line.i},false)" onclick="focusRankingSeries(${line.i},event)">
-            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".95"></path>`:""}
-            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".85"></path>`:""}
+            ${paths.solid?`<path d="${paths.solid}" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity=".9"></path><path d="${paths.solid}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".97"></path>`:""}
+            ${paths.dashed?`<path d="${paths.dashed}" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="6 5" opacity=".88"></path>`:""}
             ${values.map((value,index)=>{
               const st=chart.states[index];
               const isLast=index===values.length-1;
@@ -10257,17 +10228,17 @@ function copaSelfPickOthersHTML(game,liveRes){
 function copaSelfPickHTML(game){
   const myIdx=myParticipantIndex();
   const started=!!(game.utc&&new Date()>=new Date(game.utc));
-  // Mostra o "Seu palpite"/dropdown quando os palpites já podem ser revelados:
-  // fase de grupos é aberta no bolão; no mata-mata, revela quando a FASE encerra
-  // (trava de escrita, 30 min antes do 1º jogo da fase) — igual à aba Palpites e ao RLS.
-  if(game.ko&&!koOthersRevealed(game)) return "";
   const res=S.results[game.id];
   const isLiveState=!res&&copaGameState(game)==="live";
   const liveRes=isLiveState?liveProvisionalResult(game):null;
   // Oficial manda; ao vivo entra como parcial. Serve tanto pro badge do "Seu
   // palpite" quanto pra pontuar o dropdown dos outros (ao vivo OU encerrado).
   const scoringRes=res||liveRes;
-  const othersHTML=copaSelfPickOthersHTML(game,scoringRes);
+  // O PRÓPRIO palpite aparece SEMPRE na aba Jogos (igual à fase de grupos). O dos
+  // OUTROS só entra no momento certo: grupos = aberto; mata-mata = quando a FASE
+  // encerra (koOthersRevealed: 30 min antes do 1º jogo da fase) — igual à aba
+  // Palpites e ao RLS. Antes do fechamento, fica só o "Seu palpite" (sem dropdown).
+  const othersHTML=(game.ko&&!koOthersRevealed(game))?"":copaSelfPickOthersHTML(game,scoringRes);
   // Verde = ao vivo; dourado = encerrado/apurado; azul = ainda sem placar (grupo futuro).
   const variantCls=isLiveState?"":(started?"final":"upcoming");
   if(!Number.isInteger(myIdx)){
