@@ -52,8 +52,111 @@ input[type=range]{accent-color:var(--blue)}
 .filme-chart{margin-top:18px}
 .filme-chart svg{width:100%;height:auto;display:block}
 
-/* ===== NOVAS ANIMAÇÕES (preenchido a partir do spec) — INÍCIO ===== */
-/* (placeholder) */
+/* ===== NOVAS ANIMAÇÕES (spec filme-animation) — INÍCIO ===== */
+/* 1 — tokens de timing */
+#filmeCard{
+  --filme-ease:cubic-bezier(.3,.6,.3,1);
+  --filme-ease-emph:cubic-bezier(.34,1.56,.64,1);
+  --filme-dur-seek:420ms;
+  --filme-dur-ui:180ms;
+  --filme-flow-dur:1.15s; /* reescrito por frame via JS conforme velocidade */
+}
+
+/* 3+4 — barra mantém width; CENTERPIECE: fluxo de energia E→D via ::after */
+.filme-row .filme-bar{position:relative;overflow:hidden}
+.filme-row .filme-bar::after{
+  content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background-image:repeating-linear-gradient(115deg,
+    rgba(255,255,255,0) 0px,rgba(255,255,255,0) 14px,
+    rgba(255,255,255,.16) 22px,rgba(255,255,255,.22) 26px,
+    rgba(255,255,255,.16) 30px,rgba(255,255,255,0) 38px);
+  background-size:52px 100%;background-repeat:repeat;
+  opacity:0;transition:opacity .35s ease;
+}
+.filme-row.is-flowing .filme-bar::after{opacity:1;animation:filmeBarFlow var(--filme-flow-dur,1.15s) linear infinite;will-change:background-position}
+@keyframes filmeBarFlow{from{background-position-x:0}to{background-position-x:-52px}}
+
+/* 5 — gating: barras ao vivo mais fortes + pulse + anel vermelho */
+@keyframes filmeBarLivePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+.filme-row.is-live .filme-bar::after{
+  background-image:repeating-linear-gradient(115deg,
+    rgba(255,255,255,0) 0px,rgba(255,255,255,0) 12px,
+    rgba(255,255,255,.24) 20px,rgba(255,255,255,.34) 26px,
+    rgba(255,255,255,.24) 32px,rgba(255,255,255,0) 40px);
+  opacity:1;
+  animation:filmeBarFlow calc(var(--filme-flow-dur,1.15s) * .55) linear infinite,
+            filmeBarLivePulse 1.6s ease-in-out infinite;
+}
+.filme-row.is-live .filme-bar{box-shadow:0 0 0 1.5px rgba(216,58,52,.55),0 0 0 4px rgba(216,58,52,.12)}
+
+/* 6 — will-change/contain só durante playback */
+.filme-stage{contain:layout paint}
+.filme-chart{contain:layout paint}
+.filme-stage.is-playing .filme-row{will-change:translate}
+
+/* 8 — overtake pop + entrada de delta/trend.
+   Posição da row usa a propriedade `translate` (transição = deslize);
+   o pop usa a propriedade `scale` (animação) — independentes, sem conflito. */
+@keyframes filmeOvertake{0%{scale:1;box-shadow:none}30%{scale:1.05;box-shadow:0 6px 22px var(--row-glow,rgba(0,39,118,.35))}100%{scale:1;box-shadow:none}}
+@keyframes filmeDeltaIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes filmeTrendPop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.25)}100%{transform:scale(1);opacity:1}}
+.filme-row.filme-overtake{z-index:3;animation:filmeOvertake .5s var(--filme-ease-emph,cubic-bezier(.34,1.56,.64,1))}
+.filme-delta.show{animation:filmeDeltaIn .32s ease-out}
+.filme-trend.show{display:inline-block;animation:filmeTrendPop .36s var(--filme-ease-emph,cubic-bezier(.34,1.56,.64,1))}
+
+/* 9 — gol ripple sincronizado */
+@keyframes filmeGoalPulse{0%{box-shadow:0 0 0 0 var(--row-glow,rgba(0,39,118,.5))}70%{box-shadow:0 0 0 10px rgba(0,0,0,0)}100%{box-shadow:0 0 0 0 rgba(0,0,0,0)}}
+.filme-row .filme-bar.goal{animation:filmeGoalPulse .55s ease-out}
+
+/* 10 — gráfico: marching ants no segmento ao vivo + playhead com glow/pulse */
+@keyframes filmeAnts{to{stroke-dashoffset:-26}}
+@keyframes filmeCursorPulse{0%,100%{opacity:.45}50%{opacity:.75}}
+.filme-chart svg path.filme-line-live{stroke-dasharray:7 6}
+.filme-chart.playing svg path.filme-line-live{animation:filmeAnts 1s linear infinite}
+#filmeCursorRect{filter:drop-shadow(0 0 3px rgba(0,39,118,.5));transform-box:fill-box;transform-origin:left;will-change:transform}
+.filme-chart.playing #filmeCursorRect{animation:filmeCursorPulse 1.1s ease-in-out infinite}
+
+/* 11 — polish dos controles */
+.filme-speed button{transition:background var(--filme-dur-ui,180ms) var(--filme-ease),color var(--filme-dur-ui,180ms) var(--filme-ease),box-shadow var(--filme-dur-ui,180ms) var(--filme-ease)}
+.filme-speed button.active{outline:none;background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(0,39,118,.25)}
+#filmePlayBtn{transition:transform var(--filme-dur-ui,180ms) var(--filme-ease)}
+#filmePlayBtn:active{transform:scale(.97)}
+.filme-controls input[type=range]{-webkit-appearance:none;height:6px;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--blue));outline:none}
+.filme-controls input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:2px solid var(--blue);box-shadow:0 1px 4px rgba(0,39,118,.3);cursor:pointer}
+.filme-controls input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--surface-2);border:2px solid var(--blue);cursor:pointer}
+.filme-controls input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(0,39,118,.25)}
+
+/* reduced-motion consolidado (real usa só @media; .force-rm é espelho do lab pra screenshot) */
+@media (prefers-reduced-motion:reduce){
+  .filme-row,.filme-row .filme-bar{transition:none !important}
+  .filme-row .filme-bar::after,
+  .filme-row.is-flowing .filme-bar::after,
+  .filme-row.is-live .filme-bar::after{animation:none !important;opacity:0 !important}
+  .filme-row.is-live .filme-bar{box-shadow:0 0 0 1.5px rgba(216,58,52,.55) !important}
+  .filme-row.filme-overtake,
+  .filme-row .filme-bar.goal,
+  .filme-delta.show,
+  .filme-trend.show{animation:none !important}
+  #filmeClipRect,#filmeCursorRect{transition:none !important}
+  .filme-chart svg path.filme-line-live{animation:none !important;stroke-dashoffset:0}
+  .filme-chart.playing #filmeCursorRect{animation:none !important}
+  .filme-speed button,#filmePlayBtn,
+  .filme-controls input[type=range]::-webkit-slider-thumb{transition:none !important}
+}
+html.force-rm .filme-row,html.force-rm .filme-row .filme-bar{transition:none !important}
+html.force-rm .filme-row .filme-bar::after,
+html.force-rm .filme-row.is-flowing .filme-bar::after,
+html.force-rm .filme-row.is-live .filme-bar::after{animation:none !important;opacity:0 !important}
+html.force-rm .filme-row.is-live .filme-bar{box-shadow:0 0 0 1.5px rgba(216,58,52,.55) !important}
+html.force-rm .filme-row.filme-overtake,
+html.force-rm .filme-row .filme-bar.goal,
+html.force-rm .filme-delta.show,
+html.force-rm .filme-trend.show{animation:none !important}
+html.force-rm #filmeClipRect,html.force-rm #filmeCursorRect{transition:none !important}
+html.force-rm .filme-chart svg path.filme-line-live{animation:none !important;stroke-dashoffset:0}
+html.force-rm .filme-chart.playing #filmeCursorRect{animation:none !important}
+html.force-rm .filme-speed button,html.force-rm #filmePlayBtn,
+html.force-rm .filme-controls input[type=range]::-webkit-slider-thumb{transition:none !important}
 /* ===== NOVAS ANIMAÇÕES — FIM ===== */
 </style>
 </head>
@@ -282,6 +385,20 @@ function filmeAvailable(){return true;}
 let filmePlaying=false,filmeFrameIdx=null,filmeTimer=null,filmeSpeed=1;
 let activeTab="filme";
 const FILME_SPEED_MS={1:900,2:450,4:220};
+const FILME_EASE='cubic-bezier(.3,.6,.3,1)';
+// LAB: filmeReduced também observa a classe .force-rm (botão do lab) além do matchMedia.
+const _filmeRM = window.matchMedia ? window.matchMedia('(prefers-reduced-motion:reduce)') : {matches:false,addEventListener(){}};
+function filmeReduced(){ return !!_filmeRM.matches || document.documentElement.classList.contains('force-rm'); }
+_filmeRM.addEventListener && _filmeRM.addEventListener('change', ()=>{ if(filmeReduced()) filmeStop(); });
+function filmeRollNumber(el,to,dur){
+  const from=parseInt(el.dataset.val||'0',10)||0; to=Math.round(to);
+  el.dataset.val=String(to);
+  if(!dur||from===to||filmeReduced()){el.textContent=to;return;}
+  const t0=performance.now(); if(el._raf)cancelAnimationFrame(el._raf);
+  const ease=p=>1-Math.pow(1-p,3);
+  const step=now=>{const p=Math.min(1,(now-t0)/dur);el.textContent=Math.round(from+(to-from)*ease(p));if(p<1)el._raf=requestAnimationFrame(step);};
+  el._raf=requestAnimationFrame(step);
+}
 const FILME_CHART={W:760,H:240,padX:42,padR:110,padY:12,padB:22};
 function filmeChartY(data,v){
   const {H,padY,padB}=FILME_CHART;
@@ -304,7 +421,7 @@ function filmeChartSvg(data){
   const lines=data.series.map(s=>{
     const seg=rankingLinePathSegmentedFlex(s.values,data.states,xFor,yFor);
     return `${seg.solid?`<path d="${seg.solid}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-linecap="round"></path>`:""}
-      ${seg.dashed?`<path d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-dasharray="5 5" stroke-linecap="round"></path>`:""}`;
+      ${seg.dashed?`<path class="filme-line-live" d="${seg.dashed}" fill="none" stroke="${s.color}" stroke-width="2.4" stroke-dasharray="7 6" stroke-linecap="round"></path>`:""}`;
   }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Evolução da pontuação até o lance atual">
     <defs><clipPath id="filmeChartClip"><rect id="filmeClipRect" x="0" y="0" width="${padX}" height="${H}"></rect></clipPath></defs>
@@ -339,7 +456,7 @@ function renderFilme(){
   if(filmeFrameIdx==null||filmeFrameIdx>total-1) filmeFrameIdx=total-1;
   const rowH=30;
   const n=data.frames[0].entries.length;
-  el.innerHTML=`<div class="card">
+  el.innerHTML=`<div class="card" id="filmeCard">
     <div class="section-kicker">Histórico da Copa</div>
     <h2 style="margin-bottom:6px">Corrida do ranking, gol a gol</h2>
     <div class="filme-caption" id="filmeCaption"></div>
@@ -371,42 +488,70 @@ function filmeApplyFrame(data,idx,animate=true){
   filmeFrameIdx=idx;
   const rowH=30;
   const stepMs=FILME_SPEED_MS[filmeSpeed]||900;
-  const moveMs=!animate?0:filmePlaying?Math.round(stepMs*0.92):420;
-  const sweepMs=!animate?0:filmePlaying?stepMs:420;
+  const rm=filmeReduced();
+  const moveMs=(!animate||rm)?0:filmePlaying?Math.round(stepMs*0.92):420;
+  const sweepMs=(!animate||rm)?0:filmePlaying?stepMs:420;
+  // Duração do fluxo ambiente reescrita por frame conforme a velocidade,
+  // pra um clique em 4x retemporizar o brilho na hora, sem mexer em timer.
+  const card=document.getElementById("filmeCard");
+  if(card) card.style.setProperty("--filme-flow-dur",(filmeSpeed>=4?".8s":filmeSpeed>=2?"1s":"1.15s"));
   frame.entries.forEach(e=>{
     const row=document.getElementById(`filmeRow-${e.i}`);
     if(!row) return;
-    row.style.transition=moveMs?`transform ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
-    row.style.transform=`translateY(${e.pos*rowH}px)`;
+    // Posição via propriedade `translate` (transição = deslize). O pop de
+    // ultrapassagem anima `scale` (independente), então o deslize não é cortado.
+    row.style.setProperty("--row-glow",e.color);
+    row.style.transition=moveMs?`translate ${moveMs}ms ${FILME_EASE}`:"none";
+    row.style.translate=`0 ${e.pos*rowH}px`;
+    if(animate&&!rm&&e.moved<0){
+      row.classList.remove("filme-overtake");void row.offsetWidth;row.classList.add("filme-overtake");
+      row.addEventListener("animationend",()=>row.classList.remove("filme-overtake"),{once:true});
+    }
     const bar=document.getElementById(`filmeBar-${e.i}`);
     if(bar){
-      bar.style.transition=moveMs?`width ${moveMs}ms cubic-bezier(.3,.6,.3,1)`:"none";
+      bar.style.transition=moveMs?`width ${moveMs}ms ${FILME_EASE}`:"none";
       bar.style.width=`${Math.max(0.5,Math.max(0,e.pts)/data.maxVal*100)}%`;
+      if(animate&&!rm&&frame.event&&e.delta>0){
+        bar.style.setProperty("--row-glow",e.color);
+        bar.classList.remove("goal");void bar.offsetWidth;bar.classList.add("goal");
+        bar.addEventListener("animationend",()=>bar.classList.remove("goal"),{once:true});
+      }
     }
     const posEl=document.getElementById(`filmePos-${e.i}`);
     if(posEl) posEl.textContent=`${e.pos+1}º`;
     const ptsEl=document.getElementById(`filmePts-${e.i}`);
-    if(ptsEl) ptsEl.textContent=e.pts;
+    if(ptsEl) filmeRollNumber(ptsEl,e.pts,animate?moveMs:0);
     const deltaEl=document.getElementById(`filmeDelta-${e.i}`);
     if(deltaEl){
       deltaEl.textContent=e.delta?`${e.delta>0?"+":""}${e.delta}`:"";
       deltaEl.className=`filme-delta ${e.delta>0?"pos":e.delta<0?"neg":""}`;
+      if(animate&&!rm&&e.delta){void deltaEl.offsetWidth;deltaEl.classList.add("show");}
     }
     const trendEl=document.getElementById(`filmeTrend-${e.i}`);
     if(trendEl){
       trendEl.textContent=e.moved<0?"▲":e.moved>0?"▼":"";
       trendEl.className=`filme-trend ${e.moved<0?"up":e.moved>0?"down":""}`;
+      if(animate&&!rm&&e.moved){void trendEl.offsetWidth;trendEl.classList.add("show");}
     }
+    // Fluxo ambiente: todas as barras "vivas" (mesmo paradas). Tratamento
+    // mais forte (sheen + brilho + anel vermelho) só nos lances ao vivo tocando.
+    row.classList.toggle("is-flowing",true);
+    row.classList.toggle("is-live",filmePlaying&&frame.state==="live"&&e.delta!==0);
   });
   const chartX=filmeChartX(data,idx);
   const clipRect=document.getElementById("filmeClipRect");
   const cursorRect=document.getElementById("filmeCursorRect");
-  [[clipRect,"width",chartX],[cursorRect,"x",chartX-1]].forEach(([elm,prop,val])=>{
-    if(!elm) return;
-    elm.style.transition=sweepMs?`${prop} ${sweepMs}ms linear`:"none";
-    elm.style[prop]=`${val.toFixed(1)}px`;
-    elm.setAttribute(prop,val.toFixed(1));
-  });
+  // Cursor anda no compositor via translateX (sem brigar atributo x vs CSS);
+  // o clip continua revelando por width, com fallback de atributo no seek.
+  const baseCursorX=FILME_CHART.padX-1;
+  if(cursorRect){
+    cursorRect.style.transition=sweepMs?`transform ${sweepMs}ms linear`:"none";
+    cursorRect.style.transform=`translateX(${(chartX-1-baseCursorX).toFixed(1)}px)`;
+  }
+  if(clipRect){
+    if(sweepMs){clipRect.style.transition=`width ${sweepMs}ms linear`;clipRect.style.width=`${chartX.toFixed(1)}px`;}
+    else{clipRect.style.transition="none";clipRect.setAttribute("width",chartX.toFixed(1));clipRect.style.width=`${chartX.toFixed(1)}px`;}
+  }
   const labelsEl=document.getElementById("filmeChartLabels");
   if(labelsEl){
     const uniq=chartUniqueLabels(data.series.map(s=>s.name));
@@ -427,6 +572,8 @@ function filmeApplyFrame(data,idx,animate=true){
 function filmeStop(){
   filmePlaying=false;
   if(filmeTimer){clearTimeout(filmeTimer);filmeTimer=null;}
+  document.getElementById("filmeStage")?.classList.remove("is-playing");
+  document.querySelector("#filmeCard .filme-chart")?.classList.remove("playing");
   const btn=document.getElementById("filmePlayBtn");
   if(btn) btn.textContent="▶ Assistir";
 }
@@ -438,6 +585,8 @@ function filmeTogglePlay(){
     filmeApplyFrame(data,0,false);
   }
   filmePlaying=true;
+  document.getElementById("filmeStage")?.classList.add("is-playing");
+  document.querySelector("#filmeCard .filme-chart")?.classList.add("playing");
   const btn=document.getElementById("filmePlayBtn");
   if(btn) btn.textContent="⏸ Pausar";
   const tick=()=>{
