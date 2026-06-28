@@ -10931,13 +10931,20 @@ function refreshPredictionStateIndicators(pi,gid){
 
 function canViewParticipantPrediction(pi,game){
   const myIdx=myParticipantIndex();
-  if(!isOnlineMode()||isAdmin()||myIdx===pi) return true;
+  // Sempre dá pra ver o próprio palpite; modo offline/demo não tem restrição.
+  if(myIdx===pi||!isOnlineMode()) return true;
+  // Grupos são abertos no bolão. Mata-mata fica oculto — inclusive para o admin,
+  // que também joga — até ESTE jogo começar (mesma regra da aba Jogos e do RLS).
   if(!game?.ko) return true;
-  return predictionDeadlineClosed(game);
+  const ms=gameKickoffMs(game);
+  return Number.isFinite(ms)&&Date.now()>=ms;
 }
 function predictionRevealLabel(game){
+  if(game?.ko){
+    const label=formatPredictionDeadline(gameKickoffMs(game));
+    return label?`Libera ${label}`:"Libera no início do jogo";
+  }
   const label=formatPredictionDeadline(predictionDeadlineMs(game));
-  if(game?.ko) return label?`Libera ${label}`:"Libera no início do jogo";
   return label?`Libera ${label}`:"Libera no prazo";
 }
 function hiddenPredictionNoticeHTML(game,scope="pal"){
