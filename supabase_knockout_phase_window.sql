@@ -11,7 +11,9 @@
 --         jogos da fase de grupos.
 --       - cada fase FECHA 30 min antes do 1o jogo da propria fase
 --         (min(kickoff_utc) em public.game_kickoffs - 30 min).
---       - override 'open' libera; 'closed' trava; admin (is_admin) nunca e barrado.
+--       - override 'open' FORCA a abertura (ignora a fase anterior), mas o
+--         fechamento 30 min antes continua valendo; 'closed' trava; admin
+--         (is_admin) nunca e barrado.
 --     O caminho da fase de grupos permanece identico (trava 1h antes da 1a partida).
 --
 -- Pre-requisitos: supabase_setup.sql (is_admin, group_podium_lock_at) e o trigger
@@ -106,7 +108,17 @@ begin
       using errcode = 'P0001';
   end if;
 
-  -- ov = 'open' libera (pula as travas automaticas). Senao, aplica a janela automatica.
+  this_pattern := case phase
+    when 'r32'   then '^R32_'
+    when 'r16'   then '^R16_'
+    when 'qf'    then '^QF_'
+    when 'sf'    then '^SF_'
+    when 'p3'    then '^P3$'
+    when 'final' then '^FINAL$'
+  end;
+
+  -- Abertura automatica: fase anterior inteira encerrada (resultados oficiais
+  -- lancados). Pulada quando o admin forcou 'open'.
   if ov is distinct from 'open' then
     prev_pattern := case phase
       when 'r32'   then '^G[A-L][1-6]$'
@@ -124,14 +136,6 @@ begin
       when 'p3'    then 2
       when 'final' then 2
     end;
-    this_pattern := case phase
-      when 'r32'   then '^R32_'
-      when 'r16'   then '^R16_'
-      when 'qf'    then '^QF_'
-      when 'sf'    then '^SF_'
-      when 'p3'    then '^P3$'
-      when 'final' then '^FINAL$'
-    end;
 
     -- Abertura: fase anterior inteira encerrada (resultados oficiais lancados).
     select count(*) into prev_done from public.results where game_id ~ prev_pattern;
@@ -139,17 +143,18 @@ begin
       raise exception 'Palpites do mata-mata ainda nao foram liberados para esta fase.'
         using errcode = 'P0001';
     end if;
+  end if;
 
-    -- Fechamento: 30 min antes do 1o jogo da fase.
-    select min(kickoff_utc) - interval '30 minutes'
-      into kickoff_deadline
-    from public.game_kickoffs
-    where game_id ~ this_pattern;
+  -- Fechamento SEMPRE: 30 min antes do 1o jogo da fase. Vale inclusive quando o
+  -- admin forcou 'open' -- a fase trava sozinha no horario.
+  select min(kickoff_utc) - interval '30 minutes'
+    into kickoff_deadline
+  from public.game_kickoffs
+  where game_id ~ this_pattern;
 
-    if kickoff_deadline is not null and now() >= kickoff_deadline then
-      raise exception 'Palpites encerrados: esta fase fechou 30 minutos antes do primeiro jogo.'
-        using errcode = 'P0001';
-    end if;
+  if kickoff_deadline is not null and now() >= kickoff_deadline then
+    raise exception 'Palpites encerrados: esta fase fechou 30 minutos antes do primeiro jogo.'
+      using errcode = 'P0001';
   end if;
 
   if tg_op = 'DELETE' then return old; end if;

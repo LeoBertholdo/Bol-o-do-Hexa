@@ -1250,7 +1250,8 @@ body.chart-modal-open{overflow:hidden}
 .ko-note{background:#fffbe6;border:1px solid #f3df89;color:#725400;border-radius:8px;padding:10px 12px;font-size:.8rem;font-weight:750;margin-bottom:12px}
 
 /* PALPITES — PREMIUM (compact) */
-.pal-shell{display:grid;gap:14px}
+.pal-shell{display:grid;gap:14px;min-width:0}
+.pal-shell>*{min-width:0}
 .pal-hero{
   position:relative;
   overflow:hidden;
@@ -5487,10 +5488,12 @@ function koPhaseOverride(phaseKey){
 // Fase liberada para palpite agora?
 function koPhaseOpen(phaseKey){
   const ov=koPhaseOverride(phaseKey);
-  if(ov==="open") return true;
   if(ov==="closed") return false;
   const close=koPhaseCloseMs(phaseKey);
   const beforeClose=!Number.isFinite(close)||Date.now()<close;
+  // 'open' força a abertura desta fase (ignora a fase anterior), mas o fechamento
+  // 30 min antes do 1º jogo da fase continua valendo — trava sozinho no horário.
+  if(ov==="open") return beforeClose;
   return koPhasePrevDone(phaseKey)&&beforeClose;
 }
 // Motivo da trava: 'before' (fase anterior não encerrou), 'after' (passou do
@@ -10761,7 +10764,7 @@ function koAdminPanelHTML(){
   return `<div style="margin:10px 0;padding:10px 12px;border:1px solid rgba(127,127,127,.22);border-radius:12px">
     <div style="font-weight:900;font-size:.8rem;color:var(--text);display:flex;align-items:center;gap:6px">🛠️ Controle do mata-mata <span style="font-weight:700;color:var(--muted)">· admin</span></div>
     ${rows}
-    <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45">Auto segue a regra: abre quando a fase anterior encerra e fecha 30 min antes do 1º jogo da fase. "Abrir"/"Fechar" forçam manualmente (vale para todos).</div>
+    <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45">Auto segue a regra: abre quando a fase anterior encerra e fecha 30 min antes do 1º jogo da fase. "Abrir" libera já (mas ainda fecha sozinho 30 min antes do 1º jogo); "Fechar" trava na hora. Valem para todos.</div>
   </div>`;
 }
 // ===== KNOCKOUT BRACKET =====
