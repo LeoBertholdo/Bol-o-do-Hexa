@@ -10258,10 +10258,9 @@ function copaSelfPickHTML(game){
   const myIdx=myParticipantIndex();
   const started=!!(game.utc&&new Date()>=new Date(game.utc));
   // Mostra o "Seu palpite"/dropdown quando os palpites já podem ser revelados:
-  // jogo começou (ao vivo/encerrado) OU é fase de grupos (palpites de grupo são
-  // abertos no bolão, então aparecem mesmo nos jogos que ainda não começaram).
-  // Mata-mata segue oculto até o início do jogo.
-  if(!started&&game.ko) return "";
+  // fase de grupos é aberta no bolão; no mata-mata, revela quando a FASE encerra
+  // (trava de escrita, 30 min antes do 1º jogo da fase) — igual à aba Palpites e ao RLS.
+  if(game.ko&&!koOthersRevealed(game)) return "";
   const res=S.results[game.id];
   const isLiveState=!res&&copaGameState(game)==="live";
   const liveRes=isLiveState?liveProvisionalResult(game):null;
@@ -11060,22 +11059,27 @@ function refreshPredictionStateIndicators(pi,gid){
   });
 }
 
+// Palpite alheio do mata-mata fica visível quando a FASE encerra — mesmo instante
+// da trava de escrita (koPhaseCloseMs = 30 min antes do 1º jogo da fase). Travou,
+// ninguém edita mais, então revelar a fase inteira de uma vez é seguro (inclui
+// jogos que só acontecem dias depois). Vale inclusive para o admin, que joga.
+function koOthersRevealed(game){
+  if(!game||!game.ko) return true;
+  const close=koPhaseCloseMs(game.phaseKey);
+  return Number.isFinite(close)&&Date.now()>=close;
+}
 function canViewParticipantPrediction(pi,game){
   const myIdx=myParticipantIndex();
   // Sempre dá pra ver o próprio palpite; modo offline/demo não tem restrição.
   if(myIdx===pi||!isOnlineMode()) return true;
-  // Grupos são abertos no bolão. Mata-mata fica oculto — inclusive para o admin,
-  // que também joga — até ESTE jogo começar (mesma regra da aba Jogos e do RLS).
+  // Grupos são abertos no bolão. Mata-mata: revela no fechamento da fase (igual RLS + aba Jogos).
   if(!game?.ko) return true;
-  const ms=gameKickoffMs(game);
-  return Number.isFinite(ms)&&Date.now()>=ms;
+  return koOthersRevealed(game);
 }
 function predictionRevealLabel(game){
-  if(game?.ko){
-    const label=formatPredictionDeadline(gameKickoffMs(game));
-    return label?`Libera ${label}`:"Libera no início do jogo";
-  }
+  // KO: predictionDeadlineMs(game) já é o fechamento da fase (koPhaseCloseMs).
   const label=formatPredictionDeadline(predictionDeadlineMs(game));
+  if(game?.ko) return label?`Libera ${label}`:"Libera no fechamento da fase";
   return label?`Libera ${label}`:"Libera no prazo";
 }
 function hiddenPredictionNoticeHTML(game,scope="pal"){
