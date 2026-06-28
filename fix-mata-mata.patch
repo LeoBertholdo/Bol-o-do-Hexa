@@ -1,0 +1,134 @@
+From 6a02f95fcb372adec9e6fb86ea85c2f8b2cff723 Mon Sep 17 00:00:00 2001
+From: Leonardo Bertholdo <leonardo_bertholdo@hotmail.com>
+Date: Sun, 28 Jun 2026 01:03:04 +0000
+Subject: [PATCH] Fix mata-mata palpites: conter bracket (sem corte/scroll) e
+ override 'open' respeitar fechamento
+
+- .pal-shell: min-width:0 nos itens do grid para o .bracket-stage conter o
+  chaveamento (overflow-x interno) em vez de estourar a largura e ser cortado
+  pela direita (html overflow-x:clip).
+- koPhaseOpen: override 'open' agora libera a fase mas mantem o fechamento 30
+  min antes do 1o jogo (antes ficava aberto pra sempre).
+- supabase_knockout_phase_window.sql alinhado ao guard implantado.
+---
+ bolao2026.html                     |  9 ++++---
+ supabase_knockout_phase_window.sql | 43 +++++++++++++++++-------------
+ 2 files changed, 30 insertions(+), 22 deletions(-)
+
+diff --git a/bolao2026.html b/bolao2026.html
+index cfdc2e7..63eb37b 100644
+--- a/bolao2026.html
++++ b/bolao2026.html
+@@ -1250,7 +1250,8 @@ body.chart-modal-open{overflow:hidden}
+ .ko-note{background:#fffbe6;border:1px solid #f3df89;color:#725400;border-radius:8px;padding:10px 12px;font-size:.8rem;font-weight:750;margin-bottom:12px}
+ 
+ /* PALPITES — PREMIUM (compact) */
+-.pal-shell{display:grid;gap:14px}
++.pal-shell{display:grid;gap:14px;min-width:0}
++.pal-shell>*{min-width:0}
+ .pal-hero{
+   position:relative;
+   overflow:hidden;
+@@ -5487,10 +5488,12 @@ function koPhaseOverride(phaseKey){
+ // Fase liberada para palpite agora?
+ function koPhaseOpen(phaseKey){
+   const ov=koPhaseOverride(phaseKey);
+-  if(ov==="open") return true;
+   if(ov==="closed") return false;
+   const close=koPhaseCloseMs(phaseKey);
+   const beforeClose=!Number.isFinite(close)||Date.now()<close;
++  // 'open' força a abertura desta fase (ignora a fase anterior), mas o fechamento
++  // 30 min antes do 1º jogo da fase continua valendo — trava sozinho no horário.
++  if(ov==="open") return beforeClose;
+   return koPhasePrevDone(phaseKey)&&beforeClose;
+ }
+ // Motivo da trava: 'before' (fase anterior não encerrou), 'after' (passou do
+@@ -10761,7 +10764,7 @@ function koAdminPanelHTML(){
+   return `<div style="margin:10px 0;padding:10px 12px;border:1px solid rgba(127,127,127,.22);border-radius:12px">
+     <div style="font-weight:900;font-size:.8rem;color:var(--text);display:flex;align-items:center;gap:6px">🛠️ Controle do mata-mata <span style="font-weight:700;color:var(--muted)">· admin</span></div>
+     ${rows}
+-    <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45">Auto segue a regra: abre quando a fase anterior encerra e fecha 30 min antes do 1º jogo da fase. "Abrir"/"Fechar" forçam manualmente (vale para todos).</div>
++    <div style="margin-top:8px;font-size:.68rem;color:var(--muted);line-height:1.45">Auto segue a regra: abre quando a fase anterior encerra e fecha 30 min antes do 1º jogo da fase. "Abrir" libera já (mas ainda fecha sozinho 30 min antes do 1º jogo); "Fechar" trava na hora. Valem para todos.</div>
+   </div>`;
+ }
+ // ===== KNOCKOUT BRACKET =====
+diff --git a/supabase_knockout_phase_window.sql b/supabase_knockout_phase_window.sql
+index 38071ce..ac0b04d 100644
+--- a/supabase_knockout_phase_window.sql
++++ b/supabase_knockout_phase_window.sql
+@@ -11,7 +11,9 @@
+ --         jogos da fase de grupos.
+ --       - cada fase FECHA 30 min antes do 1o jogo da propria fase
+ --         (min(kickoff_utc) em public.game_kickoffs - 30 min).
+---       - override 'open' libera; 'closed' trava; admin (is_admin) nunca e barrado.
++--       - override 'open' FORCA a abertura (ignora a fase anterior), mas o
++--         fechamento 30 min antes continua valendo; 'closed' trava; admin
++--         (is_admin) nunca e barrado.
+ --     O caminho da fase de grupos permanece identico (trava 1h antes da 1a partida).
+ --
+ -- Pre-requisitos: supabase_setup.sql (is_admin, group_podium_lock_at) e o trigger
+@@ -106,7 +108,17 @@ begin
+       using errcode = 'P0001';
+   end if;
+ 
+-  -- ov = 'open' libera (pula as travas automaticas). Senao, aplica a janela automatica.
++  this_pattern := case phase
++    when 'r32'   then '^R32_'
++    when 'r16'   then '^R16_'
++    when 'qf'    then '^QF_'
++    when 'sf'    then '^SF_'
++    when 'p3'    then '^P3$'
++    when 'final' then '^FINAL$'
++  end;
++
++  -- Abertura automatica: fase anterior inteira encerrada (resultados oficiais
++  -- lancados). Pulada quando o admin forcou 'open'.
+   if ov is distinct from 'open' then
+     prev_pattern := case phase
+       when 'r32'   then '^G[A-L][1-6]$'
+@@ -124,14 +136,6 @@ begin
+       when 'p3'    then 2
+       when 'final' then 2
+     end;
+-    this_pattern := case phase
+-      when 'r32'   then '^R32_'
+-      when 'r16'   then '^R16_'
+-      when 'qf'    then '^QF_'
+-      when 'sf'    then '^SF_'
+-      when 'p3'    then '^P3$'
+-      when 'final' then '^FINAL$'
+-    end;
+ 
+     -- Abertura: fase anterior inteira encerrada (resultados oficiais lancados).
+     select count(*) into prev_done from public.results where game_id ~ prev_pattern;
+@@ -139,17 +143,18 @@ begin
+       raise exception 'Palpites do mata-mata ainda nao foram liberados para esta fase.'
+         using errcode = 'P0001';
+     end if;
++  end if;
+ 
+-    -- Fechamento: 30 min antes do 1o jogo da fase.
+-    select min(kickoff_utc) - interval '30 minutes'
+-      into kickoff_deadline
+-    from public.game_kickoffs
+-    where game_id ~ this_pattern;
++  -- Fechamento SEMPRE: 30 min antes do 1o jogo da fase. Vale inclusive quando o
++  -- admin forcou 'open' -- a fase trava sozinha no horario.
++  select min(kickoff_utc) - interval '30 minutes'
++    into kickoff_deadline
++  from public.game_kickoffs
++  where game_id ~ this_pattern;
+ 
+-    if kickoff_deadline is not null and now() >= kickoff_deadline then
+-      raise exception 'Palpites encerrados: esta fase fechou 30 minutos antes do primeiro jogo.'
+-        using errcode = 'P0001';
+-    end if;
++  if kickoff_deadline is not null and now() >= kickoff_deadline then
++    raise exception 'Palpites encerrados: esta fase fechou 30 minutos antes do primeiro jogo.'
++      using errcode = 'P0001';
+   end if;
+ 
+   if tg_op = 'DELETE' then return old; end if;
+-- 
+2.34.1
+
