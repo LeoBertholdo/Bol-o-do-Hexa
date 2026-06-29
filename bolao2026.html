@@ -111,6 +111,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   border-bottom:1px solid rgba(255,255,255,.2);
   box-shadow:0 16px 46px rgba(0,39,118,.28);
 }
+.hero.is-brazil-japan-victory{
+  background:
+    linear-gradient(90deg,rgba(0,39,118,.92) 0%,rgba(0,76,45,.72) 34%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.32) 100%),
+    url("assets/header-brasil-venceu-japao-2026.png") center center/cover no-repeat,
+    linear-gradient(128deg,#004c2d 0%,#002776 58%,#071c4d 100%);
+  box-shadow:0 16px 46px rgba(0,76,45,.32);
+}
 .hero.is-brazil-eliminated{
   background:
     linear-gradient(90deg,rgba(2,8,23,.94) 0%,rgba(3,12,30,.78) 40%,rgba(0,0,0,.12) 72%,rgba(0,0,0,.34) 100%),
@@ -3560,6 +3567,7 @@ body.chart-modal-open{overflow:hidden}
 @media(max-width:760px){
   h1{font-size:1.55rem}
   .hero{background-position:center center,68% center,center center}
+  .hero.is-brazil-japan-victory{background-position:center center,68% center,center center}
   .hero.is-brazil-eliminated{background-position:center center,68% center,center center}
   header{align-items:flex-start;flex-direction:column;padding:16px 12px 14px;gap:12px}
   .header-actions{width:100%;justify-content:flex-start}
@@ -8507,7 +8515,7 @@ function goTab(t){
 }
 function render(t){
   renderAuthControls();
-  syncBrazilEliminationHeader();
+  syncBrazilStoryHeader();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
   if(t==="home") renderHome();
@@ -8692,9 +8700,24 @@ function brazilEliminationOfficiallyConfirmed(){
     return Boolean(officialWinner&&officialWinner!=="Brasil");
   });
 }
-function syncBrazilEliminationHeader(){
+// Header especial da vitória contra o Japão. Mesma trava do header de luto:
+// só usa `results`, isto é, placar oficial já salvo, nunca placar ao vivo.
+function brazilJapanVictoryOfficiallyConfirmed(){
+  return koGames().some(game=>{
+    const result=S.results[game.id];
+    if(!result) return false;
+    const teams=gameTeams(game);
+    const matchup=[teams.t1,teams.t2];
+    if(!matchup.includes("Brasil")||!matchup.includes("Japão")) return false;
+    return winnerOf(game.id)==="Brasil";
+  });
+}
+function syncBrazilStoryHeader(){
   const hero=document.querySelector(".hero");
-  if(hero) hero.classList.toggle("is-brazil-eliminated",brazilEliminationOfficiallyConfirmed());
+  if(!hero) return;
+  const eliminated=brazilEliminationOfficiallyConfirmed();
+  hero.classList.toggle("is-brazil-eliminated",eliminated);
+  hero.classList.toggle("is-brazil-japan-victory",!eliminated&&brazilJapanVictoryOfficiallyConfirmed());
 }
 // Visão do Brasil no mata-mata para a Início (depois que a fase de grupos
 // fecha). Mostra o próximo jogo do Brasil — data, horário e adversário — e,
