@@ -8461,6 +8461,11 @@ function goTab(t){
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
   activeTab=t;
   render(t);
+  // Toda aba abre no topo ao trocar de página: sem isso, a posição de rolagem
+  // da aba anterior "vaza" pra nova (a página rola no window e o display:none/
+  // block das .tab não zera o scroll). A única exceção é Jogos, que logo abaixo
+  // pula pro dia atual via copaAutoScrollToCurrent quando ele está mais embaixo.
+  window.scrollTo(0,0);
   if(t==="jogos") copaAutoScrollToCurrent();
   syncApiTestClockTimer();
   syncApiTestRealtimeSubscription();
