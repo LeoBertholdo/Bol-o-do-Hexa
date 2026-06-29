@@ -3125,6 +3125,28 @@ body.chart-modal-open{overflow:hidden}
 	}
 	.copa-games-page.v2 .copa-group-archive-chev{font-size:.8rem;color:var(--copa-mute);transition:transform .2s}
 	.copa-games-page.v2 .copa-group-archive[open] .copa-group-archive-chev{transform:rotate(180deg)}
+	/* Seletor de fase dentro de cada gaveta (grupos e mata-mata têm o seu). */
+	.copa-games-page.v2 .copa-archive-filter{
+	  display:flex;
+	  flex-wrap:wrap;
+	  gap:6px;
+	  padding:2px 0 12px;
+	  margin-bottom:10px;
+	  border-bottom:1px dashed var(--copa-line-strong);
+	}
+	.copa-games-page.v2 .copa-archive-filter .fbtn{
+	  flex:0 0 auto;
+	  border-color:transparent;
+	  background:transparent;
+	  color:var(--copa-blue);
+	}
+	.copa-games-page.v2 .copa-archive-filter .fbtn.active{
+	  background:#eef5ff;
+	  color:var(--copa-blue);
+	  border-color:rgba(10,42,138,.18);
+	  box-shadow:0 5px 16px rgba(0,39,118,.08);
+	}
+	.copa-games-page.v2 .copa-group-archive.is-ko{border-color:rgba(0,151,57,.32)}
 	.copa-games-page.v2 .copa-group-archive-body{
 	  display:grid;
 	  gap:14px;
@@ -6567,12 +6589,17 @@ function koMatchPossibleResults(matchNo,kind){
 const RANKING_SERIES_COLORS=["#f5c542","#2f7cf6","#15a36b","#d83a34","#9a57ff","#f57c00","#0891b2","#db2777"];
 let activeTab="home";
 let palPi=0;
-let jFilter="all";
+// Filtros de fase independentes na aba Jogos: cada gaveta (grupos / mata-mata)
+// tem o seu seletor. "all" = todos os jogos daquela seção.
+let jGroupFilter="all";
+let jKoFilter="all";
 let jogosSearch="";
 let jogosStatusFilter="all";
-// Aberto/fechado da gaveta "Fase de grupos" na aba Jogos. Recolhida por padrão
-// depois que os grupos são apurados; persiste entre re-renders (ex.: digitar na busca).
+// Aberto/fechado das gavetas de fase na aba Jogos. "Fase de grupos" recolhida por
+// padrão depois que os grupos são apurados; "Mata-mata" aberta por padrão. Persistem
+// entre re-renders (ex.: digitar na busca).
 let copaGroupStageOpen=false;
+let copaKoStageOpen=true;
 let palStage="groups";
 let homeFixtureDateKey=null;
 let palFilter="all";
@@ -10027,31 +10054,52 @@ function copaTeamHTML(name,side="",muted=false){
     ? `<div class="${cls}">${nameHTML}${flagHTML}</div>`
     : `<div class="${cls}">${flagHTML}${nameHTML}</div>`;
 }
-function copaBaseGamesByPhase(){
-  if(jFilter==="all") return GAMES;
-  if(jFilter.startsWith("g-")){
-    const gr=jFilter.slice(2);
-    return GAMES.filter(g=>g.phase===`Grupo ${gr}`);
-  }
-  return GAMES.filter(g=>g.phaseKey===jFilter);
+// Predicados base reaproveitados pelas duas seções (grupos e mata-mata).
+function copaMatchesSearch(game,search){
+  if(!search) return true;
+  const teams=gameTeams(game);
+  return `${game.id} ${game.phase} ${teams.t1} ${teams.t2}`.toLowerCase().includes(search);
 }
-function copaSearchedGames(){
+function copaMatchesStatus(game){
+  const state=copaGameState(game);
+  if(jogosStatusFilter==="open"&&state!=="upcoming") return false;
+  if(jogosStatusFilter==="live"&&state!=="live") return false;
+  if(jogosStatusFilter==="finished"&&state!=="final") return false;
+  if(jogosStatusFilter==="pending"&&state==="final") return false;
+  return true;
+}
+// Jogos visíveis da seção de grupos: aplica o seletor de grupo próprio da gaveta,
+// depois busca e status.
+function copaGroupVisibleGames(){
   const search=jogosSearch.trim().toLowerCase();
-  if(!search) return copaBaseGamesByPhase();
-  return copaBaseGamesByPhase().filter(game=>{
-    const teams=gameTeams(game);
-    return `${game.id} ${game.phase} ${teams.t1} ${teams.t2}`.toLowerCase().includes(search);
-  });
+  return GAMES.filter(g=>!g.ko)
+    .filter(g=>jGroupFilter==="all"||g.phase===`Grupo ${jGroupFilter.slice(2)}`)
+    .filter(g=>copaMatchesSearch(g,search))
+    .filter(copaMatchesStatus)
+    .sort(compareGameSchedule);
 }
-function copaVisibleGames(){
-  return copaSearchedGames().filter(game=>{
-    const state=copaGameState(game);
-    if(jogosStatusFilter==="open"&&state!=="upcoming") return false;
-    if(jogosStatusFilter==="live"&&state!=="live") return false;
-    if(jogosStatusFilter==="finished"&&state!=="final") return false;
-    if(jogosStatusFilter==="pending"&&state==="final") return false;
-    return true;
-  }).sort(compareGameSchedule);
+// Jogos visíveis da seção de mata-mata: aplica o seletor de fase próprio da gaveta,
+// depois busca e status.
+function copaKoVisibleGames(){
+  const search=jogosSearch.trim().toLowerCase();
+  return GAMES.filter(g=>g.ko)
+    .filter(g=>jKoFilter==="all"||g.phaseKey===jKoFilter)
+    .filter(g=>copaMatchesSearch(g,search))
+    .filter(copaMatchesStatus)
+    .sort(compareGameSchedule);
+}
+// Base dos cards de métrica: soma grupos + mata-mata respeitando os seletores de
+// fase e a busca, mas SEM o filtro de status (pra os números não zerarem ao filtrar
+// por status). Mata-mata só entra quando já foi montado.
+function copaMetricsGames(){
+  const search=jogosSearch.trim().toLowerCase();
+  const grp=GAMES.filter(g=>!g.ko)
+    .filter(g=>jGroupFilter==="all"||g.phase===`Grupo ${jGroupFilter.slice(2)}`)
+    .filter(g=>copaMatchesSearch(g,search));
+  const ko=groupPhaseComplete()?GAMES.filter(g=>g.ko)
+    .filter(g=>jKoFilter==="all"||g.phaseKey===jKoFilter)
+    .filter(g=>copaMatchesSearch(g,search)):[];
+  return [...ko,...grp];
 }
 function setJogosStatus(value){
   jogosStatusFilter=jogosStatusFilter===value?"all":value;
@@ -10109,30 +10157,73 @@ function copaDaySections(list,currentKey){
       </div>
     </section>`;}).join("");
 }
-function renderCopaGamesList(games){
-  if(!games.length) return `<div class="copa-empty">Nenhum jogo bate com esse filtro.</div>`;
-  // Depois que a fase de grupos é apurada por completo, comprime todos os jogos
-  // de grupo numa "gaveta" (dropdown) recolhida e mantém o mata-mata aberto no
-  // topo, acessível sem rolar. Só na visão "Todos": ao escolher uma fase nos
-  // chips, a lista volta a ser plana (o usuário pediu aquela fase de propósito).
-  const koList=games.filter(g=>g.ko);
-  const groupList=games.filter(g=>!g.ko);
-  if(jFilter==="all"&&groupPhaseComplete()&&koList.length&&groupList.length){
-    // Busca ativa que casa jogos de grupo abre a gaveta pra revelar os acertos.
-    const open=copaGroupStageOpen||!!jogosSearch.trim();
-    const n=groupList.length;
-    return `<div class="copa-games-list">
-      <details class="copa-group-archive"${open?" open":""} ontoggle="copaGroupStageOpen=this.open">
-        <summary class="copa-group-archive-head">
-          <span class="copa-group-archive-title"><span class="copa-group-archive-ic" aria-hidden="true">📁</span>Fase de grupos<span class="copa-group-archive-badge">encerrada</span></span>
-          <span class="copa-group-archive-meta">${n} ${n===1?"jogo":"jogos"}<span class="copa-group-archive-chev" aria-hidden="true">▾</span></span>
-        </summary>
-        <div class="copa-group-archive-body">${copaDaySections(groupList,null)}</div>
-      </details>
-      ${copaDaySections(koList,copaCurrentDayKey(koList))}
-    </div>`;
+// Faixa de chips de fase que vive DENTRO de uma gaveta (no corpo, não no summary,
+// pra clicar num chip não fechar o <details>).
+function copaPhaseSelectorHTML(chips,active,setter){
+  return `<div class="copa-archive-filter">${chips.map(p=>
+    `<button class="fbtn ${active===p.k?"active":""}" onclick="${setter}('${p.k}')">${esc(p.l)}</button>`
+  ).join("")}</div>`;
+}
+// Uma gaveta de fase (grupos ou mata-mata): cabeçalho clicável + corpo com o
+// seletor próprio e a lista de jogos (ou aviso de vazio).
+function copaPhaseSectionHTML(o){
+  return `<details class="copa-group-archive ${o.cls||""}"${o.open?" open":""} ontoggle="${o.toggleVar}=this.open">
+      <summary class="copa-group-archive-head">
+        <span class="copa-group-archive-title"><span class="copa-group-archive-ic" aria-hidden="true">${o.ic}</span>${o.title}${o.badge||""}</span>
+        <span class="copa-group-archive-meta">${o.meta}<span class="copa-group-archive-chev" aria-hidden="true">▾</span></span>
+      </summary>
+      <div class="copa-group-archive-body">
+        ${o.selector}
+        ${o.body}
+      </div>
+    </details>`;
+}
+// A lista da aba Jogos vira duas gavetas independentes, cada uma com o seu seletor:
+// "Mata-mata" (aberta por padrão, quando já foi montado) no topo e "Fase de grupos"
+// embaixo (recolhida quando o mata-mata existe; aberta quando é a única seção).
+function renderCopaGamesList(){
+  const searchActive=!!jogosSearch.trim();
+  const koAvailable=groupPhaseComplete();
+  const groupChips=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`g-${g}`,l:g}))];
+  const koChips=[{k:"all",l:"Todos"},...KO_PHASES.map(p=>({k:p.k,l:p.l}))];
+  const sections=[];
+
+  if(koAvailable){
+    const koGames=copaKoVisibleGames();
+    const koOpen=copaKoStageOpen||searchActive||jKoFilter!=="all";
+    const n=koGames.length;
+    sections.push(copaPhaseSectionHTML({
+      cls:"is-ko",
+      ic:"🏆",
+      title:"Mata-mata",
+      meta:`${n} ${n===1?"jogo":"jogos"}`,
+      selector:copaPhaseSelectorHTML(koChips,jKoFilter,"setJKoFilter"),
+      body:n?copaDaySections(koGames,copaCurrentDayKey(koGames)):`<div class="copa-empty">Nenhum jogo do mata-mata bate com esse filtro.</div>`,
+      open:koOpen,
+      toggleVar:"copaKoStageOpen"
+    }));
   }
-  return `<div class="copa-games-list">${copaDaySections(games,copaCurrentDayKey(games))}</div>`;
+
+  const groupGames=copaGroupVisibleGames();
+  // Recolhida por padrão quando o mata-mata existe; aberta quando é a única seção,
+  // quando há busca ativa ou quando um grupo específico está selecionado.
+  const groupOpen=(!koAvailable)||copaGroupStageOpen||searchActive||jGroupFilter!=="all";
+  const gn=groupGames.length;
+  sections.push(copaPhaseSectionHTML({
+    cls:"",
+    ic:"📁",
+    title:"Fase de grupos",
+    badge:koAvailable?`<span class="copa-group-archive-badge">encerrada</span>`:"",
+    meta:`${gn} ${gn===1?"jogo":"jogos"}`,
+    selector:copaPhaseSelectorHTML(groupChips,jGroupFilter,"setJGroupFilter"),
+    // Como arquivo (mata-mata em cena), nenhum dia leva o destaque "Hoje"; como
+    // única seção, o dia atual destaca normalmente.
+    body:gn?copaDaySections(groupGames,koAvailable?null:copaCurrentDayKey(groupGames)):`<div class="copa-empty">Nenhum jogo de grupo bate com esse filtro.</div>`,
+    open:groupOpen,
+    toggleVar:"copaGroupStageOpen"
+  }));
+
+  return `<div class="copa-games-list">${sections.join("")}</div>`;
 }
 function scrollCopaToCurrent(smooth=true){
   const target=document.querySelector("#tab-jogos .copa-games-day.is-current");
@@ -10177,15 +10268,14 @@ if(typeof window!=="undefined"&&!window.__copaNavOffsetBound){
   window.addEventListener("resize",updateCopaNavOffset);
 }
 function renderJogos(){
-  const groupChips=[{k:"all",l:"Todos"},...GROUP_KEYS.map(g=>({k:`g-${g}`,l:g}))];
-  const koChips=KO_PHASES.map(p=>({k:p.k,l:p.l}));
-  const chipHTML=p=>`<button class="fbtn ${jFilter===p.k?"active":""}" onclick="setJFilter('${p.k}')">${p.l}</button>`;
-  const baseGames=copaSearchedGames();
-  const games=copaVisibleGames();
-  const hasCurrentDay=!!copaCurrentDayKey(games);
+  const koAvailable=groupPhaseComplete();
+  // "Ir para hoje"/FAB miram o dia atual da seção em foco (mata-mata quando já
+  // montado, senão grupos) — é onde o destaque "is-current" é renderizado.
+  const primaryGames=koAvailable?copaKoVisibleGames():copaGroupVisibleGames();
+  const hasCurrentDay=!!copaCurrentDayKey(primaryGames);
   const h=`<div class="copa-games-page v2">
     <section class="copa-games-shell">
-      ${renderCopaMetrics(baseGames)}
+      ${renderCopaMetrics(copaMetricsGames())}
       <div class="copa-games-toolbar">
         <input class="txt-inp" type="search" placeholder="Buscar seleção ou jogo" value="${esc(jogosSearch)}" oninput="jogosSearch=this.value;renderJogos()">
         <select class="txt-select" onchange="jogosStatusFilter=this.value;renderJogos()">
@@ -10194,19 +10284,9 @@ function renderJogos(){
         ${hasCurrentDay?`<button class="action-btn copa-today-btn" onclick="scrollCopaToCurrent(true)">Ir para hoje</button>`:""}
         <button class="action-btn secondary" onclick="jogosSearch='';jogosStatusFilter='all';renderJogos()">Limpar filtros</button>
       </div>
-      <div class="copa-phase-strip">
-        <div class="copa-phase-row">
-          <span class="copa-phase-label">Grupos</span>
-          <div class="copa-phase-chips">${groupChips.map(chipHTML).join("")}</div>
-        </div>
-        <div class="copa-phase-row">
-          <span class="copa-phase-label">Mata-mata</span>
-          <div class="copa-phase-chips">${koChips.map(chipHTML).join("")}</div>
-        </div>
-      </div>
       ${isOnlineMode()&&!isAdmin()?`<div class="ko-note">Os resultados oficiais ficam bloqueados para participantes. Você pode acompanhar aqui e preencher seus palpites na aba Palpites.</div>`:""}
-      ${!groupPhaseComplete()?`<div class="ko-note">O mata-mata será montado automaticamente quando todos os resultados da fase de grupos forem preenchidos.</div>`:""}
-      ${renderCopaGamesList(games)}
+      ${!koAvailable?`<div class="ko-note">O mata-mata será montado automaticamente quando todos os resultados da fase de grupos forem preenchidos.</div>`:""}
+      ${renderCopaGamesList()}
     </section>
     <button type="button" id="copaTodayFab" class="copa-today-fab" onclick="scrollCopaToCurrent(true)"><span class="copa-today-fab-dir" aria-hidden="true">↓</span>Jogos de hoje</button>
   </div>`;
@@ -10225,8 +10305,8 @@ function renderJogos(){
   }
   setupCopaTodayFab();
   updateCopaNavOffset();
-  // Mantém o chip de fase ativo visível na faixa rolável.
-  document.querySelectorAll("#tab-jogos .copa-phase-chips").forEach(wrap=>{
+  // Mantém o chip de fase ativo visível dentro do seletor de cada gaveta.
+  document.querySelectorAll("#tab-jogos .copa-archive-filter").forEach(wrap=>{
     const active=wrap.querySelector(".fbtn.active");
     if(active) wrap.scrollLeft=Math.max(0,active.offsetLeft-(wrap.clientWidth-active.offsetWidth)/2);
   });
@@ -10483,7 +10563,8 @@ function koOutcomeOptions(teams,selected){
     });
   }).join("");
 }
-function setJFilter(k){jFilter=k;renderJogos();}
+function setJGroupFilter(k){jGroupFilter=k;renderJogos();}
+function setJKoFilter(k){jKoFilter=k;renderJogos();}
 function setResDraft(id,w,v){
   if(!resultDrafts[id]) resultDrafts[id]={s1:0,s2:0};
   const n=parseInt(v,10);
