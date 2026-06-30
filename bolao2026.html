@@ -118,6 +118,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     linear-gradient(128deg,#004c2d 0%,#002776 58%,#071c4d 100%);
   box-shadow:0 16px 46px rgba(0,76,45,.32);
 }
+.hero.is-brazil-norway-victory{
+  background:
+    linear-gradient(90deg,rgba(0,39,118,.92) 0%,rgba(0,76,45,.72) 34%,rgba(0,0,0,.08) 70%,rgba(0,0,0,.32) 100%),
+    url("assets/header-brasil-venceu-noruega-2026.png") center center/cover no-repeat,
+    linear-gradient(128deg,#004c2d 0%,#002776 58%,#071c4d 100%);
+  box-shadow:0 16px 46px rgba(0,76,45,.32);
+}
 .hero.is-brazil-eliminated{
   background:
     linear-gradient(90deg,rgba(2,8,23,.94) 0%,rgba(3,12,30,.78) 40%,rgba(0,0,0,.12) 72%,rgba(0,0,0,.34) 100%),
@@ -8712,12 +8719,26 @@ function brazilJapanVictoryOfficiallyConfirmed(){
     return winnerOf(game.id)==="Brasil";
   });
 }
+// Próximo capítulo: ao confirmar uma vitória contra a Noruega, troca para a
+// arte Brasil + Japão. Continua valendo apenas resultado oficial salvo.
+function brazilNorwayVictoryOfficiallyConfirmed(){
+  return koGames().some(game=>{
+    const result=S.results[game.id];
+    if(!result) return false;
+    const teams=gameTeams(game);
+    const matchup=[teams.t1,teams.t2];
+    if(!matchup.includes("Brasil")||!matchup.includes("Noruega")) return false;
+    return winnerOf(game.id)==="Brasil";
+  });
+}
 function syncBrazilStoryHeader(){
   const hero=document.querySelector(".hero");
   if(!hero) return;
   const eliminated=brazilEliminationOfficiallyConfirmed();
+  const norwayVictory=!eliminated&&brazilNorwayVictoryOfficiallyConfirmed();
   hero.classList.toggle("is-brazil-eliminated",eliminated);
-  hero.classList.toggle("is-brazil-japan-victory",!eliminated&&brazilJapanVictoryOfficiallyConfirmed());
+  hero.classList.toggle("is-brazil-norway-victory",norwayVictory);
+  hero.classList.toggle("is-brazil-japan-victory",!eliminated&&!norwayVictory&&brazilJapanVictoryOfficiallyConfirmed());
 }
 // Visão do Brasil no mata-mata para a Início (depois que a fase de grupos
 // fecha). Mostra o próximo jogo do Brasil — data, horário e adversário — e,
