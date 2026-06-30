@@ -127,9 +127,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 }
 @media(min-width:1400px){
   .hero.is-brazil-japan-victory{
-    background-position:center center,100% 50%,center center;
-    background-size:cover,auto 240px,cover;
-    background-repeat:no-repeat;
+    background:
+      linear-gradient(90deg,rgba(0,39,118,.92) 0%,rgba(0,76,45,.76) 48%,rgba(0,42,35,.56) 100%),
+      linear-gradient(128deg,#004c2d 0%,#002776 58%,#071c4d 100%);
+  }
+  .hero.is-brazil-japan-victory:before{
+    content:"";
+    position:absolute;
+    inset:0 0 0 34%;
+    z-index:0;
+    pointer-events:none;
+    background:url("assets/header-brasil-venceu-japao-2026.png") 92% 42%/auto 220px no-repeat;
+    -webkit-mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.34) 18%,#000 34%);
+    mask-image:linear-gradient(90deg,transparent 0%,rgba(0,0,0,.34) 18%,#000 34%);
   }
 }
 .hero:after{
