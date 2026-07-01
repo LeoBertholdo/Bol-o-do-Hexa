@@ -3240,6 +3240,32 @@ body.chart-modal-open{overflow:hidden}
 	.copa-games-page.v2 .copa-state-tag.final:before{content:"\2713";margin-right:5px}
 	.copa-games-page.v2 .copa-time{font-size:.88rem;font-weight:950;color:var(--copa-ink)}
 	.copa-games-page.v2 .copa-round,.copa-games-page.v2 .copa-game-id{font-size:.58rem;font-weight:900;letter-spacing:.7px;text-transform:uppercase;color:var(--copa-mute);line-height:1.15}
+	.copa-games-page.v2 .copa-share-btn{
+	  display:inline-flex;
+	  align-items:center;
+	  justify-content:center;
+	  gap:4px;
+	  min-height:24px;
+	  margin-top:1px;
+	  padding:5px 8px;
+	  border:1px solid rgba(0,132,61,.24);
+	  border-radius:999px;
+	  background:#f0fdf4;
+	  color:#047857;
+	  font:inherit;
+	  font-size:.52rem;
+	  font-weight:950;
+	  letter-spacing:.45px;
+	  line-height:1;
+	  text-transform:uppercase;
+	  white-space:nowrap;
+	  cursor:pointer;
+	  transition:background .15s ease,border-color .15s ease,color .15s ease;
+	}
+	.copa-games-page.v2 .copa-share-btn:hover{background:#dcfce7;border-color:rgba(0,132,61,.48);color:#006b32}
+	.copa-games-page.v2 .copa-share-btn:focus-visible{outline:2px solid rgba(0,132,61,.35);outline-offset:2px}
+	.copa-games-page.v2 .copa-share-btn:disabled{background:#f8fafc;border-color:#e2e8f0;color:#94a3b8;cursor:not-allowed}
+	.copa-games-page.v2 .copa-share-btn.is-copied{background:#047857;border-color:#047857;color:#fff}
 	.copa-games-page.v2 .copa-matchline{
 	  display:grid;
 	  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
@@ -3533,6 +3559,7 @@ body.chart-modal-open{overflow:hidden}
 	  .copa-games-page.v2 .copa-game.is-live .copa-club,
 	  .copa-games-page.v2 .copa-game.is-live .copa-score-stage{min-height:50px}
 	  .copa-games-page.v2 .copa-side-panel{padding:10px 11px}
+	  .copa-games-page.v2 .copa-share-btn{margin-top:0}
 	  .copa-games-page.v2 .copa-self-pick-others{min-width:240px;max-width:calc(100vw - 24px)}
 	  .copa-games-page.v2 .copa-self-pick-others-list{max-height:220px}
 	}
@@ -10475,6 +10502,84 @@ function copaLivePalpiteRowHTML(game,pi,liveRes,opts){
     ${showPts?`<span class="copa-live-pal-pts ${pts.cls}">${esc(pts.text)}</span>`:""}
   </div>`;
 }
+function copaPredictionsExportAllowed(game){
+  return !game.ko||koOthersRevealed(game);
+}
+function copaPredictionsWhatsAppText(game){
+  const teams=gameTeams(game);
+  const flag1=teamFlag(teams.t1);
+  const flag2=teamFlag(teams.t2);
+  const matchup=[flag1,teams.t1,"×",teams.t2,flag2].filter(Boolean).join(" ");
+  const dateLabel=game.date?copaDayTitle(game.date):"";
+  const meta=[copaRoundLabel(game),dateLabel,game.time].filter(Boolean).join(" · ");
+  const picks=S.participants.map((name,i)=>{
+    const pal=S.palpites[`${i}_${game.id}`]||{};
+    if(!hasScore(pal)) return "";
+    const score=[flag1,pal.s1,"×",pal.s2,flag2].filter(v=>v!==""&&v!=null).join(" ");
+    const tied=game.ko&&+pal.s1===+pal.s2;
+    const advancer=tied&&pal.koWinner
+      ? ` → ${[teamFlag(pal.koWinner),pal.koWinner,"passa"].filter(Boolean).join(" ")}`
+      : "";
+    return `• *${name}:* ${score}${advancer}`;
+  }).filter(Boolean);
+  if(!picks.length) return "";
+  return [
+    "🏆 *BOLÃO DO HEXA*",
+    `⚽ *${matchup}*`,
+    meta?`_${meta}_`:"",
+    "",
+    "*PALPITES*",
+    ...picks,
+    "",
+    `_${picks.length} ${picks.length===1?"palpite registrado":"palpites registrados"}_`
+  ].filter((line,i,lines)=>line!==""||lines[i-1]!=="").join("\n").trim();
+}
+function fallbackCopyText(text){
+  const area=document.createElement("textarea");
+  area.value=text;
+  area.setAttribute("readonly","");
+  area.style.position="fixed";
+  area.style.opacity="0";
+  document.body.appendChild(area);
+  area.select();
+  let copied=false;
+  try{copied=document.execCommand("copy");}catch(_e){}
+  area.remove();
+  return copied;
+}
+async function copyGamePredictions(gameId,button){
+  const game=gameById(gameId);
+  if(!game) return;
+  if(!copaPredictionsExportAllowed(game)){
+    toast("Os palpites serão liberados no fechamento da fase.");
+    return;
+  }
+  const text=copaPredictionsWhatsAppText(game);
+  if(!text){
+    toast("Ainda não há palpites registrados para este jogo.");
+    return;
+  }
+  let copied=false;
+  if(navigator.clipboard&&window.isSecureContext){
+    try{await navigator.clipboard.writeText(text);copied=true;}catch(_e){}
+  }
+  if(!copied) copied=fallbackCopyText(text);
+  if(!copied){
+    toast("Não foi possível copiar os palpites.");
+    return;
+  }
+  toast("Palpites copiados para o WhatsApp.");
+  if(button){
+    const original=button.innerHTML;
+    button.innerHTML="✓ Copiado";
+    button.classList.add("is-copied");
+    setTimeout(()=>{
+      if(!button.isConnected) return;
+      button.innerHTML=original;
+      button.classList.remove("is-copied");
+    },1800);
+  }
+}
 function renderGameRow(game){
   const res=S.results[game.id];
   const teams=gameTeams(game);
@@ -10548,12 +10653,17 @@ function renderGameRow(game){
   }
   const noSidePanel=!sidePanelHTML;
   const cardCls=["copa-game",`is-${state}`,disabled?"is-locked":"",noSidePanel?"is-noside":""].filter(Boolean).join(" ");
+  const exportAllowed=copaPredictionsExportAllowed(game);
+  const exportTitle=exportAllowed
+    ?"Copiar os palpites deste jogo para o WhatsApp"
+    :"Disponível quando os palpites desta fase forem liberados";
   return `<article class="${cardCls}" data-tournament="copa" data-game-id="${esc(game.id)}">
     <div class="copa-meta">
       <div class="copa-state-tag ${state}">${esc(stateTagLabel)}</div>
       <div class="copa-time">${esc(game.time||"--:--")}</div>
       <div class="copa-round">${esc(copaRoundLabel(game))}</div>
       <div class="copa-game-id">${esc(game.id)}</div>
+      <button type="button" class="copa-share-btn" title="${esc(exportTitle)}" aria-label="${esc(exportTitle)}" onclick="copyGamePredictions(${jsAttr(game.id)},this)" ${exportAllowed?"":"disabled"}><span aria-hidden="true">↗</span> WhatsApp</button>
     </div>
     <div class="copa-matchline">
       ${copaTeamHTML(t1,"home",!teams.ready)}
