@@ -10509,30 +10509,14 @@ function copaPredictionsWhatsAppText(game){
   const teams=gameTeams(game);
   const flag1=teamFlag(teams.t1);
   const flag2=teamFlag(teams.t2);
-  const matchup=[flag1,teams.t1,"×",teams.t2,flag2].filter(Boolean).join(" ");
-  const dateLabel=game.date?copaDayTitle(game.date):"";
-  const meta=[copaRoundLabel(game),dateLabel,game.time].filter(Boolean).join(" · ");
+  const matchup=[teams.t1,flag1,"x",flag2,teams.t2].filter(Boolean).join(" ");
   const picks=S.participants.map((name,i)=>{
     const pal=S.palpites[`${i}_${game.id}`]||{};
     if(!hasScore(pal)) return "";
-    const score=[flag1,pal.s1,"×",pal.s2,flag2].filter(v=>v!==""&&v!=null).join(" ");
-    const tied=game.ko&&+pal.s1===+pal.s2;
-    const advancer=tied&&pal.koWinner
-      ? ` → ${[teamFlag(pal.koWinner),pal.koWinner,"passa"].filter(Boolean).join(" ")}`
-      : "";
-    return `• *${name}:* ${score}${advancer}`;
+    return `@${name} ${flag1} ${pal.s1}x${pal.s2} ${flag2}`.replace(/\s+/g," ").trim();
   }).filter(Boolean);
   if(!picks.length) return "";
-  return [
-    "🏆 *BOLÃO DO HEXA*",
-    `⚽ *${matchup}*`,
-    meta?`_${meta}_`:"",
-    "",
-    "*PALPITES*",
-    ...picks,
-    "",
-    `_${picks.length} ${picks.length===1?"palpite registrado":"palpites registrados"}_`
-  ].filter((line,i,lines)=>line!==""||lines[i-1]!=="").join("\n").trim();
+  return [matchup,"",...picks].join("\n");
 }
 function fallbackCopyText(text){
   const area=document.createElement("textarea");
