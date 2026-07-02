@@ -3997,6 +3997,15 @@ body.chart-modal-open{overflow:hidden}
 /* Chuva de confetes nos dias de jogo do Brasil (tela inicial) */
 .brazil-confetti-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483600}
 @media (prefers-reduced-motion:reduce){.brazil-confetti-canvas{display:none}}
+
+/* ===== Cinema (Remotion): página admin de evolução do bolão ===== */
+.cinema-shell .cinema-note{font-size:12px;color:var(--muted);margin:2px 0 12px}
+.cinema-mount{position:relative;width:100%;aspect-ratio:16/9;background:#0b1430;border-radius:10px;overflow:hidden;box-shadow:0 12px 34px rgba(0,39,118,.22)}
+.cinema-mount>div{width:100%;height:100%}
+.cinema-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#e9f4ff;font-size:14px;text-align:center;padding:20px}
+.cinema-loading .spinner{width:26px;height:26px;border-radius:50%;border:3px solid rgba(233,244,255,.25);border-top-color:#ffdf00;animation:cinemaSpin .9s linear infinite}
+@keyframes cinemaSpin{to{transform:rotate(360deg)}}
+.cinema-error{color:#ffd7d5}
 </style>
 </head>
 <body>
@@ -4022,6 +4031,7 @@ body.chart-modal-open{overflow:hidden}
   <button onclick="goTab('palpites')">Palpites</button>
   <button onclick="goTab('config')">Config</button>
   <button id="navFilmeBtn" hidden onclick="goTab('filme')">Histórico</button>
+  <button id="navCinemaBtn" hidden onclick="goTab('cinema')">Cinema</button>
 </nav>
 
 <div id="tab-home" class="tab active"></div>
@@ -4031,9 +4041,27 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-palpites" class="tab"></div>
 <div id="tab-config" class="tab"></div>
 <div id="tab-filme" class="tab"></div>
+<div id="tab-cinema" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
 
+<!-- Import map do Cinema (Remotion): "external" faz o Player e o pacote remotion
+     compartilharem o MESMO React e o MESMO remotion (senão os contexts duplicam
+     e useCurrentFrame quebra). Só é baixado quando a aba Cinema carrega. -->
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.3.1",
+    "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+    "react-dom": "https://esm.sh/react-dom@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "remotion": "https://esm.sh/remotion@4?external=react,react-dom",
+    "remotion/no-react": "https://esm.sh/remotion@4/no-react",
+    "remotion/": "https://esm.sh/remotion@4/",
+    "@remotion/player": "https://esm.sh/@remotion/player@4?external=react,react-dom,remotion"
+  }
+}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const GROUPS = {
@@ -8522,6 +8550,414 @@ function filmeSeek(idx){
   filmeApplyFrame(filmeFrames(),idx,true);
 }
 
+// ===== Cinema (Remotion): trailer da evolução do bolão =====
+// Página irmã do Histórico, mas feita do zero: um vídeo (Remotion Player)
+// com abertura, corrida de barras gol a gol, gráfico de evolução, estatísticas
+// e pódio projetado. React/Remotion só são baixados quando a aba abre
+// (import() dinâmico resolvido pelo import map do <head>). Só o admin vê.
+let cinemaRoot=null,cinemaModules=null,cinemaLoadPromise=null,cinemaDataSig=null;
+function cinemaAvailable(){return isOnlineMode()&&isAdmin();}
+function cinemaTeardown(){
+  if(cinemaRoot){try{cinemaRoot.unmount();}catch(e){}cinemaRoot=null;}
+  cinemaDataSig=null;
+  const el=document.getElementById("tab-cinema");
+  if(el&&el.innerHTML) el.innerHTML="";
+}
+function cinemaCaption(tl,k){
+  const state=tl.states[k];
+  if(state==="start") return {text:"Apito inicial — todo mundo com 0 ponto",date:"",tag:null};
+  if(state==="podio") return {text:"🏆 Pódio oficial somado",date:"",tag:null};
+  const ev=tl.events[k];
+  if(!ev) return {text:"",date:"",tag:null};
+  // gameTeams resolve os classificados do mata-mata (game.t1/t2 só existem na fase de grupos).
+  const teams=gameTeams(ev.game);
+  const f1=TEAM_FLAGS[teams.t1]||"",f2=TEAM_FLAGS[teams.t2]||"";
+  return {
+    text:`${f1} ${teams.t1} ${ev.res.s1} × ${ev.res.s2} ${teams.t2} ${f2}`.trim(),
+    date:ev.game.date?formatGameDate(ev.game.date):"",
+    tag:state==="live"?"AO VIVO · PARCIAL":null
+  };
+}
+function cinemaBuildData(){
+  const rows=ranking();
+  const tl=rankingTimeline(rows);
+  const count=tl.series.length?tl.series[0].values.length:0;
+  // Standings por lance, com o mesmo desempate estável do Histórico:
+  // pontos e, persistindo, quem já estava na frente segue na frente.
+  let prevPos={};
+  rows.forEach((r,idx)=>{prevPos[r.i]=idx;});
+  const frames=[];
+  for(let k=0;k<count;k++){
+    const entries=tl.series.map((s,si)=>({si,i:s.i,name:s.name,pts:s.values[k]}));
+    entries.sort((a,b)=>b.pts-a.pts||prevPos[a.i]-prevPos[b.i]||a.name.localeCompare(b.name));
+    const rank=new Array(tl.series.length);
+    const pos={};
+    entries.forEach((e,idx)=>{rank[e.si]=idx;pos[e.i]=idx;});
+    frames.push({values:tl.series.map(s=>s.values[k]),rank,state:tl.states[k],caption:cinemaCaption(tl,k)});
+    prevPos=pos;
+  }
+  // Maior salto num lance só (pra carta de estatística).
+  const jump={name:null,delta:0,caption:""};
+  tl.series.forEach(s=>{
+    for(let k=1;k<s.values.length;k++){
+      const d=s.values[k]-s.values[k-1];
+      if(d>jump.delta){jump.delta=d;jump.name=s.name;jump.caption=cinemaCaption(tl,k).text;}
+    }
+  });
+  const brl=v=>{try{return new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:0}).format(v);}catch(e){return `R$ ${v}`;}};
+  const byCrav=rows.slice().sort((a,b)=>b.crav-a.crav);
+  const byInv=rows.slice().sort((a,b)=>b.inv-a.inv);
+  const leader=rows[0]||null;
+  const podium=rows.slice(0,3).map((r,idx)=>({name:r.name,pts:r.pts,crav:r.crav,prize:brl(prize(idx+1))}));
+  const stats={
+    resolved:tl.resolvedCount,liveGames:tl.liveGameCount,lances:Math.max(0,count-1),
+    participants:tl.series.length,
+    leader:leader?{name:leader.name,pts:leader.pts}:null,
+    crav:byCrav[0]&&byCrav[0].crav>0?{name:byCrav[0].name,n:byCrav[0].crav}:null,
+    inv:byInv[0]&&byInv[0].inv>0?{name:byInv[0].name,n:byInv[0].inv}:null,
+    jump:jump.name?jump:null,
+    leaderPrize:leader?brl(prize(1)):null
+  };
+  const steps=Math.max(0,count-1);
+  // Corrida: ~14 quadros por lance, presa entre 8s e 50s pra Copa inteira caber.
+  const durations={
+    intro:100,
+    race:steps>0?Math.max(240,Math.min(1500,steps*14)):0,
+    chart:steps>0?260:0,
+    stats:240,
+    podio:220
+  };
+  const durationInFrames=durations.intro+durations.race+durations.chart+durations.stats+durations.podio;
+  return {
+    series:tl.series.map(s=>({name:s.name,color:s.color})),
+    frames,steps,
+    maxVal:Math.max(3,tl.maxVal),minVal:Math.min(0,tl.minVal),
+    stats,podium,durations,durationInFrames
+  };
+}
+// Fábrica da composição: recebe React+remotion já carregados e devolve o
+// componente raiz (sem JSX — o app é um HTML estático, sem build).
+function cinemaMakeComposition(React,R){
+  const h=React.createElement;
+  const {AbsoluteFill,Sequence,useCurrentFrame,useVideoConfig,interpolate,spring,Easing,random}=R;
+  const W=1280,HGT=720;
+  const YELLOW="#ffdf00",GREEN="#00843d";
+  const FONT='Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
+  const SOFT="rgba(233,244,255,.78)";
+  const clamp01=v=>Math.max(0,Math.min(1,v));
+  const lin=(f,a,b,c,d)=>interpolate(f,[a,b],[c,d],{extrapolateLeft:"clamp",extrapolateRight:"clamp"});
+  const sceneFade=(f,dur)=>lin(f,0,12,0,1)*lin(f,dur-12,dur-2,1,0);
+
+  const Bg=()=>h(AbsoluteFill,{style:{
+    background:`radial-gradient(1100px 760px at 18% -8%, rgba(0,132,61,.38), transparent 60%),
+      radial-gradient(900px 640px at 108% 108%, rgba(255,223,0,.15), transparent 55%),
+      linear-gradient(160deg,#071c4d 0%,#002776 68%,#04122f 100%)`
+  }});
+  const Watermark=()=>h("div",{style:{position:"absolute",bottom:16,left:26,fontSize:14,letterSpacing:4,fontWeight:700,color:"rgba(255,255,255,.4)",fontFamily:FONT}},"BOLÃO DO HEXA · CINEMA");
+
+  const Kicker=({children,style})=>h("div",{style:Object.assign({fontSize:20,letterSpacing:8,fontWeight:700,color:YELLOW,textTransform:"uppercase"},style)},children);
+
+  // Cena 1: abertura
+  const Intro=({data,dur})=>{
+    const f=useCurrentFrame();
+    const {fps}=useVideoConfig();
+    const titleS=spring({frame:f-6,fps,config:{damping:13,stiffness:110,mass:.7}});
+    const chips=[
+      `${data.stats.resolved} jogos computados`,
+      `${data.stats.lances} lances`,
+      `${data.stats.participants} participantes`
+    ];
+    return h(AbsoluteFill,{style:{justifyContent:"center",alignItems:"center",fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h(Kicker,{style:{opacity:lin(f,0,14,0,1),transform:`translateY(${lin(f,0,14,18,0)}px)`}},"Bolão do Hexa · Copa 2026"),
+      h("div",{style:{fontSize:94,fontWeight:900,color:"#fff",lineHeight:1.05,margin:"20px 0 12px",transform:`scale(${.72+.28*titleS})`,opacity:Math.min(1,titleS*1.3),textShadow:"0 20px 60px rgba(0,0,0,.5)"}},"O FILME DA COPA"),
+      h("div",{style:{fontSize:26,color:SOFT,opacity:lin(f,20,34,0,1)}},"A corrida do ranking, gol a gol"),
+      h("div",{style:{display:"flex",gap:16,marginTop:48}},
+        chips.map((c,i)=>{
+          const s=spring({frame:f-32-i*7,fps,config:{damping:14,stiffness:130}});
+          return h("div",{key:i,style:{padding:"12px 24px",borderRadius:999,border:"1px solid rgba(255,255,255,.28)",background:"rgba(255,255,255,.08)",color:"#fff",fontSize:21,fontWeight:600,opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*26}px)`}},c);
+        })
+      )
+    );
+  };
+
+  // Cena 2: corrida de barras (bar chart race contínuo entre lances)
+  const Race=({data,dur})=>{
+    const f=useCurrentFrame();
+    const n=data.series.length;
+    const steps=data.steps;
+    const kFloat=steps<=0?0:lin(f,20,dur-26,0,steps);
+    const k0=Math.min(steps,Math.floor(kFloat));
+    const k1=Math.min(steps,k0+1);
+    const t=clamp01(kFloat-k0);
+    const te=t*t*(3-2*t); // smoothstep: troca de posição sem tranco
+    const fr0=data.frames[k0],fr1=data.frames[k1];
+    const range=Math.max(1,data.maxVal-data.minVal);
+    const top=176,bottomPad=64;
+    const rowH=Math.min(60,(HGT-top-bottomPad)/n);
+    const area={x:318,w:W-318-158};
+    const xFor=v=>area.x+area.w*((v-data.minVal)/range);
+    const x0=xFor(0);
+    const cap=(t<.5?fr0:fr1).caption;
+    const medals=["🥇","🥈","🥉"];
+    return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h("div",{style:{position:"absolute",top:44,left:64,right:64}},
+        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"A corrida do ranking"),
+        h("div",{style:{display:"flex",alignItems:"baseline",gap:18,marginTop:10}},
+          h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:900}},cap.text||""),
+          cap.tag?h("div",{style:{fontSize:15,fontWeight:800,color:"#ff6b64",letterSpacing:2}},cap.tag):null
+        ),
+        h("div",{style:{fontSize:17,color:SOFT,marginTop:4}},cap.date||" ")
+      ),
+      data.series.map((s,si)=>{
+        const v=fr0.values[si]+(fr1.values[si]-fr0.values[si])*t;
+        const r=fr0.rank[si]+(fr1.rank[si]-fr0.rank[si])*te;
+        const y=top+r*rowH;
+        const xv=xFor(v);
+        const left=Math.min(x0,xv),wpx=Math.max(3,Math.abs(xv-x0));
+        const curRank=Math.round(r);
+        const isLeader=curRank===0;
+        return h("div",{key:si,style:{position:"absolute",left:0,top:y,width:W,height:rowH,display:"flex",alignItems:"center"}},
+          h("div",{style:{position:"absolute",left:64,width:44,textAlign:"center",fontSize:isLeader?26:20,fontWeight:800,color:curRank<3?YELLOW:"rgba(255,255,255,.65)"}},curRank<3?medals[curRank]:String(curRank+1)),
+          h("div",{style:{position:"absolute",left:114,width:190,textAlign:"right",fontSize:22,fontWeight:isLeader?800:600,color:isLeader?"#fff":SOFT,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},s.name),
+          h("div",{style:{position:"absolute",left,top:(rowH-Math.max(14,rowH-22))/2,width:wpx,height:Math.max(14,rowH-22),borderRadius:9,background:`linear-gradient(90deg,${s.color},${s.color}cc)`,boxShadow:isLeader?`0 0 26px ${s.color}88`:"none"}}),
+          h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+14,W-120),fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff"}},String(Math.round(v)))
+        );
+      }),
+      h("div",{style:{position:"absolute",left:64,right:64,bottom:34,height:6,borderRadius:999,background:"rgba(255,255,255,.14)"}},
+        h("div",{style:{width:`${steps?kFloat/steps*100:0}%`,height:"100%",borderRadius:999,background:`linear-gradient(90deg,${GREEN},${YELLOW})`}})
+      ),
+      h("div",{style:{position:"absolute",right:64,bottom:52,fontSize:15,color:SOFT,fontVariantNumeric:"tabular-nums"}},`lance ${Math.min(steps,Math.round(kFloat))}/${steps}`)
+    );
+  };
+
+  // Cena 3: gráfico de evolução se desenhando da esquerda pra direita
+  const Chart=({data,dur})=>{
+    const f=useCurrentFrame();
+    const {fps}=useVideoConfig();
+    const count=data.frames.length;
+    const pad={l:84,r:250,t:150,b:80};
+    const uw=W-pad.l-pad.r,uh=HGT-pad.t-pad.b;
+    const range=Math.max(1,data.maxVal-data.minVal);
+    const X=i=>pad.l+uw*(count>1?i/(count-1):0);
+    const Y=v=>pad.t+uh-uh*((v-data.minVal)/range);
+    const reveal=interpolate(f,[12,dur-80],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+    const clipW=pad.l+uw*reveal+4;
+    const tickStep=Math.max(1,Math.round(range/5));
+    const ticks=[];
+    for(let v=Math.ceil(data.minVal/tickStep)*tickStep;v<=data.maxVal;v+=tickStep) ticks.push(v);
+    // Rótulos finais sem sobreposição (empurra 26px quando colide).
+    const labels=data.series.map((s,si)=>({name:s.name,color:s.color,v:data.frames[count-1].values[si],y:Y(data.frames[count-1].values[si])}))
+      .sort((a,b)=>a.y-b.y);
+    for(let i=1;i<labels.length;i++) if(labels[i].y<labels[i-1].y+26) labels[i].y=labels[i-1].y+26;
+    const labelS=spring({frame:f-(dur-76),fps,config:{damping:15,stiffness:120}});
+    return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h("div",{style:{position:"absolute",top:44,left:64}},
+        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"A evolução"),
+        h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",marginTop:10}},"Ponto a ponto, do apito inicial até agora")
+      ),
+      h("svg",{width:W,height:HGT,viewBox:`0 0 ${W} ${HGT}`,style:{position:"absolute",inset:0}},
+        h("defs",null,h("clipPath",{id:"cinemaChartClip"},h("rect",{x:0,y:0,width:clipW,height:HGT}))),
+        ticks.map((v,i)=>h("g",{key:i},
+          h("line",{x1:pad.l,x2:W-pad.r,y1:Y(v),y2:Y(v),stroke:"rgba(255,255,255,.12)"}),
+          h("text",{x:pad.l-12,y:Y(v),textAnchor:"end",dominantBaseline:"middle",fontSize:15,fill:SOFT},String(v))
+        )),
+        h("g",{clipPath:"url(#cinemaChartClip)"},
+          data.series.map((s,si)=>h("polyline",{key:si,
+            points:data.frames.map((fr,k)=>`${X(k).toFixed(1)},${Y(fr.values[si]).toFixed(1)}`).join(" "),
+            fill:"none",stroke:s.color,strokeWidth:3.5,strokeLinecap:"round",strokeLinejoin:"round",
+            style:{filter:`drop-shadow(0 0 8px ${s.color}55)`}
+          }))
+        ),
+        reveal<1?h("line",{x1:clipW,x2:clipW,y1:pad.t-8,y2:HGT-pad.b+8,stroke:YELLOW,strokeWidth:2,opacity:.8}):null,
+        labels.map((l,i)=>h("g",{key:i,opacity:Math.min(1,labelS*1.2),transform:`translate(${(1-labelS)*24},0)`},
+          h("circle",{cx:W-pad.r+16,cy:l.y,r:6,fill:l.color}),
+          h("text",{x:W-pad.r+30,y:l.y,dominantBaseline:"middle",fontSize:18,fontWeight:700,fill:"#fff"},`${l.name} · ${l.v}`)
+        ))
+      )
+    );
+  };
+
+  // Cena 4: cartas de estatística
+  const Stats=({data,dur})=>{
+    const f=useCurrentFrame();
+    const {fps}=useVideoConfig();
+    const st=data.stats;
+    const cards=[
+      st.leader?{icon:"👑",label:"Líder",value:st.leader.name,sub:`${st.leader.pts} pts`}:null,
+      st.crav?{icon:"🎯",label:"Rei da cravada",value:st.crav.name,sub:`${st.crav.n} placares exatos`}:null,
+      st.jump?{icon:"🚀",label:"Maior salto",value:st.jump.name,sub:`+${st.jump.delta} pts em ${st.jump.caption}`}:null,
+      st.inv?{icon:"🙃",label:"Mais invertidas",value:st.inv.name,sub:`${st.inv.n} placares invertidos`}:null,
+      {icon:"⚽",label:"Copa até aqui",value:`${st.resolved} jogos`,sub:`${st.lances} lances registrados${st.liveGames?` · ${st.liveGames} ao vivo`:""}`},
+      st.leaderPrize?{icon:"💰",label:"Prêmio do líder",value:st.leaderPrize,sub:"se a Copa acabasse agora"}:null
+    ].filter(Boolean);
+    return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h("div",{style:{position:"absolute",top:44,left:64}},
+        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"Os números"),
+        h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",marginTop:10}},"Estatísticas do bolão")
+      ),
+      h("div",{style:{position:"absolute",top:160,left:64,right:64,display:"flex",flexWrap:"wrap",gap:22,justifyContent:"center"}},
+        cards.map((c,i)=>{
+          const s=spring({frame:f-14-i*7,fps,config:{damping:14,stiffness:120}});
+          return h("div",{key:i,style:{width:356,minHeight:196,borderRadius:20,padding:"24px 26px",background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.18)",opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*40}px) scale(${.92+.08*s})`}},
+            h("div",{style:{fontSize:38}},c.icon),
+            h("div",{style:{fontSize:15,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",margin:"10px 0 6px"}},c.label),
+            h("div",{style:{fontSize:30,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.value),
+            h("div",{style:{fontSize:16,color:SOFT,marginTop:6,lineHeight:1.35}},c.sub)
+          );
+        })
+      )
+    );
+  };
+
+  // Cena 5: pódio projetado + confete determinístico (random() do remotion)
+  const Confetti=()=>{
+    const f=useCurrentFrame();
+    const colors=[YELLOW,"#ffffff",GREEN,"#2f7cf6","#d83a34"];
+    return h(AbsoluteFill,{style:{pointerEvents:"none"}},
+      Array.from({length:36},(_,i)=>{
+        const spd=2.5+random(`cs${i}`)*3;
+        const size=8+random(`cz${i}`)*10;
+        const y=((f*spd+random(`cy${i}`)*(HGT+80))%(HGT+80))-40;
+        const x=random(`cx${i}`)*W+Math.sin(f/20+i)*30;
+        const rot=(f*(2+random(`cr${i}`)*4)+i*40)%360;
+        return h("div",{key:i,style:{position:"absolute",left:x,top:y,width:size,height:size*.5,background:colors[i%colors.length],transform:`rotate(${rot}deg)`,opacity:.85,borderRadius:2}});
+      })
+    );
+  };
+  const Podium=({data,dur})=>{
+    const f=useCurrentFrame();
+    const {fps}=useVideoConfig();
+    const base=622;
+    const spots=[
+      {p:data.podium[1],x:W/2-244,hgt:236,medal:"🥈",delay:8},
+      {p:data.podium[0],x:W/2,hgt:308,medal:"🥇",delay:0},
+      {p:data.podium[2],x:W/2+244,hgt:182,medal:"🥉",delay:16}
+    ].filter(s=>s.p);
+    return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h(Confetti),
+      h("div",{style:{position:"absolute",top:52,width:"100%",textAlign:"center"}},
+        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"Se a Copa acabasse hoje"),
+        h("div",{style:{fontSize:40,fontWeight:900,color:"#fff",marginTop:10}},"O pódio do bolão")
+      ),
+      spots.map((sp,i)=>{
+        const s=spring({frame:f-16-sp.delay,fps,config:{damping:13,stiffness:90}});
+        const hpx=sp.hgt*Math.min(1,s);
+        return h("div",{key:i,style:{position:"absolute",left:sp.x-108,top:0,width:216,height:HGT}},
+          h("div",{style:{position:"absolute",bottom:HGT-base,left:0,width:"100%",textAlign:"center",transform:`translateY(${-hpx}px)`}},
+            h("div",{style:{fontSize:46,marginBottom:2}},sp.medal),
+            h("div",{style:{fontSize:25,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},sp.p.name),
+            h("div",{style:{fontSize:17,color:SOFT,marginBottom:8}},`${sp.p.pts} pts · ${sp.p.crav} cravadas`)
+          ),
+          h("div",{style:{position:"absolute",bottom:HGT-base,left:8,width:200,height:hpx,borderRadius:"14px 14px 0 0",background:`linear-gradient(180deg,rgba(255,223,0,${i===1?.95:.55}),rgba(255,223,0,${i===1?.5:.22}))`,boxShadow:"0 -6px 30px rgba(255,223,0,.25)",display:"flex",alignItems:"flex-end",justifyContent:"center"}},
+            h("div",{style:{paddingBottom:14,fontSize:19,fontWeight:800,color:"#071c4d",opacity:s>=.75?1:0}},sp.p.prize)
+          )
+        );
+      }),
+      h("div",{style:{position:"absolute",left:0,right:0,top:base,height:3,background:"rgba(255,255,255,.25)"}}),
+      h("div",{style:{position:"absolute",bottom:34,width:"100%",textAlign:"center",fontSize:17,color:SOFT,opacity:lin(f,dur-70,dur-50,0,1)}},"Rumo ao hexa 🇧🇷")
+    );
+  };
+
+  return props=>{
+    const data=props.data;
+    const d=data.durations;
+    const seq=[];let at=0;
+    seq.push(h(Sequence,{key:"intro",from:at,durationInFrames:d.intro},h(Intro,{data,dur:d.intro})));at+=d.intro;
+    if(d.race>0){seq.push(h(Sequence,{key:"race",from:at,durationInFrames:d.race},h(Race,{data,dur:d.race})));at+=d.race;}
+    if(d.chart>0){seq.push(h(Sequence,{key:"chart",from:at,durationInFrames:d.chart},h(Chart,{data,dur:d.chart})));at+=d.chart;}
+    seq.push(h(Sequence,{key:"stats",from:at,durationInFrames:d.stats},h(Stats,{data,dur:d.stats})));at+=d.stats;
+    seq.push(h(Sequence,{key:"podio",from:at,durationInFrames:d.podio},h(Podium,{data,dur:d.podio})));
+    return h(AbsoluteFill,{style:{fontFamily:FONT}},h(Bg),seq,h(Watermark));
+  };
+}
+function cinemaLoadModules(){
+  if(cinemaModules) return Promise.resolve(cinemaModules);
+  if(!cinemaLoadPromise){
+    cinemaLoadPromise=Promise.all([
+      import("react"),import("react-dom/client"),import("remotion"),import("@remotion/player")
+    ]).then(([React,ReactDOMClient,Remotion,PlayerMod])=>{
+      cinemaModules={React,ReactDOMClient,Remotion,PlayerMod,Comp:null};
+      return cinemaModules;
+    }).catch(err=>{cinemaLoadPromise=null;throw err;});
+  }
+  return cinemaLoadPromise;
+}
+function cinemaPlayerElement(mods,data){
+  const {React,Remotion,PlayerMod}=mods;
+  if(!mods.Comp) mods.Comp=cinemaMakeComposition(React,Remotion);
+  if(!mods.playerRef) mods.playerRef=React.createRef();
+  // Controle imperativo (seek/play) pra depuração no console do admin.
+  window.__cinemaPlayer=mods.playerRef;
+  return React.createElement(PlayerMod.Player,{
+    ref:mods.playerRef,
+    component:mods.Comp,
+    inputProps:{data},
+    durationInFrames:data.durationInFrames,
+    compositionWidth:1280,compositionHeight:720,fps:30,
+    controls:true,loop:true,clickToPlay:true,doubleClickToFullscreen:true,
+    spaceKeyToPlayOrPause:true,
+    acknowledgeRemotionLicense:true,
+    style:{width:"100%",height:"100%"}
+  });
+}
+function cinemaRetry(){
+  cinemaLoadPromise=null;
+  const el=document.getElementById("tab-cinema");
+  if(el) el.innerHTML="";
+  renderCinema();
+}
+async function cinemaEnsurePlayer(){
+  let mods;
+  try{
+    mods=await cinemaLoadModules();
+  }catch(err){
+    console.error("Cinema: falha ao carregar Remotion",err);
+    const mount=document.getElementById("cinemaMount");
+    if(mount) mount.innerHTML=`<div class="cinema-loading cinema-error"><span>Não deu pra carregar o Remotion pelo CDN. Confere a conexão e tenta de novo.</span><button class="action-btn" onclick="cinemaRetry()">Tentar de novo</button></div>`;
+    return;
+  }
+  if(activeTab!=="cinema"||!cinemaAvailable()) return; // saiu da aba enquanto baixava
+  const mount=document.getElementById("cinemaMount");
+  if(!mount) return;
+  const data=cinemaBuildData();
+  if(data.steps<1){
+    cinemaTeardownRootOnly();
+    mount.innerHTML=`<div class="cinema-loading"><span>🎬 Ainda não tem lance registrado.<br>Assim que sair placar, o filme estreia aqui.</span></div>`;
+    return;
+  }
+  // Recarregar dados (realtime etc.) só re-renderiza se algo mudou, pra não
+  // resetar a reprodução à toa.
+  const last=data.frames[data.frames.length-1];
+  const sig=JSON.stringify([data.frames.length,last.values,data.stats.liveGames]);
+  if(cinemaRoot&&sig===cinemaDataSig) return;
+  cinemaDataSig=sig;
+  if(!cinemaRoot){
+    mount.innerHTML="";
+    cinemaRoot=mods.ReactDOMClient.createRoot(mount);
+  }
+  cinemaRoot.render(cinemaPlayerElement(mods,data));
+}
+function cinemaTeardownRootOnly(){
+  if(cinemaRoot){try{cinemaRoot.unmount();}catch(e){}cinemaRoot=null;}
+  cinemaDataSig=null;
+}
+function renderCinema(){
+  const el=document.getElementById("tab-cinema");
+  if(!el) return;
+  if(!cinemaAvailable()){el.innerHTML="";cinemaTeardownRootOnly();return;}
+  if(!document.getElementById("cinemaMount")){
+    cinemaTeardownRootOnly();
+    el.innerHTML=`<div class="card cinema-shell">
+      <div class="card-title">🎬 Cinema — o trailer do bolão</div>
+      <div class="cinema-note">Vídeo gerado na hora (Remotion) com a corrida do ranking, a evolução gol a gol, as estatísticas e o pódio projetado. Por enquanto, só o administrador vê.</div>
+      <div class="cinema-mount" id="cinemaMount">
+        <div class="cinema-loading"><div class="spinner"></div><span>Carregando o projetor…</span></div>
+      </div>
+    </div>`;
+  }
+  cinemaEnsurePlayer();
+}
+
 function goTab(t){
   if(t==="api-test") t="home";
   // Pódio foi integrado à página de Palpites como um estágio adicional
@@ -8529,7 +8965,8 @@ function goTab(t){
   // Chaveamento do mata-mata vive na página de Palpites, estágio "ko"
   if(t==="chaveamento"){palStage="ko";t="palpites";}
   if(t==="filme"&&!filmeAvailable()) t="home";
-  const tabs=["home","ranking","grupos","jogos","palpites","config","filme"];
+  if(t==="cinema"&&!cinemaAvailable()) t="home";
+  const tabs=["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
   if(!tabs.includes(t)) t="home";
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
@@ -8552,6 +8989,9 @@ function render(t){
   syncBrazilStoryHeader();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
+  const cinemaBtn=document.getElementById("navCinemaBtn");
+  if(cinemaBtn) cinemaBtn.hidden=!cinemaAvailable();
+  if(t!=="cinema") cinemaTeardown();
   if(t==="home") renderHome();
   if(t==="ranking") renderRanking();
   if(t==="grupos") renderGrupos();
@@ -8559,6 +8999,7 @@ function render(t){
   if(t==="palpites") renderPalpites();
   if(t==="config") renderConfig();
   if(t==="filme") renderFilme();
+  if(t==="cinema") renderCinema();
 }
 
 function predictionProgress(){
