@@ -10513,7 +10513,11 @@ function copaPredictionsWhatsAppText(game){
   const picks=S.participants.map((name,i)=>{
     const pal=S.palpites[`${i}_${game.id}`]||{};
     if(!hasScore(pal)) return "";
-    return `@${name} ${flag1} ${pal.s1}x${pal.s2} ${flag2}`.replace(/\s+/g," ").trim();
+    const tied=game.ko&&+pal.s1===+pal.s2;
+    const advancer=tied&&pal.koWinner
+      ? ` → ${[teamFlag(pal.koWinner),pal.koWinner,"passa"].filter(Boolean).join(" ")}`
+      : "";
+    return `@${name} ${flag1} ${pal.s1}x${pal.s2} ${flag2}${advancer}`.replace(/\s+/g," ").trim();
   }).filter(Boolean);
   if(!picks.length) return "";
   return [matchup,"",...picks].join("\n");
