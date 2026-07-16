@@ -132,6 +132,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     linear-gradient(128deg,#050914 0%,#07162d 58%,#02050c 100%);
   box-shadow:0 16px 46px rgba(2,8,23,.4);
 }
+.hero.is-brasileirao{
+  background:
+    linear-gradient(90deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.04) 56%,rgba(0,0,0,.14) 100%),
+    url("assets/header-brasileirao-2026.png") center center/cover no-repeat,
+    linear-gradient(128deg,#02050c 0%,#062d1d 52%,#120f06 100%);
+  box-shadow:0 16px 46px rgba(3,48,30,.34);
+}
 .hero:after{
   content:"";
   position:absolute;
@@ -158,6 +165,180 @@ h1{font-size:clamp(1.58rem,4.35vw,2.8rem);line-height:1;font-weight:950;letter-s
 .header-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .btn-save{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.34);padding:10px 12px;border-radius:8px;font-weight:950;font-size:.78rem;box-shadow:none}
 .btn-save:hover{background:rgba(255,255,255,.18)}
+.comp-toggle{display:inline-flex;align-items:center;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.30);border-radius:999px;padding:3px;gap:2px}
+.comp-toggle button{border:none;background:transparent;color:#fff;font-weight:900;font-size:.72rem;letter-spacing:.3px;padding:6px 13px;border-radius:999px;cursor:pointer;line-height:1;transition:background .15s,color .15s}
+.comp-toggle button:hover{background:rgba(255,255,255,.14)}
+.comp-toggle button.active{background:var(--yellow);color:var(--blue)}
+.comp-toggle button.active:hover{background:var(--yellow)}
+/* ==== Brasileirão (modo paralelo) — tema escuro "estádio à noite" ====
+   Tudo escopado em body.br-mode (ligado em applyCompChrome) ou em classes .brx-*
+   usadas só pelas telas do módulo BR, então a Copa nunca herda nada daqui. */
+body.br-mode{
+  color:#e9f1ec;
+  background:
+    radial-gradient(1100px 540px at 85% -12%,rgba(0,132,61,.30),transparent 62%),
+    radial-gradient(900px 480px at -12% 30%,rgba(255,215,94,.06),transparent 55%),
+    linear-gradient(180deg,#0a130e 0%,#070d09 55%,#050807 100%);
+}
+body.br-mode:before{
+  opacity:.55;
+  background-image:repeating-linear-gradient(90deg,transparent 0 84px,rgba(255,255,255,.02) 84px 168px);
+  background-size:auto;
+}
+body.br-mode nav{background:rgba(8,13,10,.88);border-bottom:1px solid rgba(255,255,255,.07)}
+body.br-mode nav button{color:#7e9488}
+body.br-mode nav button:hover{color:#cfe2d6}
+body.br-mode nav button.active{color:#ffd75e;background:rgba(255,215,94,.09);border-color:rgba(255,215,94,.22);box-shadow:none}
+body.br-mode .tab.active{animation:brxFadeIn .28s ease}
+@keyframes brxFadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.br-mode .tab .panel{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.06);box-shadow:none}
+body.br-mode .tab .card{background:linear-gradient(180deg,#111c15,#0c1410);border-color:rgba(255,255,255,.08);box-shadow:0 16px 44px rgba(0,0,0,.42)}
+body.br-mode .tab .card-title{color:#ffd75e}
+body.br-mode .tab .microcopy{color:#8ba295}
+body.br-mode .tab .microcopy strong{color:#dcebe2}
+body.br-mode .tab .action-btn{background:#009247;box-shadow:0 10px 26px rgba(0,146,71,.22)}
+body.br-mode .tab .action-btn:hover{background:#00a851}
+body.br-mode .tab .action-btn.secondary{background:rgba(255,255,255,.06);color:#dcebe2;border:1px solid rgba(255,255,255,.15);box-shadow:none}
+body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
+/* status e telas de estado */
+.brx-status{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:900;padding:8px 13px;border-radius:999px;border:1px solid transparent}
+.brx-status.ok{background:rgba(74,224,142,.08);border-color:rgba(74,224,142,.28);color:#4ae08e}
+.brx-status.warn{background:rgba(255,215,94,.08);border-color:rgba(255,215,94,.3);color:#ffd75e}
+.brx-status.err{background:rgba(255,122,112,.1);border-color:rgba(255,122,112,.32);color:#ff8b82}
+.brx-state{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;padding:30px 16px}
+.brx-state-ico{font-size:2rem;line-height:1}
+.brx-state h3{font-weight:950;font-size:1.05rem;color:#fff}
+.brx-state p{font-size:.8rem;color:#8ba295;max-width:440px;line-height:1.55}
+.brx-spinner{width:26px;height:26px;border-radius:50%;border:3px solid rgba(255,255,255,.14);border-top-color:#ffd75e;animation:cinemaSpin .9s linear infinite}
+/* cabeçalho de seção dentro dos cards */
+.brx-sec{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 0 12px}
+.brx-sec-title{font-size:.7rem;text-transform:uppercase;letter-spacing:1.1px;color:#ffd75e;font-weight:950}
+.brx-sec-meta{font-size:.62rem;color:#71877b;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.brx-sec-meta .live{color:#4ae08e}
+.brx-rnav{display:flex;align-items:center;gap:8px}
+.brx-round-title{min-width:104px;text-align:center;font-weight:950;font-size:1.02rem;color:#fff}
+.brx-arrow{width:32px;height:32px;border-radius:9px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#dcebe2;font-weight:950;font-size:1rem;display:flex;align-items:center;justify-content:center;line-height:1}
+.brx-arrow:hover:not(:disabled){background:rgba(255,255,255,.11)}
+.brx-arrow:disabled{opacity:.3}
+/* chips de rodada */
+.brx-rounds{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+.brx-rounds::-webkit-scrollbar{display:none}
+.brx-chip{position:relative;flex:0 0 auto;min-width:46px;padding:9px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9fb3a7;font-weight:950;font-size:.78rem;line-height:1;text-align:center;transition:background .15s,color .15s,border-color .15s}
+.brx-chip:hover{background:rgba(255,255,255,.09);color:#dcebe2}
+.brx-chip.done{color:#5d7267;background:rgba(255,255,255,.02)}
+.brx-chip.active{background:linear-gradient(120deg,#ffd75e,#f0b53a);border-color:#ffd75e;color:#241a00}
+.brx-chip.live:after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+@keyframes brxPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
+/* partidas */
+.brx-games{display:grid;gap:10px}
+@media(min-width:920px){.brx-games{grid-template-columns:1fr 1fr}}
+.brx-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
+.brx-match:hover{border-color:rgba(74,224,142,.3);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
+.brx-match.live{border-color:rgba(74,224,142,.42);box-shadow:0 0 0 1px rgba(74,224,142,.16),0 14px 34px rgba(0,0,0,.4)}
+.brx-team{display:flex;align-items:center;gap:9px;min-width:0}
+.brx-team.home{justify-content:flex-end;text-align:right}
+.brx-team-name{font-weight:850;font-size:.84rem;color:#dcebe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brx-team.win .brx-team-name{color:#fff;font-weight:950}
+.brx-team.lose .brx-team-name{color:#75897d}
+.brx-logo{width:30px;height:30px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.brx-logo-ph{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:#93a89d;font-size:.56rem;font-weight:900;flex:0 0 auto}
+.brx-mid{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:84px}
+.brx-score{display:flex;align-items:center;gap:7px;font-weight:950;font-size:1.22rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.brx-score span{color:#5d7267;font-weight:700;font-size:.9rem}
+.brx-score.live{color:#4ae08e}
+.brx-tag{font-size:.56rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
+.brx-tag.live{display:inline-flex;align-items:center;gap:5px;color:#4ae08e}
+.brx-tag.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-when{display:flex;flex-direction:column;align-items:center;line-height:1.35}
+.brx-when-date{font-size:.6rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b;white-space:nowrap}
+.brx-when-time{font-size:1.05rem;font-weight:950;color:#ffd75e}
+/* home / hero */
+.brx-hero{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;margin-bottom:14px;background:radial-gradient(720px 300px at 88% -30%,rgba(0,168,81,.32),transparent 62%),linear-gradient(180deg,#101c14,#0b1410)}
+.brx-hero:before{content:"";position:absolute;top:-70px;right:-70px;width:230px;height:230px;border-radius:50%;border:1.5px solid rgba(255,255,255,.06);pointer-events:none}
+.brx-hero:after{content:"";position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;border:1.5px solid rgba(255,255,255,.05);pointer-events:none}
+.brx-hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr);gap:18px;align-items:center}
+.brx-kicker{font-size:.62rem;letter-spacing:1.7px;font-weight:950;text-transform:uppercase;color:#ffd75e}
+.brx-hero h2{font-size:clamp(1.45rem,3.6vw,2.05rem);font-weight:950;color:#fff;margin:7px 0 3px;line-height:1.05}
+.brx-hero-sub{font-size:.8rem;color:#9db3a6;font-weight:800}
+.brx-hero-note{margin-top:9px;font-size:.76rem;color:#c9dcd1;font-weight:800}
+.brx-hero-note.live{color:#4ae08e;display:inline-flex;align-items:center;gap:6px}
+.brx-hero-note.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
+.brx-btn{border:none;border-radius:10px;padding:11px 16px;font-weight:950;font-size:.8rem;cursor:pointer;transition:filter .15s,background .15s}
+.brx-btn.gold{background:linear-gradient(120deg,#ffd75e,#f0b53a);color:#241a00;box-shadow:0 10px 26px rgba(255,215,94,.18)}
+.brx-btn.gold:hover{filter:brightness(1.06)}
+.brx-btn.ghost{background:rgba(255,255,255,.07);color:#dcebe2;border:1px solid rgba(255,255,255,.16)}
+.brx-btn.ghost:hover{background:rgba(255,255,255,.12)}
+.brx-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.brx-stat{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);border-radius:10px;padding:12px}
+.brx-stat.wide{grid-column:1/-1}
+.brx-stat strong{display:block;font-size:1.4rem;font-weight:950;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.brx-stat strong em{font-style:normal;font-size:.82rem;color:#71877b;font-weight:900}
+.brx-stat span{display:block;margin-top:6px;font-size:.56rem;text-transform:uppercase;letter-spacing:.6px;color:#8ba295;font-weight:900}
+/* progresso */
+.brx-progress{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px}
+.brx-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#00a851,#4ae08e)}
+.brx-progress-row{display:flex;align-items:center;gap:12px;margin-top:9px}
+/* palpites */
+.brx-pal .brx-mid{min-width:126px;gap:6px}
+.brx-pal-when{font-size:.58rem;font-weight:900;letter-spacing:.4px;color:#71877b;text-transform:uppercase;white-space:nowrap}
+.brx-guess{display:flex;align-items:center;gap:7px}
+.brx-guess>span{color:#5d7267;font-weight:800}
+.br-inp{width:46px;height:42px;text-align:center;font-weight:950;font-size:1.05rem;color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:0;background:rgba(255,255,255,.055);-moz-appearance:textfield}
+.br-inp::-webkit-outer-spin-button,.br-inp::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.br-inp:focus{outline:none;border-color:#4ae08e;box-shadow:0 0 0 3px rgba(74,224,142,.16);background:rgba(74,224,142,.06)}
+.br-saved{display:inline-flex;align-items:center;justify-content:center;min-width:18px;font-weight:950;font-size:1rem;line-height:1}
+.br-saved.ok{color:#4ae08e;animation:brxPop .3s ease}
+.br-saved.wait{color:#8ba295}
+.br-saved.err{color:#ff8b82}
+@keyframes brxPop{0%{transform:scale(.4)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
+.brx-locked{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.005))}
+.brx-locked-line{display:flex;flex-direction:column;align-items:center;line-height:1.25}
+.brx-your{font-size:.56rem;font-weight:900;color:#71877b;text-transform:uppercase;white-space:nowrap}
+.brx-real{font-weight:950;font-size:1.08rem;color:#fff;font-variant-numeric:tabular-nums}
+.brx-pts{display:inline-block;font-size:.6rem;font-weight:950;padding:3px 8px;border-radius:999px;line-height:1}
+.brx-pts.hit{background:linear-gradient(120deg,#ffd75e,#f0b53a);color:#241a00}
+.brx-pts.ok{background:rgba(74,224,142,.14);color:#4ae08e;border:1px solid rgba(74,224,142,.3)}
+.brx-pts.inv{background:rgba(255,122,112,.14);color:#ff8b82;border:1px solid rgba(255,122,112,.3)}
+.brx-pts.zero{background:rgba(255,255,255,.07);color:#93a89d;border:1px solid rgba(255,255,255,.1)}
+.brx-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
+/* ranking */
+.brx-rank{display:grid;gap:8px}
+.brx-rank-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:7px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
+.brx-rank-row.me{border-color:rgba(255,215,94,.42);background:linear-gradient(180deg,rgba(255,215,94,.07),rgba(255,215,94,.015))}
+.brx-rank-pos{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:950;font-size:.9rem;background:rgba(255,255,255,.07);color:#c8d9ce}
+.brx-rank-pos.p1{background:linear-gradient(135deg,#ffd75e,#e8a616);color:#241a00;box-shadow:0 6px 18px rgba(255,215,94,.25)}
+.brx-rank-pos.p2{background:linear-gradient(135deg,#dbe2ea,#96a5b4);color:#131a22}
+.brx-rank-pos.p3{background:linear-gradient(135deg,#e2a06b,#a96430);color:#2b1300}
+.brx-rank-main{min-width:0}
+.brx-rank-name{display:flex;align-items:center;gap:8px;font-weight:900;font-size:.9rem;color:#eef5f0;min-width:0}
+.brx-rank-name b{font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.brx-rank-name .you{flex:0 0 auto;font-size:.52rem;font-weight:950;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,215,94,.16);color:#ffd75e;padding:3px 7px;border-radius:999px}
+.brx-rank-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.brx-mchip{font-size:.56rem;font-weight:900;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);color:#8ba295;line-height:1}
+.brx-mchip.g{color:#ffd75e;background:rgba(255,215,94,.1)}
+.brx-mchip.v{color:#4ae08e;background:rgba(74,224,142,.1)}
+.brx-mchip.r{color:#ff8b82;background:rgba(255,122,112,.12)}
+.brx-rank-pts{font-weight:950;font-size:1.32rem;color:#4ae08e;display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums}
+.brx-rank-pts span{font-size:.52rem;color:#71877b;text-transform:uppercase;letter-spacing:.5px;font-weight:900}
+.brx-rank-bar{grid-column:1/-1;height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+.brx-rank-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,168,81,.85),#4ae08e)}
+.brx-empty-note{font-size:.66rem;color:#71877b;font-weight:800;text-align:center;padding:8px 0 2px}
+/* responsivo */
+@media(max-width:760px){
+  .brx-hero{padding:16px}
+  .brx-hero-grid{grid-template-columns:1fr;gap:14px}
+}
+@media(max-width:560px){
+  .brx-match{padding:11px 10px;gap:8px}
+  .brx-team-name{font-size:.76rem}
+  .brx-logo,.brx-logo-ph{width:26px;height:26px}
+  .brx-mid{min-width:72px}
+  .brx-pal .brx-mid{min-width:112px}
+  .br-inp{width:42px;height:40px}
+  .brx-round-title{min-width:86px;font-size:.94rem}
+}
 .btn-save:active,.icon-btn:active,.btn-ok:active{transform:translateY(1px)}
 
 /* NAV */
@@ -3603,6 +3784,7 @@ body.chart-modal-open{overflow:hidden}
   .hero{background-position:center center,68% center,center center}
   .hero.is-brazil-japan-victory{background-position:center center,68% center,center center}
   .hero.is-brazil-eliminated{background-position:center center,68% center,center center}
+  .hero.is-brasileirao{background-position:center center,74% center,center center}
   header{align-items:flex-start;flex-direction:column;padding:16px 12px 14px;gap:12px}
   .header-actions{width:100%;justify-content:flex-start}
   .account-panel{left:0;right:auto;max-width:calc(100vw - 24px)}
@@ -4017,6 +4199,10 @@ body.chart-modal-open{overflow:hidden}
       <h1>Bolão da Copa 2026</h1>
     </div>
     <div class="header-actions">
+      <div class="comp-toggle" role="tablist" aria-label="Competição">
+        <button type="button" data-comp="copa" class="active" onclick="setActiveComp('copa')">Copa</button>
+        <button type="button" data-comp="brasileirao" onclick="setActiveComp('brasileirao')">Brasileirão</button>
+      </div>
       <div class="account-menu" id="accountMenu" onclick="event.stopPropagation()"></div>
       <button class="btn-save" onclick="saveBackup()">Backup</button>
     </div>
@@ -8984,8 +9170,588 @@ function goTab(t){
   syncApiTestClockTimer();
   syncApiTestRealtimeSubscription();
 }
+/* ===== COMPETIÇÃO ATIVA (Copa | Brasileirão) ===================================
+   Toggle no header. Copa é o padrão e roda exatamente como antes; o Brasileirão é
+   um modo paralelo que reaproveita os mesmos contêineres de aba e a mesma navegação
+   (só o rótulo "Grupos"→"Tabela" muda). Nada do fluxo da Copa é alterado aqui. */
+const ACTIVE_COMP_KEY="bolaoActiveComp";
+let ACTIVE_COMP=loadActiveComp();
+function loadActiveComp(){
+  try{return localStorage.getItem(ACTIVE_COMP_KEY)==="brasileirao"?"brasileirao":"copa";}
+  catch(e){return "copa";}
+}
+function isBrasileirao(){return ACTIVE_COMP==="brasileirao";}
+function setActiveComp(comp){
+  const next=comp==="brasileirao"?"brasileirao":"copa";
+  if(next===ACTIVE_COMP){applyCompChrome();return;}
+  ACTIVE_COMP=next;
+  try{localStorage.setItem(ACTIVE_COMP_KEY,ACTIVE_COMP);}catch(e){}
+  applyCompChrome();
+  goTab("home");
+}
+function applyCompChrome(){
+  const br=isBrasileirao();
+  document.body.classList.toggle("br-mode",br);
+  const hero=document.querySelector(".hero");
+  if(hero){
+    hero.classList.toggle("is-brasileirao",br);
+    if(br) hero.classList.remove("is-brazil-eliminated","is-brazil-norway-victory","is-brazil-japan-victory");
+  }
+  const kicker=document.querySelector("header .brand-kicker");
+  const h1=document.querySelector("header h1");
+  if(kicker) kicker.textContent=br?"Returno 2026":"Em busca do hexa";
+  if(h1) h1.textContent=br?"Bolão do Brasileirão":"Bolão da Copa 2026";
+  const nav=document.getElementById("nav");
+  if(nav){
+    const btns=nav.querySelectorAll("button");
+    if(btns[2]) btns[2].textContent=br?"Tabela":"Grupos";
+  }
+  if(br){
+    const f=document.getElementById("navFilmeBtn"); if(f) f.hidden=true;
+    const c=document.getElementById("navCinemaBtn"); if(c) c.hidden=true;
+  }
+  document.querySelectorAll(".comp-toggle button").forEach(b=>{
+    b.classList.toggle("active",b.dataset.comp===ACTIVE_COMP);
+  });
+}
+/* ===== MÓDULO BRASILEIRÃO =====================================================
+   Modo paralelo à Copa. Lê o backend existente (api_fixture_map + live_scores +
+   results) e a tabela nova brasileirao_predictions, e reaproveita o motor 3/1/0/−2
+   (scoreDetails/score). Nada aqui roda quando a Copa está ativa. */
+const BR_TOURNAMENT="brasileirao";
+const BR_MAP_FN="api-football-map";
+const BR_SYNC_FN="api-football-sync-";
+const BR_COMPETITION="BSA";
+const BR_SEASON=2026;
+const BR_ID_PREFIX="BR_";
+const BR_FIRST_ROUND=19;            // o bolão cobre o returno (rodadas 19–38)
+const BR_TZ="America/Sao_Paulo";
+const BR_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO","FINISHED","AWARDED"]);
+const BR_LIVE_STATUSES=new Set(["1H","2H","HT","ET","BT","P","LIVE","IN_PLAY","PAUSED"]);
+const BR_TEAM_LOGOS={
+  "Atlético-MG":"assets/brasileirao/atletico-mg.png","Athletico-PR":"assets/brasileirao/athletico-pr.png",
+  "Bahia":"assets/brasileirao/bahia.png","Botafogo":"assets/brasileirao/botafogo.png",
+  "Bragantino":"assets/brasileirao/bragantino.png","Chapecoense":"assets/brasileirao/chapecoense.png",
+  "Corinthians":"assets/brasileirao/corinthians.png","Coritiba":"assets/brasileirao/coritiba.png",
+  "Cruzeiro":"assets/brasileirao/cruzeiro.png","EC Vitória":"assets/brasileirao/ec-vitoria.png",
+  "Flamengo":"assets/brasileirao/flamengo.png","Fluminense":"assets/brasileirao/fluminense.png",
+  "Grêmio":"assets/brasileirao/gremio.png","Internacional":"assets/brasileirao/internacional.png",
+  "Mirassol":"assets/brasileirao/mirassol.png","Palmeiras":"assets/brasileirao/palmeiras.png",
+  "Remo":"assets/brasileirao/remo.png","Santos":"assets/brasileirao/santos.png",
+  "São Paulo":"assets/brasileirao/sao-paulo.png","Vasco da Gama":"assets/brasileirao/vasco-da-gama.png"
+};
+let S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
+let brLoading=false;
+let brStatus=null;
+
+function brSetStatus(kind,text){ brStatus={kind,text}; }
+function brDateParts(utc){
+  if(!utc) return {date:"A definir",time:"--:--",short:"",key:"",ts:0};
+  const d=new Date(utc);
+  return {
+    date:new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"short",timeZone:BR_TZ}).format(d).replace(/\./g,""),
+    time:new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:BR_TZ}).format(d),
+    short:new Intl.DateTimeFormat("pt-BR",{weekday:"short",day:"2-digit",month:"2-digit",timeZone:BR_TZ}).format(d).replace(/\./g,""),
+    key:new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TZ}).format(d),
+    ts:d.getTime()
+  };
+}
+function brRoundNum(label){ const m=String(label||"").match(/(\d+)/); return m?+m[1]:null; }
+/* Canoniza o nome que vem da football-data ("CR Flamengo","SE Palmeiras","Botafogo FR",
+   "Red Bull Bragantino"…) para o nome curto usado nos escudos/UI. Cópia própria do
+   mapa (validado no lab), pra o módulo BR não depender do lab. */
+const BR_TEAM_ALIASES={
+  atleticomg:"Atlético-MG",atleticomineiro:"Atlético-MG",camineiro:"Atlético-MG",atletico:"Atlético-MG",
+  caparanaense:"Athletico-PR",cap:"Athletico-PR",clubeathleticoparanaense:"Athletico-PR",clubathleticoparanaense:"Athletico-PR",athleticoparanaense:"Athletico-PR",athleticopr:"Athletico-PR",athletico:"Athletico-PR",athleticoparanense:"Athletico-PR",
+  bahiaba:"Bahia",ecbahia:"Bahia",bahiasaf:"Bahia",
+  botafogofr:"Botafogo",botafogo:"Botafogo",
+  cearasc:"Ceará",ceara:"Ceará",
+  chapecoense:"Chapecoense",chapecoenseaf:"Chapecoense",chapecoensesc:"Chapecoense",chapecoensefutebol:"Chapecoense",afchapecoense:"Chapecoense",associacaochapecoensedefutebol:"Chapecoense",associacaochapecoensedefutebolsaf:"Chapecoense",
+  corinthians:"Corinthians",corinthianspaulista:"Corinthians",sccorinthians:"Corinthians",sccorinthianspaulista:"Corinthians",sportclubcorinthians:"Corinthians",sportclubcorinthianspaulista:"Corinthians",corinthianssp:"Corinthians",
+  coritibafbc:"Coritiba",coritiba:"Coritiba",coritibasaf:"Coritiba",
+  cruzeiroec:"Cruzeiro",cruzeiro:"Cruzeiro",
+  crflamengo:"Flamengo",flamengo:"Flamengo",
+  fluminensefc:"Fluminense",fluminense:"Fluminense",
+  fortalezaec:"Fortaleza",fortaleza:"Fortaleza",
+  gremiofbpa:"Grêmio",gremio:"Grêmio",
+  internacional:"Internacional",scinternacional:"Internacional",
+  mirassolfc:"Mirassol",mirassol:"Mirassol",
+  palmeiras:"Palmeiras",sepalmeiras:"Palmeiras",
+  redbullbragantino:"Bragantino",redbullbragantinosaf:"Bragantino",rbbragantino:"Bragantino",bragantino:"Bragantino",
+  remopa:"Remo",clubedoremo:"Remo",remo:"Remo",
+  santosfc:"Santos",santos:"Santos",
+  saopaulofc:"São Paulo",saopaulo:"São Paulo",
+  sportclubdorecife:"Sport",sportrecife:"Sport",sport:"Sport",
+  vasco:"Vasco da Gama",vascodagama:"Vasco da Gama",crvascodagama:"Vasco da Gama",
+  vitoria:"EC Vitória",ecvitoria:"EC Vitória",ecvitoriasaf:"EC Vitória",
+  juventude:"Juventude",ecjuventude:"Juventude"
+};
+function brCanonicalTeam(name){
+  const raw=String(name||"").trim();
+  const compact=raw.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  if(BR_TEAM_ALIASES[compact]) return BR_TEAM_ALIASES[compact];
+  const cleaned=raw.replace(/\b(SAF|SAD|FBC|FC|EC|SC|AC|CR|SE|SA|PA|SP|PR|MG|RJ|BA|RS|CE)\b\.?/gi,"").replace(/\s*[-/]\s*(PA|SP|PR|MG|RJ|BA|RS|CE)\b/gi,"").replace(/\s+/g," ").trim();
+  const cc=cleaned.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  if(cc.includes("chapecoense")) return "Chapecoense";
+  if(cc.includes("corinthians")) return "Corinthians";
+  return BR_TEAM_ALIASES[cc]||cleaned||raw;
+}
+function brLogo(team){
+  const src=BR_TEAM_LOGOS[team];
+  return src
+    ? '<img class="brx-logo" src="'+esc(src)+'" alt="'+esc(team||"")+'" loading="lazy">'
+    : '<span class="brx-logo-ph">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
+}
+function brPredKey(pi,gid){ return pi+"_"+gid; }
+function brReturnoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND); }
+function brFixtureScore(fx){
+  const res=S_BR.results[fx.id];
+  if(res&&res.s1!=null) return {s1:res.s1,s2:res.s2,final:true,live:false};
+  const lv=fx.live;
+  if(lv&&lv.goals_home!=null&&lv.goals_away!=null){
+    if(BR_FINAL_STATUSES.has(lv.status_short)) return {s1:lv.goals_home,s2:lv.goals_away,final:true,live:false};
+    if(BR_LIVE_STATUSES.has(lv.status_short)) return {s1:lv.goals_home,s2:lv.goals_away,final:false,live:true,elapsed:lv.elapsed};
+  }
+  return null;
+}
+
+async function brLoadRemote(opts={}){
+  if(!remoteClient||!remoteSession){ brSetStatus("warn","Entre no bolão para ver o Brasileirão."); return; }
+  const [mapRows,liveRows,predRows,resRows]=await Promise.all([
+    remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,kickoff_utc,home_team,away_team,round_label").eq("tournament",BR_TOURNAMENT).order("kickoff_utc",{ascending:true}),
+    remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin"),
+    remoteClient.from("brasileirao_predictions").select("participant_index,game_id,s1,s2"),
+    remoteClient.from("results").select("game_id,s1,s2")
+  ]);
+  const failed=[mapRows,liveRows,predRows,resRows].find(r=>r&&r.error);
+  if(failed){ brSetStatus("err",remoteErrorText(failed.error)); if(!opts.skipRender) render(activeTab); return; }
+  const liveBy=Object.fromEntries((liveRows.data||[]).map(r=>[r.game_id,r]));
+  S_BR.fixtures=(mapRows.data||[]).map(row=>{
+    const p=brDateParts(row.kickoff_utc);
+    return {id:row.game_id,t1:brCanonicalTeam(row.home_team),t2:brCanonicalTeam(row.away_team),utc:row.kickoff_utc,date:p.date,time:p.time,dshort:p.short,dateKey:p.key,ts:p.ts,roundLabel:row.round_label||"",round:brRoundNum(row.round_label),live:liveBy[row.game_id]||null};
+  }).sort((a,b)=>(a.ts-b.ts)||String(a.id).localeCompare(b.id));
+  S_BR.palpites=Object.fromEntries((predRows.data||[]).map(r=>[brPredKey(r.participant_index,r.game_id),{s1:r.s1,s2:r.s2}]));
+  S_BR.results=Object.fromEntries((resRows.data||[]).map(r=>[r.game_id,{s1:r.s1,s2:r.s2}]));
+  S_BR.live=liveBy;
+  S_BR.loaded=true;
+  const n=brReturnoFixtures().length;
+  brSetStatus(n?"ok":"warn", n?(n+" jogos no returno (rodadas "+BR_FIRST_ROUND+"–38)."):(isAdmin()?"Nenhum jogo mapeado. Use “Mapear temporada 2026”.":"Nenhum jogo mapeado ainda."));
+  if(!opts.skipRender) render(activeTab);
+}
+function brEnsureLoaded(){
+  if(S_BR.loaded||brLoading) return;
+  if(!remoteClient||!remoteSession) return;
+  brLoading=true;
+  brLoadRemote().finally(()=>{brLoading=false;});
+}
+
+/* ---- Ações admin ---- */
+async function brMapSeason(){
+  if(!remoteClient||!remoteSession){ toast("Entre no bolão antes de mapear."); return; }
+  if(!isAdmin()){ toast("Só o admin pode mapear a temporada."); return; }
+  brSetStatus("warn","Mapeando a temporada no football-data…"); render(activeTab);
+  const {data,error}=await remoteClient.functions.invoke(BR_MAP_FN,{body:{competition:BR_COMPETITION,season:BR_SEASON,tournament:BR_TOURNAMENT,id_prefix:BR_ID_PREFIX}});
+  if(error){ brSetStatus("err",remoteErrorText(error)); render(activeTab); toast("Falha ao mapear."); return; }
+  toast((data&&data.inserted!=null?data.inserted:"?")+" jogos mapeados.");
+  S_BR.loaded=false; await brLoadRemote();
+}
+async function brSyncNow(){
+  if(!remoteClient||!remoteSession){ toast("Entre no bolão antes de atualizar."); return; }
+  brSetStatus("warn","Pedindo uma atualização do robô…"); render(activeTab);
+  const {error}=await remoteClient.functions.invoke(BR_SYNC_FN,{body:{}});
+  if(error){ brSetStatus("err",remoteErrorText(error)); render(activeTab); return; }
+  toast("Robô acionado."); S_BR.loaded=false; await brLoadRemote();
+}
+function brRefresh(){ S_BR.loaded=false; brLoadRemote(); }
+
+/* ---- Navegação por rodada (estado só de UI) ---- */
+let brJogosRound=null, brPalRound=null;
+function brRoundsIndex(fixtures){
+  const byRound={};
+  fixtures.forEach(f=>{ const r=f.round||0; (byRound[r]=byRound[r]||[]).push(f); });
+  return {byRound,rounds:Object.keys(byRound).map(Number).sort((a,b)=>a-b)};
+}
+function brRoundState(games){
+  let done=0,live=0;
+  games.forEach(f=>{ const s=brFixtureScore(f); if(s&&s.final) done++; else if(s&&s.live) live++; });
+  return {total:games.length,done,live};
+}
+function brDefaultRound(rounds,byRound){
+  const withLive=rounds.find(r=>brRoundState(byRound[r]).live>0);
+  if(withLive!=null) return withLive;
+  const open=rounds.find(r=>{ const st=brRoundState(byRound[r]); return st.done<st.total; });
+  return open!=null?open:rounds[rounds.length-1];
+}
+function brChipsHTML(rounds,byRound,active,setter){
+  return '<div class="brx-rounds">'+rounds.map(r=>{
+    const st=brRoundState(byRound[r]);
+    const cls='brx-chip'+(r===active?' active':(st.total&&st.done>=st.total?' done':''))+(st.live?' live':'');
+    return '<button type="button" class="'+cls+'" title="Rodada '+r+'" onclick="'+setter+'('+r+')">'+r+'</button>';
+  }).join("")+'</div>';
+}
+function brScrollChips(el){
+  const wrap=el.querySelector(".brx-rounds"), act=wrap&&wrap.querySelector(".brx-chip.active");
+  if(wrap&&act) wrap.scrollLeft=Math.max(0,act.offsetLeft-wrap.clientWidth/2+act.offsetWidth/2);
+}
+function brSetJogosRound(r){ brJogosRound=r; renderBrJogos(); }
+function brSetPalRound(r){ brPalRound=r; renderBrPalpites(); }
+function brCountdownTxt(ms){
+  const mins=Math.max(1,Math.round(ms/60000));
+  if(mins<60) return "em "+mins+" min";
+  const h=Math.floor(mins/60);
+  if(h<48){ const m=mins%60; return "em "+h+"h"+(m?String(m).padStart(2,"0"):""); }
+  return null;
+}
+
+/* ---- Blocos de UI ---- */
+function brStateCard(icon,title,msg,extra){
+  return '<div class="panel"><div class="card"><div class="brx-state">'+
+    '<div class="brx-state-ico">'+icon+'</div>'+
+    '<h3>'+esc(title)+'</h3>'+(msg?'<p>'+msg+'</p>':'')+(extra||'')+
+  '</div></div></div>';
+}
+function brLoginPrompt(){ return brStateCard("🔐","Entre para ver o Brasileirão","Faça login pelo menu de conta (canto superior direito) para acompanhar o bolão do returno."); }
+function brLoadingCard(){ return '<div class="panel"><div class="card"><div class="brx-state"><div class="brx-spinner"></div><h3>Carregando o Brasileirão…</h3><p>Buscando jogos, palpites e placares.</p></div></div></div>'; }
+function brEmptyCard(){ return brStateCard("⚽","Nenhum jogo mapeado ainda", isAdmin()?'Vá em <strong>Config → “Mapear temporada 2026”</strong> para buscar o calendário.':'Os jogos ainda não foram carregados. Peça pro admin mapear a temporada.'); }
+function brMatchHTML(fx){
+  const sc=brFixtureScore(fx);
+  let mid,cls="",t1cls="",t2cls="";
+  if(sc){
+    if(sc.final){
+      if(sc.s1>sc.s2){ t1cls=" win"; t2cls=" lose"; } else if(sc.s2>sc.s1){ t2cls=" win"; t1cls=" lose"; }
+      mid='<div class="brx-score">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag">Encerrado</div>';
+    }else{
+      cls=" live";
+      mid='<div class="brx-score live">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag live">Ao vivo'+(sc.elapsed?" · "+sc.elapsed+"’":"")+'</div>';
+    }
+  }else{
+    mid='<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
+  }
+  return '<div class="brx-match'+cls+'">'+
+    '<div class="brx-team home'+t1cls+'"><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
+    '<div class="brx-mid">'+mid+'</div>'+
+    '<div class="brx-team'+t2cls+'">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
+  '</div>';
+}
+
+/* ---- Abas ---- */
+function renderBrConfig(){
+  const el=document.getElementById("tab-config"); if(!el) return;
+  const admin=isAdmin();
+  const st=brStatus||{kind:"warn",text:"Carregando…"};
+  const mapped=S_BR.fixtures.length;
+  el.innerHTML=
+    '<div class="panel">'+
+      '<div class="card">'+
+        '<div class="brx-sec"><span class="brx-sec-title">Brasileirão 2026 — returno</span><span class="brx-sec-meta">Rodadas '+BR_FIRST_ROUND+'–38</span></div>'+
+        '<div class="brx-status '+esc(st.kind)+'">'+esc(st.text)+'</div>'+
+        '<p class="microcopy" style="margin:11px 0 0">'+mapped+' jogos no mapa'+(mapped?' · '+brReturnoFixtures().length+' no returno':'')+'. Os placares entram sozinhos pelo robô de sync; jogos ao vivo pontuam provisoriamente.</p>'+
+      '</div>'+
+      '<div class="card"><div class="card-title">Pontuação</div>'+
+        '<div class="brx-legend">'+
+          '<span class="brx-legend-item"><span class="brx-pts hit">+3</span>placar cravado</span>'+
+          '<span class="brx-legend-item"><span class="brx-pts ok">+1</span>resultado certo</span>'+
+          '<span class="brx-legend-item"><span class="brx-pts zero">0</span>erro simples</span>'+
+          '<span class="brx-legend-item"><span class="brx-pts inv">−2</span>resultado invertido</span>'+
+        '</div>'+
+      '</div>'+
+      (admin?(
+        '<div class="card"><div class="card-title">Administração</div>'+
+          '<div class="action-row">'+
+            '<button class="action-btn" onclick="brMapSeason()">Mapear temporada 2026</button>'+
+            '<button class="action-btn secondary" onclick="brSyncNow()">Atualizar placares agora</button>'+
+            '<button class="action-btn secondary" onclick="brRefresh()">Recarregar</button>'+
+          '</div>'+
+          '<p class="microcopy" style="margin:8px 0 0">“Mapear” busca o calendário do Brasileirão na football-data e popula os jogos. Rode uma vez (e de novo se a CBF remarcar).</p>'+
+        '</div>'
+      ):'')+
+    '</div>';
+}
+function renderBrHome(){
+  const el=document.getElementById("tab-home"); if(!el) return;
+  if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
+  if(!S_BR.loaded){ el.innerHTML=brLoadingCard(); return; }
+  const fixtures=brReturnoFixtures();
+  if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
+  const now=Date.now();
+  const {rounds,byRound}=brRoundsIndex(fixtures);
+  const focusRound=brDefaultRound(rounds,byRound);
+  const games=byRound[focusRound]||[];
+  const st=brRoundState(games);
+  const range=games.length?(games[0].date===games[games.length-1].date?games[0].date:games[0].date+" — "+games[games.length-1].date):"";
+  let note="",noteLive=false;
+  if(st.live){ noteLive=true; note=st.live===1?"1 jogo ao vivo agora":st.live+" jogos ao vivo agora"; }
+  else{
+    const next=fixtures.find(f=>f.ts&&f.ts>now&&!brFixtureScore(f));
+    if(next){ const c=brCountdownTxt(next.ts-now); note="Próximo jogo "+(c||("dia "+next.dshort))+" · "+next.t1+" × "+next.t2; }
+  }
+  const pi=myParticipantIndex();
+  let posTxt="—",ptsTxt="—";
+  if(pi!=null){
+    const rows=brRanking();
+    const idx=rows.findIndex(r=>r.i===pi);
+    if(idx>=0){ posTxt=(idx+1)+"º"; ptsTxt=String(rows[idx].pts); }
+  }
+  const openFx=fixtures.filter(f=>!(f.ts&&now>=f.ts));
+  const filled=pi==null?0:openFx.filter(f=>{ const p=S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; }).length;
+  const pct=openFx.length?Math.round(filled*100/openFx.length):100;
+  el.innerHTML=
+    '<div class="panel">'+
+      '<div class="brx-hero"><div class="brx-hero-grid">'+
+        '<div>'+
+          '<div class="brx-kicker">Brasileirão 2026 · Returno</div>'+
+          '<h2>Rodada '+esc(focusRound||"")+'</h2>'+
+          '<div class="brx-hero-sub">'+esc(range)+(st.total?' · '+st.total+' jogos':'')+'</div>'+
+          (note?'<div class="brx-hero-note'+(noteLive?' live':'')+'">'+esc(note)+'</div>':'')+
+          '<div class="brx-hero-actions">'+
+            '<button class="brx-btn gold" onclick="goTab(\'palpites\')">Fazer palpites</button>'+
+            '<button class="brx-btn ghost" onclick="goTab(\'jogos\')">Todos os jogos</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="brx-stats">'+
+          '<div class="brx-stat"><strong>'+esc(posTxt)+'</strong><span>Sua posição</span></div>'+
+          '<div class="brx-stat"><strong>'+esc(ptsTxt)+'</strong><span>Seus pontos</span></div>'+
+          '<div class="brx-stat wide"><strong>'+(pi==null?'—':filled+'<em>/'+openFx.length+'</em>')+'</strong><span>Palpites nos jogos abertos</span>'+
+            (pi==null?'':'<div class="brx-progress-row"><div class="brx-progress"><i style="width:'+pct+'%"></i></div></div>')+
+          '</div>'+
+        '</div>'+
+      '</div></div>'+
+      '<div class="card">'+
+        '<div class="brx-sec"><span class="brx-sec-title">Jogos da rodada '+esc(focusRound||"")+'</span>'+
+        '<span class="brx-sec-meta">'+(st.live?'<span class="live">'+st.live+' ao vivo</span> · ':'')+st.done+'/'+st.total+' encerrados</span></div>'+
+        '<div class="brx-games">'+games.map(brMatchHTML).join("")+'</div>'+
+      '</div>'+
+    '</div>';
+}
+function renderBrJogos(){
+  const el=document.getElementById("tab-jogos"); if(!el) return;
+  if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
+  if(!S_BR.loaded){ el.innerHTML=brLoadingCard(); return; }
+  const fixtures=brReturnoFixtures();
+  if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
+  const {rounds,byRound}=brRoundsIndex(fixtures);
+  if(brJogosRound==null||!byRound[brJogosRound]) brJogosRound=brDefaultRound(rounds,byRound);
+  const r=brJogosRound, games=byRound[r], st=brRoundState(games), idx=rounds.indexOf(r);
+  el.innerHTML='<div class="panel">'+
+    '<div class="card">'+
+      '<div class="brx-sec"><span class="brx-sec-title">Jogos — returno</span><span class="brx-sec-meta">'+fixtures.length+' jogos · rodadas '+rounds[0]+'–'+rounds[rounds.length-1]+'</span></div>'+
+      brChipsHTML(rounds,byRound,r,"brSetJogosRound")+
+    '</div>'+
+    '<div class="card">'+
+      '<div class="brx-sec">'+
+        '<div class="brx-rnav">'+
+          '<button class="brx-arrow"'+(idx<=0?' disabled':'')+' onclick="brSetJogosRound('+rounds[Math.max(0,idx-1)]+')" aria-label="Rodada anterior">‹</button>'+
+          '<span class="brx-round-title">Rodada '+r+'</span>'+
+          '<button class="brx-arrow"'+(idx>=rounds.length-1?' disabled':'')+' onclick="brSetJogosRound('+rounds[Math.min(rounds.length-1,idx+1)]+')" aria-label="Próxima rodada">›</button>'+
+        '</div>'+
+        '<span class="brx-sec-meta">'+(st.live?'<span class="live">'+st.live+' ao vivo</span> · ':'')+st.done+'/'+st.total+' encerrados</span>'+
+      '</div>'+
+      '<div class="brx-games">'+games.map(brMatchHTML).join("")+'</div>'+
+    '</div>'+
+  '</div>';
+  brScrollChips(el);
+}
+function renderBrPlaceholder(id,title,msg){
+  const el=document.getElementById("tab-"+id); if(!el) return;
+  el.innerHTML=brStateCard("🚧",title,esc(msg));
+}
+
+/* ---- Pontuação (reusa o motor 3/1/0/−2 da Copa: scoreDetails) ---- */
+function brScoringResult(fx){ const s=brFixtureScore(fx); return s?{s1:s.s1,s2:s.s2}:null; }
+function brPlayerStats(pi){
+  let pts=0,crav=0,corr=0,inv=0,err=0,played=0;
+  brReturnoFixtures().forEach(fx=>{
+    const res=brScoringResult(fx); if(!res) return;
+    const pal=S_BR.palpites[brPredKey(pi,fx.id)];
+    const d=scoreDetails(pal,res); if(!d) return;
+    played++; pts+=d.pts;
+    if(d.exact) crav++; else if(d.base===1) corr++; else if(d.base===-2) inv++; else err++;
+  });
+  return {pts,crav,corr,inv,err,played};
+}
+function brRanking(){
+  return (S.participants||[]).map((name,i)=>({name,i,...brPlayerStats(i)})).sort((a,b)=>{
+    if(b.pts!==a.pts) return b.pts-a.pts;
+    if(b.crav!==a.crav) return b.crav-a.crav;
+    if(a.inv!==b.inv) return a.inv-b.inv;
+    return String(a.name).localeCompare(String(b.name),"pt-BR");
+  });
+}
+function brPtsBadge(d){
+  const cls=d.exact?'hit':d.base===1?'ok':d.base===-2?'inv':'zero';
+  const lbl=d.exact?'+3':d.base===1?'+1':d.base===-2?'−2':'0';
+  return '<span class="brx-pts '+cls+'">'+lbl+'</span>';
+}
+function renderBrRanking(){
+  const el=document.getElementById("tab-ranking"); if(!el) return;
+  if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
+  if(!S_BR.loaded){ el.innerHTML=brLoadingCard(); return; }
+  const fixtures=brReturnoFixtures();
+  if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
+  const myPi=myParticipantIndex();
+  const rows=brRanking();
+  const anyPlayed=rows.some(r=>r.played>0);
+  const scored=fixtures.filter(f=>brScoringResult(f)).length;
+  const maxPts=rows.length?Math.max(rows[0].pts,0):0;
+  el.innerHTML='<div class="panel"><div class="card">'+
+    '<div class="brx-sec"><span class="brx-sec-title">Ranking — returno</span><span class="brx-sec-meta">'+scored+' de '+fixtures.length+' jogos pontuados</span></div>'+
+    '<div class="brx-rank">'+rows.map((r,idx)=>{
+      const posCls=idx===0?' p1':idx===1?' p2':idx===2?' p3':'';
+      const barW=maxPts>0?Math.round(Math.max(0,r.pts)/maxPts*100):0;
+      return '<div class="brx-rank-row'+(r.i===myPi?' me':'')+'">'+
+        '<div class="brx-rank-pos'+posCls+'">'+(idx+1)+'</div>'+
+        '<div class="brx-rank-main">'+
+          '<div class="brx-rank-name"><b>'+esc(r.name)+'</b>'+(r.i===myPi?'<span class="you">você</span>':'')+'</div>'+
+          '<div class="brx-rank-meta">'+
+            '<span class="brx-mchip g">'+r.crav+' cravadas</span>'+
+            '<span class="brx-mchip v">'+r.corr+' certos</span>'+
+            '<span class="brx-mchip r">'+r.inv+' invertidos</span>'+
+            '<span class="brx-mchip">'+r.err+' erros</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="brx-rank-pts">'+r.pts+'<span>pts</span></div>'+
+        (maxPts>0?'<div class="brx-rank-bar"><i style="width:'+barW+'%"></i></div>':'')+
+      '</div>';
+    }).join("")+'</div>'+
+    (anyPlayed?'':'<div class="brx-empty-note">Ainda sem jogos pontuados — o ranking anima quando a bola rolar.</div>')+
+    '<div class="brx-legend" style="margin-top:12px">'+
+      '<span class="brx-legend-item"><span class="brx-pts hit">+3</span>cravada</span>'+
+      '<span class="brx-legend-item"><span class="brx-pts ok">+1</span>certo</span>'+
+      '<span class="brx-legend-item"><span class="brx-pts zero">0</span>erro</span>'+
+      '<span class="brx-legend-item"><span class="brx-pts inv">−2</span>invertido</span>'+
+    '</div>'+
+    '<p class="microcopy" style="margin:10px 0 0">Jogos ao vivo já contam provisoriamente — o resultado oficial fecha a conta.</p>'+
+  '</div></div>';
+}
+
+/* ---- Palpites (auto-save em brasileirao_predictions; trava no apito inicial) ----
+   Salva no onchange de cada campo, SEM re-renderizar a aba — assim os palpites das
+   outras partidas nunca são apagados. Feedback por um ✓ na própria linha. */
+function brPalpiteRowHTML(fx,pi,now){
+  const locked=Boolean(fx.ts&&now>=fx.ts);
+  const pal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
+  const when='<div class="brx-pal-when">'+esc(fx.dshort||fx.date||"")+(fx.time?' · '+esc(fx.time):'')+'</div>';
+  if(locked){
+    const res=brScoringResult(fx);
+    const sc=brFixtureScore(fx);
+    const d=(pal.s1!=null&&res)?scoreDetails(pal,res):null;
+    const palTxt=(pal.s1!=null)?(pal.s1+'–'+pal.s2):'sem palpite';
+    const resTxt=res?(res.s1+'–'+res.s2):'a definir';
+    return '<div class="brx-match brx-pal brx-locked'+(sc&&sc.live?' live':'')+'">'+
+      '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
+      '<div class="brx-mid">'+when+
+        '<div class="brx-locked-line"><span class="brx-your">seu '+esc(palTxt)+'</span><span class="brx-real">'+esc(resTxt)+'</span></div>'+
+        (d?brPtsBadge(d):(sc&&sc.live?'<span class="brx-tag live">Ao vivo</span>':''))+
+      '</div>'+
+      '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
+    '</div>';
+  }
+  const v1=pal.s1!=null?pal.s1:''; const v2=pal.s2!=null?pal.s2:'';
+  const gid=esc(fx.id); const done=(pal.s1!=null&&pal.s2!=null);
+  return '<div class="brx-match brx-pal">'+
+    '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
+    '<div class="brx-mid">'+when+
+      '<div class="brx-guess">'+
+        '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
+        '<span>×</span>'+
+        '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
+        '<span class="br-saved'+(done?' ok':'')+'" id="brSaved_'+gid+'">'+(done?'✓':'')+'</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
+  '</div>';
+}
+function renderBrPalpites(){
+  const el=document.getElementById("tab-palpites"); if(!el) return;
+  if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
+  if(!S_BR.loaded){ el.innerHTML=brLoadingCard(); return; }
+  const pi=myParticipantIndex();
+  if(pi==null){ el.innerHTML=brStateCard("👀","Conta observadora","Sua conta não tem um participante vinculado, então não dá pra palpitar — mas dá pra acompanhar tudo pelas outras abas."); return; }
+  const fixtures=brReturnoFixtures();
+  if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
+  const now=Date.now();
+  const {rounds,byRound}=brRoundsIndex(fixtures);
+  if(brPalRound==null||!byRound[brPalRound]){
+    const open=rounds.find(rr=>byRound[rr].some(f=>!(f.ts&&now>=f.ts)));
+    brPalRound=open!=null?open:brDefaultRound(rounds,byRound);
+  }
+  const isFilled=f=>{ const p=S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; };
+  const openFx=fixtures.filter(f=>!(f.ts&&now>=f.ts));
+  const filled=openFx.filter(isFilled).length;
+  const pct=openFx.length?Math.round(filled*100/openFx.length):100;
+  const r=brPalRound, games=byRound[r]||[], idx=rounds.indexOf(r);
+  const openRound=games.filter(f=>!(f.ts&&now>=f.ts));
+  const roundMeta=openRound.length?(openRound.filter(isFilled).length+'/'+openRound.length+' preenchidos'):'rodada travada';
+  el.innerHTML='<div class="panel">'+
+    '<div class="card">'+
+      '<div class="brx-sec"><span class="brx-sec-title">Seus palpites — '+esc(participantName(pi))+'</span><span class="brx-sec-meta">'+filled+'/'+openFx.length+' jogos abertos</span></div>'+
+      '<div class="brx-progress-row"><div class="brx-progress"><i style="width:'+pct+'%"></i></div><span class="brx-sec-meta">'+pct+'%</span></div>'+
+      '<p class="microcopy" style="margin:10px 0 12px">Salva sozinho ao digitar — sem botão. Cada palpite trava no apito inicial do jogo.</p>'+
+      brChipsHTML(rounds,byRound,r,"brSetPalRound")+
+    '</div>'+
+    '<div class="card">'+
+      '<div class="brx-sec">'+
+        '<div class="brx-rnav">'+
+          '<button class="brx-arrow"'+(idx<=0?' disabled':'')+' onclick="brSetPalRound('+rounds[Math.max(0,idx-1)]+')" aria-label="Rodada anterior">‹</button>'+
+          '<span class="brx-round-title">Rodada '+r+'</span>'+
+          '<button class="brx-arrow"'+(idx>=rounds.length-1?' disabled':'')+' onclick="brSetPalRound('+rounds[Math.min(rounds.length-1,idx+1)]+')" aria-label="Próxima rodada">›</button>'+
+        '</div>'+
+        '<span class="brx-sec-meta">'+roundMeta+'</span>'+
+      '</div>'+
+      '<div class="brx-games">'+games.map(f=>brPalpiteRowHTML(f,pi,now)).join("")+'</div>'+
+    '</div>'+
+  '</div>';
+  brScrollChips(el);
+}
+function brFlagSaved(gid,state){
+  const el=document.getElementById('brSaved_'+gid); if(!el) return;
+  el.className='br-saved '+(state==='erro'?'err':state==='salvando'?'wait':state==='vazio'?'':'ok');
+  el.textContent=state==='erro'?'!':state==='salvando'?'…':state==='vazio'?'':'✓';
+}
+async function brAutoSavePalpite(gid){
+  const pi=myParticipantIndex();
+  if(pi==null){ toast("Sua conta não tem participante vinculado."); return; }
+  const fx=S_BR.fixtures.find(f=>f.id===gid);
+  if(fx&&fx.ts&&Date.now()>=fx.ts){ toast("Jogo já começou — palpite encerrado."); return; }
+  const e1=document.getElementById('brS1_'+gid), e2=document.getElementById('brS2_'+gid);
+  if(!e1||!e2) return;
+  const r1=String(e1.value).trim(), r2=String(e2.value).trim();
+  const key=brPredKey(pi,gid);
+  if(r1===''&&r2===''){
+    if(S_BR.palpites[key]){
+      delete S_BR.palpites[key];
+      brFlagSaved(gid,'salvando');
+      const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").delete().eq("participant_index",pi).eq("game_id",gid));
+      brFlagSaved(gid, ok===false?'erro':'vazio');
+    } else brFlagSaved(gid,'vazio');
+    return;
+  }
+  const s1=parseInt(r1,10), s2=parseInt(r2,10);
+  if(!Number.isInteger(s1)||!Number.isInteger(s2)||s1<0||s2<0){ brFlagSaved(gid,'vazio'); return; }
+  const pal={s1:Math.min(30,s1),s2:Math.min(30,s2)};
+  if(String(pal.s1)!==r1) e1.value=pal.s1;
+  if(String(pal.s2)!==r2) e2.value=pal.s2;
+  S_BR.palpites[key]=pal;
+  brFlagSaved(gid,'salvando');
+  const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:gid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
+  if(ok===false){ brFlagSaved(gid,'erro'); toast("Não salvou (confira o login ou se o jogo já começou)."); }
+  else brFlagSaved(gid,'salvo');
+}
+
+function renderBrTab(t){
+  brEnsureLoaded();
+  if(t==="config") return renderBrConfig();
+  if(t==="jogos") return renderBrJogos();
+  if(t==="home") return renderBrHome();
+  if(t==="ranking") return renderBrRanking();
+  if(t==="palpites") return renderBrPalpites();
+  if(t==="grupos") return renderBrPlaceholder("grupos","Tabela","A classificação (oficial + projetada pelos palpites) entra na próxima etapa.");
+  return renderBrHome();
+}
+
 function render(t){
   renderAuthControls();
+  if(isBrasileirao()){ renderBrTab(t); return; }
   syncBrazilStoryHeader();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
@@ -12471,6 +13237,7 @@ document.addEventListener("input",event=>{
 });
 document.addEventListener("visibilitychange",handleApiTestVisibilityChange);
 
+applyCompChrome();
 render("home");
 initRemote();
 </script>
