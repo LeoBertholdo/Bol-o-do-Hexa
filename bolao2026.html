@@ -8924,32 +8924,67 @@ function cinemaMakeComposition(React,R){
     const f=useCurrentFrame();
     const n=data.series.length;
     const steps=data.steps;
-    const kFloat=steps<=0?0:lin(f,20,dur-26,0,steps);
+    const kFloat=steps<=0?0:lin(f,20,dur-40,0,steps);
+    // Centro da janela de suavização SEM clamp à direita: na segurada final a
+    // janela continua andando e o ranking assenta no resultado exato.
+    const kc=steps<=0?0:interpolate(f,[20,dur-40],[0,steps],{extrapolateLeft:"clamp"});
     const k0=Math.min(steps,Math.floor(kFloat));
     const k1=Math.min(steps,k0+1);
     const t=clamp01(kFloat-k0);
-    const te=t*t*(3-2*t); // smoothstep: troca de posição sem tranco
+    // smootherstep (C²): velocidade e aceleração zeram na troca de lance —
+    // barras crescem e trocam de posição sem tranco.
+    const smooth5=u=>u*u*u*(u*(u*6-15)+10);
+    const te=smooth5(t);
     const fr0=data.frames[k0],fr1=data.frames[k1];
+    const fpl=steps>0?(dur-60)/steps:dur; // quadros de vídeo por lance
+    const sampleAt=(arr,si,kf)=>{
+      const a=Math.min(steps,Math.max(0,Math.floor(kf)));
+      const b=Math.min(steps,a+1);
+      return data.frames[a][arr][si]+(data.frames[b][arr][si]-data.frames[a][arr][si])*smooth5(clamp01(kf-a));
+    };
+    // Subidas/descidas: numa Copa cheia cada lance dura 2-4 quadros e a
+    // ultrapassagem viraria um pulo seco. A posição usa média ponderada numa
+    // janela de ~14 quadros, então a troca desliza igual em qualquer densidade.
+    const halfK=Math.max(0,(14/fpl-1)/2);
+    const rankSm=si=>halfK<=0?sampleAt("rank",si,kFloat):
+      (sampleAt("rank",si,kc-halfK)+4*sampleAt("rank",si,kc-halfK/2)+6*sampleAt("rank",si,kc)+4*sampleAt("rank",si,kc+halfK/2)+sampleAt("rank",si,kc+halfK))/16;
+    const wAct=Math.max(.6,7/fpl);
     const range=Math.max(1,data.maxVal-data.minVal);
     const top=176,bottomPad=64;
     const rowH=Math.min(60,(HGT-top-bottomPad)/n);
     const area={x:318,w:W-318-158};
     const xFor=v=>area.x+area.w*((v-data.minVal)/range);
     const x0=xFor(0);
-    const cap=(t<.5?fr0:fr1).caption;
+    // Legenda: em Copa cheia trocar a cada lance vira pisca-pisca ilegível —
+    // mostra 1 jogo a cada ~24 quadros, com crossfade curto na troca.
+    const capEvery=Math.max(1,Math.ceil(24/fpl));
+    const capPos=steps>0?kFloat/capEvery:0;
+    const capA=data.frames[Math.min(steps,Math.floor(capPos)*capEvery)].caption;
+    const capB=data.frames[Math.min(steps,(Math.floor(capPos)+1)*capEvery)].caption;
+    const cu=capPos-Math.floor(capPos);
+    const atEnd=kFloat>=steps;
+    const cap=atEnd?data.frames[steps].caption:(cu<.5?capA:capB);
+    const capSwap=!atEnd&&capA.text!==capB.text;
+    const capOp=capSwap?(cu<.5?lin(cu,.38,.5,1,0):lin(cu,.5,.62,0,1)):1;
+    const capDy=capSwap?(cu<.5?lin(cu,.38,.5,0,-8):lin(cu,.5,.62,8,0)):0;
     const medals=["🥇","🥈","🥉"];
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
       h("div",{style:{position:"absolute",top:44,left:64,right:64}},
         h(Kicker,{style:{fontSize:16,letterSpacing:6}},"A corrida do ranking"),
-        h("div",{style:{display:"flex",alignItems:"baseline",gap:18,marginTop:10}},
-          h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:900}},cap.text||""),
-          cap.tag?h("div",{style:{fontSize:15,fontWeight:800,color:"#ff6b64",letterSpacing:2}},cap.tag):null
-        ),
-        h("div",{style:{fontSize:17,color:SOFT,marginTop:4}},cap.date||" ")
+        h("div",{style:{opacity:capOp,transform:`translateY(${capDy}px)`}},
+          h("div",{style:{display:"flex",alignItems:"baseline",gap:18,marginTop:10}},
+            h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:900}},cap.text||""),
+            cap.tag?h("div",{style:{fontSize:15,fontWeight:800,color:"#ff6b64",letterSpacing:2}},cap.tag):null
+          ),
+          h("div",{style:{fontSize:17,color:SOFT,marginTop:4}},cap.date||" ")
+        )
       ),
       data.series.map((s,si)=>{
-        const v=fr0.values[si]+(fr1.values[si]-fr0.values[si])*t;
-        const r=fr0.rank[si]+(fr1.rank[si]-fr0.rank[si])*te;
+        const v=fr0.values[si]+(fr1.values[si]-fr0.values[si])*te;
+        const r=rankSm(si);
+        // Brilho contínuo proporcional ao ritmo de pontuação na janela recente
+        // (nada de piscar por lance: ~3 pts na janela = brilho máximo).
+        const act=clamp01((sampleAt("values",si,kc+wAct)-sampleAt("values",si,kc-wAct))/3);
         const y=top+r*rowH;
         const xv=xFor(v);
         const left=Math.min(x0,xv),wpx=Math.max(3,Math.abs(xv-x0));
@@ -8958,8 +8993,8 @@ function cinemaMakeComposition(React,R){
         return h("div",{key:si,style:{position:"absolute",left:0,top:y,width:W,height:rowH,display:"flex",alignItems:"center"}},
           h("div",{style:{position:"absolute",left:64,width:44,textAlign:"center",fontSize:isLeader?26:20,fontWeight:800,color:curRank<3?YELLOW:"rgba(255,255,255,.65)"}},curRank<3?medals[curRank]:String(curRank+1)),
           h("div",{style:{position:"absolute",left:114,width:190,textAlign:"right",fontSize:22,fontWeight:isLeader?800:600,color:isLeader?"#fff":SOFT,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},s.name),
-          h("div",{style:{position:"absolute",left,top:(rowH-Math.max(14,rowH-22))/2,width:wpx,height:Math.max(14,rowH-22),borderRadius:9,background:`linear-gradient(90deg,${s.color},${s.color}cc)`,boxShadow:isLeader?`0 0 26px ${s.color}88`:"none"}}),
-          h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+14,W-120),fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff"}},String(Math.round(v)))
+          h("div",{style:{position:"absolute",left,top:(rowH-Math.max(14,rowH-22))/2,width:wpx,height:Math.max(14,rowH-22),borderRadius:9,background:`linear-gradient(90deg,${s.color},${s.color}cc)`,boxShadow:[isLeader?`0 0 26px ${s.color}88`:null,act>.02?`0 0 ${22*act}px ${s.color}aa`:null].filter(Boolean).join(", ")||"none"}}),
+          h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+14,W-120),fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff",transform:`scale(${1+.25*act})`,transformOrigin:"left center",textShadow:act>.02?`0 0 ${14*act}px rgba(255,223,0,${(.85*act).toFixed(2)})`:"none"}},String(Math.round(v)))
         );
       }),
       h("div",{style:{position:"absolute",left:64,right:64,bottom:34,height:6,borderRadius:999,background:"rgba(255,255,255,.14)"}},
@@ -8979,7 +9014,7 @@ function cinemaMakeComposition(React,R){
     const range=Math.max(1,data.maxVal-data.minVal);
     const X=i=>pad.l+uw*(count>1?i/(count-1):0);
     const Y=v=>pad.t+uh-uh*((v-data.minVal)/range);
-    const reveal=interpolate(f,[12,dur-80],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp",easing:Easing.inOut(Easing.quad)});
+    const reveal=interpolate(f,[12,dur-80],[0,1],{extrapolateLeft:"clamp",extrapolateRight:"clamp",easing:Easing.inOut(Easing.cubic)});
     const clipW=pad.l+uw*reveal+4;
     const tickStep=Math.max(1,Math.round(range/5));
     const ticks=[];
@@ -9293,6 +9328,34 @@ const BR_TEAM_LOGOS={
   "Remo":"assets/brasileirao/remo.png","Santos":"assets/brasileirao/santos.png",
   "São Paulo":"assets/brasileirao/sao-paulo.png","Vasco da Gama":"assets/brasileirao/vasco-da-gama.png"
 };
+/* Base da aba Tabela: classificação REAL consolidada antes da rodada 19 (os
+   jogos do returno começaram em 16/07/2026). Buscada uma única vez na
+   football-data (177 dos 180 jogos do 1º turno encerrados; 3 adiados, por isso
+   seis clubes têm 17 jogos). Formato: [pts, j, v, e, d, gp, gc]. Por cima dela,
+   brTableRows soma os jogos do bolão (brBolaoFixtures: returno + adiados
+   remarcados) — os adiados não estão na base, então não há dupla contagem. */
+const BR_BASE={
+  "Palmeiras":[41,18,12,5,1,30,13],
+  "Flamengo":[34,17,10,4,3,31,16],
+  "Fluminense":[31,18,9,4,5,28,23],
+  "Athletico-PR":[30,18,9,3,6,24,18],
+  "Bragantino":[29,18,9,2,7,25,19],
+  "Bahia":[26,17,7,5,5,25,23],
+  "Coritiba":[26,18,7,5,6,24,24],
+  "São Paulo":[25,18,7,4,7,23,20],
+  "Atlético-MG":[24,18,7,3,8,22,23],
+  "Corinthians":[24,18,6,6,6,18,19],
+  "Cruzeiro":[24,18,6,6,6,24,28],
+  "Botafogo":[22,17,6,4,7,31,31],
+  "EC Vitória":[22,17,6,4,7,21,25],
+  "Internacional":[21,18,5,6,7,21,22],
+  "Santos":[21,18,5,6,7,26,29],
+  "Grêmio":[21,18,5,6,7,20,23],
+  "Vasco da Gama":[20,18,5,5,8,22,29],
+  "Remo":[18,18,4,6,8,21,29],
+  "Mirassol":[16,17,4,4,9,18,24],
+  "Chapecoense":[9,17,1,6,10,17,33]
+};
 let S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
 let brLoading=false;
 let brStatus=null;
@@ -9328,34 +9391,6 @@ const BR_TEAM_ALIASES={
   fortalezaec:"Fortaleza",fortaleza:"Fortaleza",
   gremiofbpa:"Grêmio",gremio:"Grêmio",
   internacional:"Internacional",scinternacional:"Internacional",
-/* Base da aba Tabela: classificação REAL consolidada antes da rodada 19 (os
-   jogos do returno começaram em 16/07/2026). Buscada uma única vez na
-   football-data (177 dos 180 jogos do 1º turno encerrados; 3 adiados, por isso
-   seis clubes têm 17 jogos). Formato: [pts, j, v, e, d, gp, gc]. Por cima dela,
-   brTableRows soma os jogos do bolão (brBolaoFixtures: returno + adiados
-   remarcados) — os adiados não estão na base, então não há dupla contagem. */
-const BR_BASE={
-  "Palmeiras":[41,18,12,5,1,30,13],
-  "Flamengo":[34,17,10,4,3,31,16],
-  "Fluminense":[31,18,9,4,5,28,23],
-  "Athletico-PR":[30,18,9,3,6,24,18],
-  "Bragantino":[29,18,9,2,7,25,19],
-  "Bahia":[26,17,7,5,5,25,23],
-  "Coritiba":[26,18,7,5,6,24,24],
-  "São Paulo":[25,18,7,4,7,23,20],
-  "Atlético-MG":[24,18,7,3,8,22,23],
-  "Corinthians":[24,18,6,6,6,18,19],
-  "Cruzeiro":[24,18,6,6,6,24,28],
-  "Botafogo":[22,17,6,4,7,31,31],
-  "EC Vitória":[22,17,6,4,7,21,25],
-  "Internacional":[21,18,5,6,7,21,22],
-  "Santos":[21,18,5,6,7,26,29],
-  "Grêmio":[21,18,5,6,7,20,23],
-  "Vasco da Gama":[20,18,5,5,8,22,29],
-  "Remo":[18,18,4,6,8,21,29],
-  "Mirassol":[16,17,4,4,9,18,24],
-  "Chapecoense":[9,17,1,6,10,17,33]
-};
   mirassolfc:"Mirassol",mirassol:"Mirassol",
   palmeiras:"Palmeiras",sepalmeiras:"Palmeiras",
   redbullbragantino:"Bragantino",redbullbragantinosaf:"Bragantino",rbbragantino:"Bragantino",bragantino:"Bragantino",
@@ -9385,6 +9420,28 @@ function brLogo(team){
 }
 function brPredKey(pi,gid){ return pi+"_"+gid; }
 function brReturnoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND); }
+/* Jogos adiados: partida de rodada do turno (ex.: rodada 4) remarcada pra dentro da
+   janela do returno entra no bolão como um jogo normal — vale palpite e pontos (a
+   trava no banco já é pelo horário do jogo, não pela rodada). Ela é exibida junto da
+   rodada do returno que estiver rolando na data (slot), com etiqueta "adiado". A
+   Tabela também conta os adiados: eles não estão na base BR_BASE (que só tem os
+   jogos encerrados antes da rodada 19), então somam por cima sem duplicar. */
+function brBolaoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND||f.late); }
+function brLateFixtures(){ return S_BR.fixtures.filter(f=>f.late); }
+function brTagLateFixtures(fixtures){
+  const returno=fixtures.filter(f=>f.round!=null&&f.round>=BR_FIRST_ROUND&&f.ts);
+  const startTs=returno.length?Math.min(...returno.map(f=>f.ts)):null;
+  const roundStart={};
+  returno.forEach(f=>{ if(roundStart[f.round]==null||f.ts<roundStart[f.round]) roundStart[f.round]=f.ts; });
+  const rounds=Object.keys(roundStart).map(Number).sort((a,b)=>a-b);
+  fixtures.forEach(f=>{
+    f.late=Boolean(startTs!=null&&f.round!=null&&f.round<BR_FIRST_ROUND&&f.ts&&f.ts>=startTs);
+    if(!f.late){ f.slot=f.round; return; }
+    let slot=BR_FIRST_ROUND;
+    rounds.forEach(r=>{ if(roundStart[r]<=f.ts) slot=r; });
+    f.slot=slot;
+  });
+}
 function brFixtureScore(fx){
   const res=S_BR.results[fx.id];
   if(res&&res.s1!=null) return {s1:res.s1,s2:res.s2,final:true,live:false};
@@ -9411,6 +9468,7 @@ async function brLoadRemote(opts={}){
     const p=brDateParts(row.kickoff_utc);
     return {id:row.game_id,t1:brCanonicalTeam(row.home_team),t2:brCanonicalTeam(row.away_team),utc:row.kickoff_utc,date:p.date,time:p.time,dshort:p.short,dateKey:p.key,ts:p.ts,roundLabel:row.round_label||"",round:brRoundNum(row.round_label),live:liveBy[row.game_id]||null};
   }).sort((a,b)=>(a.ts-b.ts)||String(a.id).localeCompare(b.id));
+  brTagLateFixtures(S_BR.fixtures);
   S_BR.palpites=Object.fromEntries((predRows.data||[]).map(r=>[brPredKey(r.participant_index,r.game_id),{s1:r.s1,s2:r.s2}]));
   S_BR.results=Object.fromEntries((resRows.data||[]).map(r=>[r.game_id,{s1:r.s1,s2:r.s2}]));
   S_BR.live=liveBy;
@@ -9420,28 +9478,6 @@ async function brLoadRemote(opts={}){
   if(!opts.skipRender) render(activeTab);
 }
 function brEnsureLoaded(){
-/* Jogos adiados: partida de rodada do turno (ex.: rodada 4) remarcada pra dentro da
-   janela do returno entra no bolão como um jogo normal — vale palpite e pontos (a
-   trava no banco já é pelo horário do jogo, não pela rodada). Ela é exibida junto da
-   rodada do returno que estiver rolando na data (slot), com etiqueta "adiado". A
-   Tabela também conta os adiados: eles não estão na base BR_BASE (que só tem os
-   jogos encerrados antes da rodada 19), então somam por cima sem duplicar. */
-function brBolaoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND||f.late); }
-function brLateFixtures(){ return S_BR.fixtures.filter(f=>f.late); }
-function brTagLateFixtures(fixtures){
-  const returno=fixtures.filter(f=>f.round!=null&&f.round>=BR_FIRST_ROUND&&f.ts);
-  const startTs=returno.length?Math.min(...returno.map(f=>f.ts)):null;
-  const roundStart={};
-  returno.forEach(f=>{ if(roundStart[f.round]==null||f.ts<roundStart[f.round]) roundStart[f.round]=f.ts; });
-  const rounds=Object.keys(roundStart).map(Number).sort((a,b)=>a-b);
-  fixtures.forEach(f=>{
-    f.late=Boolean(startTs!=null&&f.round!=null&&f.round<BR_FIRST_ROUND&&f.ts&&f.ts>=startTs);
-    if(!f.late){ f.slot=f.round; return; }
-    let slot=BR_FIRST_ROUND;
-    rounds.forEach(r=>{ if(roundStart[r]<=f.ts) slot=r; });
-    f.slot=slot;
-  });
-}
   if(S_BR.loaded||brLoading) return;
   if(!remoteClient||!remoteSession) return;
   brLoading=true;
@@ -9468,7 +9504,6 @@ async function brSyncNow(){
 function brRefresh(){ S_BR.loaded=false; brLoadRemote(); }
 
 /* ---- Navegação por rodada (estado só de UI) ---- */
-  brTagLateFixtures(S_BR.fixtures);
 let brJogosRound=null, brPalRound=null;
 function brRoundsIndex(fixtures){
   const byRound={};
@@ -9519,6 +9554,7 @@ function brLoadingCard(){ return '<div class="panel"><div class="card"><div clas
 function brEmptyCard(){ return brStateCard("⚽","Nenhum jogo mapeado ainda", isAdmin()?'Vá em <strong>Config → “Mapear temporada 2026”</strong> para buscar o calendário.':'Os jogos ainda não foram carregados. Peça pro admin mapear a temporada.'); }
 function brMatchHTML(fx){
   const sc=brFixtureScore(fx);
+  const lateTag=fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'';
   let mid,cls="",t1cls="",t2cls="";
   if(sc){
     if(sc.final){
@@ -9554,7 +9590,6 @@ function renderBrConfig(){
       '<div class="card"><div class="card-title">Pontuação</div>'+
         '<div class="brx-legend">'+
           '<span class="brx-legend-item"><span class="brx-pts hit">+3</span>placar cravado</span>'+
-  const lateTag=fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'';
           '<span class="brx-legend-item"><span class="brx-pts ok">+1</span>resultado certo</span>'+
           '<span class="brx-legend-item"><span class="brx-pts zero">0</span>erro simples</span>'+
           '<span class="brx-legend-item"><span class="brx-pts inv">−2</span>resultado invertido</span>'+
@@ -9610,6 +9645,7 @@ function renderBrHome(){
           (note?'<div class="brx-hero-note'+(noteLive?' live':'')+'">'+esc(note)+'</div>':'')+
           '<div class="brx-hero-actions">'+
             '<button class="brx-btn gold" onclick="goTab(\'palpites\')">Fazer palpites</button>'+
+            '<button class="brx-btn ghost" onclick="goTab(\'grupos\')">Tabela</button>'+
             '<button class="brx-btn ghost" onclick="goTab(\'jogos\')">Todos os jogos</button>'+
           '</div>'+
         '</div>'+
@@ -9645,7 +9681,6 @@ function renderBrJogos(){
     '<div class="card">'+
       '<div class="brx-sec">'+
         '<div class="brx-rnav">'+
-            '<button class="brx-btn ghost" onclick="goTab(\'grupos\')">Tabela</button>'+
           '<button class="brx-arrow"'+(idx<=0?' disabled':'')+' onclick="brSetJogosRound('+rounds[Math.max(0,idx-1)]+')" aria-label="Rodada anterior">‹</button>'+
           '<span class="brx-round-title">Rodada '+r+'</span>'+
           '<button class="brx-arrow"'+(idx>=rounds.length-1?' disabled':'')+' onclick="brSetJogosRound('+rounds[Math.min(rounds.length-1,idx+1)]+')" aria-label="Próxima rodada">›</button>'+
@@ -9726,42 +9761,6 @@ function renderBrRanking(){
   '</div></div>';
 }
 
-/* ---- Palpites (auto-save em brasileirao_predictions; trava no apito inicial) ----
-   Salva no onchange de cada campo, SEM re-renderizar a aba — assim os palpites das
-   outras partidas nunca são apagados. Feedback por um ✓ na própria linha. */
-function brPalpiteRowHTML(fx,pi,now){
-  const locked=Boolean(fx.ts&&now>=fx.ts);
-  const pal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
-  const when='<div class="brx-pal-when">'+esc(fx.dshort||fx.date||"")+(fx.time?' · '+esc(fx.time):'')+'</div>'+
-    (fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'');
-  if(locked){
-    const res=brScoringResult(fx);
-    const sc=brFixtureScore(fx);
-    const d=(pal.s1!=null&&res)?scoreDetails(pal,res):null;
-    const palTxt=(pal.s1!=null)?(pal.s1+'–'+pal.s2):'sem palpite';
-    const resTxt=res?(res.s1+'–'+res.s2):'a definir';
-    return '<div class="brx-match brx-pal brx-locked'+(sc&&sc.live?' live':'')+'">'+
-      '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
-      '<div class="brx-mid">'+when+
-        '<div class="brx-locked-line"><span class="brx-your">seu '+esc(palTxt)+'</span><span class="brx-real">'+esc(resTxt)+'</span></div>'+
-        (d?brPtsBadge(d):(sc&&sc.live?'<span class="brx-tag live">Ao vivo</span>':''))+
-      '</div>'+
-      '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
-    '</div>';
-  }
-  const v1=pal.s1!=null?pal.s1:''; const v2=pal.s2!=null?pal.s2:'';
-  const gid=esc(fx.id); const done=(pal.s1!=null&&pal.s2!=null);
-  return '<div class="brx-match brx-pal">'+
-    '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
-    '<div class="brx-mid">'+when+
-      '<div class="brx-guess">'+
-        '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
-        '<span>×</span>'+
-        '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
-        '<span class="br-saved'+(done?' ok':'')+'" id="brSaved_'+gid+'">'+(done?'✓':'')+'</span>'+
-      '</div>'+
-    '</div>'+
-    '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
 /* ---- Tabela (classificação do Brasileirão) ----
    Parte da classificação REAL de antes da rodada 19 (BR_BASE, congelada) e soma
    por cima os jogos do bolão (brBolaoFixtures: returno + adiados remarcados):
@@ -9879,6 +9878,42 @@ function renderBrTabela(){
   '</div></div>';
 }
 
+/* ---- Palpites (auto-save em brasileirao_predictions; trava no apito inicial) ----
+   Salva no onchange de cada campo, SEM re-renderizar a aba — assim os palpites das
+   outras partidas nunca são apagados. Feedback por um ✓ na própria linha. */
+function brPalpiteRowHTML(fx,pi,now){
+  const locked=Boolean(fx.ts&&now>=fx.ts);
+  const pal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
+  const when='<div class="brx-pal-when">'+esc(fx.dshort||fx.date||"")+(fx.time?' · '+esc(fx.time):'')+'</div>'+
+    (fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'');
+  if(locked){
+    const res=brScoringResult(fx);
+    const sc=brFixtureScore(fx);
+    const d=(pal.s1!=null&&res)?scoreDetails(pal,res):null;
+    const palTxt=(pal.s1!=null)?(pal.s1+'–'+pal.s2):'sem palpite';
+    const resTxt=res?(res.s1+'–'+res.s2):'a definir';
+    return '<div class="brx-match brx-pal brx-locked'+(sc&&sc.live?' live':'')+'">'+
+      '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
+      '<div class="brx-mid">'+when+
+        '<div class="brx-locked-line"><span class="brx-your">seu '+esc(palTxt)+'</span><span class="brx-real">'+esc(resTxt)+'</span></div>'+
+        (d?brPtsBadge(d):(sc&&sc.live?'<span class="brx-tag live">Ao vivo</span>':''))+
+      '</div>'+
+      '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
+    '</div>';
+  }
+  const v1=pal.s1!=null?pal.s1:''; const v2=pal.s2!=null?pal.s2:'';
+  const gid=esc(fx.id); const done=(pal.s1!=null&&pal.s2!=null);
+  return '<div class="brx-match brx-pal">'+
+    '<div class="brx-team home"><span class="brx-team-name">'+esc(fx.t1)+'</span>'+brLogo(fx.t1)+'</div>'+
+    '<div class="brx-mid">'+when+
+      '<div class="brx-guess">'+
+        '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
+        '<span>×</span>'+
+        '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
+        '<span class="br-saved'+(done?' ok':'')+'" id="brSaved_'+gid+'">'+(done?'✓':'')+'</span>'+
+      '</div>'+
+    '</div>'+
+    '<div class="brx-team">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2)+'</span></div>'+
   '</div>';
 }
 function renderBrPalpites(){
