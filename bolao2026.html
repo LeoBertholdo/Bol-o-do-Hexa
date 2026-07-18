@@ -346,8 +346,10 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-col.win .brx-pop-cap{color:#4ae08e}
 .brx-pop-cap .n{font-size:.5rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b}
 .brx-pop-col.win .brx-pop-cap .n{color:#4ae08e}
-.brx-pop-chips{display:flex;flex-direction:column;gap:8px;align-items:center}
-.brx-pchip{display:flex;flex-direction:column;align-items:center;gap:3px;max-width:100%}
+.brx-pop-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 5px}
+.brx-pchip{display:flex;flex-direction:column;align-items:center;gap:3px;width:56px}
+.brx-pchip-b{display:flex;flex-direction:column;align-items:center;gap:4px}
+.brx-pencil{opacity:.75;font-size:.85em;margin-left:2px}
 .brx-pav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:950;background:rgba(255,255,255,.1);color:#cfe2d6;flex:0 0 auto}
 .brx-pchip.me .brx-pav{background:rgba(255,215,94,.18);color:#ffd75e;box-shadow:0 0 0 2px rgba(255,215,94,.55)}
 .brx-pnm{font-size:.66rem;font-weight:800;color:#dcebe2;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -9710,7 +9712,7 @@ function brMatchHTML(fx,opts){
      campos inline; jogo travado vira um pill que abre o popup com os palpites de
      todos (segredo até o apito). Só quando opts.interactive — o preview da Home usa
      o card puro, sem inputs, pra não duplicar os IDs brS1_/brS2_ no DOM. */
-  let pal="",palCls="",matchAttr="";
+  let pal="",palCls="",matchAttr="",editCls="";
   if(opts.interactive){
     if(locked){
       const myPal=pi!=null?S_BR.palpites[brPredKey(pi,fx.id)]:null;
@@ -9727,8 +9729,9 @@ function brMatchHTML(fx,opts){
       const v1=myPal.s1!=null?myPal.s1:'', v2=myPal.s2!=null?myPal.s2:'';
       const done=(myPal.s1!=null&&myPal.s2!=null);
       matchAttr=' id="brMatch_'+gid+'"';
+      editCls=done?'':' editing'; // sem palpite: já abre os campos, sem o passo extra do botão
       pal='<div class="brx-mid-pal">'+
-        '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b>':'Palpitar')+'</button>'+
+        '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b> <span class="brx-pencil" aria-hidden="true">✎</span>':'Palpitar')+'</button>'+
         '<div class="brx-guess brx-guess-edit">'+
           '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
           '<span>×</span>'+
@@ -9740,7 +9743,7 @@ function brMatchHTML(fx,opts){
       palCls=" brx-pal";
     }
   }
-  return '<div class="brx-match'+cls+palCls+'"'+matchAttr+'>'+
+  return '<div class="brx-match'+cls+palCls+editCls+'"'+matchAttr+'>'+
     '<div class="brx-team home'+t1cls+'"><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
     '<div class="brx-mid">'+mid+lateTag+pal+'</div>'+
     '<div class="brx-team'+t2cls+'">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
@@ -10178,7 +10181,7 @@ function brRefreshPill(gid){
   const btn=document.getElementById('brPill_'+gid); if(!btn) return;
   const pi=myParticipantIndex(); if(pi==null) return;
   const p=S_BR.palpites[brPredKey(pi,gid)];
-  if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b>'; }
+  if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b> <span class="brx-pencil" aria-hidden="true">✎</span>'; }
   else{ btn.className='brx-pill-guess'; btn.textContent='Palpitar'; }
 }
 function brToggleGuess(gid,on){
@@ -10224,18 +10227,19 @@ function brPopupHTML(gid){
   const locked=Boolean(fx.ts&&Date.now()>=fx.ts);
   if(!locked) return head+'<div class="brx-pop-empty" style="margin-top:16px">Os palpites de todo mundo aparecem quando a bola rolar.</div>';
   const myPi=myParticipantIndex();
+  const res=sc?{s1:sc.s1,s2:sc.s2}:null; // placar atual (final OU ao vivo) pra pontuar cada palpite
   const cols={home:[],draw:[],away:[]};
   (S.participants||[]).forEach((name,i)=>{
     const p=S_BR.palpites[brPredKey(i,gid)];
     if(!p||p.s1==null||p.s2==null) return;
     const out=p.s1>p.s2?'home':(p.s1<p.s2?'away':'draw');
-    const exact=Boolean(sc&&sc.final&&sc.s1===p.s1&&sc.s2===p.s2);
-    cols[out].push({name,s1:p.s1,s2:p.s2,exact,me:i===myPi});
+    const d=res?scoreDetails({s1:p.s1,s2:p.s2},res):null;
+    cols[out].push({name,s1:p.s1,s2:p.s2,d,me:i===myPi});
   });
   const finalRes=(sc&&sc.final)?(sc.s1>sc.s2?'home':(sc.s1<sc.s2?'away':'draw')):null;
-  const sortCol=a=>a.sort((x,y)=>(y.exact-x.exact)||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
+  const sortCol=a=>a.sort((x,y)=>((y.d?y.d.pts:0)-(x.d?x.d.pts:0))||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
   sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
-  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"><span class="brx-pav">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc'+(c.exact?' hit':'')+'">'+c.s1+'×'+c.s2+'</span></span>';
+  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"><span class="brx-pav">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-pchip-b"><span class="brx-psc">'+c.s1+'×'+c.s2+'</span>'+(c.d?brPtsBadge(c.d):'')+'</span></span>';
   const col=(arr,label,winner)=>'<div class="brx-pop-col'+(winner?' win':'')+'">'+
     '<div class="brx-pop-cap">'+esc(label)+'<span class="n">'+arr.length+(winner?' · acertaram':'')+'</span></div>'+
     (arr.length?'<div class="brx-pop-chips">'+arr.map(chip).join('')+'</div>':'<div class="brx-pop-empty">—</div>')+
@@ -10247,7 +10251,7 @@ function brPopupHTML(gid){
       col(cols.draw,'Empate',finalRes==='draw')+
       col(cols.away,fx.t2||'Visitante',finalRes==='away')+
     '</div>'+
-    (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+' · <span class="brx-psc hit">placar</span> dourado = cravou</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
+    (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+(res?' · <span class="brx-pts hit">+3</span>cravou <span class="brx-pts ok">+1</span>certo <span class="brx-pts zero">0</span>erro <span class="brx-pts inv">−2</span>invertido':'')+'</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
 }
 
 function renderBrTab(t){
