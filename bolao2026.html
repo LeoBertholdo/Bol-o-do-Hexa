@@ -304,6 +304,57 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-pts.zero{background:rgba(255,255,255,.07);color:#93a89d;border:1px solid rgba(255,255,255,.1)}
 .brx-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
+/* palpite inline na aba Jogos */
+.brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
+.brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.brx-pill-guess:hover{background:rgba(255,215,94,.18)}
+.brx-pill-guess.filled{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#c8d9ce;text-transform:none;letter-spacing:0}
+.brx-pill-guess.filled b{color:#fff;font-weight:950;margin-left:4px}
+.brx-guess-edit{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px}
+.brx-match.editing .brx-guess-edit{display:flex}
+.brx-match.editing .brx-pill-guess{display:none}
+.brx-guess-done{border:none;background:none;color:#4ae08e;font-weight:950;font-size:.58rem;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;padding:4px 2px}
+.brx-guess-done:hover{color:#7ef0ad}
+.brx-open-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.brx-open-pill:hover{background:rgba(255,255,255,.1);color:#fff}
+.brx-open-pill b{color:#fff;font-weight:950}
+/* popup "todos os palpites" (overlay escuro, clone do chart-modal) */
+.brx-modal{position:fixed;inset:0;z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
+.brx-modal.open{display:flex}
+.brx-modal-backdrop{position:absolute;inset:0;background:rgba(4,8,6,.72);backdrop-filter:blur(3px)}
+.brx-modal-frame{position:relative;width:100%;max-width:452px;max-height:90vh;overflow:auto;background:linear-gradient(180deg,#111c15,#0b1210);border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.6);padding:20px 16px 18px;animation:brxPopIn .22s ease}
+@keyframes brxPopIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.brx-modal-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#cfe2d6;font-size:1.15rem;font-weight:900;cursor:pointer;display:grid;place-items:center;z-index:3}
+.brx-modal-close:hover{background:rgba(255,255,255,.12);color:#fff}
+body.brx-modal-open{overflow:hidden}
+.brx-pop-round{text-align:center;font-size:.58rem;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:#71877b;margin:0 0 12px}
+.brx-pop-head{display:flex;align-items:center;justify-content:center;gap:8px}
+.brx-pop-name{flex:1;min-width:0;font-weight:900;font-size:.84rem;color:#dcebe2;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.brx-pop-name.home{text-align:right}
+.brx-pop-esc{flex:0 0 auto;display:inline-flex}
+.brx-pop-esc .brx-logo,.brx-pop-esc .brx-logo-ph{width:34px;height:34px}
+.brx-pop-score{min-width:52px;text-align:center;font-weight:950;font-size:1.42rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
+.brx-pop-score.live{color:#4ae08e}
+.brx-pop-score .x{color:#5d7267;font-weight:700;font-size:1rem;margin:0 2px}
+.brx-pop-status{text-align:center;font-size:.58rem;font-weight:950;letter-spacing:.7px;text-transform:uppercase;color:#71877b;margin:9px 0 2px}
+.brx-pop-status.live{color:#4ae08e;display:flex;align-items:center;justify-content:center;gap:6px}
+.brx-pop-status.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-pop-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:14px}
+.brx-pop-col{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 5px 12px;min-height:84px}
+.brx-pop-col.win{background:rgba(74,224,142,.07);border-color:rgba(74,224,142,.26)}
+.brx-pop-cap{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:.62rem;font-weight:950;color:#c8d9ce;margin-bottom:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.brx-pop-col.win .brx-pop-cap{color:#4ae08e}
+.brx-pop-cap .n{font-size:.5rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b}
+.brx-pop-col.win .brx-pop-cap .n{color:#4ae08e}
+.brx-pop-chips{display:flex;flex-direction:column;gap:8px;align-items:center}
+.brx-pchip{display:flex;flex-direction:column;align-items:center;gap:3px;max-width:100%}
+.brx-pav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:950;background:rgba(255,255,255,.1);color:#cfe2d6;flex:0 0 auto}
+.brx-pchip.me .brx-pav{background:rgba(255,215,94,.18);color:#ffd75e;box-shadow:0 0 0 2px rgba(255,215,94,.55)}
+.brx-pnm{font-size:.66rem;font-weight:800;color:#dcebe2;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brx-psc{font-size:.58rem;font-weight:900;color:#8ba295;font-variant-numeric:tabular-nums}
+.brx-psc.hit{color:#241a00;background:linear-gradient(120deg,#ffd75e,#f0b53a);padding:1px 7px;border-radius:999px}
+.brx-pop-empty{font-size:.72rem;color:#5d7267;text-align:center;padding:6px 0}
+.brx-pop-foot{margin-top:13px;text-align:center;font-size:.6rem;font-weight:800;color:#71877b;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
 /* ranking */
 .brx-rank{display:grid;gap:8px}
 .brx-rank-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:7px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
@@ -1099,7 +1150,7 @@ nav button.active{color:var(--blue);background:#fff;border-color:var(--border);b
   border:1px solid #ebeff7;
   border-radius:11px;
 }
-.chart-control{display:grid;gap:5px;min-width:0}
+.chart-control{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0}
 .chart-control-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .chart-control-label{
   font-size:.56rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
@@ -4283,6 +4334,7 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-cinema" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
+<div id="brModal" class="brx-modal"></div>
 
 <!-- Import map do Cinema (Remotion): "external" faz o Player e o pacote remotion
      compartilharem o MESMO React e o MESMO remotion (senão os contexts duplicam
@@ -9316,6 +9368,8 @@ function goTab(t){
   if(t==="podio"){palStage="podio";t="palpites";}
   // Chaveamento do mata-mata vive na página de Palpites, estágio "ko"
   if(t==="chaveamento"){palStage="ko";t="palpites";}
+  // No Brasileirão os palpites moram na aba Jogos — não há aba Palpites separada.
+  if(isBrasileirao()&&t==="palpites") t="jogos";
   if(t==="filme"&&!filmeAvailable()) t="home";
   if(t==="cinema"&&!cinemaAvailable()) t="home";
   const tabs=["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
@@ -9371,6 +9425,8 @@ function applyCompChrome(){
   if(nav){
     const btns=nav.querySelectorAll("button");
     if(btns[2]) btns[2].textContent=br?"Tabela":"Grupos";
+    // Palpites sai da nav no Brasileirão: agora se palpita na própria aba Jogos.
+    if(btns[4]) btns[4].hidden=br;
   }
   if(br){
     const f=document.getElementById("navFilmeBtn"); if(f) f.hidden=true;
@@ -9630,8 +9686,13 @@ function brStateCard(icon,title,msg,extra){
 function brLoginPrompt(){ return brStateCard("🔐","Entre para ver o Brasileirão","Faça login pelo menu de conta (canto superior direito) para acompanhar o bolão do returno."); }
 function brLoadingCard(){ return '<div class="panel"><div class="card"><div class="brx-state"><div class="brx-spinner"></div><h3>Carregando o Brasileirão…</h3><p>Buscando jogos, palpites e placares.</p></div></div></div>'; }
 function brEmptyCard(){ return brStateCard("⚽","Nenhum jogo mapeado ainda", isAdmin()?'Vá em <strong>Config → “Mapear temporada 2026”</strong> para buscar o calendário.':'Os jogos ainda não foram carregados. Peça pro admin mapear a temporada.'); }
-function brMatchHTML(fx){
+function brMatchHTML(fx,opts){
+  opts=opts||{};
   const sc=brFixtureScore(fx);
+  const now=Date.now();
+  const locked=Boolean(fx.ts&&now>=fx.ts);
+  const gid=esc(fx.id);
+  const pi=opts.interactive?myParticipantIndex():null;
   const lateTag=fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'';
   let mid,cls="",t1cls="",t2cls="";
   if(sc){
@@ -9645,9 +9706,43 @@ function brMatchHTML(fx){
   }else{
     mid='<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
   }
-  return '<div class="brx-match'+cls+'">'+
+  /* Palpite mora aqui na aba Jogos: jogo aberto vira botão "Palpitar" que abre os
+     campos inline; jogo travado vira um pill que abre o popup com os palpites de
+     todos (segredo até o apito). Só quando opts.interactive — o preview da Home usa
+     o card puro, sem inputs, pra não duplicar os IDs brS1_/brS2_ no DOM. */
+  let pal="",palCls="",matchAttr="";
+  if(opts.interactive){
+    if(locked){
+      const myPal=pi!=null?S_BR.palpites[brPredKey(pi,fx.id)]:null;
+      const hasPal=myPal&&myPal.s1!=null&&myPal.s2!=null;
+      const res=brScoringResult(fx);
+      const d=(hasPal&&res)?scoreDetails(myPal,res):null;
+      pal='<div class="brx-mid-pal">'+
+        '<button class="brx-open-pill" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+'</button>'+
+        (d?brPtsBadge(d):'')+
+      '</div>';
+      palCls=" brx-pal";
+    }else if(pi!=null){
+      const myPal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
+      const v1=myPal.s1!=null?myPal.s1:'', v2=myPal.s2!=null?myPal.s2:'';
+      const done=(myPal.s1!=null&&myPal.s2!=null);
+      matchAttr=' id="brMatch_'+gid+'"';
+      pal='<div class="brx-mid-pal">'+
+        '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b>':'Palpitar')+'</button>'+
+        '<div class="brx-guess brx-guess-edit">'+
+          '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
+          '<span>×</span>'+
+          '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
+          '<span class="br-saved'+(done?' ok':'')+'" id="brSaved_'+gid+'">'+(done?'✓':'')+'</span>'+
+          '<button class="brx-guess-done" onclick="brToggleGuess(\''+gid+'\',false)">pronto</button>'+
+        '</div>'+
+      '</div>';
+      palCls=" brx-pal";
+    }
+  }
+  return '<div class="brx-match'+cls+palCls+'"'+matchAttr+'>'+
     '<div class="brx-team home'+t1cls+'"><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
-    '<div class="brx-mid">'+mid+lateTag+'</div>'+
+    '<div class="brx-mid">'+mid+lateTag+pal+'</div>'+
     '<div class="brx-team'+t2cls+'">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
   '</div>';
 }
@@ -9722,7 +9817,7 @@ function renderBrHome(){
           '<div class="brx-hero-sub">'+esc(range)+(st.total?' · '+st.total+' jogos':'')+'</div>'+
           (note?'<div class="brx-hero-note'+(noteLive?' live':'')+'">'+esc(note)+'</div>':'')+
           '<div class="brx-hero-actions">'+
-            '<button class="brx-btn gold" onclick="goTab(\'palpites\')">Fazer palpites</button>'+
+            '<button class="brx-btn gold" onclick="goTab(\'jogos\')">Fazer palpites</button>'+
             '<button class="brx-btn ghost" onclick="goTab(\'grupos\')">Tabela</button>'+
             '<button class="brx-btn ghost" onclick="goTab(\'jogos\')">Todos os jogos</button>'+
           '</div>'+
@@ -9765,7 +9860,7 @@ function renderBrJogos(){
         '</div>'+
         '<span class="brx-sec-meta">'+(st.live?'<span class="live">'+st.live+' ao vivo</span> · ':'')+st.done+'/'+st.total+' encerrados</span>'+
       '</div>'+
-      '<div class="brx-games">'+games.map(brMatchHTML).join("")+'</div>'+
+      '<div class="brx-games">'+games.map(f=>brMatchHTML(f,{interactive:true})).join("")+'</div>'+
     '</div>'+
   '</div>';
   brScrollChips(el);
@@ -9920,7 +10015,7 @@ function renderBrTabela(){
     '<button type="button" class="'+(proj?'active':'')+'" onclick="brSetTabelaMode(\'proj\')">Com meus palpites</button>'+
     '<button type="button" class="'+(proj?'':'active')+'" onclick="brSetTabelaMode(\'oficial\')">Só resultados</button>'+
   '</div>';
-  const cta=(proj&&openNoPal>0)?'<button class="brx-btn ghost" onclick="goTab(\'palpites\')">'+(openNoPal===1?'Palpitar no jogo que falta':'Palpitar nos '+openNoPal+' que faltam')+'</button>':'';
+  const cta=(proj&&openNoPal>0)?'<button class="brx-btn ghost" onclick="goTab(\'jogos\')">'+(openNoPal===1?'Palpitar no jogo que falta':'Palpitar nos '+openNoPal+' que faltam')+'</button>':'';
   const zz4Start=Math.max(5,rows.length-3);
   const body=rows.map((t,i)=>{
     const pos=i+1;
@@ -10057,6 +10152,7 @@ async function brAutoSavePalpite(gid){
       const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").delete().eq("participant_index",pi).eq("game_id",gid));
       brFlagSaved(gid, ok===false?'erro':'vazio');
     } else brFlagSaved(gid,'vazio');
+    brRefreshPill(gid);
     return;
   }
   const s1=parseInt(r1,10), s2=parseInt(r2,10);
@@ -10069,6 +10165,89 @@ async function brAutoSavePalpite(gid){
   const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:gid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
   if(ok===false){ brFlagSaved(gid,'erro'); toast("Não salvou (confira o login ou se o jogo já começou)."); }
   else brFlagSaved(gid,'salvo');
+  brRefreshPill(gid);
+}
+
+/* ---- Palpite inline (aba Jogos) + popup "todos os palpites" -------------------
+   brToggleGuess abre/fecha os campos no card; brRefreshPill mantém o pill "seu
+   palpite 2×1" em dia com o que está salvo. O popup só lista os palpites de todo
+   mundo em jogo travado (segredo até o apito) — por segurança, brPopupHTML também
+   confere o lock antes de revelar. */
+function brFirstName(name){ const p=String(name||"").trim().split(/\s+/); return p[0]||String(name||"?"); }
+function brRefreshPill(gid){
+  const btn=document.getElementById('brPill_'+gid); if(!btn) return;
+  const pi=myParticipantIndex(); if(pi==null) return;
+  const p=S_BR.palpites[brPredKey(pi,gid)];
+  if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b>'; }
+  else{ btn.className='brx-pill-guess'; btn.textContent='Palpitar'; }
+}
+function brToggleGuess(gid,on){
+  const m=document.getElementById('brMatch_'+gid); if(!m) return;
+  m.classList.toggle('editing',!!on);
+  if(on){ const i=document.getElementById('brS1_'+gid); if(i){ try{i.focus();i.select();}catch(e){} } }
+  else brRefreshPill(gid);
+}
+let brPopupGid=null;
+function brOpenPopup(gid){ brPopupGid=gid; renderBrPopup(); }
+function brClosePopup(){ brPopupGid=null; renderBrPopup(); }
+function renderBrPopup(){
+  const el=document.getElementById("brModal"); if(!el) return;
+  if(!brPopupGid){ el.classList.remove("open"); el.innerHTML=""; document.body.classList.remove("brx-modal-open"); return; }
+  el.innerHTML='<div class="brx-modal-backdrop" onclick="brClosePopup()"></div>'+
+    '<div class="brx-modal-frame" role="dialog" aria-modal="true" aria-label="Palpites do jogo">'+
+      '<button class="brx-modal-close" onclick="brClosePopup()" aria-label="Fechar">×</button>'+
+      brPopupHTML(brPopupGid)+
+    '</div>';
+  el.classList.add("open"); document.body.classList.add("brx-modal-open");
+}
+function brPopupHTML(gid){
+  const fx=S_BR.fixtures.find(f=>f.id===gid);
+  if(!fx) return '<div class="brx-pop-empty">Jogo não encontrado.</div>';
+  const sc=brFixtureScore(fx);
+  const roundTxt=fx.roundLabel||('Rodada '+(fx.slot!=null?fx.slot:(fx.round||'')));
+  let scoreHTML,statusHTML;
+  if(sc){
+    scoreHTML='<div class="brx-pop-score'+(sc.live?' live':'')+'">'+sc.s1+'<span class="x">×</span>'+sc.s2+'</div>';
+    statusHTML='<div class="brx-pop-status'+(sc.live?' live':'')+'">'+(sc.live?('Ao vivo'+(sc.elapsed?' · '+sc.elapsed+'’':'')):'Encerrado')+'</div>';
+  }else{
+    scoreHTML='<div class="brx-pop-score"><span class="x">×</span></div>';
+    statusHTML='<div class="brx-pop-status">'+esc((fx.dshort||fx.date||'')+(fx.time?' · '+fx.time:''))+'</div>';
+  }
+  const head='<div class="brx-pop-round">'+esc(roundTxt)+'</div>'+
+    '<div class="brx-pop-head">'+
+      '<span class="brx-pop-name home">'+esc(fx.t1||'?')+'</span>'+
+      '<span class="brx-pop-esc">'+brLogo(fx.t1)+'</span>'+
+      scoreHTML+
+      '<span class="brx-pop-esc">'+brLogo(fx.t2)+'</span>'+
+      '<span class="brx-pop-name">'+esc(fx.t2||'?')+'</span>'+
+    '</div>'+statusHTML;
+  const locked=Boolean(fx.ts&&Date.now()>=fx.ts);
+  if(!locked) return head+'<div class="brx-pop-empty" style="margin-top:16px">Os palpites de todo mundo aparecem quando a bola rolar.</div>';
+  const myPi=myParticipantIndex();
+  const cols={home:[],draw:[],away:[]};
+  (S.participants||[]).forEach((name,i)=>{
+    const p=S_BR.palpites[brPredKey(i,gid)];
+    if(!p||p.s1==null||p.s2==null) return;
+    const out=p.s1>p.s2?'home':(p.s1<p.s2?'away':'draw');
+    const exact=Boolean(sc&&sc.final&&sc.s1===p.s1&&sc.s2===p.s2);
+    cols[out].push({name,s1:p.s1,s2:p.s2,exact,me:i===myPi});
+  });
+  const finalRes=(sc&&sc.final)?(sc.s1>sc.s2?'home':(sc.s1<sc.s2?'away':'draw')):null;
+  const sortCol=a=>a.sort((x,y)=>(y.exact-x.exact)||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
+  sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
+  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"><span class="brx-pav">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc'+(c.exact?' hit':'')+'">'+c.s1+'×'+c.s2+'</span></span>';
+  const col=(arr,label,winner)=>'<div class="brx-pop-col'+(winner?' win':'')+'">'+
+    '<div class="brx-pop-cap">'+esc(label)+'<span class="n">'+arr.length+(winner?' · acertaram':'')+'</span></div>'+
+    (arr.length?'<div class="brx-pop-chips">'+arr.map(chip).join('')+'</div>':'<div class="brx-pop-empty">—</div>')+
+  '</div>';
+  const total=cols.home.length+cols.draw.length+cols.away.length;
+  return head+
+    '<div class="brx-pop-cols">'+
+      col(cols.home,fx.t1||'Mandante',finalRes==='home')+
+      col(cols.draw,'Empate',finalRes==='draw')+
+      col(cols.away,fx.t2||'Visitante',finalRes==='away')+
+    '</div>'+
+    (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+' · <span class="brx-psc hit">placar</span> dourado = cravou</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
 }
 
 function renderBrTab(t){
@@ -10077,7 +10256,7 @@ function renderBrTab(t){
   if(t==="jogos") return renderBrJogos();
   if(t==="home") return renderBrHome();
   if(t==="ranking") return renderBrRanking();
-  if(t==="palpites") return renderBrPalpites();
+  if(t==="palpites") return renderBrJogos();
   if(t==="grupos") return renderBrTabela();
   return renderBrHome();
 }
