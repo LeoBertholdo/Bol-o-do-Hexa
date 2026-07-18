@@ -8857,6 +8857,47 @@ function cinemaBuildData(){
     jump:jump.name?jump:null,
     leaderPrize:leader?brl(prize(1)):null
   };
+  // Curiosidades do grupo como um todo: rodam no painel lateral da corrida,
+  // aproveitando o vão à direita enquanto as barras ainda são curtas.
+  const curiosidades=[];
+  const totalPts=rows.reduce((a,r)=>a+r.pts,0);
+  const totalCrav=rows.reduce((a,r)=>a+r.crav,0);
+  const totalInv=rows.reduce((a,r)=>a+r.inv,0);
+  let leaderChanges=0,prevLeader=null;const leadCount={};
+  frames.forEach(fr=>{
+    const li=fr.rank.indexOf(0);
+    if(li<0) return;
+    const nm=tl.series[li].name;
+    leadCount[nm]=(leadCount[nm]||0)+1;
+    if(prevLeader!==null&&nm!==prevLeader) leaderChanges++;
+    prevLeader=nm;
+  });
+  const topLead=Object.entries(leadCount).sort((a,b)=>b[1]-a[1])[0];
+  const perGame={};
+  for(let k=1;k<count;k++){
+    const ev=tl.events[k];if(!ev) continue;
+    const teams=gameTeams(ev.game);
+    const g=perGame[`${teams.t1}×${teams.t2}`]||(perGame[`${teams.t1}×${teams.t2}`]={pts:0,label:"",done:true});
+    g.pts+=frames[k].values.reduce((a,v,i)=>a+(v-frames[k-1].values[i]),0);
+    g.label=cinemaCaption(tl,k).text;
+    g.done=tl.states[k]!=="live";
+  }
+  const gamesArr=Object.values(perGame);
+  const rain=gamesArr.slice().sort((a,b)=>b.pts-a.pts)[0];
+  const zebras=gamesArr.filter(g=>g.done&&g.pts===0).length;
+  if(totalPts>0) curiosidades.push({icon:"⚽",text:`Juntos, o grupo já somou ${totalPts} pontos`});
+  if(rows.length>1){
+    const gap=rows[0].pts-rows[1].pts;
+    curiosidades.push({icon:"🔥",text:gap===0?"Empate na ponta — desempate no detalhe":`${gap===1?"1 ponto separa":`${gap} pontos separam`} o líder do vice`});
+  }
+  if(totalCrav>0) curiosidades.push({icon:"🎯",text:`${totalCrav} placares cravados na conta do grupo`});
+  if(leaderChanges>0) curiosidades.push({icon:"👑",text:`A liderança já trocou de mãos ${leaderChanges} ${leaderChanges===1?"vez":"vezes"}`});
+  else if(topLead) curiosidades.push({icon:"👑",text:`${topLead[0]} lidera do início ao fim — soberano`});
+  if(topLead&&leaderChanges>0) curiosidades.push({icon:"⏱️",text:`${topLead[0]} passou ${Math.round(topLead[1]/Math.max(1,count)*100)}% da corrida na ponta`});
+  if(rain&&rain.pts>0) curiosidades.push({icon:"💥",text:`${rain.label} rendeu ${rain.pts} pontos ao grupo — recorde`});
+  if(zebras>0) curiosidades.push({icon:"🦓",text:`${zebras===1?"1 jogo zerou":`${zebras} jogos zeraram`} o grupo inteiro`});
+  if(totalInv>0) curiosidades.push({icon:"🙃",text:`${totalInv} palpites com placar invertido — essa dói`});
+  if(rows.length) curiosidades.push({icon:"📊",text:`Média do grupo: ${Math.round(totalPts/rows.length)} pontos por cabeça`});
   const steps=Math.max(0,count-1);
   // Corrida: ~14 quadros por lance, presa entre 8s e 50s pra Copa inteira caber.
   const durations={
@@ -8871,7 +8912,7 @@ function cinemaBuildData(){
     series:tl.series.map(s=>({name:s.name,color:s.color})),
     frames,steps,
     maxVal:Math.max(3,tl.maxVal),minVal:Math.min(0,tl.minVal),
-    stats,podium,durations,durationInFrames
+    stats,podium,curiosidades,durations,durationInFrames
   };
 }
 // Fábrica da composição: recebe React+remotion já carregados e devolve o
@@ -8967,6 +9008,36 @@ function cinemaMakeComposition(React,R){
     const capSwap=!atEnd&&capA.text!==capB.text;
     const capOp=capSwap?(cu<.5?lin(cu,.38,.5,1,0):lin(cu,.5,.62,0,1)):1;
     const capDy=capSwap?(cu<.5?lin(cu,.38,.5,0,-8):lin(cu,.5,.62,8,0)):0;
+    // Painel de curiosidades do grupo: pilha de até 3 por vez no vão à direita,
+    // trocando em grupos. Cada card mede as barras da própria faixa vertical e
+    // some sozinho quando alguma chega perto — o de cima cede primeiro.
+    const cardW=332,cardLeft=W-64-cardW;
+    const slotTops=[330,436,542],slotH=92;
+    const factList=data.curiosidades||[];
+    const perGroup=Math.min(slotTops.length,factList.length);
+    const nGroups=Math.max(1,Math.ceil(factList.length/Math.max(1,perGroup)));
+    const groupDur=Math.max(240,Math.min(420,Math.floor((dur-70)/nGroups)));
+    const lf=f-60;
+    const gi=lf>=0&&factList.length?Math.floor(lf/groupDur)%nGroups:-1;
+    const gt=gi>=0?lf%groupDur:0;
+    const tipNear=(y1,y2)=>{
+      let m=0;
+      data.series.forEach((s,si)=>{
+        const yy=top+rankSm(si)*rowH;
+        if(yy+rowH>y1&&yy<y2)
+          m=Math.max(m,xFor(fr0.values[si]+(fr1.values[si]-fr0.values[si])*te));
+      });
+      return m;
+    };
+    const factCards=[];
+    if(gi>=0) for(let i=0;i<perGroup;i++){
+      const fact=factList[gi*perGroup+i];
+      if(!fact) continue;
+      const enter=Math.min(lin(gt,10+i*12,26+i*12,0,1),lin(gt,groupDur-18,groupDur-6,1,0));
+      const st=slotTops[i];
+      const op=enter*lin(tipNear(st-8,st+slotH+8),cardLeft-180,cardLeft-90,1,0);
+      if(op>.01) factCards.push({fact,top:st,op,dy:lin(gt,10+i*12,26+i*12,10,0)});
+    }
     const medals=["🥇","🥈","🥉"];
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
       h("div",{style:{position:"absolute",top:44,left:64,right:64}},
@@ -8997,6 +9068,13 @@ function cinemaMakeComposition(React,R){
           h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+14,W-120),fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff",transform:`scale(${1+.25*act})`,transformOrigin:"left center",textShadow:act>.02?`0 0 ${14*act}px rgba(255,223,0,${(.85*act).toFixed(2)})`:"none"}},String(Math.round(v)))
         );
       }),
+      factCards.length?h("div",{style:{position:"absolute",left:cardLeft,top:300,width:cardW,fontSize:12,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",opacity:Math.max(...factCards.map(c=>c.op))}},"Enquanto isso, no grupo"):null,
+      factCards.map((c,i)=>h("div",{key:i,style:{position:"absolute",left:cardLeft,top:c.top,width:cardW,boxSizing:"border-box",padding:"14px 18px",borderRadius:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",opacity:c.op,transform:`translateY(${c.dy}px)`}},
+        h("div",{style:{display:"flex",alignItems:"flex-start",gap:11}},
+          h("div",{style:{fontSize:24,lineHeight:1.1}},c.fact.icon),
+          h("div",{style:{fontSize:16.5,fontWeight:600,color:"#fff",lineHeight:1.32}},c.fact.text)
+        )
+      )),
       h("div",{style:{position:"absolute",left:64,right:64,bottom:34,height:6,borderRadius:999,background:"rgba(255,255,255,.14)"}},
         h("div",{style:{width:`${steps?kFloat/steps*100:0}%`,height:"100%",borderRadius:999,background:`linear-gradient(90deg,${GREEN},${YELLOW})`}})
       ),
