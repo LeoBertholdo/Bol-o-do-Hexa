@@ -2,11 +2,23 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta id="themeColor" name="theme-color" content="#f8fbf1">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>
+  /* Evita o flash branco ao reabrir o Brasileirão salvo no aparelho. */
+  try{
+    if(localStorage.getItem("bolaoActiveComp")==="brasileirao"){
+      document.documentElement.classList.add("br-mode");
+      document.getElementById("themeColor").setAttribute("content","#070d09");
+    }
+  }catch(e){}
+</script>
 <title>Bolão da Copa 2026</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html{overflow-x:clip}
+html{overflow-x:clip;background:#f8fbf1}
+html.br-mode{background:#070d09;color-scheme:dark}
 :root{
   --green:#00843d;
   --green-2:#005f2f;
@@ -103,6 +115,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   position:relative;
   overflow:visible;
   z-index:10;
+  /* Com viewport-fit=cover, preserva o espaço da barra de status sem deixar
+     uma faixa branca acima do cabeçalho no iPhone. */
+  padding-top:env(safe-area-inset-top);
   color:#fff;
   background:
     linear-gradient(90deg,rgba(0,39,118,.88) 0%,rgba(0,76,45,.68) 34%,rgba(0,0,0,.22) 68%,rgba(0,0,0,.42) 100%),
@@ -238,7 +253,24 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 /* partidas */
 .brx-games{display:grid;gap:10px}
 @media(min-width:920px){.brx-games{grid-template-columns:1fr 1fr}}
-.brx-match{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
+.brx-home-games-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 14px}
+.brx-home-games-copy{min-width:0}
+.brx-home-day-title{display:block;margin-top:5px;color:#fff;font-size:1.14rem;font-weight:950;line-height:1.05}
+.brx-home-day-meta{display:block;margin-top:5px;color:#8ba295;font-size:.61rem;font-weight:900;letter-spacing:.45px;text-transform:uppercase}
+.brx-home-day-meta .live{color:#4ae08e}
+.brx-home-day-reset{display:inline-flex;margin-top:6px;padding:0;border:0;background:none;color:#ffd75e;font-size:.62rem;font-weight:900;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
+.brx-home-nav{display:inline-flex;align-items:center;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);flex:0 0 auto}
+.brx-home-arrow{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#dcebe2;font-size:1.2rem;font-weight:950;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+.brx-home-arrow:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}
+.brx-home-arrow:disabled{opacity:.28;cursor:not-allowed}
+.brx-home-games-list .brx-games{grid-template-columns:1fr}
+.brx-home-days{display:grid;gap:14px}
+.brx-home-day-block+.brx-home-day-block{padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.brx-home-day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
+.brx-home-day-label{color:#c9dcd1;font-size:.68rem;font-weight:950;letter-spacing:.6px;text-transform:uppercase}
+.brx-home-day-status{color:#71877b;font-size:.58rem;font-weight:900;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.brx-home-day-status.live{color:#4ae08e}
+.brx-match{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
 .brx-match:hover{border-color:rgba(74,224,142,.3);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .brx-match.live{border-color:rgba(74,224,142,.42);box-shadow:0 0 0 1px rgba(74,224,142,.16),0 14px 34px rgba(0,0,0,.4)}
 .brx-team{display:flex;align-items:center;gap:9px;min-width:0}
@@ -246,8 +278,9 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-team-name{font-weight:850;font-size:.84rem;color:#dcebe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brx-team.win .brx-team-name{color:#fff;font-weight:950}
 .brx-team.lose .brx-team-name{color:#75897d}
-.brx-logo{width:30px;height:30px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
-.brx-logo-ph{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.08);color:#93a89d;font-size:.56rem;font-weight:900;flex:0 0 auto}
+.brx-crest{display:grid;place-items:center;width:30px;height:30px;flex:0 0 auto;line-height:0}
+.brx-logo{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}
+.brx-logo-ph{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(255,255,255,.08);color:#93a89d;font-size:.56rem;font-weight:900;line-height:1}
 .brx-mid{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:84px}
 .brx-score{display:flex;align-items:center;gap:7px;font-weight:950;font-size:1.22rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
 .brx-score span{color:#5d7267;font-weight:700;font-size:.9rem}
@@ -264,14 +297,57 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-hero:before{content:"";position:absolute;top:-70px;right:-70px;width:230px;height:230px;border-radius:50%;border:1.5px solid rgba(255,255,255,.06);pointer-events:none}
 .brx-hero:after{content:"";position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;border:1.5px solid rgba(255,255,255,.05);pointer-events:none}
 .brx-hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(250px,.85fr);gap:18px;align-items:center}
+.brx-hero-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(198px,.78fr);gap:16px;align-items:center;min-width:0}
+.brx-hero-copy{min-width:0}
 .brx-kicker{font-size:.62rem;letter-spacing:1.7px;font-weight:950;text-transform:uppercase;color:#ffd75e}
 .brx-hero h2{font-size:clamp(1.45rem,3.6vw,2.05rem);font-weight:950;color:#fff;margin:7px 0 3px;line-height:1.05}
 .brx-hero-sub{font-size:.8rem;color:#9db3a6;font-weight:800}
-.brx-hero-note{margin-top:9px;font-size:.76rem;color:#c9dcd1;font-weight:800}
-.brx-hero-note.live{color:#4ae08e;display:inline-flex;align-items:center;gap:6px}
-.brx-hero-note.live:before{content:"";width:7px;height:7px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
-.brx-hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
-.brx-btn{border:none;border-radius:10px;padding:11px 16px;font-weight:950;font-size:.8rem;cursor:pointer;transition:filter .15s,background .15s}
+.brx-hero-focus{min-height:0;display:flex;flex-direction:column;justify-content:center;gap:9px;padding:6px 0 6px 16px;border-left:1px solid rgba(255,255,255,.13)}
+.brx-hero-focus.live{border-left-color:rgba(74,224,142,.54)}
+.brx-focus-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.brx-focus-label{display:flex;align-items:center;gap:6px;color:#9db3a6;font-size:.57rem;font-weight:950;letter-spacing:.75px;text-transform:uppercase}
+.brx-hero-focus.live .brx-focus-label{color:#4ae08e}
+.brx-focus-label.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-focus-date{color:#71877b;font-size:.56rem;font-weight:900;letter-spacing:.35px;text-transform:uppercase;white-space:nowrap}
+.brx-focus-games{display:grid;gap:6px}
+.brx-focus-game{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:6px;color:#eaf4ed;font-size:.66rem;font-weight:900;line-height:1.18}
+.brx-focus-team{display:flex;align-items:center;gap:5px;min-width:0}
+.brx-focus-team.home{justify-content:flex-end;text-align:right}
+.brx-focus-team-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brx-focus-team .brx-crest{width:23px;height:23px}
+.brx-focus-game strong{color:#ffd75e;font-size:.84rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.brx-hero-focus.live .brx-focus-game strong{color:#4ae08e}
+.brx-focus-more{color:#71877b;font-size:.56rem;font-weight:900;letter-spacing:.3px}
+.brx-favorite{gap:8px;min-width:0}
+.brx-favorite-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brx-favorite-change{padding:2px 0;border:0;background:none;color:#ffd75e;font-size:.54rem;font-weight:950;letter-spacing:.25px;text-transform:uppercase;cursor:pointer}
+.brx-favorite-change:hover{text-decoration:underline;text-underline-offset:3px}
+.brx-favorite-club{display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:0;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
+.brx-favorite-club .brx-crest{width:34px;height:34px}
+.brx-favorite-club-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
+.brx-favorite-club-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82rem;font-weight:950;line-height:1.1}
+.brx-favorite-club-copy span{color:#8ba295;font-size:.52rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.brx-favorite-games{display:grid;gap:5px;padding-top:7px;border-top:1px solid rgba(255,255,255,.1)}
+.brx-favorite-game{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0}
+.brx-favorite-game-copy{display:flex;align-items:center;gap:5px;min-width:0;color:#cfe0d6;font-size:.59rem;font-weight:850}
+.brx-favorite-game-copy .brx-crest{width:19px;height:19px}
+.brx-favorite-game-copy span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brx-favorite-game-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap}
+.brx-favorite-game-meta strong{color:#dcebe2;font-size:.49rem;font-weight:950;letter-spacing:.1px;text-transform:uppercase}
+.brx-favorite-game-meta strong span{color:#ffd75e}
+.brx-favorite-game-meta small{color:#71877b;font-size:.46rem;font-weight:900;font-variant-numeric:tabular-nums}
+.brx-favorite-game-meta.live strong{color:#4ae08e;font-size:.65rem;font-variant-numeric:tabular-nums;letter-spacing:0;text-transform:none}
+.brx-favorite-game-meta.live small{color:#4ae08e;text-transform:uppercase}
+.brx-favorite-form{display:flex;align-items:center;gap:5px;margin-left:auto}
+.brx-favorite-form-label{color:#71877b;font-size:.48rem;font-weight:900;letter-spacing:.35px;text-transform:uppercase}
+.brx-favorite-form-dots{display:flex;gap:3px}
+.brx-favorite-form-dots i{display:block;width:6px;height:6px;border-radius:50%;background:#526359}
+.brx-favorite-form-dots i.v{background:#4ae08e}.brx-favorite-form-dots i.e{background:#aab9b0}.brx-favorite-form-dots i.d{background:#ff7a70}
+.brx-favorite-empty{align-items:flex-start;padding-right:4px}
+.brx-favorite-empty p{max-width:205px;color:#8ba295;font-size:.65rem;font-weight:750;line-height:1.4}
+.brx-favorite-empty .brx-btn{padding:8px 11px;font-size:.65rem}
+.brx-hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.brx-btn{border:none;border-radius:10px;padding:10px 14px;font-weight:950;font-size:.76rem;cursor:pointer;transition:filter .15s,background .15s}
 .brx-btn.gold{background:linear-gradient(120deg,#ffd75e,#f0b53a);color:#241a00;box-shadow:0 10px 26px rgba(255,215,94,.18)}
 .brx-btn.gold:hover{filter:brightness(1.06)}
 .brx-btn.ghost{background:rgba(255,255,255,.07);color:#dcebe2;border:1px solid rgba(255,255,255,.16)}
@@ -308,10 +384,16 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-pts.ok{background:rgba(74,224,142,.14);color:#4ae08e;border:1px solid rgba(74,224,142,.3)}
 .brx-pts.inv{background:rgba(255,122,112,.14);color:#ff8b82;border:1px solid rgba(255,122,112,.3)}
 .brx-pts.zero{background:rgba(255,255,255,.07);color:#93a89d;border:1px solid rgba(255,255,255,.1)}
+.brx-match.result.brx-pal .brx-team{align-self:start;margin-top:0}
+.brx-match.result.brx-pal.has-round .brx-team{margin-top:17px}
 .brx-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
 /* palpite inline na aba Jogos */
 .brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
+.brx-pal-pair{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.brx-pal-pair.scored{padding-right:22px}
+.brx-pal-score{position:absolute;right:0;top:50%;z-index:0;transform:translateY(-50%);pointer-events:none}
+.brx-pal-score .brx-pts{display:block;min-width:34px;padding:5px 8px 5px 20px;text-align:right}
 .brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-pill-guess:hover{background:rgba(255,215,94,.18)}
 .brx-pill-guess.filled{display:inline-flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#9db3a6;text-transform:none;letter-spacing:0;font-weight:800}
@@ -339,9 +421,14 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-guess-ok .br-saved{min-width:0;font-size:.88rem;line-height:1}
 .brx-guess-ok .br-saved:not(:empty)+svg{display:none}
 .brx-guess-ok:has(.br-saved.err){border-color:rgba(255,122,112,.5);background:rgba(255,122,112,.12)}
-.brx-open-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s}
+.brx-open-pill{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-open-pill:hover{background:rgba(255,255,255,.1);color:#fff}
 .brx-open-pill b{color:#fff;font-weight:950}
+.brx-open-pill.scored.hit{border-color:rgba(255,215,94,.46);background:rgba(255,215,94,.15);color:#ffe391}
+.brx-open-pill.scored.ok{border-color:rgba(74,224,142,.42);background:rgba(74,224,142,.12);color:#88ecb5}
+.brx-open-pill.scored.inv{border-color:rgba(255,122,112,.44);background:rgba(255,122,112,.13);color:#ffada6}
+.brx-open-pill.scored.zero{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.075);color:#b6c6bd}
+.brx-open-pill.scored b{color:inherit}
 /* popup "todos os palpites" (overlay escuro, clone do chart-modal) */
 .brx-modal{position:fixed;inset:0;z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 .brx-modal.open{display:flex}
@@ -351,6 +438,68 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-modal-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#cfe2d6;font-size:1.15rem;font-weight:900;cursor:pointer;display:grid;place-items:center;z-index:3}
 .brx-modal-close:hover{background:rgba(255,255,255,.12);color:#fff}
 body.brx-modal-open{overflow:hidden}
+/* popup do clube (clicar no time na Tabela, na V2 ou nos cards de jogo). Camada
+   própria ABAIXO do #brModal: o "ver todos" de um jogo travado abre por cima.
+   --club = cor de destaque do clube clicado (BR_TEAM_COLORS). */
+.brx-team-modal{z-index:1290}
+.brx-team-frame{max-width:496px;overflow:auto;border-color:color-mix(in srgb,var(--club,#ffd75e) 30%,rgba(255,255,255,.1));background:radial-gradient(640px 250px at 50% -80px,color-mix(in srgb,var(--club,#ffd75e) 17%,transparent),transparent 72%),linear-gradient(180deg,#111c15,#0b1210)}
+/* O Internacional ganha um vermelho limpo, fiel à identidade do clube. */
+.brx-team-frame.brx-team-theme-internacional{border-color:rgba(255,73,91,.7);background:radial-gradient(640px 250px at 50% -80px,rgba(231,31,50,.32),transparent 72%),linear-gradient(180deg,#241215,#0b1010)}
+.brx-tp-head{display:flex;align-items:center;gap:12px;margin:2px 40px 16px 2px}
+.brx-tp-logo{width:56px;height:56px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
+.brx-tp-id{min-width:0}
+.brx-tp-name{font-size:1.34rem;font-weight:950;color:#fff;line-height:1.12;margin-top:2px}
+.brx-tp-form{display:flex;align-items:center;gap:8px;margin-top:7px}
+.brx-tp-form>span:last-child{font-size:.55rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#71877b}
+.brx-tp-inline-stats{display:flex;align-items:center;gap:9px;margin-left:auto;min-width:0}
+.brx-tp-inline-stat{display:flex;flex-direction:column;gap:2px;padding-left:9px;border-left:1px solid rgba(255,255,255,.12);min-width:0}
+.brx-tp-inline-stat strong{font-size:.92rem;font-weight:950;line-height:1;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+.brx-tp-inline-stat strong.accent{color:var(--club,#ffd75e)}
+.brx-tp-inline-stat span{font-size:.46rem;font-weight:900;letter-spacing:.45px;text-transform:uppercase;color:#8ba295;white-space:nowrap}
+.brx-tp-games{display:grid;gap:10px}
+.brx-tp-picker-btn{display:grid;place-items:center;width:32px;height:34px;padding:0;border:1px solid rgba(255,255,255,.13);border-radius:9px;background:rgba(255,255,255,.05);color:#dcebe2;font-size:1.18rem;font-weight:950;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+.brx-tp-picker-btn:hover:not(:disabled){background:rgba(255,255,255,.12);color:#fff}
+.brx-tp-picker-btn:disabled{opacity:.3;cursor:not-allowed}
+.brx-tp-carousel-shell{min-width:0}
+.brx-tp-carousel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.brx-tp-carousel-nav{display:inline-flex;align-items:center;gap:4px;padding:3px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.04)}
+.brx-tp-carousel-nav .brx-tp-picker-btn{width:27px;height:27px;border:0;border-radius:6px;background:transparent;font-size:1rem}
+.brx-tp-carousel{display:flex;gap:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;touch-action:pan-x pan-y}
+.brx-tp-carousel::-webkit-scrollbar{display:none}
+.brx-tp-slide{flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
+.brx-tp-slide-head{display:flex;align-items:center;gap:8px;margin:0 1px 9px;color:#eef6f1;min-width:0}
+.brx-tp-slide-head .brx-crest{width:25px;height:25px}
+.brx-tp-slide-head strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.78rem;font-weight:950}
+.brx-tp-slide-state{margin-left:auto;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#8ba295;font-size:.5rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.brx-tp-slide-state.live{border-color:rgba(74,224,142,.3);background:rgba(74,224,142,.1);color:#4ae08e}
+.brx-tp-slide-state.current{border-color:rgba(255,215,94,.3);background:rgba(255,215,94,.1);color:#ffd75e}
+.brx-tp-slide-games{display:grid;gap:10px}
+.brx-tp-slot{display:grid;min-height:0}
+.brx-tp-leg{margin:0 2px 5px;color:#71877b;font-size:.5rem;font-weight:950;letter-spacing:.65px;text-transform:uppercase}
+.brx-tp-next .brx-match{border-color:color-mix(in srgb,var(--club,#ffd75e) 42%,rgba(255,255,255,.08));box-shadow:0 0 0 1px color-mix(in srgb,var(--club,#ffd75e) 16%,transparent)}
+/* :not(.live): sem ele este seletor (0,3,0) ganharia do .brx-match.live e o hover
+   trocaria a borda verde de jogo rolando pela cor do clube */
+.brx-team-frame .brx-match:not(.live):hover{border-color:color-mix(in srgb,var(--club,#ffd75e) 45%,rgba(255,255,255,.1))}
+.brx-rmini{font-size:.55rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
+.brx-favorite-picker-frame{max-width:620px;background:radial-gradient(700px 260px at 50% -110px,rgba(255,215,94,.15),transparent 68%),linear-gradient(180deg,#111c15,#0b1210)}
+.brx-favorite-picker-head{margin:1px 42px 17px 2px}
+.brx-favorite-picker-kicker{color:#ffd75e;font-size:.56rem;font-weight:950;letter-spacing:1.3px;text-transform:uppercase}
+.brx-favorite-picker-head h3{margin:4px 0 5px;color:#fff;font-size:1.25rem;font-weight:950;line-height:1.12}
+.brx-favorite-picker-head p{color:#8ba295;font-size:.68rem;font-weight:750;line-height:1.4}
+.brx-favorite-picker-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.brx-favorite-option{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:96px;padding:11px 7px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(255,255,255,.035);color:#dcebe2;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.brx-favorite-option:hover{transform:translateY(-1px);border-color:rgba(255,215,94,.34);background:rgba(255,215,94,.07)}
+.brx-favorite-option.selected{border-color:rgba(255,215,94,.52);background:rgba(255,215,94,.1);color:#fff}
+.brx-favorite-option .brx-crest{width:38px;height:38px}
+.brx-favorite-option span:last-child{font-size:.61rem;font-weight:900;line-height:1.18;text-align:center}
+.brx-favorite-option .brx-favorite-check{position:absolute;top:7px;right:7px;display:grid;place-items:center;width:17px;height:17px;border-radius:50%;background:#ffd75e;color:#251b00;font-size:.65rem;font-weight:950}
+/* nos cards do popup, o clube clicado fica em evidência (sem atropelar o cinza de derrota) */
+.brx-team.tpfocus:not(.lose) .brx-team-name{color:#fff}
+/* clube clicável: cursor + sublinhado no hover + foco visível pra teclado */
+.brx-team-click,.brx-club-btn{cursor:pointer}
+.brx-team-click:hover .brx-team-name{color:#fff}
+.brx-team-click:hover .brx-team-name,.brx-club-btn:hover .brx-club-name,.brx-club-btn:hover .brv2-club-name{text-decoration:underline dotted;text-underline-offset:3px;text-decoration-thickness:1px}
+.brx-team-click:focus-visible,.brx-club-btn:focus-visible{outline:3px solid rgba(255,223,0,.72);outline-offset:2px;border-radius:9px}
 .brx-pop-round{text-align:center;font-size:.6rem;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:#71877b;margin:0 0 12px}
 .brx-pop-head{display:flex;align-items:center;justify-content:center;gap:8px}
 .brx-pop-name{flex:1;min-width:0;font-weight:900;font-size:.84rem;color:#dcebe2;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -441,7 +590,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-delta.up{color:#4ae08e}
 .brx-delta.down{color:#ff8b82}
 .brx-club{display:flex;align-items:center;gap:9px;min-width:0;text-align:left}
-.brx-club .brx-logo,.brx-club .brx-logo-ph{width:24px;height:24px;font-size:.5rem}
+.brx-club .brx-crest,.brx-club .brx-logo-ph{width:24px;height:24px;font-size:.5rem}
 .brx-club-name{font-weight:900;font-size:.8rem;color:#eef5f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brx-club .livedot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
 .brx-sgn.up{color:#4ae08e}
@@ -623,9 +772,18 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
 @media(max-width:560px){
   .brx-match{padding:11px 10px;gap:8px}
   .brx-team-name{font-size:.76rem}
-  .brx-logo,.brx-logo-ph{width:26px;height:26px}
+  .brx-crest,.brx-logo-ph{width:26px;height:26px}
   .brx-mid{min-width:72px}
   .brx-pal .brx-mid{min-width:112px}
+  .brx-hero-main{grid-template-columns:1fr;gap:12px}
+  .brx-hero-focus{min-height:0;padding:11px 12px}
+  .brx-home-games-head{align-items:flex-start}
+  .brx-home-day-title{font-size:1rem}
+  .brx-home-nav{margin-top:1px}
+  .brx-home-day-head{align-items:flex-start;flex-direction:column;gap:4px}
+  .brx-hero-focus{padding:10px 0 0;border-left:0;border-top:1px solid rgba(255,255,255,.13)}
+  .brx-favorite-picker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .brx-favorite-option{min-height:88px}
   .br-inp{width:42px;height:40px}
   /* toque: 36px de ALTURA nos campos e no ✓; largura enxuta pra sobrar espaço pros nomes */
   .brx-guess-box .br-inp{width:34px;height:36px}
@@ -4050,7 +4208,9 @@ body.chart-modal-open{overflow:hidden}
 		}
 
 	/* TOAST */
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1000;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+/* z-index acima dos modais do Brasileirão (1290/1300): o popup do clube tem
+   palpite inline, e o toast de "não salvou" precisa aparecer POR CIMA do backdrop */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1400;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 @media(max-width:980px){
@@ -4524,6 +4684,8 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-cinema" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
+<div id="brFavoriteModal" class="brx-modal brx-team-modal"></div>
+<div id="brTeamModal" class="brx-modal brx-team-modal"></div>
 <div id="brModal" class="brx-modal"></div>
 
 <!-- Import map do Cinema (Remotion): "external" faz o Player e o pacote remotion
@@ -5068,6 +5230,7 @@ async function initRemote(){
   setSyncStatus("warn","Conectando ao Supabase...");
   remoteClient.auth.onAuthStateChange((event,session)=>{
     remoteSession=session;
+    brSyncSessionUser(session);
     currentProfile=null;
     if(!session) remoteProfiles=[];
     if(event==="PASSWORD_RECOVERY"||(session&&pendingRecoveryLink&&!passwordResetMode)){
@@ -5098,6 +5261,7 @@ async function initRemote(){
     return;
   }
   remoteSession=data.session;
+  brSyncSessionUser(remoteSession);
   if(remoteSession&&pendingRecoveryLink){
     pendingRecoveryLink=false;
     enterPasswordRecoveryMode();
@@ -5438,6 +5602,7 @@ async function signOut(){
   await remoteClient.auth.signOut();
   currentProfile=null;
   remoteSession=null;
+  brSyncSessionUser(null);
   remoteProfiles=[];
   passwordResetMode=false;
   authPanelOpen=false;
@@ -9661,6 +9826,9 @@ function setActiveComp(comp){
 function applyCompChrome(){
   const br=isBrasileirao();
   document.body.classList.toggle("br-mode",br);
+  document.documentElement.classList.toggle("br-mode",br);
+  const themeColor=document.getElementById("themeColor");
+  if(themeColor) themeColor.content=br?"#070d09":"#f8fbf1";
   const hero=document.querySelector(".hero");
   if(hero){
     hero.classList.toggle("is-brasileirao",br);
@@ -9720,6 +9888,22 @@ const BR_TEAM_LOGOS={
   "Remo":"assets/brasileirao/remo.png","Santos":"assets/brasileirao/santos.png",
   "São Paulo":"assets/brasileirao/sao-paulo.png","Vasco da Gama":"assets/brasileirao/vasco-da-gama.png"
 };
+/* Cor de destaque do popup do clube — tons clareados pro fundo escuro (preto de
+   alvinegro some no tema, então esses ganham um prata claro). Fallback: dourado. */
+const BR_TEAM_COLORS={
+  "Atlético-MG":"#e8edf2","Athletico-PR":"#d71920",
+  "Bahia":"#3f8cff","Botafogo":"#dfe5ea",
+  "Bragantino":"#ff5560","Chapecoense":"#26c281",
+  "Corinthians":"#e8edf2","Coritiba":"#2bb673",
+  "Cruzeiro":"#4b7bff","EC Vitória":"#ff6a5e",
+  "Flamengo":"#ff4438","Fluminense":"#d05577",
+  "Grêmio":"#4fb3e8","Internacional":"#ff3145",
+  "Mirassol":"#ffd23f","Palmeiras":"#2fd07a",
+  "Remo":"#5f8bff","Santos":"#e8edf2",
+  "São Paulo":"#ff5a52","Vasco da Gama":"#e8edf2"
+};
+const BR_FAVORITE_TABLE="user_team_preferences";
+const BR_FAVORITE_STORAGE_PREFIX="bolaoBrFavoriteTeam:";
 /* Base da aba Tabela: classificação REAL consolidada antes da rodada 19 (os
    jogos do returno começaram em 16/07/2026). Buscada uma única vez na
    football-data (177 dos 180 jogos do 1º turno encerrados; 3 adiados, por isso
@@ -9748,11 +9932,55 @@ const BR_BASE={
   "Mirassol":[16,17,4,4,9,18,24],
   "Chapecoense":[9,17,1,6,10,17,33]
 };
+/* Placar por jogo do primeiro turno. BR_BASE guarda apenas o agregado da tabela;
+   esta camada imutável existe para o popup conseguir mostrar a ida de cada
+   confronto. Não entra no ranking do bolão nem duplica os adiados mapeados. */
+const BR_FIRST_TURN_RESULTS=[
+  [1,"Atlético-MG","Palmeiras",2,2],[1,"Coritiba","Bragantino",0,1],[1,"Internacional","Athletico-PR",0,1],[1,"EC Vitória","Remo",2,0],[1,"Fluminense","Grêmio",2,1],[1,"Chapecoense","Santos",4,2],[1,"Corinthians","Bahia",1,2],[1,"São Paulo","Flamengo",2,1],[1,"Mirassol","Vasco da Gama",2,1],[1,"Botafogo","Cruzeiro",4,0],
+  [2,"Bragantino","Atlético-MG",1,0],[2,"Flamengo","Internacional",1,1],[2,"Remo","Mirassol",2,2],[2,"Santos","São Paulo",1,1],[2,"Grêmio","Botafogo",5,3],[2,"Palmeiras","EC Vitória",5,1],[2,"Bahia","Fluminense",1,1],[2,"Vasco da Gama","Chapecoense",1,1],[2,"Cruzeiro","Coritiba",1,2],[2,"Athletico-PR","Corinthians",0,1],
+  [3,"EC Vitória","Flamengo",1,2],[3,"Chapecoense","Coritiba",3,3],[3,"Mirassol","Cruzeiro",2,2],[3,"Atlético-MG","Remo",3,3],[3,"São Paulo","Grêmio",2,0],[3,"Vasco da Gama","Bahia",0,1],[3,"Athletico-PR","Santos",2,1],[3,"Fluminense","Botafogo",1,0],[3,"Corinthians","Bragantino",2,0],[3,"Internacional","Palmeiras",1,3],
+  [4,"Bragantino","Athletico-PR",1,1],[4,"Remo","Internacional",1,1],[4,"Coritiba","São Paulo",0,1],[4,"Cruzeiro","Corinthians",1,1],[4,"Grêmio","Atlético-MG",2,1],[4,"Palmeiras","Fluminense",2,1],[4,"Santos","Vasco da Gama",2,1],[4,"Bahia","Chapecoense",2,0],
+  [5,"Mirassol","Santos",2,2],[5,"Atlético-MG","Internacional",1,0],[5,"Bahia","EC Vitória",1,1],[5,"Corinthians","Coritiba",0,2],[5,"Flamengo","Cruzeiro",2,0],[5,"Remo","Fluminense",0,2],[5,"Vasco da Gama","Palmeiras",2,1],[5,"São Paulo","Chapecoense",2,0],[5,"Grêmio","Bragantino",1,1],[5,"Athletico-PR","Botafogo",4,1],
+  [6,"EC Vitória","Atlético-MG",2,0],[6,"Botafogo","Flamengo",0,3],[6,"Fluminense","Athletico-PR",3,2],[6,"Internacional","Bahia",0,1],[6,"Santos","Corinthians",1,1],[6,"Coritiba","Remo",1,0],[6,"Palmeiras","Mirassol",1,0],[6,"Bragantino","São Paulo",1,2],[6,"Cruzeiro","Vasco da Gama",3,3],[6,"Chapecoense","Grêmio",1,1],
+  [7,"Bahia","Bragantino",2,0],[7,"Palmeiras","Botafogo",2,1],[7,"Athletico-PR","Cruzeiro",2,1],[7,"Atlético-MG","São Paulo",1,0],[7,"Mirassol","Coritiba",0,1],[7,"Santos","Internacional",1,2],[7,"Vasco da Gama","Fluminense",3,2],[7,"Grêmio","EC Vitória",2,0],[7,"Flamengo","Remo",3,0],[7,"Chapecoense","Corinthians",0,0],
+  [8,"Bragantino","Botafogo",1,2],[8,"Fluminense","Atlético-MG",1,0],[8,"São Paulo","Palmeiras",0,1],[8,"Athletico-PR","Coritiba",2,0],[8,"Cruzeiro","Santos",0,0],[8,"Remo","Bahia",4,1],[8,"Vasco da Gama","Grêmio",2,1],[8,"Internacional","Chapecoense",2,0],[8,"EC Vitória","Mirassol",1,0],[8,"Corinthians","Flamengo",1,1],
+  [9,"Botafogo","Mirassol",3,2],[9,"Internacional","São Paulo",1,1],[9,"Bahia","Athletico-PR",3,0],[9,"Cruzeiro","EC Vitória",3,0],[9,"Coritiba","Vasco da Gama",1,1],[9,"Fluminense","Corinthians",3,1],[9,"Chapecoense","Atlético-MG",0,4],[9,"Santos","Remo",2,0],[9,"Bragantino","Flamengo",3,0],[9,"Palmeiras","Grêmio",2,1],
+  [10,"São Paulo","Cruzeiro",4,1],[10,"Coritiba","Fluminense",1,1],[10,"Vasco da Gama","Botafogo",1,2],[10,"Chapecoense","EC Vitória",1,1],[10,"Atlético-MG","Athletico-PR",2,1],[10,"Flamengo","Santos",3,1],[10,"Bahia","Palmeiras",1,2],[10,"Corinthians","Internacional",0,1],[10,"Mirassol","Bragantino",0,1],[10,"Grêmio","Remo",0,0],
+  [11,"Remo","Vasco da Gama",1,1],[11,"EC Vitória","São Paulo",2,0],[11,"Mirassol","Bahia",1,2],[11,"Santos","Atlético-MG",1,0],[11,"Internacional","Grêmio",0,0],[11,"Athletico-PR","Chapecoense",2,0],[11,"Botafogo","Coritiba",2,2],[11,"Fluminense","Flamengo",1,2],[11,"Corinthians","Palmeiras",0,0],[11,"Cruzeiro","Bragantino",2,1],
+  [12,"Chapecoense","Botafogo",1,4],[12,"Vasco da Gama","São Paulo",2,1],[12,"EC Vitória","Corinthians",0,0],[12,"Cruzeiro","Grêmio",2,0],[12,"Internacional","Mirassol",1,2],[12,"Coritiba","Atlético-MG",2,0],[12,"Santos","Fluminense",2,3],[12,"Bragantino","Remo",4,2],[12,"Palmeiras","Athletico-PR",1,0],[12,"Flamengo","Bahia",2,0],
+  [13,"Bahia","Santos",2,2],[13,"Botafogo","Internacional",2,2],[13,"Remo","Cruzeiro",0,1],[13,"São Paulo","Mirassol",1,0],[13,"Corinthians","Vasco da Gama",1,0],[13,"Grêmio","Coritiba",1,0],[13,"Athletico-PR","EC Vitória",3,1],[13,"Bragantino","Palmeiras",0,1],[13,"Atlético-MG","Flamengo",0,4],[13,"Fluminense","Chapecoense",2,1],
+  [14,"Botafogo","Remo",1,2],[14,"EC Vitória","Coritiba",4,1],[14,"Palmeiras","Santos",1,1],[14,"Athletico-PR","Grêmio",0,0],[14,"Cruzeiro","Atlético-MG",1,3],[14,"Flamengo","Vasco da Gama",2,2],[14,"São Paulo","Bahia",2,2],[14,"Chapecoense","Bragantino",1,2],[14,"Internacional","Fluminense",2,0],[14,"Mirassol","Corinthians",2,1],
+  [15,"Coritiba","Internacional",2,2],[15,"Fluminense","EC Vitória",2,2],[15,"Bahia","Cruzeiro",1,2],[15,"Atlético-MG","Botafogo",1,1],[15,"Remo","Palmeiras",1,1],[15,"Corinthians","São Paulo",3,2],[15,"Mirassol","Chapecoense",1,1],[15,"Santos","Bragantino",2,0],[15,"Grêmio","Flamengo",0,1],[15,"Vasco da Gama","Athletico-PR",1,0],
+  [16,"Atlético-MG","Mirassol",3,1],[16,"Internacional","Vasco da Gama",4,1],[16,"Fluminense","São Paulo",2,1],[16,"Palmeiras","Cruzeiro",1,1],[16,"Santos","Coritiba",0,3],[16,"Bahia","Grêmio",1,1],[16,"Botafogo","Corinthians",3,1],[16,"Bragantino","EC Vitória",2,0],[16,"Chapecoense","Remo",2,3],[16,"Athletico-PR","Flamengo",1,1],
+  [17,"São Paulo","Botafogo",1,1],[17,"EC Vitória","Internacional",2,0],[17,"Grêmio","Santos",3,2],[17,"Mirassol","Fluminense",1,0],[17,"Flamengo","Palmeiras",0,3],[17,"Cruzeiro","Chapecoense",2,1],[17,"Remo","Athletico-PR",1,2],[17,"Corinthians","Atlético-MG",1,0],[17,"Vasco da Gama","Bragantino",0,3],[17,"Coritiba","Bahia",3,2],
+  [18,"Athletico-PR","Mirassol",1,0],[18,"Flamengo","Coritiba",3,0],[18,"Bahia","Botafogo",2,1],[18,"Grêmio","Corinthians",1,3],[18,"Santos","EC Vitória",3,1],[18,"Bragantino","Internacional",3,1],[18,"Palmeiras","Chapecoense",1,0],[18,"Vasco da Gama","Atlético-MG",0,1],[18,"Cruzeiro","Fluminense",1,1],[18,"Remo","São Paulo",1,0]
+];
+const BR_FIRST_TURN_RESULT_MAP=new Map(BR_FIRST_TURN_RESULTS.map(r=>[r[0]+"|"+r[1]+"|"+r[2],{s1:r[3],s2:r[4]}]));
+function brHistoricalResultFor(fx){
+  if(!fx||fx.round==null||fx.round>=BR_FIRST_ROUND) return null;
+  return BR_FIRST_TURN_RESULT_MAP.get(fx.round+"|"+fx.t1+"|"+fx.t2)||null;
+}
+function brHistoricalFixture(row,index){
+  return {id:"BRH_"+row[0]+"_"+index,t1:row[1],t2:row[2],round:row[0],slot:row[0],roundLabel:"Rodada "+row[0],date:"",time:"",dateKey:"",ts:Date.UTC(BR_SEASON,0,row[0]),historical:true};
+}
 let S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
 let brLoading=false;
 let brStatus=null;
 let brLastUpdatedAt=null;
 let brProjectionError=null;
+let brFavoriteTeam="";
+let brFavoritePickerOpen=false;
+let brSessionUserId=null;
+
+function brSyncSessionUser(session){
+  const nextUserId=session?.user?.id||null;
+  if(nextUserId===brSessionUserId) return;
+  brSessionUserId=nextUserId;
+  S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
+  brLoading=false;
+  brFavoriteTeam="";
+  brFavoritePickerOpen=false;
+}
 
 function brSetStatus(kind,text){ brStatus={kind,text}; }
 function brDateParts(utc){
@@ -9808,9 +10036,23 @@ function brCanonicalTeam(name){
 }
 function brLogo(team){
   const src=BR_TEAM_LOGOS[team];
+  const special=team==="Athletico-PR"?' brx-logo-athletico':'';
   return src
-    ? '<img class="brx-logo" src="'+esc(src)+'" alt="'+esc(team||"")+'">'
-    : '<span class="brx-logo-ph">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
+    ? '<span class="brx-crest"><img class="brx-logo'+special+'" src="'+esc(src)+'" alt="'+esc(team||"")+'"></span>'
+    : '<span class="brx-crest brx-logo-ph">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
+}
+function brIsSupportedFavoriteTeam(team){ return Boolean(team&&Object.prototype.hasOwnProperty.call(BR_TEAM_LOGOS,team)); }
+function brFavoriteStorageKey(){ return BR_FAVORITE_STORAGE_PREFIX+(remoteSession?.user?.id||"local"); }
+function brReadLocalFavoriteTeam(){
+  if(!CAN_USE_LOCAL_STORAGE) return "";
+  try{
+    const team=String(localStorage.getItem(brFavoriteStorageKey())||"");
+    return brIsSupportedFavoriteTeam(team)?team:"";
+  }catch(e){ return ""; }
+}
+function brWriteLocalFavoriteTeam(team){
+  if(!CAN_USE_LOCAL_STORAGE||!brIsSupportedFavoriteTeam(team)) return;
+  try{ localStorage.setItem(brFavoriteStorageKey(),team); }catch(e){}
 }
 function brPredKey(pi,gid){ return pi+"_"+gid; }
 function brReturnoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND); }
@@ -9845,22 +10087,28 @@ function brFixtureScore(fx){
     if(BR_FINAL_STATUSES.has(status)) return {s1:lv.goals_home,s2:lv.goals_away,final:true,live:false};
     if(BR_LIVE_STATUSES.has(status)) return {s1:lv.goals_home,s2:lv.goals_away,final:false,live:true,elapsed:lv.elapsed};
   }
+  const historical=brHistoricalResultFor(fx);
+  if(historical) return {s1:historical.s1,s2:historical.s2,final:true,live:false};
   return null;
 }
 
 async function brLoadRemote(opts={}){
   if(!remoteClient||!remoteSession){ brSetStatus("warn","Entre no bolão para ver o Brasileirão."); return; }
-  const [mapRows,liveRows,predRows,resRows]=await Promise.all([
+  const [mapRows,liveRows,predRows,resRows,favoriteRow]=await Promise.all([
     remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,kickoff_utc,home_team,away_team,round_label").eq("tournament",BR_TOURNAMENT).order("kickoff_utc",{ascending:true}),
     remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin,last_synced_at"),
     remoteClient.from("brasileirao_predictions").select("participant_index,game_id,s1,s2"),
-    remoteClient.from("results").select("game_id,s1,s2")
+    remoteClient.from("results").select("game_id,s1,s2"),
+    remoteClient.from(BR_FAVORITE_TABLE).select("team_key").eq("user_id",remoteSession.user.id).eq("competition",BR_TOURNAMENT).maybeSingle()
   ]);
   // A classificação ao vivo continua disponível mesmo se apenas a consulta de
   // palpites falhar. Nesse caso, a V2 desabilita a projeção sem bloquear a tabela.
   const failed=[mapRows,liveRows,resRows].find(r=>r&&r.error);
   if(failed){ brSetStatus("err",remoteErrorText(failed.error)); if(!opts.skipRender) render(activeTab); return; }
   brProjectionError=predRows&&predRows.error?remoteErrorText(predRows.error):null;
+  const remoteFavorite=brIsSupportedFavoriteTeam(favoriteRow?.data?.team_key)?favoriteRow.data.team_key:"";
+  brFavoriteTeam=remoteFavorite||brReadLocalFavoriteTeam();
+  if(remoteFavorite) brWriteLocalFavoriteTeam(remoteFavorite);
   const liveBy=Object.fromEntries((liveRows.data||[]).map(r=>[r.game_id,r]));
   S_BR.fixtures=(mapRows.data||[]).map(row=>{
     const p=brDateParts(row.kickoff_utc);
@@ -9955,12 +10203,18 @@ function brMatchHTML(fx,opts){
   const sc=brFixtureScore(fx);
   const now=Date.now();
   const locked=Boolean(fx.ts&&now>=fx.ts);
-  const gid=esc(fx.id);
+  /* opts.ns prefixa os ids do DOM (popup do clube renderiza o MESMO jogo que a aba
+     atrás — sem prefixo os getElementById acertariam o card errado). O id real do
+     jogo sai de brRealGid() na hora de falar com dados/banco. */
+  const gid=esc((opts.ns||"")+fx.id);
   const pi=opts.interactive?myParticipantIndex():null;
   const lateTag=fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'';
+  const roundTag=(opts.showRound&&!fx.late)?'<div class="brx-rmini">Rodada '+esc(String(fx.slot!=null?fx.slot:(fx.round||"—")))+'</div>':'';
+  const roundCls=roundTag?' has-round':'';
   let mid,cls="",t1cls="",t2cls="";
   if(sc){
     if(sc.final){
+      cls=" result";
       if(sc.s1>sc.s2){ t1cls=" win"; t2cls=" lose"; } else if(sc.s2>sc.s1){ t2cls=" win"; t1cls=" lose"; }
       mid='<div class="brx-score">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag">Encerrado</div>';
     }else{
@@ -9981,9 +10235,12 @@ function brMatchHTML(fx,opts){
       const hasPal=myPal&&myPal.s1!=null&&myPal.s2!=null;
       const res=brScoringResult(fx);
       const d=(hasPal&&res)?scoreDetails(myPal,res):null;
+      const ptsCls=d?brPtsCls(d):"";
       pal='<div class="brx-mid-pal">'+
-        '<button class="brx-open-pill" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+'</button>'+
-        (d?brPtsBadge(d):'')+
+        '<div class="brx-pal-pair'+(d?' scored':'')+'">'+
+          (d?'<span class="brx-pal-score">'+brPtsBadge(d)+'</span>':'')+
+          '<button class="brx-open-pill'+(d?' scored '+ptsCls:'')+'" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+'</button>'+
+        '</div>'+
       '</div>';
       palCls=" brx-pal";
     }else if(pi!=null){
@@ -10006,10 +10263,13 @@ function brMatchHTML(fx,opts){
       palCls=" brx-pal";
     }
   }
-  return '<div class="brx-match'+cls+palCls+editCls+'"'+matchAttr+'>'+
-    '<div class="brx-team home'+t1cls+'"><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
-    '<div class="brx-mid">'+mid+lateTag+pal+'</div>'+
-    '<div class="brx-team'+t2cls+'">'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
+  const foc1=(opts.focusTeam&&fx.t1===opts.focusTeam)?' tpfocus':'';
+  const foc2=(opts.focusTeam&&fx.t2===opts.focusTeam)?' tpfocus':'';
+  const clickAttrs=team=>' role="button" tabindex="0" data-team="'+esc(team||"")+'" title="Ver todos os jogos do clube" aria-label="Ver todos os jogos do '+esc(team||"?")+'" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)"';
+  return '<div class="brx-match'+cls+palCls+editCls+roundCls+'"'+matchAttr+'>'+
+    '<div class="brx-team home brx-team-click'+t1cls+foc1+'"'+clickAttrs(fx.t1)+'><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
+    '<div class="brx-mid">'+roundTag+mid+lateTag+pal+'</div>'+
+    '<div class="brx-team brx-team-click'+t2cls+foc2+'"'+clickAttrs(fx.t2)+'>'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
   '</div>';
 }
 
@@ -10046,6 +10306,141 @@ function renderBrConfig(){
       ):'')+
     '</div>';
 }
+function brFavoriteRecentForm(team){
+  return brTeamSeasonFixtures(team).map(f=>({f,score:brFixtureScore(f)}))
+    .filter(item=>item.score&&item.score.final)
+    .map(item=>{
+      const mine=item.f.t1===team?item.score.s1:item.score.s2;
+      const theirs=item.f.t1===team?item.score.s2:item.score.s1;
+      return mine>theirs?"v":mine<theirs?"d":"e";
+    }).slice(-5);
+}
+function brFavoriteUpcomingFixtures(team,now){
+  return brTeamSeasonFixtures(team).filter(f=>{
+    const score=brFixtureScore(f);
+    return score?.live||(!score?.final&&f.ts&&f.ts>=now);
+  }).sort((a,b)=>{
+    const aLive=Boolean(brFixtureScore(a)?.live),bLive=Boolean(brFixtureScore(b)?.live);
+    return Number(bLive)-Number(aLive)||(a.ts-b.ts);
+  }).slice(0,2);
+}
+function brFavoriteGameHTML(team,fx){
+  const opponent=fx.t1===team?fx.t2:fx.t1;
+  const venue=fx.t1===team?"Casa":"Fora";
+  const score=brFixtureScore(fx);
+  const meta=score?.live
+    ? '<div class="brx-favorite-game-meta live"><strong>'+score.s1+' × '+score.s2+'</strong><small>Ao vivo'+(score.elapsed?' · '+score.elapsed+'’':'')+'</small></div>'
+    : '<div class="brx-favorite-game-meta"><strong><span>'+esc(venue)+'</span> · '+esc(fx.dshort||fx.date||"A definir")+'</strong><small>'+esc(fx.time||"--:--")+'</small></div>';
+  return '<div class="brx-favorite-game">'+
+    '<div class="brx-favorite-game-copy">'+brLogo(opponent)+'<span>'+esc(opponent||"Adversário")+'</span></div>'+
+    meta+
+  '</div>';
+}
+function brFavoriteHeroHTML(now){
+  const team=brIsSupportedFavoriteTeam(brFavoriteTeam)?brFavoriteTeam:"";
+  if(!team){
+    return '<aside class="brx-hero-focus brx-favorite brx-favorite-empty" aria-label="Escolha seu time do coração">'+
+      '<div class="brx-focus-label">Seu time do coração</div>'+
+      '<p>Escolha um clube para acompanhar os próximos jogos e a fase recente.</p>'+
+      '<button type="button" class="brx-btn ghost" onclick="brOpenFavoritePicker()">Escolher time</button>'+
+    '</aside>';
+  }
+  const official=brTableRows(false);
+  const position=official.findIndex(row=>row.name===team);
+  const form=brFavoriteRecentForm(team);
+  const upcoming=brFavoriteUpcomingFixtures(team,now);
+  const formNames={v:"vitória",e:"empate",d:"derrota"};
+  const formAria=form.length?("Últimos jogos: "+form.map(r=>formNames[r]).join(", ")):"Forma recente ainda indisponível";
+  const formHTML=form.length
+    ? '<span class="brx-favorite-form" role="img" aria-label="'+esc(formAria)+'"><span class="brx-favorite-form-label">Forma</span><span class="brx-favorite-form-dots">'+form.map(r=>'<i class="'+r+'" aria-hidden="true"></i>').join("")+'</span></span>'
+    : '';
+  return '<aside class="brx-hero-focus brx-favorite" aria-label="Meu time: '+esc(team)+'">'+
+    '<div class="brx-favorite-head"><div class="brx-focus-label">Meu time</div><button type="button" class="brx-favorite-change" onclick="brOpenFavoritePicker()">Trocar</button></div>'+
+    '<button type="button" class="brx-favorite-club" onclick="brOpenTeamPopup(this.dataset.team)" data-team="'+esc(team)+'" aria-label="Abrir detalhes do '+esc(team)+'">'+
+      brLogo(team)+'<span class="brx-favorite-club-copy"><strong>'+esc(team)+'</strong><span>'+(position>=0?(position+1)+'º na tabela':'Posição a definir')+'</span></span>'+
+    '</button>'+
+    '<div class="brx-favorite-games">'+
+      (upcoming.length?upcoming.map(f=>brFavoriteGameHTML(team,f)).join(""):'<span class="brx-focus-date">Nenhum próximo jogo confirmado</span>')+
+    '</div>'+formHTML+
+  '</aside>';
+}
+let brHomeRound=null,brHomeDayKey=null;
+function brHomeRoundDayKeys(games){
+  const seen=new Set(),keys=[];
+  games.forEach(f=>{
+    const key=f.dateKey||f.date||"a-definir";
+    if(!seen.has(key)){ seen.add(key); keys.push(key); }
+  });
+  return keys;
+}
+function brHomeDayWindow(games,now){
+  const byKey={};
+  games.forEach(f=>{
+    const key=f.dateKey||f.date||"a-definir";
+    if(!byKey[key]) byKey[key]={key,date:f.date||"Data a definir",games:[]};
+    byKey[key].games.push(f);
+  });
+  const days=Object.values(byKey);
+  if(!days.length) return {day:null,games:[],prevKey:null,nextKey:null,title:"Jogos da rodada",meta:"",canReset:false};
+  const todayKey=new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TZ}).format(new Date(now));
+  const live=days.find(d=>d.games.some(f=>{ const score=brFixtureScore(f); return score&&score.live; }));
+  const today=days.find(d=>d.key===todayKey);
+  const next=days.find(d=>d.games.some(f=>{
+    const score=brFixtureScore(f);
+    return (!score||score.live)&&(!f.ts||f.ts>=now);
+  }));
+  const pending=days.find(d=>d.games.some(f=>{ const score=brFixtureScore(f); return !score||score.live; }));
+  const fallback=live||today||next||pending||days[days.length-1];
+  const day=days.find(d=>d.key===brHomeDayKey)||fallback;
+  const index=days.indexOf(day);
+  // A Home exibe um par de dias consecutivos. A navegação desloca a janela um
+  // dia de cada vez, para que o usuário mantenha contexto entre as rodadas.
+  const visibleDays=days.slice(index,index+2);
+  const visibleGames=visibleDays.flatMap(d=>d.games);
+  const state=brRoundState(visibleGames);
+  const isToday=day.key===todayKey;
+  const isLive=state.live>0;
+  const isPast=day.key<todayKey;
+  const title=isLive?"Ao vivo agora":isToday?"Jogos de hoje":isPast?"Resultados":"Próximos jogos";
+  const dateLabel=visibleDays.map(d=>d.date).join(" — ");
+  const meta=isLive?state.live+(state.live===1?" ao vivo":" ao vivo")+" · "+state.done+"/"+state.total+" encerrados":visibleDays.length+" dias · "+visibleGames.length+(visibleGames.length===1?" jogo":" jogos");
+  return {day,days:visibleDays,games:visibleGames,state,title,dateLabel,meta,prevKey:days[index-1]?.key||null,nextKey:days[index+1]?.key||null,canReset:brHomeDayKey!=null&&day.key!==fallback.key};
+}
+function brHomeMoveDay(dir){
+  const fixtures=brBolaoFixtures();
+  const {rounds,byRound}=brRoundsIndex(fixtures);
+  const defaultRound=brDefaultRound(rounds,byRound);
+  const focusRound=brHomeRound!=null&&byRound[brHomeRound]?brHomeRound:defaultRound;
+  const win=brHomeDayWindow(byRound[focusRound]||[],Date.now());
+  const target=dir<0?win.prevKey:win.nextKey;
+  if(target){
+    brHomeRound=focusRound;
+    brHomeDayKey=target;
+    renderBrHome();
+    return;
+  }
+  const targetRound=rounds[rounds.indexOf(focusRound)+dir];
+  if(targetRound==null) return;
+  const keys=brHomeRoundDayKeys(byRound[targetRound]||[]);
+  brHomeRound=targetRound;
+  brHomeDayKey=dir<0?keys[keys.length-1]||null:keys[0]||null;
+  renderBrHome();
+}
+function brHomeResetDay(){ brHomeRound=null; brHomeDayKey=null; renderBrHome(); }
+function brHomeDayBlockHTML(day){
+  const state=brRoundState(day.games);
+  const status=state.live?state.live+(state.live===1?" ao vivo":" ao vivo")+(state.done?" · "+state.done+"/"+state.total+" encerrados":""):state.done===state.total?state.done+"/"+state.total+" encerrados":day.games.length+(day.games.length===1?" jogo":" jogos");
+  return '<section class="brx-home-day-block">'+
+    '<div class="brx-home-day-head"><span class="brx-home-day-label">'+esc(day.date)+'</span><span class="brx-home-day-status'+(state.live?" live":"")+'">'+esc(status)+'</span></div>'+
+    '<div class="brx-games">'+day.games.map(brMatchHTML).join("")+'</div>'+
+  '</section>';
+}
+function brHomeDayControlsHTML(win){
+  return '<div class="brx-home-nav" role="group" aria-label="Navegar entre dias e rodadas">'+
+    '<button type="button" class="brx-home-arrow" onclick="brHomeMoveDay(-1)"'+(win.canPrev?"":" disabled")+' aria-label="Dia ou rodada anterior com jogos">‹</button>'+
+    '<button type="button" class="brx-home-arrow" onclick="brHomeMoveDay(1)"'+(win.canNext?"":" disabled")+' aria-label="Próximo dia ou rodada com jogos">›</button>'+
+  '</div>';
+}
 function renderBrHome(){
   const el=document.getElementById("tab-home"); if(!el) return;
   if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
@@ -10054,16 +10449,17 @@ function renderBrHome(){
   if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
   const now=Date.now();
   const {rounds,byRound}=brRoundsIndex(fixtures);
-  const focusRound=brDefaultRound(rounds,byRound);
+  const defaultRound=brDefaultRound(rounds,byRound);
+  const focusRound=brHomeRound!=null&&byRound[brHomeRound]?brHomeRound:defaultRound;
   const games=byRound[focusRound]||[];
   const st=brRoundState(games);
   const range=games.length?(games[0].date===games[games.length-1].date?games[0].date:games[0].date+" — "+games[games.length-1].date):"";
-  let note="",noteLive=false;
-  if(st.live){ noteLive=true; note=st.live===1?"1 jogo ao vivo agora":st.live+" jogos ao vivo agora"; }
-  else{
-    const next=fixtures.find(f=>f.ts&&f.ts>now&&!brFixtureScore(f));
-    if(next){ const c=brCountdownTxt(next.ts-now); note="Próximo jogo "+(c||("dia "+next.dshort))+" · "+next.t1+" × "+next.t2; }
-  }
+  const heroFocus=brFavoriteHeroHTML(now);
+  const homeDay=brHomeDayWindow(games,now);
+  const roundIndex=rounds.indexOf(focusRound);
+  homeDay.canPrev=Boolean(homeDay.prevKey)||roundIndex>0;
+  homeDay.canNext=Boolean(homeDay.nextKey)||roundIndex<rounds.length-1;
+  homeDay.canReset=homeDay.canReset||focusRound!==defaultRound;
   const pi=myParticipantIndex();
   let posTxt="—",ptsTxt="—";
   if(pi!=null){
@@ -10077,17 +10473,15 @@ function renderBrHome(){
   el.innerHTML=
     '<div class="panel">'+
       '<div class="brx-hero"><div class="brx-hero-grid">'+
-        '<div>'+
+        '<div class="brx-hero-main"><div class="brx-hero-copy">'+
           '<div class="brx-kicker">Brasileirão 2026 · Returno</div>'+
           '<h2>Rodada '+esc(focusRound||"")+'</h2>'+
-          '<div class="brx-hero-sub">'+esc(range)+(st.total?' · '+st.total+' jogos':'')+'</div>'+
-          (note?'<div class="brx-hero-note'+(noteLive?' live':'')+'">'+esc(note)+'</div>':'')+
+          '<div class="brx-hero-sub">'+esc(range)+'</div>'+
           '<div class="brx-hero-actions">'+
-            '<button class="brx-btn gold" onclick="goTab(\'jogos\')">Fazer palpites</button>'+
+            '<button class="brx-btn gold" onclick="goTab(\'jogos\')">Palpitar</button>'+
             '<button class="brx-btn ghost" onclick="goTab(\'grupos\')">Tabela</button>'+
-            '<button class="brx-btn ghost" onclick="goTab(\'jogos\')">Todos os jogos</button>'+
           '</div>'+
-        '</div>'+
+        '</div>'+heroFocus+'</div>'+
         '<div class="brx-stats">'+
           '<div class="brx-stat"><strong>'+esc(posTxt)+'</strong><span>Sua posição</span></div>'+
           '<div class="brx-stat"><strong>'+esc(ptsTxt)+'</strong><span>Seus pontos</span></div>'+
@@ -10096,10 +10490,12 @@ function renderBrHome(){
           '</div>'+
         '</div>'+
       '</div></div>'+
-      '<div class="card">'+
-        '<div class="brx-sec"><span class="brx-sec-title">Jogos da rodada '+esc(focusRound||"")+'</span>'+
-        '<span class="brx-sec-meta">'+(st.live?'<span class="live">'+st.live+' ao vivo</span> · ':'')+st.done+'/'+st.total+' encerrados</span></div>'+
-        '<div class="brx-games">'+games.map(brMatchHTML).join("")+'</div>'+
+      '<div class="card brx-home-games-list">'+
+        '<div class="brx-home-games-head"><div class="brx-home-games-copy">'+
+          '<span class="brx-sec-title">Rodada '+esc(focusRound||"")+' · '+esc(homeDay.title)+'</span>'+
+          (homeDay.canReset?'<button type="button" class="brx-home-day-reset" onclick="brHomeResetDay()">Voltar ao destaque atual</button>':'')+
+        '</div>'+brHomeDayControlsHTML(homeDay)+'</div>'+
+        '<div class="brx-home-days">'+homeDay.days.map(brHomeDayBlockHTML).join("")+'</div>'+
       '</div>'+
     '</div>';
 }
@@ -10300,7 +10696,7 @@ function renderBrTabela(){
     const sg=t.sg>0?'<span class="brx-sgn up">+'+t.sg+'</span>':t.sg<0?'<span class="brx-sgn down">−'+Math.abs(t.sg)+'</span>':'0';
     return '<tr class="brx-tr'+zone+'" style="--i:'+i+'">'+
       '<td><span class="brx-poswrap"><span class="brx-posn">'+pos+'</span>'+delta+'</span></td>'+
-      '<td><span class="brx-club">'+brLogo(t.name)+'<span class="brx-club-name">'+esc(t.name)+'</span>'+(t.live?'<span class="livedot" title="jogando agora"></span>':'')+'</span></td>'+
+      '<td><span class="brx-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brLogo(t.name)+'<span class="brx-club-name">'+esc(t.name)+'</span>'+(t.live?'<span class="livedot" title="jogando agora"></span>':'')+'</span></td>'+
       '<td>'+t.pts+'</td><td>'+t.j+'</td><td>'+t.v+'</td><td>'+t.e+'</td><td>'+t.d+'</td>'+
       '<td>'+t.gp+'</td><td>'+t.gc+'</td><td>'+sg+'</td><td>'+form+'</td>'+
     '</tr>';
@@ -10334,8 +10730,9 @@ function brTabelaV2UpdatedLabel(){
 }
 function brTableLogoDecorative(team){
   const src=BR_TEAM_LOGOS[team];
+  const special=team==="Athletico-PR"?' brx-logo-athletico':'';
   return src
-    ? '<img class="brx-logo" src="'+esc(src)+'" alt="" aria-hidden="true">'
+    ? '<img class="brx-logo'+special+'" src="'+esc(src)+'" alt="" aria-hidden="true">'
     : '<span class="brx-logo-ph" aria-hidden="true">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
 }
 function brTabelaV2Movement(delta){
@@ -10418,7 +10815,7 @@ function renderBrTabelaV2(){
     const pointTitle=projected?'Pontos projetados: '+t.pts+'; na classificação atual: '+off.pts:'Pontos: '+t.pts;
     return '<tr class="'+rowClass+'">'+
       '<td class="brv2-col-pos"><span class="brv2-position"><span class="brv2-pos-number">'+pos+'</span>'+(projected?brTabelaV2Movement(delta):'')+(zone.label?'<span class="brv2-sr">'+zone.label+'</span>':'')+'</span></td>'+
-      '<th scope="row" class="brv2-col-club"><span class="brv2-club">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
+      '<th scope="row" class="brv2-col-club"><span class="brv2-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
       '<td class="brv2-col-points" title="'+esc(pointTitle)+'">'+t.pts+'</td>'+
       '<td class="brv2-col-stat brv2-col-j">'+t.j+'</td>'+
       '<td class="brv2-col-stat brv2-col-v">'+t.v+'</td>'+
@@ -10548,20 +10945,26 @@ function brFlagSaved(gid,state){
 async function brAutoSavePalpite(gid){
   const pi=myParticipantIndex();
   if(pi==null){ toast("Sua conta não tem participante vinculado."); return; }
-  const fx=S_BR.fixtures.find(f=>f.id===gid);
+  /* gid pode vir prefixado (card do popup do clube); dados/banco usam o id real e,
+     no fim, o pill do card gêmeo na aba atrás é atualizado junto. */
+  const realGid=brRealGid(gid);
+  const fromPopup=gid!==realGid; // card do popup do clube → a aba atrás precisa re-renderizar no fechamento
+  const syncPills=()=>{ brRefreshPill(gid); if(fromPopup) brRefreshPill(realGid); };
+  const fx=S_BR.fixtures.find(f=>f.id===realGid);
   if(fx&&fx.ts&&Date.now()>=fx.ts){ toast("Jogo já começou — palpite encerrado."); return; }
   const e1=document.getElementById('brS1_'+gid), e2=document.getElementById('brS2_'+gid);
   if(!e1||!e2) return;
   const r1=String(e1.value).trim(), r2=String(e2.value).trim();
-  const key=brPredKey(pi,gid);
+  const key=brPredKey(pi,realGid);
   if(r1===''&&r2===''){
     if(S_BR.palpites[key]){
       delete S_BR.palpites[key];
+      if(fromPopup) brTeamPopupDirty=true;
       brFlagSaved(gid,'salvando');
-      const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").delete().eq("participant_index",pi).eq("game_id",gid));
+      const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").delete().eq("participant_index",pi).eq("game_id",realGid));
       brFlagSaved(gid, ok===false?'erro':'vazio');
     } else brFlagSaved(gid,'vazio');
-    brRefreshPill(gid);
+    syncPills();
     return;
   }
   const s1=parseInt(r1,10), s2=parseInt(r2,10);
@@ -10570,8 +10973,9 @@ async function brAutoSavePalpite(gid){
   if(String(pal.s1)!==r1) e1.value=pal.s1;
   if(String(pal.s2)!==r2) e2.value=pal.s2;
   S_BR.palpites[key]=pal;
+  if(fromPopup) brTeamPopupDirty=true;
   brFlagSaved(gid,'salvando');
-  const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:gid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
+  const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:realGid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
   if(ok===false){ brFlagSaved(gid,'erro'); toast("Não salvou (confira o login ou se o jogo já começou)."); }
   else{
     brFlagSaved(gid,'salvo');
@@ -10583,7 +10987,7 @@ async function brAutoSavePalpite(gid){
       brToggleGuess(gid,false);
     },600);
   }
-  brRefreshPill(gid);
+  syncPills();
 }
 
 /* ---- Palpite inline (aba Jogos) + popup "todos os palpites" -------------------
@@ -10597,7 +11001,7 @@ const BRX_SVG_CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none"
 function brRefreshPill(gid){
   const btn=document.getElementById('brPill_'+gid); if(!btn) return;
   const pi=myParticipantIndex(); if(pi==null) return;
-  const p=S_BR.palpites[brPredKey(pi,gid)];
+  const p=S_BR.palpites[brPredKey(pi,brRealGid(gid))];
   if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b><span class="brx-pencil" aria-hidden="true">'+BRX_SVG_PENCIL+'</span>'; }
   else{ btn.className='brx-pill-guess'; btn.textContent='Palpitar'; }
 }
@@ -10616,17 +11020,69 @@ function brGuessReady(gid){
   if(btn) btn.classList.toggle('ready',!!(e1&&e2&&e1.value!==''&&e2.value!==''));
 }
 let brPopupGid=null;
-function brOpenPopup(gid){ brPopupGid=gid; renderBrPopup(); }
+function brOpenPopup(gid){ brPopupGid=brRealGid(gid); renderBrPopup(); }
 function brClosePopup(){ brPopupGid=null; renderBrPopup(); }
+function brOpenFavoritePicker(){
+  if(brTeamPopup){ brTeamPopup=null; brTeamPopupOpponent=null; renderBrTeamPopup(); }
+  brFavoritePickerOpen=true;
+  renderBrFavoritePicker();
+}
+function brCloseFavoritePicker(){
+  brFavoritePickerOpen=false;
+  renderBrFavoritePicker();
+}
+async function brSaveFavoriteTeam(team){
+  team=brCanonicalTeam(team);
+  if(!brIsSupportedFavoriteTeam(team)){ toast("Esse clube não está disponível nesta edição."); return; }
+  brFavoriteTeam=team;
+  brWriteLocalFavoriteTeam(team);
+  brCloseFavoritePicker();
+  renderBrHome();
+  if(!remoteClient||!remoteSession){
+    toast("Time salvo neste aparelho.");
+    return;
+  }
+  const {error}=await remoteClient.from(BR_FAVORITE_TABLE).upsert({
+    user_id:remoteSession.user.id,
+    competition:BR_TOURNAMENT,
+    team_key:team,
+    updated_at:new Date().toISOString()
+  },{onConflict:"user_id,competition"});
+  if(error){
+    toast("Time salvo neste aparelho; a sincronização online não respondeu.");
+    return;
+  }
+  toast(team+" definido como seu time do coração.");
+}
+function renderBrFavoritePicker(){
+  const el=document.getElementById("brFavoriteModal"); if(!el) return;
+  if(!brFavoritePickerOpen){ el.classList.remove("open"); el.innerHTML=""; brSyncModalBodyLock(); return; }
+  const teams=Object.keys(BR_TEAM_LOGOS).sort((a,b)=>a.localeCompare(b,"pt-BR"));
+  const options=teams.map(team=>{
+    const selected=team===brFavoriteTeam;
+    return '<button type="button" class="brx-favorite-option'+(selected?' selected':'')+'" data-team="'+esc(team)+'" onclick="brSaveFavoriteTeam(this.dataset.team)" aria-pressed="'+selected+'" aria-label="Escolher '+esc(team)+'">'+
+      (selected?'<span class="brx-favorite-check" aria-hidden="true">✓</span>':'')+brLogo(team)+'<span>'+esc(team)+'</span></button>';
+  }).join("");
+  el.innerHTML='<div class="brx-modal-backdrop" onclick="brCloseFavoritePicker()"></div>'+
+    '<div class="brx-modal-frame brx-favorite-picker-frame" role="dialog" aria-modal="true" aria-labelledby="brFavoriteTitle">'+
+      '<button class="brx-modal-close" onclick="brCloseFavoritePicker()" aria-label="Fechar">×</button>'+
+      '<div class="brx-favorite-picker-head"><div class="brx-favorite-picker-kicker">Personalizar início</div><h3 id="brFavoriteTitle">Qual é o seu time?</h3><p>A escolha fica vinculada à sua conta e pode ser trocada quando quiser.</p></div>'+
+      '<div class="brx-favorite-picker-grid">'+options+'</div>'+
+    '</div>';
+  el.classList.add("open");
+  brSyncModalBodyLock();
+}
+/* O scroll do body destrava só quando todas as camadas do Brasileirão fecham. */
+function brSyncModalBodyLock(){ document.body.classList.toggle("brx-modal-open",Boolean(brPopupGid||brTeamPopup||brFavoritePickerOpen)); }
 function renderBrPopup(){
   const el=document.getElementById("brModal"); if(!el) return;
-  if(!brPopupGid){ el.classList.remove("open"); el.innerHTML=""; document.body.classList.remove("brx-modal-open"); return; }
+  if(!brPopupGid){ el.classList.remove("open"); el.innerHTML=""; brSyncModalBodyLock(); return; }
   el.innerHTML='<div class="brx-modal-backdrop" onclick="brClosePopup()"></div>'+
     '<div class="brx-modal-frame" role="dialog" aria-modal="true" aria-label="Palpites do jogo">'+
       '<button class="brx-modal-close" onclick="brClosePopup()" aria-label="Fechar">×</button>'+
       brPopupHTML(brPopupGid)+
     '</div>';
-  el.classList.add("open"); document.body.classList.add("brx-modal-open");
+  el.classList.add("open"); brSyncModalBodyLock();
 }
 function brPopupHTML(gid){
   const fx=S_BR.fixtures.find(f=>f.id===gid);
@@ -10681,6 +11137,229 @@ function brPopupHTML(gid){
     (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+(res?' · <span class="brx-lgp"><span class="brx-lgdot hit"></span>cravou (+3)</span><span class="brx-lgp"><span class="brx-lgdot ok"></span>certo (+1)</span><span class="brx-lgp"><span class="brx-lgdot"></span>erro (0)</span><span class="brx-lgp"><span class="brx-lgdot inv"></span>invertido (−2)</span>':'')+'</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
 }
 
+/* ---- Popup do clube (clicar num time filtra os jogos dele) --------------------
+   Abre pelo clique no clube na Tabela, na Tabela V2 e nos cards de jogo (Home e
+   aba Jogos — inclusive nos cards DENTRO do próprio popup, que viram pivô pra
+   trocar de clube). Mora numa camada própria (#brTeamModal, abaixo do #brModal)
+   pra o "ver todos" de jogo travado abrir POR CIMA. O próximo jogo aceita palpite
+   inline; o primeiro turno aparece como histórico. IDs prefixados (tp:) evitam
+   colisão com o mesmo jogo renderizado na aba atrás do overlay. */
+const BRX_TP_NS="tp:";
+function brRealGid(gid){ const s=String(gid||""); return s.startsWith(BRX_TP_NS)?s.slice(BRX_TP_NS.length):s; }
+function brTeamKey(ev,el){ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); el.click(); } }
+function brTeamAccent(team){ return BR_TEAM_COLORS[team]||"#ffd75e"; }
+function brTeamThemeClass(team){
+  return team==="Internacional"?" brx-team-theme-internacional":"";
+}
+let brTeamPopup=null;
+let brTeamPopupOpponent=null;
+let brTeamPopupDirty=false; // algum palpite foi salvo/apagado por um card do popup?
+/* Fechar por Esc destrói o input focado ANTES do change disparar (o auto-save mora
+   no change, e remoção de nó não dispara change) — então o flush chama o auto-save
+   direto, com o gid lido do id do input. Clique no backdrop/× já blura naturalmente
+   (o change nativo roda antes); isto cobre Esc e fechamentos programáticos. */
+function brFlushTeamPopupInput(){
+  const a=document.activeElement, m=document.getElementById("brTeamModal");
+  if(!a||!m||!m.contains(a)) return;
+  const mm=/^brS[12]_(.+)$/.exec(a.id||"");
+  if(mm) brAutoSavePalpite(mm[1]);
+}
+function brOpenTeamPopup(team){
+  team=String(team||"").trim();
+  if(!team) return;
+  if(brFavoritePickerOpen){ brFavoritePickerOpen=false; renderBrFavoritePicker(); }
+  if(brTeamPopup==null) brTeamPopupDirty=false; // pivô de clube preserva o dirty
+  if(brTeamPopup!==team) brTeamPopupOpponent=null;
+  brTeamPopup=team;
+  renderBrTeamPopup();
+}
+function brCloseTeamPopup(){
+  if(brTeamPopup==null) return;
+  brFlushTeamPopupInput();
+  brTeamPopup=null;
+  brTeamPopupOpponent=null;
+  renderBrTeamPopup();
+  /* Só re-renderiza a aba se algo mudou aqui dentro (o pill gêmeo já sincroniza a
+     cada save) — um render incondicional apagaria palpite meio digitado num card
+     da aba atrás do overlay. */
+  if(brTeamPopupDirty){ brTeamPopupDirty=false; render(activeTab); }
+}
+/* Jogos que valem pontos no bolão, usados apenas para calcular "seus pts". */
+function brTeamFixtures(team){
+  return brBolaoFixtures().filter(f=>f.t1===team||f.t2===team)
+    .sort((a,b)=>((a.ts||Infinity)-(b.ts||Infinity))||(((a.slot!=null?a.slot:a.round)||99)-((b.slot!=null?b.slot:b.round)||99)));
+}
+/* O carrossel usa a temporada inteira para conseguir juntar ida e volta. */
+function brTeamSeasonFixtures(team){
+  const fixtures=S_BR.fixtures.slice();
+  BR_FIRST_TURN_RESULTS.forEach((row,index)=>{
+    if(row[1]!==team&&row[2]!==team) return;
+    const exists=fixtures.some(f=>f.round===row[0]&&f.t1===row[1]&&f.t2===row[2]);
+    if(!exists) fixtures.push(brHistoricalFixture(row,index));
+  });
+  return fixtures.filter(f=>f.t1===team||f.t2===team)
+    .sort((a,b)=>((a.ts||Infinity)-(b.ts||Infinity))||String(a.id).localeCompare(String(b.id)));
+}
+function brTeamTodayKey(now){
+  return new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TZ}).format(new Date(now));
+}
+function brTeamConfrontations(team,now=Date.now()){
+  const today=brTeamTodayKey(now);
+  const byOpponent=new Map();
+  brTeamSeasonFixtures(team).forEach(f=>{
+    const opponent=f.t1===team?f.t2:f.t1;
+    if(!opponent) return;
+    if(!byOpponent.has(opponent)) byOpponent.set(opponent,[]);
+    byOpponent.get(opponent).push(f);
+  });
+  const groups=Array.from(byOpponent,([opponent,games])=>{
+    games.sort((a,b)=>((a.ts||Infinity)-(b.ts||Infinity))||String(a.id).localeCompare(String(b.id)));
+    const liveGame=games.find(f=>{ const s=brFixtureScore(f); return s&&s.live; })||null;
+    const todayGame=games.find(f=>f.dateKey===today)||null;
+    const upcomingGame=games.find(f=>{
+      const s=brFixtureScore(f);
+      return !(s&&s.final)&&!(f.ts&&f.ts<now);
+    })||null;
+    const activeGame=liveGame||todayGame||upcomingGame||games[games.length-1]||null;
+    const anchorTs=activeGame&&activeGame.ts?activeGame.ts:Infinity;
+    const stateLabel=liveGame?"Ao vivo":todayGame?"Hoje":upcomingGame?"Próximo":"Encerrado";
+    const stateClass=liveGame?" live":(todayGame||upcomingGame)?" current":"";
+    return {opponent,games,liveGame,todayGame,upcomingGame,activeGame,anchorTs,stateLabel,stateClass};
+  });
+  return groups.sort((a,b)=>(a.anchorTs-b.anchorTs)||a.opponent.localeCompare(b.opponent,"pt-BR"));
+}
+function brTeamInitialConfrontation(groups){
+  const remembered=groups.findIndex(g=>g.opponent===brTeamPopupOpponent);
+  if(remembered>=0) return remembered;
+  const current=groups.findIndex(g=>g.liveGame||g.todayGame);
+  if(current>=0) return current;
+  const next=groups.findIndex(g=>g.upcomingGame);
+  return next>=0?next:Math.max(0,groups.length-1);
+}
+function brTeamCarouselSync(track){
+  if(!track) return;
+  const count=track.children.length;
+  const width=Math.max(1,track.clientWidth);
+  const index=Math.max(0,Math.min(count-1,Math.round(track.scrollLeft/width)));
+  track.dataset.index=String(index);
+  const slide=track.children[index];
+  if(slide) brTeamPopupOpponent=slide.dataset.opponent||null;
+  const frame=track.closest(".brx-team-frame");
+  const prev=frame&&frame.querySelector('[data-br-tp-dir="-1"]');
+  const next=frame&&frame.querySelector('[data-br-tp-dir="1"]');
+  if(prev) prev.disabled=index<=0;
+  if(next) next.disabled=index>=count-1;
+}
+function brTeamCarouselStep(dir){
+  const track=document.getElementById("brTpCarousel");
+  if(!track) return;
+  const count=track.children.length;
+  const width=Math.max(1,track.clientWidth);
+  const current=Number.isFinite(Number(track.dataset.index))?Number(track.dataset.index):Math.round(track.scrollLeft/width);
+  const target=Math.max(0,Math.min(count-1,current+dir));
+  const left=target*width;
+  if(typeof track.scrollTo==="function") track.scrollTo({left,behavior:"smooth"});
+  else track.scrollLeft=left;
+}
+function renderBrTeamPopup(){
+  const el=document.getElementById("brTeamModal"); if(!el) return;
+  if(!brTeamPopup){ el.classList.remove("open"); el.innerHTML=""; brSyncModalBodyLock(); return; }
+  /* O placar ao vivo re-renderiza o popup aberto (render → renderBrTeamPopup). O
+     frame é PRESERVADO entre renders do mesmo clube: recriá-lo replayaria o
+     brxPopIn a cada tick do robô (a família de flicker do ce5595f) e zeraria o
+     swipe do carrossel no meio do gesto. */
+  let frame=el.querySelector(".brx-modal-frame");
+  const sameTeam=Boolean(frame&&frame.dataset.team===brTeamPopup);
+  const prevTrack=sameTeam?frame.querySelector("#brTpCarousel"):null;
+  const prevScroll=prevTrack?prevTrack.scrollLeft:null;
+  if(!frame){
+    el.innerHTML='<div class="brx-modal-backdrop" onclick="brCloseTeamPopup()"></div>'+
+      '<div class="brx-modal-frame" role="dialog" aria-modal="true"></div>';
+    frame=el.querySelector(".brx-modal-frame");
+  }
+  frame.className="brx-modal-frame brx-team-frame"+brTeamThemeClass(brTeamPopup);
+  frame.dataset.team=brTeamPopup;
+  frame.setAttribute("aria-label","Estatísticas e confrontos do "+brTeamPopup);
+  frame.style.setProperty("--club",brTeamAccent(brTeamPopup));
+  frame.innerHTML='<button class="brx-modal-close" onclick="brCloseTeamPopup()" aria-label="Fechar">×</button>'+
+    brTeamPopupHTML(brTeamPopup);
+  el.classList.add("open"); brSyncModalBodyLock();
+  const track=document.getElementById("brTpCarousel");
+  if(track){
+    requestAnimationFrame(()=>{
+      if(prevScroll!=null) track.scrollLeft=prevScroll;
+      else{
+        const initial=Math.max(0,Number(track.dataset.initial)||0);
+        track.scrollLeft=initial*Math.max(1,track.clientWidth);
+      }
+      brTeamCarouselSync(track);
+    });
+  }
+}
+function brTeamPopupHTML(team){
+  const fixtures=brTeamFixtures(team);
+  const now=Date.now();
+  const pi=myParticipantIndex();
+  const official=brTableRows(false);
+  const offIdx=official.findIndex(t=>t.name===team);
+  const offRow=offIdx>=0?official[offIdx]:null;
+  let myPts=0;
+  if(pi!=null) fixtures.forEach(f=>{
+    if(!(f.ts&&now>=f.ts)) return;
+    const res=brScoringResult(f); if(!res) return;
+    const p=S_BR.palpites[brPredKey(pi,f.id)];
+    const d=p?scoreDetails(p,res):null;
+    if(d) myPts+=d.pts;
+  });
+  const inlineStats=
+    '<div class="brx-tp-inline-stats">'+
+      '<div class="brx-tp-inline-stat"><strong class="accent">'+(offIdx>=0?(offIdx+1)+'º':'—')+'</strong><span>tabela</span></div>'+
+      '<div class="brx-tp-inline-stat"><strong>'+(offRow?offRow.pts:'—')+'</strong><span>pts clube</span></div>'+
+      (pi!=null?'<div class="brx-tp-inline-stat" title="Seus pontos nos jogos deste clube"><strong>'+myPts+'</strong><span>seus pts</span></div>':'')+
+    '</div>';
+  const groups=brTeamConfrontations(team,now);
+  const initial=brTeamInitialConfrontation(groups);
+  const bolaoIds=new Set(fixtures.map(f=>f.id));
+  const slides=groups.map(group=>{
+    const games=group.games.slice(0,2).map((f,index)=>{
+      const isActive=group.activeGame&&group.activeGame.id===f.id;
+      return '<div class="brx-tp-slot'+(isActive?' brx-tp-next':'')+'">'+
+        '<div class="brx-tp-leg">'+(index===0?'1º confronto':'2º confronto')+'</div>'+
+        brMatchHTML(f,{interactive:bolaoIds.has(f.id),ns:BRX_TP_NS,showRound:true,focusTeam:team})+
+      '</div>';
+    }).join('');
+    return '<section class="brx-tp-slide" data-opponent="'+esc(group.opponent)+'" aria-label="Confrontos com '+esc(group.opponent)+'">'+
+      '<div class="brx-tp-slide-head">'+brLogo(group.opponent)+'<strong>'+esc(group.opponent)+'</strong><span class="brx-tp-slide-state'+group.stateClass+'">'+group.stateLabel+'</span></div>'+
+      '<div class="brx-tp-slide-games">'+games+'</div>'+
+    '</section>';
+  }).join('');
+  const carousel=groups.length?'<div class="brx-tp-carousel-shell">'+
+    '<div class="brx-tp-carousel-head">'+
+      '<span class="brx-sec-title">Confrontos do clube</span>'+
+      '<div class="brx-tp-carousel-nav" role="group" aria-label="Navegar pelos adversários">'+
+        '<button class="brx-tp-picker-btn" data-br-tp-dir="-1" type="button" onclick="brTeamCarouselStep(-1)" aria-label="Confronto anterior">‹</button>'+
+        '<button class="brx-tp-picker-btn" data-br-tp-dir="1" type="button" onclick="brTeamCarouselStep(1)" aria-label="Próximo confronto">›</button>'+
+      '</div>'+
+    '</div>'+
+    '<div id="brTpCarousel" class="brx-tp-carousel" data-index="'+initial+'" data-initial="'+initial+'" onscroll="brTeamCarouselSync(this)">'+slides+'</div>'+
+  '</div>':'';
+  return '<div class="brx-tp-head">'+
+      brTeamPopupLogo(team)+
+      '<div class="brx-tp-id">'+
+        '<div class="brx-tp-name">'+esc(team)+'</div>'+
+      '</div>'+
+      inlineStats+
+    '</div>'+
+    (groups.length?'<div class="brx-tp-games">'+carousel+'</div>':'<div class="brx-pop-empty">Nenhum jogo deste clube no Brasileirão.</div>');
+}
+function brTeamPopupLogo(team){
+  const src=BR_TEAM_LOGOS[team];
+  const special=team==="Athletico-PR"?' brx-tp-logo-athletico':'';
+  return src
+    ? '<img class="brx-tp-logo'+special+'" src="'+esc(src)+'" alt="">'
+    : '<span class="brx-logo-ph brx-tp-logo" style="font-size:.8rem">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
+}
+
 function renderBrTab(t){
   brEnsureLoaded();
   if(t==="config") return renderBrConfig();
@@ -10694,7 +11373,13 @@ function renderBrTab(t){
 
 function render(t){
   renderAuthControls();
-  if(isBrasileirao()){ renderBrTab(t); return; }
+  if(isBrasileirao()){
+    renderBrTab(t);
+    if(brTeamPopup) renderBrTeamPopup(); // popup do clube acompanha placar ao vivo
+    return;
+  }
+  // Trocou pra Copa com popup do returno aberto: fecha as duas camadas
+  if(brTeamPopup||brPopupGid){ brFlushTeamPopupInput(); brTeamPopup=null; brTeamPopupOpponent=null; brPopupGid=null; renderBrTeamPopup(); renderBrPopup(); }
   syncBrazilStoryHeader();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
@@ -14173,6 +14858,8 @@ document.addEventListener("click",event=>{
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
   if(event.key==="Escape"&&chartExpanded) closeChartModal();
+  // fecha uma camada por Esc: primeiro o popup de palpites, depois o do clube
+  if(event.key==="Escape"){ if(brPopupGid) brClosePopup(); else if(brTeamPopup) brCloseTeamPopup(); }
   handleScoreZeroTyping(event);
 });
 document.addEventListener("input",event=>{
