@@ -390,10 +390,12 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
 /* palpite inline na aba Jogos */
 .brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
-.brx-pal-pair{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.brx-pal-pair.scored{padding-right:22px}
-.brx-pal-score{position:absolute;right:0;top:50%;z-index:0;transform:translateY(-50%);pointer-events:none}
-.brx-pal-score .brx-pts{display:block;min-width:34px;padding:5px 8px 5px 20px;text-align:right}
+/* pontos como chip DENTRO do pill "ver todos" — contorno único, nada de badge
+   espiando por trás (o fundo translúcido do pill deixava a curva dele vazar) */
+.brx-open-pill .brx-pts{margin:-3px -7px -3px 0;padding:4px 8px;min-width:26px;text-align:center;box-sizing:border-box;border:none;font-size:.58rem}
+.brx-open-pill .brx-pts.ok{background:rgba(74,224,142,.22)}
+.brx-open-pill .brx-pts.inv{background:rgba(255,122,112,.22)}
+.brx-open-pill .brx-pts.zero{background:rgba(255,255,255,.13);color:#c2d2c8}
 .brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-pill-guess:hover{background:rgba(255,215,94,.18)}
 .brx-pill-guess.filled{display:inline-flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#9db3a6;text-transform:none;letter-spacing:0;font-weight:800}
@@ -421,7 +423,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-guess-ok .br-saved{min-width:0;font-size:.88rem;line-height:1}
 .brx-guess-ok .br-saved:not(:empty)+svg{display:none}
 .brx-guess-ok:has(.br-saved.err){border-color:rgba(255,122,112,.5);background:rgba(255,122,112,.12)}
-.brx-open-pill{position:relative;z-index:1;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.brx-open-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-open-pill:hover{background:rgba(255,255,255,.1);color:#fff}
 .brx-open-pill b{color:#fff;font-weight:950}
 .brx-open-pill.scored.hit{border-color:rgba(255,215,94,.46);background:rgba(255,215,94,.15);color:#ffe391}
@@ -10237,10 +10239,7 @@ function brMatchHTML(fx,opts){
       const d=(hasPal&&res)?scoreDetails(myPal,res):null;
       const ptsCls=d?brPtsCls(d):"";
       pal='<div class="brx-mid-pal">'+
-        '<div class="brx-pal-pair'+(d?' scored':'')+'">'+
-          (d?'<span class="brx-pal-score">'+brPtsBadge(d)+'</span>':'')+
-          '<button class="brx-open-pill'+(d?' scored '+ptsCls:'')+'" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+'</button>'+
-        '</div>'+
+        '<button class="brx-open-pill'+(d?' scored '+ptsCls:'')+'" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+(d?brPtsBadge(d):'')+'</button>'+
       '</div>';
       palCls=" brx-pal";
     }else if(pi!=null){
