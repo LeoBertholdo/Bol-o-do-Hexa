@@ -448,7 +448,6 @@ body.brx-modal-open{overflow:hidden}
 .brx-tp-head{display:flex;align-items:center;gap:12px;margin:2px 40px 16px 2px}
 .brx-tp-logo{width:56px;height:56px;object-fit:contain;flex:0 0 auto;filter:drop-shadow(0 8px 20px rgba(0,0,0,.55))}
 .brx-tp-id{min-width:0}
-.brx-tp-kicker{font-size:.58rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:950;color:var(--club,#ffd75e)}
 .brx-tp-name{font-size:1.34rem;font-weight:950;color:#fff;line-height:1.12;margin-top:2px}
 .brx-tp-form{display:flex;align-items:center;gap:8px;margin-top:7px}
 .brx-tp-form>span:last-child{font-size:.55rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;color:#71877b}
@@ -478,7 +477,9 @@ body.brx-modal-open{overflow:hidden}
 .brx-tp-slot{display:grid;min-height:0}
 .brx-tp-leg{margin:0 2px 5px;color:#71877b;font-size:.5rem;font-weight:950;letter-spacing:.65px;text-transform:uppercase}
 .brx-tp-next .brx-match{border-color:color-mix(in srgb,var(--club,#ffd75e) 42%,rgba(255,255,255,.08));box-shadow:0 0 0 1px color-mix(in srgb,var(--club,#ffd75e) 16%,transparent)}
-.brx-team-frame .brx-match:hover{border-color:color-mix(in srgb,var(--club,#ffd75e) 45%,rgba(255,255,255,.1))}
+/* :not(.live): sem ele este seletor (0,3,0) ganharia do .brx-match.live e o hover
+   trocaria a borda verde de jogo rolando pela cor do clube */
+.brx-team-frame .brx-match:not(.live):hover{border-color:color-mix(in srgb,var(--club,#ffd75e) 45%,rgba(255,255,255,.1))}
 .brx-rmini{font-size:.55rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
 .brx-favorite-picker-frame{max-width:620px;background:radial-gradient(700px 260px at 50% -110px,rgba(255,215,94,.15),transparent 68%),linear-gradient(180deg,#111c15,#0b1210)}
 .brx-favorite-picker-head{margin:1px 42px 17px 2px}
@@ -498,7 +499,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-team-click,.brx-club-btn{cursor:pointer}
 .brx-team-click:hover .brx-team-name{color:#fff}
 .brx-team-click:hover .brx-team-name,.brx-club-btn:hover .brx-club-name,.brx-club-btn:hover .brv2-club-name{text-decoration:underline dotted;text-underline-offset:3px;text-decoration-thickness:1px}
-.brx-team-click:focus-visible,.brx-club-btn:focus-visible{outline:2px solid rgba(255,215,94,.55);outline-offset:2px;border-radius:9px}
+.brx-team-click:focus-visible,.brx-club-btn:focus-visible{outline:3px solid rgba(255,223,0,.72);outline-offset:2px;border-radius:9px}
 .brx-pop-round{text-align:center;font-size:.6rem;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:#71877b;margin:0 0 12px}
 .brx-pop-head{display:flex;align-items:center;justify-content:center;gap:8px}
 .brx-pop-name{flex:1;min-width:0;font-weight:900;font-size:.84rem;color:#dcebe2;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -4207,7 +4208,9 @@ body.chart-modal-open{overflow:hidden}
 		}
 
 	/* TOAST */
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1000;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
+/* z-index acima dos modais do Brasileirão (1290/1300): o popup do clube tem
+   palpite inline, e o toast de "não salvou" precisa aparecer POR CIMA do backdrop */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(100px);background:#172033;color:#fff;padding:10px 18px;border-radius:999px;font-size:.84rem;font-weight:850;transition:transform .3s;z-index:1400;pointer-events:none;box-shadow:0 12px 28px rgba(0,0,0,.22)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 @media(max-width:980px){
@@ -10693,7 +10696,7 @@ function renderBrTabela(){
     const sg=t.sg>0?'<span class="brx-sgn up">+'+t.sg+'</span>':t.sg<0?'<span class="brx-sgn down">−'+Math.abs(t.sg)+'</span>':'0';
     return '<tr class="brx-tr'+zone+'" style="--i:'+i+'">'+
       '<td><span class="brx-poswrap"><span class="brx-posn">'+pos+'</span>'+delta+'</span></td>'+
-      '<td><span class="brx-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" aria-label="Ver todos os jogos do '+esc(t.name)+'" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brLogo(t.name)+'<span class="brx-club-name">'+esc(t.name)+'</span>'+(t.live?'<span class="livedot" title="jogando agora"></span>':'')+'</span></td>'+
+      '<td><span class="brx-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brLogo(t.name)+'<span class="brx-club-name">'+esc(t.name)+'</span>'+(t.live?'<span class="livedot" title="jogando agora"></span>':'')+'</span></td>'+
       '<td>'+t.pts+'</td><td>'+t.j+'</td><td>'+t.v+'</td><td>'+t.e+'</td><td>'+t.d+'</td>'+
       '<td>'+t.gp+'</td><td>'+t.gc+'</td><td>'+sg+'</td><td>'+form+'</td>'+
     '</tr>';
@@ -10812,7 +10815,7 @@ function renderBrTabelaV2(){
     const pointTitle=projected?'Pontos projetados: '+t.pts+'; na classificação atual: '+off.pts:'Pontos: '+t.pts;
     return '<tr class="'+rowClass+'">'+
       '<td class="brv2-col-pos"><span class="brv2-position"><span class="brv2-pos-number">'+pos+'</span>'+(projected?brTabelaV2Movement(delta):'')+(zone.label?'<span class="brv2-sr">'+zone.label+'</span>':'')+'</span></td>'+
-      '<th scope="row" class="brv2-col-club"><span class="brv2-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" aria-label="Ver todos os jogos do '+esc(t.name)+'" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
+      '<th scope="row" class="brv2-col-club"><span class="brv2-club brx-club-btn" role="button" tabindex="0" data-team="'+esc(t.name)+'" title="Ver todos os jogos do clube" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
       '<td class="brv2-col-points" title="'+esc(pointTitle)+'">'+t.pts+'</td>'+
       '<td class="brv2-col-stat brv2-col-j">'+t.j+'</td>'+
       '<td class="brv2-col-stat brv2-col-v">'+t.v+'</td>'+
@@ -10945,7 +10948,8 @@ async function brAutoSavePalpite(gid){
   /* gid pode vir prefixado (card do popup do clube); dados/banco usam o id real e,
      no fim, o pill do card gêmeo na aba atrás é atualizado junto. */
   const realGid=brRealGid(gid);
-  const syncPills=()=>{ brRefreshPill(gid); if(gid!==realGid) brRefreshPill(realGid); };
+  const fromPopup=gid!==realGid; // card do popup do clube → a aba atrás precisa re-renderizar no fechamento
+  const syncPills=()=>{ brRefreshPill(gid); if(fromPopup) brRefreshPill(realGid); };
   const fx=S_BR.fixtures.find(f=>f.id===realGid);
   if(fx&&fx.ts&&Date.now()>=fx.ts){ toast("Jogo já começou — palpite encerrado."); return; }
   const e1=document.getElementById('brS1_'+gid), e2=document.getElementById('brS2_'+gid);
@@ -10955,6 +10959,7 @@ async function brAutoSavePalpite(gid){
   if(r1===''&&r2===''){
     if(S_BR.palpites[key]){
       delete S_BR.palpites[key];
+      if(fromPopup) brTeamPopupDirty=true;
       brFlagSaved(gid,'salvando');
       const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").delete().eq("participant_index",pi).eq("game_id",realGid));
       brFlagSaved(gid, ok===false?'erro':'vazio');
@@ -10968,6 +10973,7 @@ async function brAutoSavePalpite(gid){
   if(String(pal.s1)!==r1) e1.value=pal.s1;
   if(String(pal.s2)!==r2) e2.value=pal.s2;
   S_BR.palpites[key]=pal;
+  if(fromPopup) brTeamPopupDirty=true;
   brFlagSaved(gid,'salvando');
   const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:realGid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
   if(ok===false){ brFlagSaved(gid,'erro'); toast("Não salvou (confira o login ou se o jogo já começou)."); }
@@ -11147,20 +11153,36 @@ function brTeamThemeClass(team){
 }
 let brTeamPopup=null;
 let brTeamPopupOpponent=null;
+let brTeamPopupDirty=false; // algum palpite foi salvo/apagado por um card do popup?
+/* Fechar por Esc destrói o input focado ANTES do change disparar (o auto-save mora
+   no change, e remoção de nó não dispara change) — então o flush chama o auto-save
+   direto, com o gid lido do id do input. Clique no backdrop/× já blura naturalmente
+   (o change nativo roda antes); isto cobre Esc e fechamentos programáticos. */
+function brFlushTeamPopupInput(){
+  const a=document.activeElement, m=document.getElementById("brTeamModal");
+  if(!a||!m||!m.contains(a)) return;
+  const mm=/^brS[12]_(.+)$/.exec(a.id||"");
+  if(mm) brAutoSavePalpite(mm[1]);
+}
 function brOpenTeamPopup(team){
   team=String(team||"").trim();
   if(!team) return;
   if(brFavoritePickerOpen){ brFavoritePickerOpen=false; renderBrFavoritePicker(); }
+  if(brTeamPopup==null) brTeamPopupDirty=false; // pivô de clube preserva o dirty
   if(brTeamPopup!==team) brTeamPopupOpponent=null;
   brTeamPopup=team;
   renderBrTeamPopup();
 }
 function brCloseTeamPopup(){
   if(brTeamPopup==null) return;
+  brFlushTeamPopupInput();
   brTeamPopup=null;
   brTeamPopupOpponent=null;
   renderBrTeamPopup();
-  render(activeTab); // palpite feito no popup reaparece no card gêmeo da aba
+  /* Só re-renderiza a aba se algo mudou aqui dentro (o pill gêmeo já sincroniza a
+     cada save) — um render incondicional apagaria palpite meio digitado num card
+     da aba atrás do overlay. */
+  if(brTeamPopupDirty){ brTeamPopupDirty=false; render(activeTab); }
 }
 /* Jogos que valem pontos no bolão, usados apenas para calcular "seus pts". */
 function brTeamFixtures(team){
@@ -11242,17 +11264,34 @@ function brTeamCarouselStep(dir){
 function renderBrTeamPopup(){
   const el=document.getElementById("brTeamModal"); if(!el) return;
   if(!brTeamPopup){ el.classList.remove("open"); el.innerHTML=""; brSyncModalBodyLock(); return; }
-  el.innerHTML='<div class="brx-modal-backdrop" onclick="brCloseTeamPopup()"></div>'+
-    '<div class="brx-modal-frame brx-team-frame'+brTeamThemeClass(brTeamPopup)+'" role="dialog" aria-modal="true" aria-label="Estatísticas e confrontos do '+esc(brTeamPopup)+'" style="--club:'+esc(brTeamAccent(brTeamPopup))+'">'+
-      '<button class="brx-modal-close" onclick="brCloseTeamPopup()" aria-label="Fechar">×</button>'+
-      brTeamPopupHTML(brTeamPopup)+
-    '</div>';
+  /* O placar ao vivo re-renderiza o popup aberto (render → renderBrTeamPopup). O
+     frame é PRESERVADO entre renders do mesmo clube: recriá-lo replayaria o
+     brxPopIn a cada tick do robô (a família de flicker do ce5595f) e zeraria o
+     swipe do carrossel no meio do gesto. */
+  let frame=el.querySelector(".brx-modal-frame");
+  const sameTeam=Boolean(frame&&frame.dataset.team===brTeamPopup);
+  const prevTrack=sameTeam?frame.querySelector("#brTpCarousel"):null;
+  const prevScroll=prevTrack?prevTrack.scrollLeft:null;
+  if(!frame){
+    el.innerHTML='<div class="brx-modal-backdrop" onclick="brCloseTeamPopup()"></div>'+
+      '<div class="brx-modal-frame" role="dialog" aria-modal="true"></div>';
+    frame=el.querySelector(".brx-modal-frame");
+  }
+  frame.className="brx-modal-frame brx-team-frame"+brTeamThemeClass(brTeamPopup);
+  frame.dataset.team=brTeamPopup;
+  frame.setAttribute("aria-label","Estatísticas e confrontos do "+brTeamPopup);
+  frame.style.setProperty("--club",brTeamAccent(brTeamPopup));
+  frame.innerHTML='<button class="brx-modal-close" onclick="brCloseTeamPopup()" aria-label="Fechar">×</button>'+
+    brTeamPopupHTML(brTeamPopup);
   el.classList.add("open"); brSyncModalBodyLock();
   const track=document.getElementById("brTpCarousel");
   if(track){
     requestAnimationFrame(()=>{
-      const initial=Math.max(0,Number(track.dataset.initial)||0);
-      track.scrollLeft=initial*Math.max(1,track.clientWidth);
+      if(prevScroll!=null) track.scrollLeft=prevScroll;
+      else{
+        const initial=Math.max(0,Number(track.dataset.initial)||0);
+        track.scrollLeft=initial*Math.max(1,track.clientWidth);
+      }
       brTeamCarouselSync(track);
     });
   }
@@ -11340,7 +11379,7 @@ function render(t){
     return;
   }
   // Trocou pra Copa com popup do returno aberto: fecha as duas camadas
-  if(brTeamPopup||brPopupGid){ brTeamPopup=null; brPopupGid=null; renderBrTeamPopup(); renderBrPopup(); }
+  if(brTeamPopup||brPopupGid){ brFlushTeamPopupInput(); brTeamPopup=null; brTeamPopupOpponent=null; brPopupGid=null; renderBrTeamPopup(); renderBrPopup(); }
   syncBrazilStoryHeader();
   const filmeBtn=document.getElementById("navFilmeBtn");
   if(filmeBtn) filmeBtn.hidden=!filmeAvailable();
