@@ -452,6 +452,163 @@ body.brx-modal-open{overflow:hidden}
   .brx-club-name{font-size:.74rem}
   .brx-tbl td{padding:8px 4px}
 }
+/* Tabela V2 do returno — prévia exclusiva para administradores. */
+body.br-mode .tab .panel.brv2-page{padding:0;background:transparent;border:0;box-shadow:none}
+body.br-mode .tab .card.brv2-shell{
+  --brv2-accent:#4ae08e;
+  position:relative;
+  overflow:hidden;
+  margin:0;
+  padding:0;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  background:linear-gradient(180deg,#111c15 0%,#09110d 100%);
+  box-shadow:0 28px 76px rgba(0,0,0,.4);
+}
+body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
+.brv2-header{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:22px;
+  align-items:center;
+  padding:24px 26px 21px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  background:
+    radial-gradient(520px 210px at 88% -35%,rgba(74,224,142,.22),transparent 68%),
+    linear-gradient(135deg,rgba(255,255,255,.035),transparent 60%);
+}
+.brv2-shell.is-projected .brv2-header{
+  background:
+    radial-gradient(520px 210px at 88% -35%,rgba(255,215,94,.18),transparent 68%),
+    linear-gradient(135deg,rgba(255,255,255,.035),transparent 60%);
+}
+.brv2-heading{min-width:0}
+.brv2-eyebrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:.59rem;font-weight:950;letter-spacing:1.35px;text-transform:uppercase;color:#8ba295}
+.brv2-preview{display:inline-flex;align-items:center;padding:4px 8px;border:1px solid rgba(255,215,94,.28);border-radius:999px;background:rgba(255,215,94,.09);color:#ffd75e;letter-spacing:.75px}
+.brv2-titleline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brv2-title{margin:0;color:#fff;font-size:clamp(1.5rem,3.2vw,2.18rem);font-weight:950;line-height:1.02;letter-spacing:-.03em}
+.brv2-live-status{display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:6px 10px;border:1px solid rgba(74,224,142,.25);border-radius:999px;background:rgba(74,224,142,.08);color:#63e89b;font-size:.61rem;font-weight:950;letter-spacing:.52px;text-transform:uppercase;white-space:nowrap}
+.brv2-live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(74,224,142,.1);animation:brxPulse 1.4s ease-in-out infinite}
+.brv2-subtitle{max-width:650px;margin:9px 0 0;color:#9db3a6;font-size:.78rem;font-weight:760;line-height:1.5}
+.brv2-switch{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  min-height:46px;
+  min-width:190px;
+  padding:11px 15px;
+  border:1px solid #ffd75e;
+  border-radius:12px;
+  background:linear-gradient(120deg,#ffd75e,#efb63d);
+  color:#251b00;
+  font-size:.76rem;
+  font-weight:950;
+  line-height:1.15;
+  box-shadow:0 12px 28px rgba(255,215,94,.16);
+  transition:transform .16s ease,filter .16s ease,background .16s ease;
+}
+.brv2-switch:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
+.brv2-switch:active:not(:disabled){transform:translateY(0)}
+.brv2-shell.is-projected .brv2-switch{border-color:rgba(74,224,142,.42);background:rgba(74,224,142,.1);color:#72eca4;box-shadow:none}
+.brv2-switch-mark{font-size:1rem;line-height:1}
+.brv2-summary{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding:12px 26px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.12)}
+.brv2-summary-item{display:inline-flex;align-items:baseline;gap:5px;color:#81978b;font-size:.66rem;font-weight:850;line-height:1.35}
+.brv2-summary-item strong{color:#dcebe2;font-size:.78rem;font-weight:950;font-variant-numeric:tabular-nums}
+.brv2-summary-item.live strong{color:#4ae08e}
+.brv2-summary-item.projected strong{color:#ffd75e}
+.brv2-summary-spacer{flex:1}
+.brv2-updated{color:#71877b;font-size:.61rem;font-weight:850;letter-spacing:.25px;white-space:nowrap}
+.brv2-context{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 26px;color:#9db3a6;font-size:.73rem;font-weight:780;line-height:1.5}
+.brv2-context strong{color:#e7f0ea;font-weight:950}
+.brv2-context-link{border:0;background:transparent;color:#ffd75e;padding:2px 0;font-size:.7rem;font-weight:950;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;white-space:nowrap}
+.brv2-alert{margin:0 26px 12px;padding:10px 12px;border:1px solid rgba(255,215,94,.25);border-radius:10px;background:rgba(255,215,94,.07);color:#e8cc78;font-size:.7rem;font-weight:800;line-height:1.45}
+.brv2-table-area{padding:0 18px 20px}
+.brv2-table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(0,0,0,.1);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+.brv2-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-variant-numeric:tabular-nums}
+.brv2-table caption,.brv2-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+.brv2-table thead th{position:sticky;top:0;z-index:2;padding:11px 8px;border-bottom:1px solid rgba(255,255,255,.1);background:#101a14;color:#71877b;font-size:.54rem;font-weight:950;letter-spacing:.75px;text-align:center;text-transform:uppercase;white-space:nowrap}
+.brv2-table thead th.brv2-col-club{text-align:left}
+.brv2-table abbr{text-decoration:none}
+.brv2-table tbody td,.brv2-table tbody th{height:53px;padding:8px;border-bottom:1px solid rgba(255,255,255,.065);background:rgba(255,255,255,.018);color:#bccdc3;font-size:.75rem;font-weight:820;text-align:center;transition:background .14s ease}
+.brv2-table tbody th{font-weight:inherit}
+.brv2-table tbody tr:last-child td,.brv2-table tbody tr:last-child th{border-bottom:0}
+.brv2-table tbody tr:hover td,.brv2-table tbody tr:hover th{background:rgba(255,255,255,.045)}
+.brv2-row.is-live td,.brv2-row.is-live th{background:rgba(74,224,142,.025)}
+.brv2-table .brv2-col-pos{position:relative;width:72px}
+.brv2-table .brv2-col-club{width:27%;text-align:left}
+.brv2-table .brv2-col-points{width:52px;color:#fff;font-size:.94rem;font-weight:950}
+.brv2-table .brv2-col-stat{width:42px}
+.brv2-table .brv2-col-sg{width:48px}
+.brv2-table .brv2-col-form{width:94px}
+.brv2-row.zone-top .brv2-col-pos:before,.brv2-row.zone-bottom .brv2-col-pos:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0}
+.brv2-row.zone-top .brv2-col-pos:before{background:#4ae08e}
+.brv2-row.zone-bottom .brv2-col-pos:before{background:#ff7a70}
+.brv2-position{display:flex;align-items:center;justify-content:center;gap:5px}
+.brv2-pos-number{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.065);color:#d4e1d9;font-size:.72rem;font-weight:950}
+.brv2-row.is-leader .brv2-pos-number{background:linear-gradient(135deg,#ffd75e,#e8a616);color:#251b00;box-shadow:0 5px 14px rgba(255,215,94,.22)}
+.brv2-shell.is-projected .brv2-row.moved .brv2-pos-number{border:1px solid rgba(255,215,94,.34);color:#ffd75e}
+.brv2-shell.is-projected .brv2-row.moved .brv2-col-points{color:#ffd75e}
+.brv2-move{display:inline-flex;align-items:center;justify-content:center;min-width:20px;font-size:.55rem;font-weight:950;line-height:1}
+.brv2-move.up{color:#4ae08e}.brv2-move.down{color:#ff8b82}.brv2-move.same{color:#52675b}
+.brv2-club{display:flex;align-items:center;gap:10px;min-width:0}
+.brv2-club .brx-logo,.brv2-club .brx-logo-ph{width:27px;height:27px;font-size:.48rem}
+.brv2-club-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+.brv2-club-name{overflow:hidden;color:#edf5f0;font-size:.78rem;font-weight:920;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
+.brv2-club-note{display:flex;align-items:center;gap:5px;color:#71877b;font-size:.51rem;font-weight:900;letter-spacing:.35px;line-height:1;text-transform:uppercase;white-space:nowrap}
+.brv2-club-note.live{color:#4ae08e}.brv2-club-note.projected{color:#d5b54e}
+.brv2-club-note-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:brxPulse 1.2s ease-in-out infinite}
+.brv2-sg.up{color:#4ae08e}.brv2-sg.down{color:#ff8b82}
+.brv2-form{display:inline-flex;justify-content:center;gap:5px}
+.brv2-form-dot{width:9px;height:9px;border-radius:50%;background:#425249}
+.brv2-form-dot.v{background:#4ae08e}.brv2-form-dot.e{background:#82958a}.brv2-form-dot.d{background:#ff7a70}
+.brv2-form-dot.projected{background:transparent;box-shadow:inset 0 0 0 1.5px currentColor}
+.brv2-form-dot.v.projected{color:#4ae08e}.brv2-form-dot.e.projected{color:#82958a}.brv2-form-dot.d.projected{color:#ff7a70}
+.brv2-form-dot.live{animation:brxPulse 1.2s ease-in-out infinite}
+.brv2-footer{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 8px 0}
+.brv2-legend{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
+.brv2-legend-item{display:inline-flex;align-items:center;gap:6px;color:#82968b;font-size:.61rem;font-weight:850}
+.brv2-zone{width:3px;height:14px;border-radius:999px}.brv2-zone.top{background:#4ae08e}.brv2-zone.bottom{background:#ff7a70}
+.brv2-method{max-width:510px;color:#687d71;font-size:.6rem;font-weight:760;line-height:1.5;text-align:right}
+.brv2-state{display:flex;min-height:350px;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:34px 20px;text-align:center}
+.brv2-state h3{color:#fff;font-size:1.06rem;font-weight:950}.brv2-state p{max-width:440px;color:#8ba295;font-size:.76rem;line-height:1.55}
+.brv2-retry{min-height:42px;margin-top:4px;padding:9px 14px;border:1px solid rgba(255,215,94,.42);border-radius:10px;background:rgba(255,215,94,.1);color:#ffd75e;font-size:.72rem;font-weight:950}
+@media(max-width:760px){
+  .brv2-header{grid-template-columns:1fr;padding:20px;gap:16px}
+  .brv2-switch{justify-self:start}
+  .brv2-summary,.brv2-context{padding-left:20px;padding-right:20px}
+  .brv2-table-area{padding-left:10px;padding-right:10px}
+  .brv2-table .brv2-col-gp,.brv2-table .brv2-col-gc{display:none}
+}
+@media(max-width:560px){
+  body.br-mode .tab .card.brv2-shell{border-radius:14px}
+  .brv2-header{padding:18px 16px 16px}
+  .brv2-title{font-size:1.48rem}
+  .brv2-switch{width:100%;min-width:0}
+  .brv2-summary{padding:11px 16px;gap:7px 13px}
+  .brv2-summary-spacer{display:none}
+  .brv2-updated{width:100%}
+  .brv2-context{align-items:flex-start;flex-direction:column;padding:13px 16px}
+  .brv2-alert{margin-left:16px;margin-right:16px}
+  .brv2-table-area{padding:0 0 16px}
+  .brv2-table-wrap{border-left:0;border-right:0;border-radius:0}
+  .brv2-table .brv2-col-v,.brv2-table .brv2-col-e,.brv2-table .brv2-col-d,.brv2-table .brv2-col-form{display:none}
+  .brv2-table .brv2-col-pos{width:68px}
+  .brv2-table .brv2-col-club{width:auto}
+  .brv2-table .brv2-col-points{width:48px}
+  .brv2-table .brv2-col-stat,.brv2-table .brv2-col-sg{width:42px}
+  .brv2-table thead th{padding:10px 5px}
+  .brv2-table tbody td,.brv2-table tbody th{height:51px;padding:7px 5px}
+  .brv2-club{gap:7px}.brv2-club .brx-logo,.brv2-club .brx-logo-ph{width:24px;height:24px}
+  .brv2-club-name{font-size:.73rem}
+  .brv2-method{max-width:none;text-align:left}
+  .brv2-footer{padding-left:14px;padding-right:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  .brv2-live-dot,.brv2-form-dot.live,.brv2-club-note-dot{animation:none}
+  .brv2-switch{transition:none}
+}
 /* responsivo */
 @media(max-width:760px){
   .brx-hero{padding:16px}
@@ -5050,6 +5207,46 @@ function applyCopaLiveRows(rows){
   });
   copaLive=next;
 }
+/* A mesma leitura alimenta o returno. Antes, o polling/Re​altime atualizava
+   apenas copaLive e a classificação do Brasileirão ficava presa na primeira foto. */
+function applyBrLiveRows(rows){
+  if(!Array.isArray(rows)) return false;
+  const next={};
+  rows.forEach(row=>{
+    const id=String(row.game_id||"");
+    if(id.startsWith("BR_")) next[id]=row;
+  });
+  // O robô atualiza `last_synced_at` mesmo quando o placar não mudou. Ele não
+  // entra na comparação para que esse detalhe técnico não recrie a tela inteira
+  // a cada polling e faça os escudos piscarem.
+  const snapshot=source=>Object.values(source||{}).map(row=>[
+    String(row.game_id||""),
+    row.status_short||"",
+    row.elapsed??"",
+    row.goals_home??"",
+    row.goals_away??"",
+    row.is_locked_by_admin?1:0
+  ].join("\u0001")).sort().join("\u0002");
+  const changed=snapshot(S_BR.live)!==snapshot(next);
+  S_BR.live=next;
+  S_BR.fixtures.forEach(fx=>{ fx.live=next[fx.id]||null; });
+  if(changed&&(S_BR.loaded||S_BR.fixtures.length)) brLastUpdatedAt=new Date();
+  return changed;
+}
+function applyBrResultRows(rows){
+  if(!Array.isArray(rows)) return false;
+  const next={};
+  rows.forEach(row=>{
+    const id=String(row.game_id||"");
+    if(id.startsWith("BR_")&&row.s1!=null&&row.s2!=null) next[id]={s1:row.s1,s2:row.s2};
+  });
+  const snapshot=source=>Object.entries(source||{}).map(([id,row])=>
+    [id,row.s1??"",row.s2??""].join("\u0001")
+  ).sort().join("\u0002");
+  const changed=snapshot(S_BR.results)!==snapshot(next);
+  S_BR.results=next;
+  return changed;
+}
 async function fetchCopaLiveHistoryRemote(){
   if(!remoteClient) return null;
   return remoteClient.from("live_score_history")
@@ -5081,7 +5278,11 @@ function queueCopaLiveRefresh(){
       if(hist&&!hist.error) applyCopaLiveHistoryRows(hist.data);
       if(!resp||resp.error) return;
       applyCopaLiveRows(resp.data);
-      if(["home","ranking","grupos","jogos"].includes(activeTab)&&!shouldDeferRemoteRender()) render(activeTab);
+      const brLiveChanged=applyBrLiveRows(resp.data);
+      const shouldRender=isBrasileirao()
+        ? brLiveChanged
+        : ["home","ranking","grupos","jogos"].includes(activeTab);
+      if(shouldRender&&!shouldDeferRemoteRender()) render(activeTab);
     }catch(e){console.warn(e);}
   },400);
 }
@@ -5117,7 +5318,11 @@ async function loadRemoteData(showToast=false,options={}){
     fetchCopaLiveHistoryRemote()
   ]);
   // Placar ao vivo e histórico são opcionais: erro aqui não derruba a sincronização principal.
-  if(liveScores&&!liveScores.error) applyCopaLiveRows(liveScores.data);
+  let brLiveChanged=false;
+  if(liveScores&&!liveScores.error){
+    applyCopaLiveRows(liveScores.data);
+    brLiveChanged=applyBrLiveRows(liveScores.data);
+  }
   if(liveHistory&&!liveHistory.error) applyCopaLiveHistoryRows(liveHistory.data);
   syncCopaLiveRealtime();
   const failed=[profiles,settings,results,predictions,podium,actualPodio].find(r=>r.error);
@@ -5138,6 +5343,7 @@ async function loadRemoteData(showToast=false,options={}){
     podium:podium.data,
     actualPodio:actualPodio.data
   });
+  const brResultsChanged=applyBrResultRows(results.data);
   if(currentProfile&&!palSelectionTouched) palPi=currentProfile.participant_index;
   setSyncStatus("ok",currentProfile?`Online como ${participantName(currentProfile.participant_index)}`:"Conta sem participante vinculado.");
   if(showToast&&currentProfile) toast("Bolão online sincronizado.");
@@ -5146,7 +5352,13 @@ async function loadRemoteData(showToast=false,options={}){
   if(activeTab==="api-test"){
     await loadApiTestRemote(false,{silent:true,skipRender:true});
   }
-  if(!deferRender) render(activeTab);
+  // Na aba do Brasileirão, o polling só troca o DOM quando há uma mudança que
+  // ela mostra. As leituras iniciais e manuais continuam sempre renderizando.
+  // Assim os escudos e a tabela não piscam a cada ciclo de 30 segundos.
+  const shouldRender=isBrasileirao()
+    ? options.source!=="poll"||brLiveChanged||brResultsChanged
+    : true;
+  if(!deferRender&&shouldRender) render(activeTab);
 }
 
 function authValue(source,field){
@@ -9402,6 +9614,9 @@ function goTab(t){
   document.getElementById(`tab-${t}`).classList.add("active");
   const idx=tabs.indexOf(t);
   if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
+  // Cada nova entrada na Tabela V2 começa na classificação ao vivo. Re​renders
+  // de polling/Re​altime preservam a escolha enquanto a pessoa permanece na aba.
+  if(isBrasileirao()&&t==="grupos"&&activeTab!=="grupos") brTabelaV2Mode="oficial";
   activeTab=t;
   render(t);
   // Toda aba abre no topo ao trocar de página: sem isso, a posição de rolagem
@@ -9516,6 +9731,8 @@ const BR_BASE={
 let S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
 let brLoading=false;
 let brStatus=null;
+let brLastUpdatedAt=null;
+let brProjectionError=null;
 
 function brSetStatus(kind,text){ brStatus={kind,text}; }
 function brDateParts(utc){
@@ -9572,7 +9789,7 @@ function brCanonicalTeam(name){
 function brLogo(team){
   const src=BR_TEAM_LOGOS[team];
   return src
-    ? '<img class="brx-logo" src="'+esc(src)+'" alt="'+esc(team||"")+'" loading="lazy">'
+    ? '<img class="brx-logo" src="'+esc(src)+'" alt="'+esc(team||"")+'">'
     : '<span class="brx-logo-ph">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
 }
 function brPredKey(pi,gid){ return pi+"_"+gid; }
@@ -9614,24 +9831,27 @@ async function brLoadRemote(opts={}){
   if(!remoteClient||!remoteSession){ brSetStatus("warn","Entre no bolão para ver o Brasileirão."); return; }
   const [mapRows,liveRows,predRows,resRows]=await Promise.all([
     remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,kickoff_utc,home_team,away_team,round_label").eq("tournament",BR_TOURNAMENT).order("kickoff_utc",{ascending:true}),
-    remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin"),
+    remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin,last_synced_at"),
     remoteClient.from("brasileirao_predictions").select("participant_index,game_id,s1,s2"),
     remoteClient.from("results").select("game_id,s1,s2")
   ]);
-  const failed=[mapRows,liveRows,predRows,resRows].find(r=>r&&r.error);
+  // A classificação ao vivo continua disponível mesmo se apenas a consulta de
+  // palpites falhar. Nesse caso, a V2 desabilita a projeção sem bloquear a tabela.
+  const failed=[mapRows,liveRows,resRows].find(r=>r&&r.error);
   if(failed){ brSetStatus("err",remoteErrorText(failed.error)); if(!opts.skipRender) render(activeTab); return; }
+  brProjectionError=predRows&&predRows.error?remoteErrorText(predRows.error):null;
   const liveBy=Object.fromEntries((liveRows.data||[]).map(r=>[r.game_id,r]));
   S_BR.fixtures=(mapRows.data||[]).map(row=>{
     const p=brDateParts(row.kickoff_utc);
     return {id:row.game_id,t1:brCanonicalTeam(row.home_team),t2:brCanonicalTeam(row.away_team),utc:row.kickoff_utc,date:p.date,time:p.time,dshort:p.short,dateKey:p.key,ts:p.ts,roundLabel:row.round_label||"",round:brRoundNum(row.round_label),live:liveBy[row.game_id]||null};
   }).sort((a,b)=>(a.ts-b.ts)||String(a.id).localeCompare(b.id));
   brTagLateFixtures(S_BR.fixtures);
-  S_BR.palpites=Object.fromEntries((predRows.data||[]).map(r=>[brPredKey(r.participant_index,r.game_id),{s1:r.s1,s2:r.s2}]));
+  if(!brProjectionError) S_BR.palpites=Object.fromEntries((predRows.data||[]).map(r=>[brPredKey(r.participant_index,r.game_id),{s1:r.s1,s2:r.s2}]));
   S_BR.results=Object.fromEntries((resRows.data||[]).map(r=>[r.game_id,{s1:r.s1,s2:r.s2}]));
-  S_BR.live=liveBy;
+  applyBrLiveRows(liveRows.data||[]);
   S_BR.loaded=true;
   const n=brBolaoFixtures().length, lateN=brLateFixtures().length;
-  brSetStatus(n?"ok":"warn", n?(n+" jogos valendo no bolão"+(lateN?" ("+(n-lateN)+" do returno + "+lateN+(lateN>1?" adiados":" adiado")+" de rodadas passadas).":" (rodadas "+BR_FIRST_ROUND+"–38).")):(isAdmin()?"Nenhum jogo mapeado. Use “Mapear temporada 2026”.":"Nenhum jogo mapeado ainda."));
+  brSetStatus(n?(brProjectionError?"warn":"ok"):"warn", n?(n+" jogos valendo no bolão"+(lateN?" ("+(n-lateN)+" do returno + "+lateN+(lateN>1?" adiados":" adiado")+" de rodadas passadas).":" (rodadas "+BR_FIRST_ROUND+"–38).")+(brProjectionError?" A projeção está temporariamente indisponível.":"")):(isAdmin()?"Nenhum jogo mapeado. Use “Mapear temporada 2026”.":"Nenhum jogo mapeado ainda."));
   if(!opts.skipRender) render(activeTab);
 }
 function brEnsureLoaded(){
@@ -10077,6 +10297,145 @@ function renderBrTabela(){
   '</div></div>';
 }
 
+/* ---- Tabela V2 (prévia admin) -----------------------------------------------
+   A versão atual continua intacta para participantes. A V2 abre sempre na
+   classificação ao vivo e usa um único botão para alternar a projeção. */
+let brTabelaV2Mode="oficial";
+function brTabelaV2UpdatedLabel(){
+  if(!brLastUpdatedAt) return "atualizando agora";
+  try{
+    return "atualizada às "+new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:BR_TZ}).format(brLastUpdatedAt);
+  }catch(e){ return "atualizada agora"; }
+}
+function brTableLogoDecorative(team){
+  const src=BR_TEAM_LOGOS[team];
+  return src
+    ? '<img class="brx-logo" src="'+esc(src)+'" alt="" aria-hidden="true">'
+    : '<span class="brx-logo-ph" aria-hidden="true">'+esc(String(team||"?").slice(0,3).toUpperCase())+'</span>';
+}
+function brTabelaV2Movement(delta){
+  if(delta>0) return '<span class="brv2-move up" title="Subiu '+delta+(delta===1?' posição':' posições')+'"><span aria-hidden="true">↑'+delta+'</span><span class="brv2-sr">Subiu '+delta+(delta===1?' posição':' posições')+'</span></span>';
+  if(delta<0){ const n=Math.abs(delta); return '<span class="brv2-move down" title="Caiu '+n+(n===1?' posição':' posições')+'"><span aria-hidden="true">↓'+n+'</span><span class="brv2-sr">Caiu '+n+(n===1?' posição':' posições')+'</span></span>'; }
+  return '<span class="brv2-move same" title="Sem mudança"><span aria-hidden="true">·</span><span class="brv2-sr">Sem mudança de posição</span></span>';
+}
+function brTabelaV2Form(form){
+  if(!form.length) return '<span class="brv2-form" role="img" aria-label="Sem jogos do returno na conta"><span class="brv2-form-dot" aria-hidden="true"></span></span>';
+  const names={v:"vitória",e:"empate",d:"derrota"};
+  const aria=form.map(f=>names[f.r]+(f.kind==="proj"?" projetada":f.kind==="live"?" ao vivo":"")).join(", ");
+  return '<span class="brv2-form" role="img" aria-label="Forma no returno: '+esc(aria)+'">'+form.map(f=>
+    '<span class="brv2-form-dot '+f.r+(f.kind==="proj"?' projected':f.kind==="live"?' live':'')+'" title="'+esc(f.tip)+'" aria-hidden="true"></span>'
+  ).join('')+'</span>';
+}
+function brRetryTabelaV2(){
+  S_BR.loaded=false;
+  brStatus=null;
+  renderBrTabelaV2();
+  brLoadRemote();
+}
+function brToggleTabelaV2(){
+  if(brProjectionError){ toast("A projeção está temporariamente indisponível."); return; }
+  if(myParticipantIndex()==null){ toast("Vincule a conta a um participante para projetar a tabela."); return; }
+  brTabelaV2Mode=brTabelaV2Mode==="proj"?"oficial":"proj";
+  renderBrTabelaV2();
+  requestAnimationFrame(()=>document.getElementById("brV2Toggle")?.focus());
+}
+function renderBrTabelaV2(){
+  const el=document.getElementById("tab-grupos"); if(!el) return;
+  // Defesa em profundidade da feature flag: mudança de papel ou logout remove
+  // imediatamente a prévia e devolve a experiência já publicada.
+  if(!isAdmin()){ renderBrTabela(); return; }
+  const hadToggleFocus=document.activeElement&&document.activeElement.id==="brV2Toggle";
+  if(!remoteSession){ el.innerHTML=brLoginPrompt(); return; }
+  if(!S_BR.loaded){
+    const failed=brStatus&&brStatus.kind==="err";
+    el.innerHTML='<div class="panel brv2-page"><div class="card brv2-shell"><div class="brv2-state" aria-busy="'+(failed?'false':'true')+'">'+
+      (failed?'<div class="brx-state-ico" aria-hidden="true">⚠️</div><h3>Não foi possível carregar a classificação</h3><p>'+esc(brStatus.text||"Tente novamente em instantes.")+'</p><button type="button" class="brv2-retry" onclick="brRetryTabelaV2()">Tentar novamente</button>':'<div class="brx-spinner" aria-hidden="true"></div><h3>Carregando a classificação ao vivo…</h3><p>Buscando jogos, resultados e placares em andamento.</p>')+
+    '</div></div></div>';
+    return;
+  }
+  const fixtures=brBolaoFixtures();
+  if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
+  const pi=myParticipantIndex();
+  if(brTabelaV2Mode!=="proj") brTabelaV2Mode="oficial";
+  if(pi==null||brProjectionError) brTabelaV2Mode="oficial";
+  const projected=brTabelaV2Mode==="proj";
+  const official=brTableRows(false);
+  const rows=projected?brTableRows(true):official;
+  const officialByTeam={}; official.forEach((t,i)=>{ officialByTeam[t.name]={...t,pos:i+1}; });
+  const now=Date.now();
+  const isFilled=f=>{ const p=pi==null?null:S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; };
+  const scored=fixtures.filter(f=>brFixtureScore(f)).length;
+  const liveN=fixtures.filter(f=>{ const s=brFixtureScore(f); return s&&s.live; }).length;
+  const myProjected=pi==null?0:fixtures.filter(f=>!brFixtureScore(f)&&isFilled(f)).length;
+  const openWithoutPick=pi==null?0:fixtures.filter(f=>!(f.ts&&now>=f.ts)&&!brFixtureScore(f)&&!isFilled(f)).length;
+  const counted=projected?scored+myProjected:scored;
+  const title=projected?"Projeção com meus palpites":"Classificação ao vivo";
+  const subtitle=projected
+    ? "Resultados iniciados prevalecem; nos jogos futuros, entram os palpites que você já preencheu."
+    : "Resultados confirmados e placares em andamento entram automaticamente na classificação.";
+  const context=projected
+    ? '<strong>'+myProjected+(myProjected===1?' palpite incluído':' palpites incluídos')+'</strong>. Jogos futuros sem palpite permanecem na classificação atual.'+(openWithoutPick?' Faltam <strong>'+openWithoutPick+(openWithoutPick===1?' palpite':' palpites')+'</strong>.':'')
+    : 'Parciais ao vivo recalculam <strong>pontos, saldo e posições</strong>. O resultado confirmado fecha a conta.';
+  const switchDisabled=pi==null||Boolean(brProjectionError);
+  const switchLabel=projected?"Voltar para tabela ao vivo":"Ver com meus palpites";
+  const lastZoneStart=Math.max(5,rows.length-3);
+  const body=rows.map((t,i)=>{
+    const pos=i+1;
+    const off=officialByTeam[t.name]||{pos,pts:t.pts};
+    const delta=off.pos-pos;
+    const rowClass='brv2-row'+(pos===1?' is-leader':'')+(pos<=4?' zone-top':pos>=lastZoneStart?' zone-bottom':'')+(t.live?' is-live':'')+(projected&&delta?' moved':'');
+    const clubNote=t.live
+      ? '<span class="brv2-club-note live"><span class="brv2-club-note-dot" aria-hidden="true"></span>jogando agora</span>'
+      : projected&&t.proj
+        ? '<span class="brv2-club-note projected">'+t.proj+(t.proj===1?' jogo projetado':' jogos projetados')+'</span>'
+        : '';
+    const sg=t.sg>0?'<span class="brv2-sg up">+'+t.sg+'</span>':t.sg<0?'<span class="brv2-sg down">−'+Math.abs(t.sg)+'</span>':'0';
+    const pointTitle=projected?'Pontos projetados: '+t.pts+'; na tabela ao vivo: '+off.pts:'Pontos: '+t.pts;
+    return '<tr class="'+rowClass+'">'+
+      '<td class="brv2-col-pos"><span class="brv2-position"><span class="brv2-pos-number">'+pos+'</span>'+(projected?brTabelaV2Movement(delta):'')+'</span></td>'+
+      '<th scope="row" class="brv2-col-club"><span class="brv2-club">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
+      '<td class="brv2-col-points" title="'+esc(pointTitle)+'">'+t.pts+'</td>'+
+      '<td class="brv2-col-stat brv2-col-j">'+t.j+'</td>'+
+      '<td class="brv2-col-stat brv2-col-v">'+t.v+'</td>'+
+      '<td class="brv2-col-stat brv2-col-e">'+t.e+'</td>'+
+      '<td class="brv2-col-stat brv2-col-d">'+t.d+'</td>'+
+      '<td class="brv2-col-stat brv2-col-gp">'+t.gp+'</td>'+
+      '<td class="brv2-col-stat brv2-col-gc">'+t.gc+'</td>'+
+      '<td class="brv2-col-sg">'+sg+'</td>'+
+      '<td class="brv2-col-form">'+brTabelaV2Form(t.form)+'</td>'+
+    '</tr>';
+  }).join('');
+  const head='<tr><th scope="col" class="brv2-col-pos">Pos.</th><th scope="col" class="brv2-col-club">Clube</th><th scope="col" class="brv2-col-points"><abbr title="Pontos">P</abbr></th><th scope="col" class="brv2-col-stat brv2-col-j"><abbr title="Jogos">J</abbr></th><th scope="col" class="brv2-col-stat brv2-col-v"><abbr title="Vitórias">V</abbr></th><th scope="col" class="brv2-col-stat brv2-col-e"><abbr title="Empates">E</abbr></th><th scope="col" class="brv2-col-stat brv2-col-d"><abbr title="Derrotas">D</abbr></th><th scope="col" class="brv2-col-stat brv2-col-gp"><abbr title="Gols pró">GP</abbr></th><th scope="col" class="brv2-col-stat brv2-col-gc"><abbr title="Gols contra">GC</abbr></th><th scope="col" class="brv2-col-sg"><abbr title="Saldo de gols">SG</abbr></th><th scope="col" class="brv2-col-form">Forma no returno</th></tr>';
+  el.innerHTML='<div class="panel brv2-page"><div class="card brv2-shell'+(projected?' is-projected':'')+'">'+
+    '<header class="brv2-header">'+
+      '<div class="brv2-heading">'+
+        '<div class="brv2-eyebrow"><span>Brasileirão 2026 · Returno</span><span class="brv2-preview">Prévia V2 · Admin</span></div>'+
+        '<div class="brv2-titleline"><h2 class="brv2-title" id="brV2Title">'+title+'</h2><span class="brv2-live-status"><span class="brv2-live-dot" aria-hidden="true"></span>'+(liveN?liveN+(liveN===1?' jogo ao vivo':' jogos ao vivo'):'atualização automática')+'</span></div>'+
+        '<p class="brv2-subtitle">'+subtitle+'</p>'+
+      '</div>'+
+      '<button type="button" class="brv2-switch" id="brV2Toggle" aria-pressed="'+projected+'" aria-controls="brV2Table" onclick="brToggleTabelaV2()"'+(switchDisabled?' disabled':'')+'><span>'+switchLabel+'</span><span class="brv2-switch-mark" aria-hidden="true">'+(projected?'←':'→')+'</span></button>'+
+    '</header>'+
+    '<div class="brv2-summary" role="status" aria-live="polite">'+
+      '<span class="brv2-summary-item"><strong>'+counted+'</strong> de '+fixtures.length+' jogos na conta</span>'+
+      (liveN?'<span class="brv2-summary-item live"><strong>'+liveN+'</strong> ao vivo agora</span>':'')+
+      (projected?'<span class="brv2-summary-item projected"><strong>'+myProjected+'</strong> pelos seus palpites</span>':'')+
+      '<span class="brv2-summary-spacer"></span><span class="brv2-updated">'+brTabelaV2UpdatedLabel()+'</span>'+
+    '</div>'+
+    '<div class="brv2-context" id="brV2Context"><span>'+context+'</span></div>'+
+    (brProjectionError?'<div class="brv2-alert" role="status">A classificação ao vivo está disponível, mas seus palpites não puderam ser carregados agora.</div>':'')+
+    '<div class="brv2-table-area">'+
+      '<div class="brv2-table-wrap"><table class="brv2-table" id="brV2Table" aria-describedby="brV2Context"><caption>'+title+' do Campeonato Brasileiro 2026</caption><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'+
+      '<footer class="brv2-footer">'+
+        '<div class="brv2-legend"><span class="brv2-legend-item"><span class="brv2-zone top" aria-hidden="true"></span>G4</span><span class="brv2-legend-item"><span class="brv2-zone bottom" aria-hidden="true"></span>Z4</span>'+
+          (projected?'<span class="brv2-legend-item"><span class="brv2-form-dot v projected" aria-hidden="true"></span>resultado pelo seu palpite</span>':'')+
+        '</div>'+
+        '<p class="brv2-method">Base consolidada antes da rodada 19 + jogos do returno e adiados remarcados. Critérios: pontos, vitórias, saldo de gols e gols pró.</p>'+
+      '</footer>'+
+    '</div>'+
+  '</div></div>';
+  if(hadToggleFocus) requestAnimationFrame(()=>document.getElementById("brV2Toggle")?.focus());
+}
+
 /* ---- Palpites (auto-save em brasileirao_predictions; trava no apito inicial) ----
    Salva no onchange de cada campo, SEM re-renderizar a aba — assim os palpites das
    outras partidas nunca são apagados. Feedback por um ✓ na própria linha. */
@@ -10298,7 +10657,7 @@ function renderBrTab(t){
   if(t==="home") return renderBrHome();
   if(t==="ranking") return renderBrRanking();
   if(t==="palpites") return renderBrJogos();
-  if(t==="grupos") return renderBrTabela();
+  if(t==="grupos") return isAdmin()?renderBrTabelaV2():renderBrTabela();
   return renderBrHome();
 }
 
