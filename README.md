@@ -78,6 +78,7 @@ Tabelas utilizadas:
 | `podium_predictions` | Palpites de pódio por participante |
 | `profiles` | Mapeamento usuário Supabase → índice de participante + role |
 | `invited_emails` | Lista de e-mails autorizados a vincular cada participante |
+| `user_team_preferences` | Time do coração por usuário e competição |
 
 O cliente faz polling a cada **30 segundos** (`REMOTE_POLL_MS`) para manter o ranking atualizado automaticamente. Usuários com `role = "admin"` podem editar resultados, configurações, permissões e convites.
 
@@ -156,6 +157,8 @@ const DEFAULT_PARTICIPANTS = ["Leo B.", "Leo C.", "Gabriel", "Gustavo", "Otávio
 ```
 
 Em modo online, cada participante faz login com sua conta Supabase e vincula o usuário ao seu índice na lista. Em modo offline, a seleção é feita diretamente na aba **Configurações**.
+
+No Brasileirão, cada conta também pode escolher um **time do coração**. A Home passa a mostrar os dois próximos jogos do clube, posição na tabela e forma recente. A preferência é salva no Supabase com RLS por usuário e mantém um fallback local no aparelho; para projetos existentes, aplique `supabase_favorite_team.sql`.
 
 ---
 
