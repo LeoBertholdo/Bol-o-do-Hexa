@@ -185,8 +185,14 @@ body.br-mode:before{
   background-image:repeating-linear-gradient(90deg,transparent 0 84px,rgba(255,255,255,.02) 84px 168px);
   background-size:auto;
 }
-body.br-mode nav{background:rgba(8,13,10,.88);border-bottom:1px solid rgba(255,255,255,.07)}
-body.br-mode nav button{color:#7e9488}
+.hero.is-brasileirao header{padding-top:13px;padding-bottom:12px}
+.hero.is-brasileirao h1{font-size:clamp(1.42rem,3vw,2.05rem)}
+.hero.is-brasileirao .brand-kicker{font-size:.6rem;margin-bottom:3px}
+.hero.is-brasileirao .btn-save,.hero.is-brasileirao .btn-auth{padding:8px 10px}
+.hero.is-brasileirao .comp-toggle button{padding:5px 11px}
+body.br-mode nav{padding-top:5px;padding-bottom:5px;background:rgba(8,13,10,.88);border-bottom:1px solid rgba(255,255,255,.07)}
+body.br-mode nav button{padding:8px 10px;color:#7e9488;font-size:.76rem}
+body.br-mode .tab{padding-top:12px}
 body.br-mode nav button:hover{color:#cfe2d6}
 body.br-mode nav button.active{color:#ffd75e;background:rgba(255,215,94,.09);border-color:rgba(255,215,94,.22);box-shadow:none}
 body.br-mode .tab.active{animation:brxFadeIn .28s ease}
@@ -225,7 +231,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-rounds::-webkit-scrollbar{display:none}
 .brx-chip{position:relative;flex:0 0 auto;min-width:46px;padding:9px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#9fb3a7;font-weight:950;font-size:.78rem;line-height:1;text-align:center;transition:background .15s,color .15s,border-color .15s}
 .brx-chip:hover{background:rgba(255,255,255,.09);color:#dcebe2}
-.brx-chip.done{color:#5d7267;background:rgba(255,255,255,.02)}
+.brx-chip.done{color:#75897d;background:rgba(255,255,255,.02)}
 .brx-chip.active{background:linear-gradient(120deg,#ffd75e,#f0b53a);border-color:#ffd75e;color:#241a00}
 .brx-chip.live:after{content:"";position:absolute;top:4px;right:4px;width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
 @keyframes brxPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.72)}}
@@ -246,7 +252,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-score{display:flex;align-items:center;gap:7px;font-weight:950;font-size:1.22rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
 .brx-score span{color:#5d7267;font-weight:700;font-size:.9rem}
 .brx-score.live{color:#4ae08e}
-.brx-tag{font-size:.56rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
+.brx-tag{font-size:.6rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
 .brx-tag.live{display:inline-flex;align-items:center;gap:5px;color:#4ae08e}
 .brx-tag.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
 .brx-tag.late{color:#e0b34a;white-space:nowrap}
@@ -275,7 +281,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-stat.wide{grid-column:1/-1}
 .brx-stat strong{display:block;font-size:1.4rem;font-weight:950;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
 .brx-stat strong em{font-style:normal;font-size:.82rem;color:#71877b;font-weight:900}
-.brx-stat span{display:block;margin-top:6px;font-size:.56rem;text-transform:uppercase;letter-spacing:.6px;color:#8ba295;font-weight:900}
+.brx-stat span{display:block;margin-top:6px;font-size:.6rem;text-transform:uppercase;letter-spacing:.6px;color:#8ba295;font-weight:900}
 /* progresso */
 .brx-progress{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:80px}
 .brx-progress i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#00a851,#4ae08e)}
@@ -295,7 +301,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 @keyframes brxPop{0%{transform:scale(.4)}70%{transform:scale(1.3)}100%{transform:scale(1)}}
 .brx-locked{background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(255,255,255,.005))}
 .brx-locked-line{display:flex;flex-direction:column;align-items:center;line-height:1.25}
-.brx-your{font-size:.56rem;font-weight:900;color:#71877b;text-transform:uppercase;white-space:nowrap}
+.brx-your{font-size:.6rem;font-weight:900;color:#71877b;text-transform:uppercase;white-space:nowrap}
 .brx-real{font-weight:950;font-size:1.08rem;color:#fff;font-variant-numeric:tabular-nums}
 .brx-pts{display:inline-block;font-size:.6rem;font-weight:950;padding:3px 8px;border-radius:999px;line-height:1}
 .brx-pts.hit{background:linear-gradient(120deg,#ffd75e,#f0b53a);color:#241a00}
@@ -322,8 +328,12 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-guess-box .br-inp{width:36px;height:32px;border:none;border-radius:9px;background:transparent;font-size:.98rem}
 .brx-guess-box .br-inp::placeholder{color:#4d6156;font-weight:900}
 .brx-guess-box .br-inp:focus{border:none;box-shadow:none;background:rgba(255,215,94,.08)}
-.brx-guess-ok{width:26px;height:26px;margin-left:4px;border-radius:50%;border:1px solid rgba(74,224,142,.28);background:rgba(74,224,142,.09);color:#4ae08e;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;flex:0 0 auto}
-.brx-guess-ok:hover{background:rgba(74,224,142,.2);border-color:rgba(74,224,142,.5)}
+/* neutro enquanto o palpite está incompleto — verde é reservado pro "pronto pra confirmar" (.ready),
+   senão o ✓ em repouso parece "já salvo" */
+.brx-guess-ok{width:32px;height:32px;margin-left:4px;border-radius:50%;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#8ba295;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s,color .15s;flex:0 0 auto}
+.brx-guess-ok:hover{background:rgba(255,255,255,.11)}
+.brx-guess-ok.ready{border-color:rgba(74,224,142,.28);background:rgba(74,224,142,.09);color:#4ae08e}
+.brx-guess-ok.ready:hover{background:rgba(74,224,142,.2);border-color:rgba(74,224,142,.5)}
 /* o estado de save ("…"/"✓"/"!") mora DENTRO do botão ✓: quando tem texto, ele
    substitui o ícone — sem layout shift e sem dois checks lado a lado */
 .brx-guess-ok .br-saved{min-width:0;font-size:.88rem;line-height:1}
@@ -341,7 +351,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-modal-close{position:absolute;top:12px;right:12px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#cfe2d6;font-size:1.15rem;font-weight:900;cursor:pointer;display:grid;place-items:center;z-index:3}
 .brx-modal-close:hover{background:rgba(255,255,255,.12);color:#fff}
 body.brx-modal-open{overflow:hidden}
-.brx-pop-round{text-align:center;font-size:.58rem;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:#71877b;margin:0 0 12px}
+.brx-pop-round{text-align:center;font-size:.6rem;font-weight:950;letter-spacing:.9px;text-transform:uppercase;color:#71877b;margin:0 0 12px}
 .brx-pop-head{display:flex;align-items:center;justify-content:center;gap:8px}
 .brx-pop-name{flex:1;min-width:0;font-weight:900;font-size:.84rem;color:#dcebe2;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .brx-pop-name.home{text-align:right}
@@ -350,7 +360,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-score{min-width:52px;text-align:center;font-weight:950;font-size:1.42rem;line-height:1;color:#fff;font-variant-numeric:tabular-nums}
 .brx-pop-score.live{color:#4ae08e}
 .brx-pop-score .x{color:#5d7267;font-weight:700;font-size:1rem;margin:0 2px}
-.brx-pop-status{text-align:center;font-size:.58rem;font-weight:950;letter-spacing:.7px;text-transform:uppercase;color:#71877b;margin:9px 0 2px}
+.brx-pop-status{text-align:center;font-size:.6rem;font-weight:950;letter-spacing:.7px;text-transform:uppercase;color:#71877b;margin:9px 0 2px}
 .brx-pop-status.live{color:#4ae08e;display:flex;align-items:center;justify-content:center;gap:6px}
 .brx-pop-status.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
 .brx-pop-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:14px}
@@ -358,7 +368,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-col.win{background:rgba(74,224,142,.07);border-color:rgba(74,224,142,.26)}
 .brx-pop-cap{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;font-size:.62rem;font-weight:950;color:#c8d9ce;margin-bottom:10px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .brx-pop-col.win .brx-pop-cap{color:#4ae08e}
-.brx-pop-cap .n{font-size:.5rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b}
+.brx-pop-cap .n{font-size:.6rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b}
 .brx-pop-col.win .brx-pop-cap .n{color:#4ae08e}
 .brx-pop-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 5px}
 .brx-pchip{display:flex;flex-direction:column;align-items:center;gap:3px;width:56px}
@@ -470,61 +480,53 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
   position:relative;
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
-  gap:22px;
+  gap:16px;
   align-items:center;
-  padding:24px 26px 21px;
+  padding:14px 18px;
   border-bottom:1px solid rgba(255,255,255,.08);
   background:
-    radial-gradient(520px 210px at 88% -35%,rgba(74,224,142,.22),transparent 68%),
+    radial-gradient(420px 160px at 88% -45%,rgba(74,224,142,.18),transparent 68%),
     linear-gradient(135deg,rgba(255,255,255,.035),transparent 60%);
 }
 .brv2-shell.is-projected .brv2-header{
   background:
-    radial-gradient(520px 210px at 88% -35%,rgba(255,215,94,.18),transparent 68%),
+    radial-gradient(420px 160px at 88% -45%,rgba(255,215,94,.15),transparent 68%),
     linear-gradient(135deg,rgba(255,255,255,.035),transparent 60%);
 }
 .brv2-heading{min-width:0}
-.brv2-eyebrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:9px;font-size:.59rem;font-weight:950;letter-spacing:1.35px;text-transform:uppercase;color:#8ba295}
-.brv2-preview{display:inline-flex;align-items:center;padding:4px 8px;border:1px solid rgba(255,215,94,.28);border-radius:999px;background:rgba(255,215,94,.09);color:#ffd75e;letter-spacing:.75px}
-.brv2-titleline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.brv2-title{margin:0;color:#fff;font-size:clamp(1.5rem,3.2vw,2.18rem);font-weight:950;line-height:1.02;letter-spacing:-.03em}
-.brv2-live-status{display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:6px 10px;border:1px solid rgba(74,224,142,.25);border-radius:999px;background:rgba(74,224,142,.08);color:#63e89b;font-size:.61rem;font-weight:950;letter-spacing:.52px;text-transform:uppercase;white-space:nowrap}
-.brv2-live-dot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(74,224,142,.1);animation:brxPulse 1.4s ease-in-out infinite}
-.brv2-subtitle{max-width:650px;margin:9px 0 0;color:#9db3a6;font-size:.78rem;font-weight:760;line-height:1.5}
+.brv2-eyebrow{display:flex;align-items:center;margin-bottom:4px;font-size:.51rem;font-weight:950;letter-spacing:1px;text-transform:uppercase;color:#8ba295}
+.brv2-preview{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid rgba(255,215,94,.24);border-radius:999px;background:rgba(255,215,94,.07);color:#ffd75e;letter-spacing:.65px}
+.brv2-titleline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.brv2-title{margin:0;color:#fff;font-size:clamp(1.12rem,2.1vw,1.38rem);font-weight:950;line-height:1;letter-spacing:-.02em}
+.brv2-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;color:#71877b;font-size:.59rem;font-weight:850;line-height:1.3}
+.brv2-meta-live{display:inline-flex;align-items:center;gap:6px;color:#4ae08e;font-weight:950}
+.brv2-meta-projected{color:#d7b84e;font-weight:950}
+.brv2-meta-sep{color:#42564a}
+.brv2-live-dot{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px rgba(74,224,142,.09);animation:brxPulse 1.4s ease-in-out infinite}
 .brv2-switch{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:9px;
-  min-height:46px;
-  min-width:190px;
-  padding:11px 15px;
+  gap:7px;
+  min-height:38px;
+  min-width:132px;
+  padding:8px 12px;
   border:1px solid #ffd75e;
-  border-radius:12px;
+  border-radius:9px;
   background:linear-gradient(120deg,#ffd75e,#efb63d);
   color:#251b00;
-  font-size:.76rem;
+  font-size:.68rem;
   font-weight:950;
   line-height:1.15;
-  box-shadow:0 12px 28px rgba(255,215,94,.16);
+  box-shadow:0 8px 20px rgba(255,215,94,.13);
   transition:transform .16s ease,filter .16s ease,background .16s ease;
 }
 .brv2-switch:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-1px)}
 .brv2-switch:active:not(:disabled){transform:translateY(0)}
 .brv2-shell.is-projected .brv2-switch{border-color:rgba(74,224,142,.42);background:rgba(74,224,142,.1);color:#72eca4;box-shadow:none}
-.brv2-switch-mark{font-size:1rem;line-height:1}
-.brv2-summary{display:flex;align-items:center;gap:8px 18px;flex-wrap:wrap;padding:12px 26px;border-bottom:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.12)}
-.brv2-summary-item{display:inline-flex;align-items:baseline;gap:5px;color:#81978b;font-size:.66rem;font-weight:850;line-height:1.35}
-.brv2-summary-item strong{color:#dcebe2;font-size:.78rem;font-weight:950;font-variant-numeric:tabular-nums}
-.brv2-summary-item.live strong{color:#4ae08e}
-.brv2-summary-item.projected strong{color:#ffd75e}
-.brv2-summary-spacer{flex:1}
-.brv2-updated{color:#71877b;font-size:.61rem;font-weight:850;letter-spacing:.25px;white-space:nowrap}
-.brv2-context{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 26px;color:#9db3a6;font-size:.73rem;font-weight:780;line-height:1.5}
-.brv2-context strong{color:#e7f0ea;font-weight:950}
-.brv2-context-link{border:0;background:transparent;color:#ffd75e;padding:2px 0;font-size:.7rem;font-weight:950;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;white-space:nowrap}
-.brv2-alert{margin:0 26px 12px;padding:10px 12px;border:1px solid rgba(255,215,94,.25);border-radius:10px;background:rgba(255,215,94,.07);color:#e8cc78;font-size:.7rem;font-weight:800;line-height:1.45}
-.brv2-table-area{padding:0 18px 20px}
+.brv2-switch-mark{font-size:.9rem;line-height:1}
+.brv2-alert{margin:12px 18px 0;padding:9px 11px;border:1px solid rgba(255,215,94,.25);border-radius:9px;background:rgba(255,215,94,.07);color:#e8cc78;font-size:.67rem;font-weight:800;line-height:1.4}
+.brv2-table-area{padding:14px 14px 18px}
 .brv2-table-wrap{overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(0,0,0,.1);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
 .brv2-table{width:100%;border-collapse:separate;border-spacing:0;table-layout:fixed;font-variant-numeric:tabular-nums}
 .brv2-table caption,.brv2-sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
@@ -535,16 +537,21 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
 .brv2-table tbody th{font-weight:inherit}
 .brv2-table tbody tr:last-child td,.brv2-table tbody tr:last-child th{border-bottom:0}
 .brv2-table tbody tr:hover td,.brv2-table tbody tr:hover th{background:rgba(255,255,255,.045)}
-.brv2-row.is-live td,.brv2-row.is-live th{background:rgba(74,224,142,.025)}
+.brv2-row.is-live td,.brv2-row.is-live th{background:rgba(74,224,142,.055)}
 .brv2-table .brv2-col-pos{position:relative;width:72px}
 .brv2-table .brv2-col-club{width:27%;text-align:left}
 .brv2-table .brv2-col-points{width:52px;color:#fff;font-size:.94rem;font-weight:950}
 .brv2-table .brv2-col-stat{width:42px}
 .brv2-table .brv2-col-sg{width:48px}
 .brv2-table .brv2-col-form{width:94px}
-.brv2-row.zone-top .brv2-col-pos:before,.brv2-row.zone-bottom .brv2-col-pos:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0}
-.brv2-row.zone-top .brv2-col-pos:before{background:#4ae08e}
-.brv2-row.zone-bottom .brv2-col-pos:before{background:#ff7a70}
+.brv2-row.zone-lib-group .brv2-col-pos:before,
+.brv2-row.zone-lib-pre .brv2-col-pos:before,
+.brv2-row.zone-sula .brv2-col-pos:before,
+.brv2-row.zone-relegation .brv2-col-pos:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:0 4px 4px 0}
+.brv2-row.zone-lib-group .brv2-col-pos:before{background:#60a5fa}
+.brv2-row.zone-lib-pre .brv2-col-pos:before{background:#c4b5fd}
+.brv2-row.zone-sula .brv2-col-pos:before{background:#fbbf24}
+.brv2-row.zone-relegation .brv2-col-pos:before{background:#fb7185}
 .brv2-position{display:flex;align-items:center;justify-content:center;gap:5px}
 .brv2-pos-number{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.065);color:#d4e1d9;font-size:.72rem;font-weight:950}
 .brv2-row.is-leader .brv2-pos-number{background:linear-gradient(135deg,#ffd75e,#e8a616);color:#251b00;box-shadow:0 5px 14px rgba(255,215,94,.22)}
@@ -557,8 +564,9 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
 .brv2-club-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
 .brv2-club-name{overflow:hidden;color:#edf5f0;font-size:.78rem;font-weight:920;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
 .brv2-club-note{display:flex;align-items:center;gap:5px;color:#71877b;font-size:.51rem;font-weight:900;letter-spacing:.35px;line-height:1;text-transform:uppercase;white-space:nowrap}
-.brv2-club-note.live{color:#4ae08e}.brv2-club-note.projected{color:#d5b54e}
+.brv2-club-note.live{width:max-content;padding:2px 5px;border-radius:999px;background:rgba(74,224,142,.1);color:#4ae08e}.brv2-club-note.projected{color:#d5b54e}
 .brv2-club-note-dot{width:5px;height:5px;border-radius:50%;background:currentColor;animation:brxPulse 1.2s ease-in-out infinite}
+.brv2-live-score{color:#dff9ea;font-weight:950;letter-spacing:0}
 .brv2-sg.up{color:#4ae08e}.brv2-sg.down{color:#ff8b82}
 .brv2-form{display:inline-flex;justify-content:center;gap:5px}
 .brv2-form-dot{width:9px;height:9px;border-radius:50%;background:#425249}
@@ -569,29 +577,27 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
 .brv2-footer{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 8px 0}
 .brv2-legend{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}
 .brv2-legend-item{display:inline-flex;align-items:center;gap:6px;color:#82968b;font-size:.61rem;font-weight:850}
-.brv2-zone{width:3px;height:14px;border-radius:999px}.brv2-zone.top{background:#4ae08e}.brv2-zone.bottom{background:#ff7a70}
+.brv2-zone{width:3px;height:14px;border-radius:999px}
+.brv2-zone.lib-group{background:#60a5fa}.brv2-zone.lib-pre{background:#c4b5fd}.brv2-zone.sula{background:#fbbf24}.brv2-zone.relegation{background:#fb7185}
 .brv2-method{max-width:510px;color:#687d71;font-size:.6rem;font-weight:760;line-height:1.5;text-align:right}
 .brv2-state{display:flex;min-height:350px;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:34px 20px;text-align:center}
 .brv2-state h3{color:#fff;font-size:1.06rem;font-weight:950}.brv2-state p{max-width:440px;color:#8ba295;font-size:.76rem;line-height:1.55}
 .brv2-retry{min-height:42px;margin-top:4px;padding:9px 14px;border:1px solid rgba(255,215,94,.42);border-radius:10px;background:rgba(255,215,94,.1);color:#ffd75e;font-size:.72rem;font-weight:950}
 @media(max-width:760px){
-  .brv2-header{grid-template-columns:1fr;padding:20px;gap:16px}
-  .brv2-switch{justify-self:start}
-  .brv2-summary,.brv2-context{padding-left:20px;padding-right:20px}
+  .brv2-header{padding:12px 14px;gap:12px}
   .brv2-table-area{padding-left:10px;padding-right:10px}
   .brv2-table .brv2-col-gp,.brv2-table .brv2-col-gc{display:none}
 }
 @media(max-width:560px){
   body.br-mode .tab .card.brv2-shell{border-radius:14px}
-  .brv2-header{padding:18px 16px 16px}
-  .brv2-title{font-size:1.48rem}
-  .brv2-switch{width:100%;min-width:0}
-  .brv2-summary{padding:11px 16px;gap:7px 13px}
-  .brv2-summary-spacer{display:none}
-  .brv2-updated{width:100%}
-  .brv2-context{align-items:flex-start;flex-direction:column;padding:13px 16px}
-  .brv2-alert{margin-left:16px;margin-right:16px}
-  .brv2-table-area{padding:0 0 16px}
+  .brv2-header{padding:11px 12px;gap:9px}
+  .brv2-titleline{display:block}
+  .brv2-title{font-size:1.08rem}
+  .brv2-meta{margin-top:4px;font-size:.54rem}
+  .brv2-switch{min-width:0;padding:8px 10px;font-size:.63rem}
+  .brv2-switch-mark{display:none}
+  .brv2-alert{margin-left:12px;margin-right:12px}
+  .brv2-table-area{padding:10px 0 16px}
   .brv2-table-wrap{border-left:0;border-right:0;border-radius:0}
   .brv2-table .brv2-col-v,.brv2-table .brv2-col-e,.brv2-table .brv2-col-d,.brv2-table .brv2-col-form{display:none}
   .brv2-table .brv2-col-pos{width:68px}
@@ -621,6 +627,10 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
   .brx-mid{min-width:72px}
   .brx-pal .brx-mid{min-width:112px}
   .br-inp{width:42px;height:40px}
+  /* toque: 36px de ALTURA nos campos e no ✓; largura enxuta pra sobrar espaço pros nomes */
+  .brx-guess-box .br-inp{width:34px;height:36px}
+  .brx-guess-box>span{padding:0 1px}
+  .brx-guess-ok{width:36px;height:36px;margin-left:2px}
   .brx-round-title{min-width:86px;font-size:.94rem}
 }
 .btn-save:active,.icon-btn:active,.btn-ok:active{transform:translateY(1px)}
@@ -4494,14 +4504,14 @@ body.chart-modal-open{overflow:hidden}
 </div>
 
 <nav id="nav">
-  <button class="active" onclick="goTab('home')">Início</button>
-  <button onclick="goTab('ranking')">Ranking</button>
-  <button onclick="goTab('grupos')">Grupos</button>
-  <button onclick="goTab('jogos')">Jogos</button>
-  <button onclick="goTab('palpites')">Palpites</button>
-  <button onclick="goTab('config')">Config</button>
-  <button id="navFilmeBtn" hidden onclick="goTab('filme')">Histórico</button>
-  <button id="navCinemaBtn" hidden onclick="goTab('cinema')">Cinema</button>
+  <button data-tab="home" class="active" onclick="goTab('home')">Início</button>
+  <button data-tab="ranking" onclick="goTab('ranking')">Ranking</button>
+  <button data-tab="grupos" onclick="goTab('grupos')">Grupos</button>
+  <button data-tab="jogos" onclick="goTab('jogos')">Jogos</button>
+  <button data-tab="palpites" onclick="goTab('palpites')">Palpites</button>
+  <button data-tab="config" onclick="goTab('config')">Config</button>
+  <button data-tab="filme" id="navFilmeBtn" hidden onclick="goTab('filme')">Histórico</button>
+  <button data-tab="cinema" id="navCinemaBtn" hidden onclick="goTab('cinema')">Cinema</button>
 </nav>
 
 <div id="tab-home" class="tab active"></div>
@@ -9610,10 +9620,11 @@ function goTab(t){
   const tabs=["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
   if(!tabs.includes(t)) t="home";
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
-  document.querySelectorAll("nav button").forEach(el=>el.classList.remove("active"));
+  const nav=document.getElementById("nav");
+  if(nav) nav.querySelectorAll("button").forEach(el=>el.classList.remove("active"));
   document.getElementById(`tab-${t}`).classList.add("active");
-  const idx=tabs.indexOf(t);
-  if(idx>=0) document.querySelectorAll("nav button")[idx].classList.add("active");
+  const activeNavButton=nav&&nav.querySelector('[data-tab="'+t+'"]');
+  if(activeNavButton) activeNavButton.classList.add("active");
   // Cada nova entrada na Tabela V2 começa na classificação ao vivo. Re​renders
   // de polling/Re​altime preservam a escolha enquanto a pessoa permanece na aba.
   if(isBrasileirao()&&t==="grupos"&&activeTab!=="grupos") brTabelaV2Mode="oficial";
@@ -9661,10 +9672,19 @@ function applyCompChrome(){
   if(h1) h1.textContent=br?"Bolão do Brasileirão":"Bolão da Copa 2026";
   const nav=document.getElementById("nav");
   if(nav){
-    const btns=nav.querySelectorAll("button");
-    if(btns[2]) btns[2].textContent=br?"Tabela":"Grupos";
-    // Palpites sai da nav no Brasileirão: agora se palpita na própria aba Jogos.
-    if(btns[4]) btns[4].hidden=br;
+    const byTab=tab=>nav.querySelector('[data-tab="'+tab+'"]');
+    const gruposBtn=byTab("grupos");
+    if(gruposBtn) gruposBtn.textContent=br?"Tabela":"Grupos";
+    // No returno, os quatro destinos principais acompanham a jornada real:
+    // consultar jogos, conferir o ranking e então abrir a classificação.
+    const order=br
+      ? ["home","jogos","ranking","grupos","palpites","config","filme","cinema"]
+      : ["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
+    order.forEach(tab=>{ const button=byTab(tab); if(button) nav.appendChild(button); });
+    // Palpites já está dentro de Jogos; Config continua acessível pelos fluxos
+    // internos, mas sai da navegação principal do Brasileirão.
+    const palpitesBtn=byTab("palpites"); if(palpitesBtn) palpitesBtn.hidden=br;
+    const configBtn=byTab("config"); if(configBtn) configBtn.hidden=br;
   }
   if(br){
     const f=document.getElementById("navFilmeBtn"); if(f) f.hidden=true;
@@ -9821,8 +9841,9 @@ function brFixtureScore(fx){
   if(res&&res.s1!=null) return {s1:res.s1,s2:res.s2,final:true,live:false};
   const lv=fx.live;
   if(lv&&lv.goals_home!=null&&lv.goals_away!=null){
-    if(BR_FINAL_STATUSES.has(lv.status_short)) return {s1:lv.goals_home,s2:lv.goals_away,final:true,live:false};
-    if(BR_LIVE_STATUSES.has(lv.status_short)) return {s1:lv.goals_home,s2:lv.goals_away,final:false,live:true,elapsed:lv.elapsed};
+    const status=String(lv.status_short||"").trim().toUpperCase();
+    if(BR_FINAL_STATUSES.has(status)) return {s1:lv.goals_home,s2:lv.goals_away,final:true,live:false};
+    if(BR_LIVE_STATUSES.has(status)) return {s1:lv.goals_home,s2:lv.goals_away,final:false,live:true,elapsed:lv.elapsed};
   }
   return null;
 }
@@ -9975,10 +9996,10 @@ function brMatchHTML(fx,opts){
         '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b><span class="brx-pencil" aria-hidden="true">'+BRX_SVG_PENCIL+'</span>':'Palpitar')+'</button>'+
         '<div class="brx-guess-edit">'+
           '<span class="brx-guess-box">'+
-            '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
+            '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v1+'" oninput="brGuessReady(\''+gid+'\')" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
             '<span>×</span>'+
-            '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
-            '<button class="brx-guess-ok" onclick="brToggleGuess(\''+gid+'\',false)" aria-label="Concluir palpite" title="Pronto"><span class="br-saved" id="brSaved_'+gid+'"></span>'+BRX_SVG_CHECK+'</button>'+
+            '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v2+'" oninput="brGuessReady(\''+gid+'\')" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
+            '<button class="brx-guess-ok'+(done?' ready':'')+'" onclick="brToggleGuess(\''+gid+'\',false)" aria-label="Concluir palpite" title="Pronto"><span class="br-saved" id="brSaved_'+gid+'"></span>'+BRX_SVG_CHECK+'</button>'+
           '</span>'+
         '</div>'+
       '</div>';
@@ -10194,8 +10215,8 @@ function brTableRows(withPalpites){
   const T=n=>{
     if(!teams[n]){
       const b=BR_BASE[n];
-      teams[n]=b?{name:n,pts:b[0],j:b[1],v:b[2],e:b[3],d:b[4],gp:b[5],gc:b[6],sg:0,proj:0,live:false,form:[]}
-               :{name:n,pts:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0,proj:0,live:false,form:[]};
+      teams[n]=b?{name:n,pts:b[0],j:b[1],v:b[2],e:b[3],d:b[4],gp:b[5],gc:b[6],sg:0,proj:0,live:false,liveInfo:null,form:[]}
+               :{name:n,pts:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0,proj:0,live:false,liveInfo:null,form:[]};
     }
     return teams[n];
   };
@@ -10211,7 +10232,11 @@ function brTableRows(withPalpites){
       if(!p||p.s1==null||p.s2==null) return;
       s1=+p.s1; s2=+p.s2; kind="proj";
     } else return;
-    if(kind==="live"){ home.live=true; away.live=true; }
+    if(kind==="live"){
+      home.live=true; away.live=true;
+      home.liveInfo={score:s1+"–"+s2,elapsed:sc.elapsed};
+      away.liveInfo={score:s2+"–"+s1,elapsed:sc.elapsed};
+    }
     if(kind==="proj"){ home.proj++; away.proj++; }
     home.j++; away.j++; home.gp+=s1; home.gc+=s2; away.gp+=s2; away.gc+=s1;
     if(s1>s2){ home.v++; away.d++; home.pts+=3; }
@@ -10302,10 +10327,10 @@ function renderBrTabela(){
    classificação ao vivo e usa um único botão para alternar a projeção. */
 let brTabelaV2Mode="oficial";
 function brTabelaV2UpdatedLabel(){
-  if(!brLastUpdatedAt) return "atualizando agora";
+  if(!brLastUpdatedAt) return "agora";
   try{
-    return "atualizada às "+new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:BR_TZ}).format(brLastUpdatedAt);
-  }catch(e){ return "atualizada agora"; }
+    return "às "+new Intl.DateTimeFormat("pt-BR",{hour:"2-digit",minute:"2-digit",hourCycle:"h23",timeZone:BR_TZ}).format(brLastUpdatedAt);
+  }catch(e){ return "agora"; }
 }
 function brTableLogoDecorative(team){
   const src=BR_TEAM_LOGOS[team];
@@ -10325,6 +10350,14 @@ function brTabelaV2Form(form){
   return '<span class="brv2-form" role="img" aria-label="Forma no returno: '+esc(aria)+'">'+form.map(f=>
     '<span class="brv2-form-dot '+f.r+(f.kind==="proj"?' projected':f.kind==="live"?' live':'')+'" title="'+esc(f.tip)+'" aria-hidden="true"></span>'
   ).join('')+'</span>';
+}
+function brTabelaV2Zone(pos,total){
+  const relegationStart=Math.max(5,total-3);
+  if(pos<=4) return {className:"zone-lib-group",label:"zona da fase de grupos da Libertadores"};
+  if(pos===5) return {className:"zone-lib-pre",label:"zona da fase preliminar da Libertadores"};
+  if(pos<=11) return {className:"zone-sula",label:"faixa-base da Copa Sul-Americana"};
+  if(pos>=relegationStart) return {className:"zone-relegation",label:"zona de rebaixamento"};
+  return {className:"",label:""};
 }
 function brRetryTabelaV2(){
   S_BR.loaded=false;
@@ -10349,7 +10382,7 @@ function renderBrTabelaV2(){
   if(!S_BR.loaded){
     const failed=brStatus&&brStatus.kind==="err";
     el.innerHTML='<div class="panel brv2-page"><div class="card brv2-shell"><div class="brv2-state" aria-busy="'+(failed?'false':'true')+'">'+
-      (failed?'<div class="brx-state-ico" aria-hidden="true">⚠️</div><h3>Não foi possível carregar a classificação</h3><p>'+esc(brStatus.text||"Tente novamente em instantes.")+'</p><button type="button" class="brv2-retry" onclick="brRetryTabelaV2()">Tentar novamente</button>':'<div class="brx-spinner" aria-hidden="true"></div><h3>Carregando a classificação ao vivo…</h3><p>Buscando jogos, resultados e placares em andamento.</p>')+
+      (failed?'<div class="brx-state-ico" aria-hidden="true">⚠️</div><h3>Não foi possível carregar a classificação</h3><p>'+esc(brStatus.text||"Tente novamente em instantes.")+'</p><button type="button" class="brv2-retry" onclick="brRetryTabelaV2()">Tentar novamente</button>':'<div class="brx-spinner" aria-hidden="true"></div><h3>Carregando a classificação…</h3><p>Buscando jogos, resultados e placares em andamento.</p>')+
     '</div></div></div>';
     return;
   }
@@ -10362,37 +10395,29 @@ function renderBrTabelaV2(){
   const official=brTableRows(false);
   const rows=projected?brTableRows(true):official;
   const officialByTeam={}; official.forEach((t,i)=>{ officialByTeam[t.name]={...t,pos:i+1}; });
-  const now=Date.now();
   const isFilled=f=>{ const p=pi==null?null:S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; };
   const scored=fixtures.filter(f=>brFixtureScore(f)).length;
   const liveN=fixtures.filter(f=>{ const s=brFixtureScore(f); return s&&s.live; }).length;
   const myProjected=pi==null?0:fixtures.filter(f=>!brFixtureScore(f)&&isFilled(f)).length;
-  const openWithoutPick=pi==null?0:fixtures.filter(f=>!(f.ts&&now>=f.ts)&&!brFixtureScore(f)&&!isFilled(f)).length;
   const counted=projected?scored+myProjected:scored;
-  const title=projected?"Projeção com meus palpites":"Classificação ao vivo";
-  const subtitle=projected
-    ? "Resultados iniciados prevalecem; nos jogos futuros, entram os palpites que você já preencheu."
-    : "Resultados confirmados e placares em andamento entram automaticamente na classificação.";
-  const context=projected
-    ? '<strong>'+myProjected+(myProjected===1?' palpite incluído':' palpites incluídos')+'</strong>. Jogos futuros sem palpite permanecem na classificação atual.'+(openWithoutPick?' Faltam <strong>'+openWithoutPick+(openWithoutPick===1?' palpite':' palpites')+'</strong>.':'')
-    : 'Parciais ao vivo recalculam <strong>pontos, saldo e posições</strong>. O resultado confirmado fecha a conta.';
+  const title=projected?"Meus palpites":"Classificação";
   const switchDisabled=pi==null||Boolean(brProjectionError);
-  const switchLabel=projected?"Voltar para tabela ao vivo":"Ver com meus palpites";
-  const lastZoneStart=Math.max(5,rows.length-3);
+  const switchLabel=projected?"Classificação":"Meus palpites";
   const body=rows.map((t,i)=>{
     const pos=i+1;
     const off=officialByTeam[t.name]||{pos,pts:t.pts};
     const delta=off.pos-pos;
-    const rowClass='brv2-row'+(pos===1?' is-leader':'')+(pos<=4?' zone-top':pos>=lastZoneStart?' zone-bottom':'')+(t.live?' is-live':'')+(projected&&delta?' moved':'');
+    const zone=brTabelaV2Zone(pos,rows.length);
+    const rowClass='brv2-row'+(pos===1?' is-leader':'')+(zone.className?' '+zone.className:'')+(t.live?' is-live':'')+(projected&&delta?' moved':'');
     const clubNote=t.live
-      ? '<span class="brv2-club-note live"><span class="brv2-club-note-dot" aria-hidden="true"></span>jogando agora</span>'
+      ? '<span class="brv2-club-note live"><span class="brv2-club-note-dot" aria-hidden="true"></span><span>Ao vivo'+(t.liveInfo&&t.liveInfo.elapsed?' · '+esc(t.liveInfo.elapsed)+'’':'')+'</span>'+(t.liveInfo?'<span class="brv2-live-score">'+esc(t.liveInfo.score)+'</span>':'')+'</span>'
       : projected&&t.proj
         ? '<span class="brv2-club-note projected">'+t.proj+(t.proj===1?' jogo projetado':' jogos projetados')+'</span>'
         : '';
     const sg=t.sg>0?'<span class="brv2-sg up">+'+t.sg+'</span>':t.sg<0?'<span class="brv2-sg down">−'+Math.abs(t.sg)+'</span>':'0';
-    const pointTitle=projected?'Pontos projetados: '+t.pts+'; na tabela ao vivo: '+off.pts:'Pontos: '+t.pts;
+    const pointTitle=projected?'Pontos projetados: '+t.pts+'; na classificação atual: '+off.pts:'Pontos: '+t.pts;
     return '<tr class="'+rowClass+'">'+
-      '<td class="brv2-col-pos"><span class="brv2-position"><span class="brv2-pos-number">'+pos+'</span>'+(projected?brTabelaV2Movement(delta):'')+'</span></td>'+
+      '<td class="brv2-col-pos"><span class="brv2-position"><span class="brv2-pos-number">'+pos+'</span>'+(projected?brTabelaV2Movement(delta):'')+(zone.label?'<span class="brv2-sr">'+zone.label+'</span>':'')+'</span></td>'+
       '<th scope="row" class="brv2-col-club"><span class="brv2-club">'+brTableLogoDecorative(t.name)+'<span class="brv2-club-copy"><span class="brv2-club-name">'+esc(t.name)+'</span>'+clubNote+'</span></span></th>'+
       '<td class="brv2-col-points" title="'+esc(pointTitle)+'">'+t.pts+'</td>'+
       '<td class="brv2-col-stat brv2-col-j">'+t.j+'</td>'+
@@ -10409,27 +10434,26 @@ function renderBrTabelaV2(){
   el.innerHTML='<div class="panel brv2-page"><div class="card brv2-shell'+(projected?' is-projected':'')+'">'+
     '<header class="brv2-header">'+
       '<div class="brv2-heading">'+
-        '<div class="brv2-eyebrow"><span>Brasileirão 2026 · Returno</span><span class="brv2-preview">Prévia V2 · Admin</span></div>'+
-        '<div class="brv2-titleline"><h2 class="brv2-title" id="brV2Title">'+title+'</h2><span class="brv2-live-status"><span class="brv2-live-dot" aria-hidden="true"></span>'+(liveN?liveN+(liveN===1?' jogo ao vivo':' jogos ao vivo'):'atualização automática')+'</span></div>'+
-        '<p class="brv2-subtitle">'+subtitle+'</p>'+
+        '<div class="brv2-eyebrow"><span class="brv2-preview">Tabela V2 · Admin</span></div>'+
+        '<div class="brv2-titleline"><h2 class="brv2-title" id="brV2Title">'+title+'</h2>'+
+          '<div class="brv2-meta" role="status" aria-live="polite">'+
+            (liveN?'<span class="brv2-meta-live"><span class="brv2-live-dot" aria-hidden="true"></span>'+liveN+(liveN===1?' jogo ao vivo':' jogos ao vivo')+'</span><span class="brv2-meta-sep" aria-hidden="true">·</span>':'')+
+            '<span>'+counted+'/'+fixtures.length+' jogos</span>'+
+            (projected?'<span class="brv2-meta-sep" aria-hidden="true">·</span><span class="brv2-meta-projected">'+myProjected+(myProjected===1?' palpite':' palpites')+'</span>':'')+
+            '<span class="brv2-meta-sep" aria-hidden="true">·</span><span>'+brTabelaV2UpdatedLabel()+'</span>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
       '<button type="button" class="brv2-switch" id="brV2Toggle" aria-pressed="'+projected+'" aria-controls="brV2Table" onclick="brToggleTabelaV2()"'+(switchDisabled?' disabled':'')+'><span>'+switchLabel+'</span><span class="brv2-switch-mark" aria-hidden="true">'+(projected?'←':'→')+'</span></button>'+
     '</header>'+
-    '<div class="brv2-summary" role="status" aria-live="polite">'+
-      '<span class="brv2-summary-item"><strong>'+counted+'</strong> de '+fixtures.length+' jogos na conta</span>'+
-      (liveN?'<span class="brv2-summary-item live"><strong>'+liveN+'</strong> ao vivo agora</span>':'')+
-      (projected?'<span class="brv2-summary-item projected"><strong>'+myProjected+'</strong> pelos seus palpites</span>':'')+
-      '<span class="brv2-summary-spacer"></span><span class="brv2-updated">'+brTabelaV2UpdatedLabel()+'</span>'+
-    '</div>'+
-    '<div class="brv2-context" id="brV2Context"><span>'+context+'</span></div>'+
-    (brProjectionError?'<div class="brv2-alert" role="status">A classificação ao vivo está disponível, mas seus palpites não puderam ser carregados agora.</div>':'')+
+    (brProjectionError?'<div class="brv2-alert" role="status">A classificação atual está disponível, mas seus palpites não puderam ser carregados agora.</div>':'')+
     '<div class="brv2-table-area">'+
-      '<div class="brv2-table-wrap"><table class="brv2-table" id="brV2Table" aria-describedby="brV2Context"><caption>'+title+' do Campeonato Brasileiro 2026</caption><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'+
+      '<div class="brv2-table-wrap"><table class="brv2-table" id="brV2Table"><caption>'+title+' do Campeonato Brasileiro 2026</caption><thead>'+head+'</thead><tbody>'+body+'</tbody></table></div>'+
       '<footer class="brv2-footer">'+
-        '<div class="brv2-legend"><span class="brv2-legend-item"><span class="brv2-zone top" aria-hidden="true"></span>G4</span><span class="brv2-legend-item"><span class="brv2-zone bottom" aria-hidden="true"></span>Z4</span>'+
+        '<div class="brv2-legend"><span class="brv2-legend-item"><span class="brv2-zone lib-group" aria-hidden="true"></span>Libertadores · 1º–4º</span><span class="brv2-legend-item"><span class="brv2-zone lib-pre" aria-hidden="true"></span>Pré-Libertadores · 5º</span><span class="brv2-legend-item"><span class="brv2-zone sula" aria-hidden="true"></span>Sul-Americana · 6º–11º*</span><span class="brv2-legend-item"><span class="brv2-zone relegation" aria-hidden="true"></span>Z4 · 17º–20º</span>'+
           (projected?'<span class="brv2-legend-item"><span class="brv2-form-dot v projected" aria-hidden="true"></span>resultado pelo seu palpite</span>':'')+
         '</div>'+
-        '<p class="brv2-method">Base consolidada antes da rodada 19 + jogos do returno e adiados remarcados. Critérios: pontos, vitórias, saldo de gols e gols pró.</p>'+
+        '<p class="brv2-method">* Faixa-base: copas podem ampliar vagas. Critérios: P, V, SG e GP.</p>'+
       '</footer>'+
     '</div>'+
   '</div></div>';
@@ -10586,6 +10610,11 @@ function brToggleGuess(gid,on){
   }
   else brRefreshPill(gid);
 }
+function brGuessReady(gid){
+  const e1=document.getElementById('brS1_'+gid), e2=document.getElementById('brS2_'+gid);
+  const btn=e1&&e1.parentElement&&e1.parentElement.querySelector('.brx-guess-ok');
+  if(btn) btn.classList.toggle('ready',!!(e1&&e2&&e1.value!==''&&e2.value!==''));
+}
 let brPopupGid=null;
 function brOpenPopup(gid){ brPopupGid=gid; renderBrPopup(); }
 function brClosePopup(){ brPopupGid=null; renderBrPopup(); }
@@ -10636,8 +10665,10 @@ function brPopupHTML(gid){
   const sortCol=a=>a.sort((x,y)=>((y.d?y.d.pts:0)-(x.d?x.d.pts:0))||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
   sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
   const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"'+(c.me?' title="você"':'')+'><span class="brx-pav'+(c.d?' '+brPtsCls(c.d):'')+'">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc">'+c.s1+'×'+c.s2+'</span></span>';
+  // contagem em palavras ("2 pessoas", "1 acertou") — número solto embaixo do time lia como placar
+  const capN=(n,winner)=>winner?(n?n+(n===1?' acertou':' acertaram'):'ninguém acertou'):(n?n+(n===1?' pessoa':' pessoas'):'ninguém');
   const col=(arr,label,winner)=>'<div class="brx-pop-col'+(winner?' win':'')+'">'+
-    '<div class="brx-pop-cap">'+esc(label)+'<span class="n">'+arr.length+(winner?' · acertaram':'')+'</span></div>'+
+    '<div class="brx-pop-cap">'+esc(label)+'<span class="n">'+capN(arr.length,winner)+'</span></div>'+
     (arr.length?'<div class="brx-pop-chips">'+arr.map(chip).join('')+'</div>':'<div class="brx-pop-empty">—</div>')+
   '</div>';
   const total=cols.home.length+cols.draw.length+cols.away.length;
