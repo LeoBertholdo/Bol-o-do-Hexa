@@ -306,15 +306,29 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
 /* palpite inline na aba Jogos */
 .brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
-.brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-pill-guess:hover{background:rgba(255,215,94,.18)}
-.brx-pill-guess.filled{border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#c8d9ce;text-transform:none;letter-spacing:0}
-.brx-pill-guess.filled b{color:#fff;font-weight:950;margin-left:4px}
-.brx-guess-edit{display:none;align-items:center;justify-content:center;flex-wrap:wrap;gap:7px}
+.brx-pill-guess.filled{display:inline-flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#9db3a6;text-transform:none;letter-spacing:0;font-weight:800}
+.brx-pill-guess.filled b{color:#ffd75e;font-weight:950;font-variant-numeric:tabular-nums}
+.brx-pill-guess.filled:hover{border-color:rgba(255,215,94,.38);color:#dcebe2}
+.brx-pencil{display:inline-flex;align-items:center;opacity:.55;transition:opacity .15s}
+.brx-pill-guess:hover .brx-pencil{opacity:1}
+.brx-guess-edit{display:none;align-items:center;justify-content:center;gap:8px}
 .brx-match.editing .brx-guess-edit{display:flex}
 .brx-match.editing .brx-pill-guess{display:none}
-.brx-guess-done{border:none;background:none;color:#4ae08e;font-weight:950;font-size:.58rem;text-transform:uppercase;letter-spacing:.6px;cursor:pointer;padding:4px 2px}
-.brx-guess-done:hover{color:#7ef0ad}
+.brx-guess-box{display:inline-flex;align-items:center;gap:2px;padding:3px;border:1px solid rgba(255,255,255,.13);border-radius:12px;background:rgba(255,255,255,.04);transition:border-color .15s,box-shadow .15s}
+.brx-guess-box:focus-within{border-color:rgba(255,215,94,.55);box-shadow:0 0 0 3px rgba(255,215,94,.1)}
+.brx-guess-box>span{color:#5d7267;font-weight:800;font-size:.85rem;padding:0 2px}
+.brx-guess-box .br-inp{width:36px;height:32px;border:none;border-radius:9px;background:transparent;font-size:.98rem}
+.brx-guess-box .br-inp::placeholder{color:#4d6156;font-weight:900}
+.brx-guess-box .br-inp:focus{border:none;box-shadow:none;background:rgba(255,215,94,.08)}
+.brx-guess-ok{width:30px;height:30px;border-radius:50%;border:1px solid rgba(74,224,142,.32);background:rgba(74,224,142,.1);color:#4ae08e;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,border-color .15s;flex:0 0 auto}
+.brx-guess-ok:hover{background:rgba(74,224,142,.2);border-color:rgba(74,224,142,.5)}
+/* o estado de save ("…"/"✓"/"!") mora DENTRO do botão ✓: quando tem texto, ele
+   substitui o ícone — sem layout shift e sem dois checks lado a lado */
+.brx-guess-ok .br-saved{min-width:0;font-size:.88rem;line-height:1}
+.brx-guess-ok .br-saved:not(:empty)+svg{display:none}
+.brx-guess-ok:has(.br-saved.err){border-color:rgba(255,122,112,.5);background:rgba(255,122,112,.12)}
 .brx-open-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s}
 .brx-open-pill:hover{background:rgba(255,255,255,.1);color:#fff}
 .brx-open-pill b{color:#fff;font-weight:950}
@@ -348,13 +362,20 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-col.win .brx-pop-cap .n{color:#4ae08e}
 .brx-pop-chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 5px}
 .brx-pchip{display:flex;flex-direction:column;align-items:center;gap:3px;width:56px}
-.brx-pchip-b{display:flex;flex-direction:column;align-items:center;gap:4px}
-.brx-pencil{opacity:.75;font-size:.85em;margin-left:2px}
+/* a bolinha das iniciais carrega a cor dos pontos (mesma semântica do ranking) */
 .brx-pav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:950;background:rgba(255,255,255,.1);color:#cfe2d6;flex:0 0 auto}
-.brx-pchip.me .brx-pav{background:rgba(255,215,94,.18);color:#ffd75e;box-shadow:0 0 0 2px rgba(255,215,94,.55)}
+.brx-pav.hit{background:linear-gradient(135deg,#ffd75e,#f0b53a);color:#241a00}
+.brx-pav.ok{background:rgba(74,224,142,.16);color:#4ae08e;border:1px solid rgba(74,224,142,.4)}
+.brx-pav.inv{background:rgba(255,122,112,.16);color:#ff8b82;border:1px solid rgba(255,122,112,.4)}
+.brx-pchip.me .brx-pav{box-shadow:0 0 0 2px rgba(255,255,255,.75)}
+.brx-pchip.me .brx-pnm{color:#fff}
 .brx-pnm{font-size:.66rem;font-weight:800;color:#dcebe2;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brx-psc{font-size:.58rem;font-weight:900;color:#8ba295;font-variant-numeric:tabular-nums}
-.brx-psc.hit{color:#241a00;background:linear-gradient(120deg,#ffd75e,#f0b53a);padding:1px 7px;border-radius:999px}
+.brx-lgp{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.brx-lgdot{width:9px;height:9px;border-radius:50%;display:inline-block;background:rgba(255,255,255,.22)}
+.brx-lgdot.hit{background:linear-gradient(135deg,#ffd75e,#f0b53a)}
+.brx-lgdot.ok{background:#4ae08e}
+.brx-lgdot.inv{background:#ff8b82}
 .brx-pop-empty{font-size:.72rem;color:#5d7267;text-align:center;padding:6px 0}
 .brx-pop-foot{margin-top:13px;text-align:center;font-size:.6rem;font-weight:800;color:#71877b;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
 /* ranking */
@@ -9731,13 +9752,14 @@ function brMatchHTML(fx,opts){
       matchAttr=' id="brMatch_'+gid+'"';
       editCls=done?'':' editing'; // sem palpite: já abre os campos, sem o passo extra do botão
       pal='<div class="brx-mid-pal">'+
-        '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b> <span class="brx-pencil" aria-hidden="true">✎</span>':'Palpitar')+'</button>'+
-        '<div class="brx-guess brx-guess-edit">'+
-          '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
-          '<span>×</span>'+
-          '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
-          '<span class="br-saved'+(done?' ok':'')+'" id="brSaved_'+gid+'">'+(done?'✓':'')+'</span>'+
-          '<button class="brx-guess-done" onclick="brToggleGuess(\''+gid+'\',false)">pronto</button>'+
+        '<button class="brx-pill-guess'+(done?' filled':'')+'" id="brPill_'+gid+'" onclick="brToggleGuess(\''+gid+'\',true)">'+(done?'seu palpite <b>'+myPal.s1+'×'+myPal.s2+'</b><span class="brx-pencil" aria-hidden="true">'+BRX_SVG_PENCIL+'</span>':'Palpitar')+'</button>'+
+        '<div class="brx-guess-edit">'+
+          '<span class="brx-guess-box">'+
+            '<input class="br-inp" id="brS1_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v1+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t1)+'">'+
+            '<span>×</span>'+
+            '<input class="br-inp" id="brS2_'+gid+'" type="number" min="0" max="30" inputmode="numeric" placeholder="–" value="'+v2+'" onchange="brAutoSavePalpite(\''+gid+'\')" aria-label="gols '+esc(fx.t2)+'">'+
+          '</span>'+
+          '<button class="brx-guess-ok" onclick="brToggleGuess(\''+gid+'\',false)" aria-label="Concluir palpite" title="Pronto"><span class="br-saved" id="brSaved_'+gid+'"></span>'+BRX_SVG_CHECK+'</button>'+
         '</div>'+
       '</div>';
       palCls=" brx-pal";
@@ -9890,8 +9912,9 @@ function brRanking(){
     return String(a.name).localeCompare(String(b.name),"pt-BR");
   });
 }
+function brPtsCls(d){ return d.exact?'hit':d.base===1?'ok':d.base===-2?'inv':'zero'; }
 function brPtsBadge(d){
-  const cls=d.exact?'hit':d.base===1?'ok':d.base===-2?'inv':'zero';
+  const cls=brPtsCls(d);
   const lbl=d.exact?'+3':d.base===1?'+1':d.base===-2?'−2':'0';
   return '<span class="brx-pts '+cls+'">'+lbl+'</span>';
 }
@@ -10167,7 +10190,16 @@ async function brAutoSavePalpite(gid){
   brFlagSaved(gid,'salvando');
   const ok=await remoteWrite(()=>remoteClient.from("brasileirao_predictions").upsert({participant_index:pi,game_id:gid,user_id:remoteSession.user.id,s1:pal.s1,s2:pal.s2},{onConflict:"participant_index,game_id"}));
   if(ok===false){ brFlagSaved(gid,'erro'); toast("Não salvou (confira o login ou se o jogo já começou)."); }
-  else brFlagSaved(gid,'salvo');
+  else{
+    brFlagSaved(gid,'salvo');
+    // Salvou completo: recolhe o editor sozinho (vira o pill "seu palpite"), a menos
+    // que o usuário ainda esteja com o foco num dos campos deste mesmo jogo.
+    setTimeout(()=>{
+      const a=document.activeElement;
+      if(a&&(a.id==='brS1_'+gid||a.id==='brS2_'+gid)) return;
+      brToggleGuess(gid,false);
+    },600);
+  }
   brRefreshPill(gid);
 }
 
@@ -10177,17 +10209,22 @@ async function brAutoSavePalpite(gid){
    mundo em jogo travado (segredo até o apito) — por segurança, brPopupHTML também
    confere o lock antes de revelar. */
 function brFirstName(name){ const p=String(name||"").trim().split(/\s+/); return p[0]||String(name||"?"); }
+const BRX_SVG_PENCIL='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
+const BRX_SVG_CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
 function brRefreshPill(gid){
   const btn=document.getElementById('brPill_'+gid); if(!btn) return;
   const pi=myParticipantIndex(); if(pi==null) return;
   const p=S_BR.palpites[brPredKey(pi,gid)];
-  if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b> <span class="brx-pencil" aria-hidden="true">✎</span>'; }
+  if(p&&p.s1!=null&&p.s2!=null){ btn.className='brx-pill-guess filled'; btn.innerHTML='seu palpite <b>'+p.s1+'×'+p.s2+'</b><span class="brx-pencil" aria-hidden="true">'+BRX_SVG_PENCIL+'</span>'; }
   else{ btn.className='brx-pill-guess'; btn.textContent='Palpitar'; }
 }
 function brToggleGuess(gid,on){
   const m=document.getElementById('brMatch_'+gid); if(!m) return;
   m.classList.toggle('editing',!!on);
-  if(on){ const i=document.getElementById('brS1_'+gid); if(i){ try{i.focus();i.select();}catch(e){} } }
+  if(on){
+    brFlagSaved(gid,'vazio'); // zera o estado de save pro botão voltar a mostrar o ✓ de ícone
+    const i=document.getElementById('brS1_'+gid); if(i){ try{i.focus();i.select();}catch(e){} }
+  }
   else brRefreshPill(gid);
 }
 let brPopupGid=null;
@@ -10239,7 +10276,7 @@ function brPopupHTML(gid){
   const finalRes=(sc&&sc.final)?(sc.s1>sc.s2?'home':(sc.s1<sc.s2?'away':'draw')):null;
   const sortCol=a=>a.sort((x,y)=>((y.d?y.d.pts:0)-(x.d?x.d.pts:0))||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
   sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
-  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"><span class="brx-pav">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-pchip-b"><span class="brx-psc">'+c.s1+'×'+c.s2+'</span>'+(c.d?brPtsBadge(c.d):'')+'</span></span>';
+  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"'+(c.me?' title="você"':'')+'><span class="brx-pav'+(c.d?' '+brPtsCls(c.d):'')+'">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc">'+c.s1+'×'+c.s2+'</span></span>';
   const col=(arr,label,winner)=>'<div class="brx-pop-col'+(winner?' win':'')+'">'+
     '<div class="brx-pop-cap">'+esc(label)+'<span class="n">'+arr.length+(winner?' · acertaram':'')+'</span></div>'+
     (arr.length?'<div class="brx-pop-chips">'+arr.map(chip).join('')+'</div>':'<div class="brx-pop-empty">—</div>')+
@@ -10251,7 +10288,7 @@ function brPopupHTML(gid){
       col(cols.draw,'Empate',finalRes==='draw')+
       col(cols.away,fx.t2||'Visitante',finalRes==='away')+
     '</div>'+
-    (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+(res?' · <span class="brx-pts hit">+3</span>cravou <span class="brx-pts ok">+1</span>certo <span class="brx-pts zero">0</span>erro <span class="brx-pts inv">−2</span>invertido':'')+'</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
+    (total?'<div class="brx-pop-foot">'+total+(total===1?' palpite':' palpites')+(res?' · <span class="brx-lgp"><span class="brx-lgdot hit"></span>cravou (+3)</span><span class="brx-lgp"><span class="brx-lgdot ok"></span>certo (+1)</span><span class="brx-lgp"><span class="brx-lgdot"></span>erro (0)</span><span class="brx-lgp"><span class="brx-lgdot inv"></span>invertido (−2)</span>':'')+'</div>':'<div class="brx-pop-empty" style="margin-top:14px">Ninguém palpitou neste jogo.</div>');
 }
 
 function renderBrTab(t){
