@@ -304,7 +304,6 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-hero-copy{min-width:0}
 .brx-kicker{font-size:.62rem;letter-spacing:1.7px;font-weight:950;text-transform:uppercase;color:#ffd75e}
 .brx-hero h2{font-size:clamp(1.45rem,3.6vw,2.05rem);font-weight:950;color:#fff;margin:7px 0 3px;line-height:1.05}
-.brx-hero-sub{font-size:.8rem;color:#9db3a6;font-weight:800}
 .brx-hero-focus{min-height:0;display:flex;flex-direction:column;justify-content:center;gap:9px;padding:6px 0 6px 16px;border-left:1px solid rgba(255,255,255,.13)}
 .brx-hero-focus.live{border-left-color:rgba(74,224,142,.54)}
 .brx-focus-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -4664,6 +4663,14 @@ body.chart-modal-open{overflow:hidden}
 .cinema-shell .cinema-note{font-size:12px;color:var(--muted);margin:2px 0 12px}
 .cinema-mount{position:relative;width:100%;aspect-ratio:16/9;background:#0b1430;border-radius:10px;overflow:hidden;box-shadow:0 12px 34px rgba(0,39,118,.22)}
 .cinema-mount>div{width:100%;height:100%}
+/* Formato Stories: o palco vira 9:16, estreito e centralizado. */
+.cinema-mount.v{aspect-ratio:9/16;max-width:400px;margin:0 auto}
+.cinema-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.cinema-toolbar .cinema-orient{display:flex;gap:4px}
+.cinema-toolbar .cinema-orient button.active{outline:2px solid #002776}
+.cinema-dl-status{font-size:13px;margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cinema-dl-status .bar{flex:1;min-width:140px;height:6px;border-radius:999px;background:rgba(0,39,118,.15);overflow:hidden}
+.cinema-dl-status .bar>span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#00843d,#ffdf00)}
 .cinema-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#e9f4ff;font-size:14px;text-align:center;padding:20px}
 .cinema-loading .spinner{width:26px;height:26px;border-radius:50%;border:3px solid rgba(233,244,255,.25);border-top-color:#ffdf00;animation:cinemaSpin .9s linear infinite}
 @keyframes cinemaSpin{to{transform:rotate(360deg)}}
@@ -4727,7 +4734,9 @@ body.chart-modal-open{overflow:hidden}
     "remotion": "https://esm.sh/remotion@4?external=react,react-dom",
     "remotion/no-react": "https://esm.sh/remotion@4/no-react",
     "remotion/": "https://esm.sh/remotion@4/",
-    "@remotion/player": "https://esm.sh/@remotion/player@4?external=react,react-dom,remotion"
+    "@remotion/player": "https://esm.sh/@remotion/player@4?external=react,react-dom,remotion",
+    "mp4-muxer": "https://esm.sh/mp4-muxer@5",
+    "modern-screenshot": "https://esm.sh/modern-screenshot@4"
   }
 }
 </script>
@@ -9283,6 +9292,9 @@ function filmeSeek(idx){
 // e pódio projetado. React/Remotion só são baixados quando a aba abre
 // (import() dinâmico resolvido pelo import map do <head>). Só o admin vê.
 let cinemaRoot=null,cinemaModules=null,cinemaLoadPromise=null,cinemaDataSig=null;
+// Orientação do trailer: "v" (9:16, padrão — grupo assiste no celular) ou "h".
+let cinemaOrient=(()=>{try{return localStorage.getItem("bolao.cinemaOrient")||"v";}catch(e){return "v";}})();
+let cinemaDlAbort=null; // sinal de cancelamento da exportação em andamento
 function cinemaAvailable(){return isOnlineMode()&&isAdmin();}
 function cinemaTeardown(){
   if(cinemaRoot){try{cinemaRoot.unmount();}catch(e){}cinemaRoot=null;}
@@ -9345,47 +9357,38 @@ function cinemaBuildData(){
     jump:jump.name?jump:null,
     leaderPrize:leader?brl(prize(1)):null
   };
-  // Curiosidades do grupo como um todo: rodam no painel lateral da corrida,
-  // aproveitando o vão à direita enquanto as barras ainda são curtas.
-  const curiosidades=[];
-  const totalPts=rows.reduce((a,r)=>a+r.pts,0);
-  const totalCrav=rows.reduce((a,r)=>a+r.crav,0);
-  const totalInv=rows.reduce((a,r)=>a+r.inv,0);
-  let leaderChanges=0,prevLeader=null;const leadCount={};
-  frames.forEach(fr=>{
-    const li=fr.rank.indexOf(0);
-    if(li<0) return;
-    const nm=tl.series[li].name;
-    leadCount[nm]=(leadCount[nm]||0)+1;
-    if(prevLeader!==null&&nm!==prevLeader) leaderChanges++;
-    prevLeader=nm;
+  // Momentos do grupo no WhatsApp, garimpados do export do chat (janela
+  // 11/06→18/07, 7.636 msgs; recontagem de 2026-07-19 — o export ainda não
+  // tem a final). Cada card entra na corrida quando o cursor cruza a data.
+  const WHATS_CARDS=[
+    {on:"2026-06-11",icon:"🏁",title:"A Copa começou",stat:"7.636 msgs",sub:"38 dias de resenha sem freio"},
+    {on:"2026-06-13",icon:"😏",title:"Nasce o “lá ele”",stat:"Luizin",sub:"o primeiro de 18"},
+    {on:"2026-06-16",icon:"🥶",title:"Nasce a zika",stat:"Otávin → Barreto",sub:"“parabéns pela cravada” antes do apito"},
+    {on:"2026-06-22",icon:"📢",title:"O dia do caos",stat:"440 msgs",sub:"458 K de risada · 28 palavrões"},
+    {on:"2026-06-24",icon:"⚡",title:"Chuva de zika",stat:"20 num dia",sub:"congratulações zikadas em série"},
+    {on:"2026-06-27",icon:"🦉",title:"Corujão: Barretin",stat:"135 msgs",sub:"entre meia-noite e seis da manhã"},
+    {on:"2026-06-29",icon:"🃏",title:"Rei da figurinha: Chemito",stat:"45",sub:"nenhuma palavra necessária"},
+    {on:"2026-07-05",icon:"🤬",title:"Boca de lixo: Otávin",stat:"94 palavrões",sub:"o dia da eliminação ajudou"},
+    {on:"2026-07-17",icon:"😏",title:"Lá ele: Luizin",stat:"7 de 18",sub:"“LÁ ELE 1000 VEZES”"}
+  ];
+  const dayKeys=[];
+  for(let k=0;k<count;k++){
+    const ev=tl.events[k];
+    dayKeys.push(ev&&ev.game&&ev.game.date?String(ev.game.date).slice(0,10):(k>0?dayKeys[k-1]:""));
+  }
+  const whats=[];
+  WHATS_CARDS.forEach(c=>{
+    const k=dayKeys.findIndex(d=>d&&d>=c.on);
+    if(k>=0) whats.push(Object.assign({k},c));
   });
-  const topLead=Object.entries(leadCount).sort((a,b)=>b[1]-a[1])[0];
-  const perGame={};
-  for(let k=1;k<count;k++){
-    const ev=tl.events[k];if(!ev) continue;
-    const teams=gameTeams(ev.game);
-    const g=perGame[`${teams.t1}×${teams.t2}`]||(perGame[`${teams.t1}×${teams.t2}`]={pts:0,label:"",done:true});
-    g.pts+=frames[k].values.reduce((a,v,i)=>a+(v-frames[k-1].values[i]),0);
-    g.label=cinemaCaption(tl,k).text;
-    g.done=tl.states[k]!=="live";
-  }
-  const gamesArr=Object.values(perGame);
-  const rain=gamesArr.slice().sort((a,b)=>b.pts-a.pts)[0];
-  const zebras=gamesArr.filter(g=>g.done&&g.pts===0).length;
-  if(totalPts>0) curiosidades.push({icon:"⚽",text:`Juntos, o grupo já somou ${totalPts} pontos`});
-  if(rows.length>1){
-    const gap=rows[0].pts-rows[1].pts;
-    curiosidades.push({icon:"🔥",text:gap===0?"Empate na ponta — desempate no detalhe":`${gap===1?"1 ponto separa":`${gap} pontos separam`} o líder do vice`});
-  }
-  if(totalCrav>0) curiosidades.push({icon:"🎯",text:`${totalCrav} placares cravados na conta do grupo`});
-  if(leaderChanges>0) curiosidades.push({icon:"👑",text:`A liderança já trocou de mãos ${leaderChanges} ${leaderChanges===1?"vez":"vezes"}`});
-  else if(topLead) curiosidades.push({icon:"👑",text:`${topLead[0]} lidera do início ao fim — soberano`});
-  if(topLead&&leaderChanges>0) curiosidades.push({icon:"⏱️",text:`${topLead[0]} passou ${Math.round(topLead[1]/Math.max(1,count)*100)}% da corrida na ponta`});
-  if(rain&&rain.pts>0) curiosidades.push({icon:"💥",text:`${rain.label} rendeu ${rain.pts} pontos ao grupo — recorde`});
-  if(zebras>0) curiosidades.push({icon:"🦓",text:`${zebras===1?"1 jogo zerou":`${zebras} jogos zeraram`} o grupo inteiro`});
-  if(totalInv>0) curiosidades.push({icon:"🙃",text:`${totalInv} palpites com placar invertido — essa dói`});
-  if(rows.length) curiosidades.push({icon:"📊",text:`Média do grupo: ${Math.round(totalPts/rows.length)} pontos por cabeça`});
+  // Rankings do grupo (cenas próprias antes do pódio) — mesmos números do chat.
+  const chatBoards=[
+    {kicker:"O locutor oficial do grupo",title:"🎙️ O Altruísta",sub:"quem compilou e mandou o palpite da galera",
+     rows:[["Thyago",37],["Barretin",19],["Leonardo",11],["Chemito",8],["Otávin",8],["Luizin",7],["Bonato",3],["Vitão",2]]},
+    {kicker:"Parabéns pela cravada antes do apito",title:"🥶 O Ranking da Zika",sub:"86 zikas na Copa",twin:["zicou","foi zicado"],
+     rows:[["Otávin",29,10],["Luizin",18,3],["Thyago",15,9],["Bonato",8,2],["Chemito",7,0],["Vitão",4,7],["Barretin",3,7],["Leonardo",2,9]],
+     punch:"Otávin zicou 29 vezes — e foi o mais zicado. Karma."}
+  ];
   const steps=Math.max(0,count-1);
   // Corrida: ~14 quadros por lance, presa entre 8s e 50s pra Copa inteira caber.
   const durations={
@@ -9393,22 +9396,26 @@ function cinemaBuildData(){
     race:steps>0?Math.max(240,Math.min(1500,steps*14)):0,
     chart:steps>0?260:0,
     stats:240,
+    board:220, // cada ranking do grupo (Altruísta, Zika)
     podio:220
   };
-  const durationInFrames=durations.intro+durations.race+durations.chart+durations.stats+durations.podio;
+  const durationInFrames=durations.intro+durations.race+durations.chart+durations.stats+durations.board*chatBoards.length+durations.podio;
   return {
     series:tl.series.map(s=>({name:s.name,color:s.color})),
     frames,steps,
     maxVal:Math.max(3,tl.maxVal),minVal:Math.min(0,tl.minVal),
-    stats,podium,curiosidades,durations,durationInFrames
+    stats,podium,whats,chatBoards,durations,durationInFrames
   };
 }
 // Fábrica da composição: recebe React+remotion já carregados e devolve o
 // componente raiz (sem JSX — o app é um HTML estático, sem build).
-function cinemaMakeComposition(React,R){
+// orient: "h" (16:9, 1280×720) ou "v" (9:16, 720×1280 — Stories/WhatsApp).
+function cinemaMakeComposition(React,R,orient){
   const h=React.createElement;
   const {AbsoluteFill,Sequence,useCurrentFrame,useVideoConfig,interpolate,spring,Easing,random}=R;
-  const W=1280,HGT=720;
+  const V=orient==="v";
+  const W=V?720:1280,HGT=V?1280:720;
+  const MX=V?40:64; // margem lateral padrão do formato
   const YELLOW="#ffdf00",GREEN="#00843d";
   const FONT='Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
   const SOFT="rgba(233,244,255,.78)";
@@ -9436,13 +9443,13 @@ function cinemaMakeComposition(React,R){
       `${data.stats.participants} participantes`
     ];
     return h(AbsoluteFill,{style:{justifyContent:"center",alignItems:"center",fontFamily:FONT,opacity:sceneFade(f,dur)}},
-      h(Kicker,{style:{opacity:lin(f,0,14,0,1),transform:`translateY(${lin(f,0,14,18,0)}px)`}},"Bolão do Hexa · Copa 2026"),
-      h("div",{style:{fontSize:94,fontWeight:900,color:"#fff",lineHeight:1.05,margin:"20px 0 12px",transform:`scale(${.72+.28*titleS})`,opacity:Math.min(1,titleS*1.3),textShadow:"0 20px 60px rgba(0,0,0,.5)"}},"O FILME DA COPA"),
-      h("div",{style:{fontSize:26,color:SOFT,opacity:lin(f,20,34,0,1)}},"A corrida do ranking, gol a gol"),
-      h("div",{style:{display:"flex",gap:16,marginTop:48}},
+      h(Kicker,{style:{fontSize:V?15:20,letterSpacing:V?5:8,opacity:lin(f,0,14,0,1),transform:`translateY(${lin(f,0,14,18,0)}px)`}},"Bolão do Hexa · Copa 2026"),
+      h("div",{style:{fontSize:V?46:64,fontWeight:900,color:"#fff",lineHeight:1.08,margin:"20px 0 12px",textAlign:"center",maxWidth:W-2*MX,transform:`scale(${.72+.28*titleS})`,opacity:Math.min(1,titleS*1.3),textShadow:"0 20px 60px rgba(0,0,0,.5)"}},"SAUDADES DO QUE A GENTE NÃO VIVEU"),
+      h("div",{style:{fontSize:V?18:24,color:SOFT,opacity:lin(f,20,34,0,1),textAlign:"center",maxWidth:W-2*MX}},"38 dias, 7.636 mensagens e 86 zikas depois"),
+      h("div",{style:{display:"flex",flexWrap:"wrap",justifyContent:"center",maxWidth:W-2*MX,gap:V?10:16,marginTop:V?34:48}},
         chips.map((c,i)=>{
           const s=spring({frame:f-32-i*7,fps,config:{damping:14,stiffness:130}});
-          return h("div",{key:i,style:{padding:"12px 24px",borderRadius:999,border:"1px solid rgba(255,255,255,.28)",background:"rgba(255,255,255,.08)",color:"#fff",fontSize:21,fontWeight:600,opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*26}px)`}},c);
+          return h("div",{key:i,style:{padding:V?"9px 18px":"12px 24px",borderRadius:999,border:"1px solid rgba(255,255,255,.28)",background:"rgba(255,255,255,.08)",color:"#fff",fontSize:V?16:21,fontWeight:600,opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*26}px)`}},c);
         })
       )
     );
@@ -9479,9 +9486,11 @@ function cinemaMakeComposition(React,R){
       (sampleAt("rank",si,kc-halfK)+4*sampleAt("rank",si,kc-halfK/2)+6*sampleAt("rank",si,kc)+4*sampleAt("rank",si,kc+halfK/2)+sampleAt("rank",si,kc+halfK))/16;
     const wAct=Math.max(.6,7/fpl);
     const range=Math.max(1,data.maxVal-data.minVal);
-    const top=176,bottomPad=64;
-    const rowH=Math.min(60,(HGT-top-bottomPad)/n);
-    const area={x:318,w:W-318-158};
+    // No retrato as barras ocupam a metade de cima; a de baixo é dos cards.
+    const top=V?140:176;
+    const rowsBottom=V?606:HGT-64;
+    const rowH=Math.min(60,(rowsBottom-top)/n);
+    const area=V?{x:186,w:W-186-84}:{x:318,w:W-318-158};
     const xFor=v=>area.x+area.w*((v-data.minVal)/range);
     const x0=xFor(0);
     // Legenda: em Copa cheia trocar a cada lance vira pisca-pisca ilegível —
@@ -9496,18 +9505,14 @@ function cinemaMakeComposition(React,R){
     const capSwap=!atEnd&&capA.text!==capB.text;
     const capOp=capSwap?(cu<.5?lin(cu,.38,.5,1,0):lin(cu,.5,.62,0,1)):1;
     const capDy=capSwap?(cu<.5?lin(cu,.38,.5,0,-8):lin(cu,.5,.62,8,0)):0;
-    // Painel de curiosidades do grupo: pilha de até 3 por vez no vão à direita,
-    // trocando em grupos. Cada card mede as barras da própria faixa vertical e
-    // some sozinho quando alguma chega perto — o de cima cede primeiro.
-    const cardW=332,cardLeft=W-64-cardW;
-    const slotTops=[330,436,542],slotH=92;
-    const factList=data.curiosidades||[];
-    const perGroup=Math.min(slotTops.length,factList.length);
-    const nGroups=Math.max(1,Math.ceil(factList.length/Math.max(1,perGroup)));
-    const groupDur=Math.max(240,Math.min(420,Math.floor((dur-70)/nGroups)));
-    const lf=f-60;
-    const gi=lf>=0&&factList.length?Math.floor(lf/groupDur)%nGroups:-1;
-    const gt=gi>=0?lf%groupDur:0;
+    // Feed do WhatsApp: os momentos do grupo entram em ordem cronológica
+    // quando a corrida cruza a data de cada um. O card novo chega no slot de
+    // cima, empurra os anteriores pra baixo e o mais velho sai por baixo.
+    // Tudo determinístico por frame (posição = quantos cards chegaram depois).
+    // Na paisagem a coluna mora no vão à direita e ainda cede quando uma barra
+    // longa se aproxima; no retrato vive na metade de baixo, sem conflito.
+    const cardW=V?W-2*MX:332,cardLeft=V?MX:W-64-cardW;
+    const slotTops=V?[668,792,916,1040]:[196,308,420,532],slotH=V?108:96;
     const tipNear=(y1,y2)=>{
       let m=0;
       data.series.forEach((s,si)=>{
@@ -9517,25 +9522,40 @@ function cinemaMakeComposition(React,R){
       });
       return m;
     };
+    const whats=data.whats||[];
+    const kToF=k=>steps>0?20+(dur-60)*(k/steps):20; // inverso do kFloat
+    const SHIFT=14; // quadros da animação de empurrar a pilha
+    const starts=[];let prevStart=-1e9;
+    whats.forEach(c=>{const s=Math.max(kToF(c.k),prevStart+40);starts.push(s);prevStart=s;});
+    const maxSlots=slotTops.length;
+    const slotGapY=slotTops.length>1?slotTops[1]-slotTops[0]:112;
     const factCards=[];
-    if(gi>=0) for(let i=0;i<perGroup;i++){
-      const fact=factList[gi*perGroup+i];
-      if(!fact) continue;
-      const enter=Math.min(lin(gt,10+i*12,26+i*12,0,1),lin(gt,groupDur-18,groupDur-6,1,0));
-      const st=slotTops[i];
-      const op=enter*lin(tipNear(st-8,st+slotH+8),cardLeft-180,cardLeft-90,1,0);
-      if(op>.01) factCards.push({fact,top:st,op,dy:lin(gt,10+i*12,26+i*12,10,0)});
-    }
+    whats.forEach((c,i)=>{
+      const s=starts[i];
+      if(f<s) return;
+      // Quantos cards chegaram depois deste (fração anima o empurrão).
+      let slotFloat=0;
+      for(let j=i+1;j<whats.length;j++){
+        if(f>=starts[j]+SHIFT) slotFloat+=1;
+        else if(f>=starts[j]) slotFloat+=smooth5((f-starts[j])/SHIFT);
+      }
+      if(slotFloat>maxSlots) return; // já saiu da pilha faz tempo
+      const enter=lin(f,s,s+12,0,1);
+      const exit=lin(slotFloat,maxSlots-1,maxSlots,1,0); // some ao ser empurrado pra fora
+      const y=slotTops[0]+slotFloat*slotGapY;
+      const op=(V?1:lin(tipNear(y-8,y+slotH+8),cardLeft-180,cardLeft-90,1,0))*enter*exit;
+      if(op>.01) factCards.push({fact:c,top:y,op,dy:(1-enter)*10});
+    });
     const medals=["🥇","🥈","🥉"];
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
-      h("div",{style:{position:"absolute",top:44,left:64,right:64}},
-        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"A corrida do ranking"),
+      h("div",{style:{position:"absolute",top:V?32:44,left:MX,right:MX}},
+        h(Kicker,{style:{fontSize:V?13:16,letterSpacing:V?4:6}},"A corrida do ranking"),
         h("div",{style:{opacity:capOp,transform:`translateY(${capDy}px)`}},
-          h("div",{style:{display:"flex",alignItems:"baseline",gap:18,marginTop:10}},
-            h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:900}},cap.text||""),
-            cap.tag?h("div",{style:{fontSize:15,fontWeight:800,color:"#ff6b64",letterSpacing:2}},cap.tag):null
+          h("div",{style:{display:"flex",alignItems:"baseline",gap:V?10:18,marginTop:V?6:10}},
+            h("div",{style:{fontSize:V?24:34,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:V?W-2*MX:900}},cap.text||""),
+            cap.tag?h("div",{style:{fontSize:V?12:15,fontWeight:800,color:"#ff6b64",letterSpacing:2,whiteSpace:"nowrap"}},cap.tag):null
           ),
-          h("div",{style:{fontSize:17,color:SOFT,marginTop:4}},cap.date||" ")
+          h("div",{style:{fontSize:V?13:17,color:SOFT,marginTop:4}},cap.date||" ")
         )
       ),
       data.series.map((s,si)=>{
@@ -9550,23 +9570,27 @@ function cinemaMakeComposition(React,R){
         const curRank=Math.round(r);
         const isLeader=curRank===0;
         return h("div",{key:si,style:{position:"absolute",left:0,top:y,width:W,height:rowH,display:"flex",alignItems:"center"}},
-          h("div",{style:{position:"absolute",left:64,width:44,textAlign:"center",fontSize:isLeader?26:20,fontWeight:800,color:curRank<3?YELLOW:"rgba(255,255,255,.65)"}},curRank<3?medals[curRank]:String(curRank+1)),
-          h("div",{style:{position:"absolute",left:114,width:190,textAlign:"right",fontSize:22,fontWeight:isLeader?800:600,color:isLeader?"#fff":SOFT,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},s.name),
+          h("div",{style:{position:"absolute",left:V?14:64,width:V?36:44,textAlign:"center",fontSize:isLeader?(V?21:26):(V?16:20),fontWeight:800,color:curRank<3?YELLOW:"rgba(255,255,255,.65)"}},curRank<3?medals[curRank]:String(curRank+1)),
+          h("div",{style:{position:"absolute",left:V?52:114,width:V?126:190,textAlign:"right",fontSize:V?17:22,fontWeight:isLeader?800:600,color:isLeader?"#fff":SOFT,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},s.name),
           h("div",{style:{position:"absolute",left,top:(rowH-Math.max(14,rowH-22))/2,width:wpx,height:Math.max(14,rowH-22),borderRadius:9,background:`linear-gradient(90deg,${s.color},${s.color}cc)`,boxShadow:[isLeader?`0 0 26px ${s.color}88`:null,act>.02?`0 0 ${22*act}px ${s.color}aa`:null].filter(Boolean).join(", ")||"none"}}),
-          h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+14,W-120),fontSize:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff",transform:`scale(${1+.25*act})`,transformOrigin:"left center",textShadow:act>.02?`0 0 ${14*act}px rgba(255,223,0,${(.85*act).toFixed(2)})`:"none"}},String(Math.round(v)))
+          h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+(V?10:14),W-(V?66:120)),fontSize:V?17:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff",transform:`scale(${1+.25*act})`,transformOrigin:"left center",textShadow:act>.02?`0 0 ${14*act}px rgba(255,223,0,${(.85*act).toFixed(2)})`:"none"}},String(Math.round(v)))
         );
       }),
-      factCards.length?h("div",{style:{position:"absolute",left:cardLeft,top:300,width:cardW,fontSize:12,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",opacity:Math.max(...factCards.map(c=>c.op))}},"Enquanto isso, no grupo"):null,
-      factCards.map((c,i)=>h("div",{key:i,style:{position:"absolute",left:cardLeft,top:c.top,width:cardW,boxSizing:"border-box",padding:"14px 18px",borderRadius:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",opacity:c.op,transform:`translateY(${c.dy}px)`}},
-        h("div",{style:{display:"flex",alignItems:"flex-start",gap:11}},
-          h("div",{style:{fontSize:24,lineHeight:1.1}},c.fact.icon),
-          h("div",{style:{fontSize:16.5,fontWeight:600,color:"#fff",lineHeight:1.32}},c.fact.text)
+      factCards.length?h("div",{style:{position:"absolute",left:cardLeft,top:slotTops[0]-30,width:cardW,fontSize:12,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",opacity:Math.max(...factCards.map(c=>c.op))}},"Enquanto isso, no grupo"):null,
+      factCards.map(c=>h("div",{key:c.fact.on+c.fact.title,style:{position:"absolute",left:cardLeft,top:c.top,width:cardW,boxSizing:"border-box",padding:V?"14px 20px":"12px 16px",borderRadius:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",opacity:c.op,transform:`translateY(${c.dy}px)`}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:V?14:11}},
+          h("div",{style:{fontSize:V?30:24,lineHeight:1.1,flex:"none"}},c.fact.icon),
+          h("div",{style:{minWidth:0,flex:1}},
+            h("div",{style:{fontSize:V?12:10.5,letterSpacing:2,fontWeight:800,color:YELLOW,textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.title),
+            h("div",{style:{fontSize:V?22:18,fontWeight:800,color:"#fff",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.stat),
+            c.fact.sub?h("div",{style:{fontSize:V?13:11.5,color:SOFT,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.sub):null
+          )
         )
       )),
-      h("div",{style:{position:"absolute",left:64,right:64,bottom:34,height:6,borderRadius:999,background:"rgba(255,255,255,.14)"}},
+      h("div",{style:{position:"absolute",left:MX,right:MX,bottom:34,height:6,borderRadius:999,background:"rgba(255,255,255,.14)"}},
         h("div",{style:{width:`${steps?kFloat/steps*100:0}%`,height:"100%",borderRadius:999,background:`linear-gradient(90deg,${GREEN},${YELLOW})`}})
       ),
-      h("div",{style:{position:"absolute",right:64,bottom:52,fontSize:15,color:SOFT,fontVariantNumeric:"tabular-nums"}},`lance ${Math.min(steps,Math.round(kFloat))}/${steps}`)
+      h("div",{style:{position:"absolute",right:MX,bottom:52,fontSize:V?13:15,color:SOFT,fontVariantNumeric:"tabular-nums"}},`lance ${Math.min(steps,Math.round(kFloat))}/${steps}`)
     );
   };
 
@@ -9575,7 +9599,8 @@ function cinemaMakeComposition(React,R){
     const f=useCurrentFrame();
     const {fps}=useVideoConfig();
     const count=data.frames.length;
-    const pad={l:84,r:250,t:150,b:80};
+    // Retrato: rótulos de nome continuam à direita, só que mais juntos.
+    const pad=V?{l:52,r:168,t:150,b:150}:{l:84,r:250,t:150,b:80};
     const uw=W-pad.l-pad.r,uh=HGT-pad.t-pad.b;
     const range=Math.max(1,data.maxVal-data.minVal);
     const X=i=>pad.l+uw*(count>1?i/(count-1):0);
@@ -9588,18 +9613,26 @@ function cinemaMakeComposition(React,R){
     // Rótulos finais sem sobreposição (empurra 26px quando colide).
     const labels=data.series.map((s,si)=>({name:s.name,color:s.color,v:data.frames[count-1].values[si],y:Y(data.frames[count-1].values[si])}))
       .sort((a,b)=>a.y-b.y);
-    for(let i=1;i<labels.length;i++) if(labels[i].y<labels[i-1].y+26) labels[i].y=labels[i-1].y+26;
+    const labGap=V?22:26;
+    for(let i=1;i<labels.length;i++) if(labels[i].y<labels[i-1].y+labGap) labels[i].y=labels[i-1].y+labGap;
+    // A cadeia de empurrões pode passar do fundo do quadro (ex.: todo mundo
+    // empatado perto do mínimo). Prende o último e comprime a pilha de volta.
+    if(labels.length){
+      const labMaxY=HGT-16;
+      if(labels[labels.length-1].y>labMaxY) labels[labels.length-1].y=labMaxY;
+      for(let i=labels.length-2;i>=0;i--) if(labels[i].y>labels[i+1].y-labGap) labels[i].y=labels[i+1].y-labGap;
+    }
     const labelS=spring({frame:f-(dur-76),fps,config:{damping:15,stiffness:120}});
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
-      h("div",{style:{position:"absolute",top:44,left:64}},
-        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"A evolução"),
-        h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",marginTop:10}},"Ponto a ponto, do apito inicial até agora")
+      h("div",{style:{position:"absolute",top:V?32:44,left:MX,right:MX}},
+        h(Kicker,{style:{fontSize:V?13:16,letterSpacing:V?4:6}},"A evolução"),
+        h("div",{style:{fontSize:V?21:34,fontWeight:800,color:"#fff",marginTop:V?6:10}},"Ponto a ponto, do apito inicial até agora")
       ),
       h("svg",{width:W,height:HGT,viewBox:`0 0 ${W} ${HGT}`,style:{position:"absolute",inset:0}},
         h("defs",null,h("clipPath",{id:"cinemaChartClip"},h("rect",{x:0,y:0,width:clipW,height:HGT}))),
         ticks.map((v,i)=>h("g",{key:i},
           h("line",{x1:pad.l,x2:W-pad.r,y1:Y(v),y2:Y(v),stroke:"rgba(255,255,255,.12)"}),
-          h("text",{x:pad.l-12,y:Y(v),textAnchor:"end",dominantBaseline:"middle",fontSize:15,fill:SOFT},String(v))
+          h("text",{x:pad.l-12,y:Y(v),textAnchor:"end",dominantBaseline:"middle",fontSize:V?13:15,fill:SOFT},String(v))
         )),
         h("g",{clipPath:"url(#cinemaChartClip)"},
           data.series.map((s,si)=>h("polyline",{key:si,
@@ -9610,8 +9643,8 @@ function cinemaMakeComposition(React,R){
         ),
         reveal<1?h("line",{x1:clipW,x2:clipW,y1:pad.t-8,y2:HGT-pad.b+8,stroke:YELLOW,strokeWidth:2,opacity:.8}):null,
         labels.map((l,i)=>h("g",{key:i,opacity:Math.min(1,labelS*1.2),transform:`translate(${(1-labelS)*24},0)`},
-          h("circle",{cx:W-pad.r+16,cy:l.y,r:6,fill:l.color}),
-          h("text",{x:W-pad.r+30,y:l.y,dominantBaseline:"middle",fontSize:18,fontWeight:700,fill:"#fff"},`${l.name} · ${l.v}`)
+          h("circle",{cx:W-pad.r+(V?10:16),cy:l.y,r:V?5:6,fill:l.color}),
+          h("text",{x:W-pad.r+(V?22:30),y:l.y,dominantBaseline:"middle",fontSize:V?15:18,fontWeight:700,fill:"#fff"},`${l.name} · ${l.v}`)
         ))
       )
     );
@@ -9631,25 +9664,75 @@ function cinemaMakeComposition(React,R){
       st.leaderPrize?{icon:"💰",label:"Prêmio do líder",value:st.leaderPrize,sub:"se a Copa acabasse agora"}:null
     ].filter(Boolean);
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
-      h("div",{style:{position:"absolute",top:44,left:64}},
-        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"Os números"),
-        h("div",{style:{fontSize:34,fontWeight:800,color:"#fff",marginTop:10}},"Estatísticas do bolão")
+      h("div",{style:{position:"absolute",top:V?32:44,left:MX}},
+        h(Kicker,{style:{fontSize:V?13:16,letterSpacing:V?4:6}},"Os números"),
+        h("div",{style:{fontSize:V?24:34,fontWeight:800,color:"#fff",marginTop:V?6:10}},"Estatísticas do bolão")
       ),
-      h("div",{style:{position:"absolute",top:160,left:64,right:64,display:"flex",flexWrap:"wrap",gap:22,justifyContent:"center"}},
+      h("div",{style:Object.assign({position:"absolute",top:V?126:160,left:MX,right:MX,display:"flex",flexWrap:"wrap",gap:V?14:22,justifyContent:"center"},V?{bottom:56,alignContent:"center"}:null)},
         cards.map((c,i)=>{
           const s=spring({frame:f-14-i*7,fps,config:{damping:14,stiffness:120}});
-          return h("div",{key:i,style:{width:356,minHeight:196,borderRadius:20,padding:"24px 26px",background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.18)",opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*40}px) scale(${.92+.08*s})`}},
-            h("div",{style:{fontSize:38}},c.icon),
-            h("div",{style:{fontSize:15,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",margin:"10px 0 6px"}},c.label),
-            h("div",{style:{fontSize:30,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.value),
-            h("div",{style:{fontSize:16,color:SOFT,marginTop:6,lineHeight:1.35}},c.sub)
+          // Retrato: cartas em coluna única, mais baixas, com ícone ao lado.
+          return h("div",{key:i,style:{width:V?"100%":356,minHeight:V?0:196,boxSizing:"border-box",borderRadius:20,padding:V?"16px 20px":"24px 26px",background:"rgba(255,255,255,.07)",border:"1px solid rgba(255,255,255,.18)",opacity:Math.min(1,s*1.2),transform:`translateY(${(1-s)*40}px) scale(${.92+.08*s})`,display:V?"flex":"block",alignItems:"center",gap:V?16:0}},
+            h("div",{style:{fontSize:V?32:38,flex:"none"}},c.icon),
+            h("div",{style:V?{minWidth:0}:null},
+              h("div",{style:{fontSize:V?12:15,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",margin:V?"0 0 3px":"10px 0 6px"}},c.label),
+              h("div",{style:{fontSize:V?22:30,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.value),
+              h("div",{style:{fontSize:V?14:16,color:SOFT,marginTop:V?3:6,lineHeight:1.35}},c.sub)
+            )
           );
         })
       )
     );
   };
 
-  // Cena 5: pódio projetado + confete determinístico (random() do remotion)
+  // Cenas do WhatsApp: ranking completo de uma categoria do grupo (Altruísta,
+  // Zika). Barras horizontais com spring por linha; boards "twin" ganham uma
+  // segunda barra (foi zicado) e um punch line no rodapé.
+  const Board=({board,dur})=>{
+    const f=useCurrentFrame();
+    const {fps}=useVideoConfig();
+    const rows=board.rows||[];
+    const twin=!!board.twin;
+    const maxV=Math.max(1,...rows.map(r=>Math.max(r[1],r[2]||0)));
+    const topY=V?216:196;
+    const botY=board.punch?(V?HGT-190:HGT-130):(V?HGT-110:HGT-70);
+    const rowH=rows.length?Math.min(V?120:60,(botY-topY)/rows.length):0;
+    const nameW=V?128:150;
+    const x0=(V?MX:W/2-330)+nameW+14;
+    const barMax=(V?W-MX:W/2+330)-x0-64;
+    const barH1=twin?(V?18:14):(V?24:20),barH2=V?12:9;
+    return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
+      h("div",{style:{position:"absolute",top:V?40:44,left:0,width:"100%",textAlign:"center"}},
+        h(Kicker,{style:{fontSize:V?13:16,letterSpacing:V?4:6,opacity:lin(f,0,12,0,1)}},board.kicker),
+        h("div",{style:{fontSize:V?32:40,fontWeight:900,color:"#fff",marginTop:8,opacity:lin(f,4,16,0,1)}},board.title),
+        h("div",{style:{fontSize:V?14:17,color:SOFT,marginTop:6,opacity:lin(f,8,20,0,1)}},
+          board.sub,
+          twin?h("span",null," — ",
+            h("span",{style:{color:YELLOW,fontWeight:700}},"■ "+board.twin[0]),
+            "  ",
+            h("span",{style:{color:"#ff6b64",fontWeight:700}},"■ "+board.twin[1])
+          ):null
+        )
+      ),
+      rows.map((r,i)=>{
+        const s=spring({frame:f-14-i*5,fps,config:{damping:15,stiffness:110}});
+        const y=topY+i*rowH;
+        const w1=Math.max(3,barMax*(r[1]/maxV)*Math.min(1,s));
+        const w2=twin?Math.max(r[2]>0?3:0,barMax*((r[2]||0)/maxV)*Math.min(1,s)):0;
+        const lead=i===0;
+        return h("div",{key:r[0],style:{position:"absolute",left:0,top:y,width:W,height:rowH,opacity:Math.min(1,s*1.3)}},
+          h("div",{style:{position:"absolute",left:x0-nameW-14,top:"50%",transform:"translateY(-50%)",width:nameW,textAlign:"right",fontSize:V?17:19,fontWeight:lead?800:600,color:lead?"#fff":SOFT,whiteSpace:"nowrap"}},r[0]),
+          h("div",{style:{position:"absolute",left:x0,top:twin?rowH/2-barH1-2:rowH/2-barH1/2,width:w1,height:barH1,borderRadius:6,background:lead?YELLOW:"rgba(255,223,0,.45)",boxShadow:lead?"0 0 22px rgba(255,223,0,.45)":"none"}}),
+          h("div",{style:{position:"absolute",left:x0+w1+10,top:twin?rowH/2-barH1-2:rowH/2-barH1/2,height:barH1,display:"flex",alignItems:"center",fontSize:V?17:18,fontWeight:800,fontVariantNumeric:"tabular-nums",color:lead?YELLOW:"#fff"}},String(r[1])),
+          twin?h("div",{style:{position:"absolute",left:x0,top:rowH/2+3,width:w2,height:barH2,borderRadius:5,background:"#ff6b64",opacity:.92}}):null,
+          twin?h("div",{style:{position:"absolute",left:x0+w2+10,top:rowH/2+3,height:barH2,display:"flex",alignItems:"center",fontSize:V?13:13,fontWeight:700,fontVariantNumeric:"tabular-nums",color:"#ff9d97"}},String(r[2]||0)):null
+        );
+      }),
+      board.punch?h("div",{style:{position:"absolute",left:V?MX:W/2-330,right:V?MX:W/2-330,bottom:V?90:44,padding:V?"16px 20px":"14px 20px",borderRadius:14,textAlign:"center",background:"rgba(255,223,0,.1)",border:"1px solid rgba(255,223,0,.5)",fontSize:V?17:19,fontWeight:700,color:"#fff",opacity:lin(f,dur-110,dur-92,0,1),transform:`translateY(${lin(f,dur-110,dur-92,14,0)}px)`}},board.punch):null
+    );
+  };
+
+  // Cena do pódio: projetado + confete determinístico (random() do remotion)
   const Confetti=()=>{
     const f=useCurrentFrame();
     const colors=[YELLOW,"#ffffff",GREEN,"#2f7cf6","#d83a34"];
@@ -9667,29 +9750,32 @@ function cinemaMakeComposition(React,R){
   const Podium=({data,dur})=>{
     const f=useCurrentFrame();
     const {fps}=useVideoConfig();
-    const base=622;
+    // Retrato: pódio mais embaixo, colunas mais estreitas e altas.
+    const base=V?1010:622;
+    const off=V?204:244,colW=V?184:216,pillW=V?172:200;
+    const hgts=V?[300,396,232]:[236,308,182];
     const spots=[
-      {p:data.podium[1],x:W/2-244,hgt:236,medal:"🥈",delay:8},
-      {p:data.podium[0],x:W/2,hgt:308,medal:"🥇",delay:0},
-      {p:data.podium[2],x:W/2+244,hgt:182,medal:"🥉",delay:16}
+      {p:data.podium[1],x:W/2-off,hgt:hgts[0],medal:"🥈",delay:8},
+      {p:data.podium[0],x:W/2,hgt:hgts[1],medal:"🥇",delay:0},
+      {p:data.podium[2],x:W/2+off,hgt:hgts[2],medal:"🥉",delay:16}
     ].filter(s=>s.p);
     return h(AbsoluteFill,{style:{fontFamily:FONT,opacity:sceneFade(f,dur)}},
       h(Confetti),
-      h("div",{style:{position:"absolute",top:52,width:"100%",textAlign:"center"}},
-        h(Kicker,{style:{fontSize:16,letterSpacing:6}},"Se a Copa acabasse hoje"),
-        h("div",{style:{fontSize:40,fontWeight:900,color:"#fff",marginTop:10}},"O pódio do bolão")
+      h("div",{style:{position:"absolute",top:V?64:52,width:"100%",textAlign:"center"}},
+        h(Kicker,{style:{fontSize:V?13:16,letterSpacing:V?4:6}},"Se a Copa acabasse hoje"),
+        h("div",{style:{fontSize:V?30:40,fontWeight:900,color:"#fff",marginTop:10}},"O pódio do bolão")
       ),
       spots.map((sp,i)=>{
         const s=spring({frame:f-16-sp.delay,fps,config:{damping:13,stiffness:90}});
         const hpx=sp.hgt*Math.min(1,s);
-        return h("div",{key:i,style:{position:"absolute",left:sp.x-108,top:0,width:216,height:HGT}},
+        return h("div",{key:i,style:{position:"absolute",left:sp.x-colW/2,top:0,width:colW,height:HGT}},
           h("div",{style:{position:"absolute",bottom:HGT-base,left:0,width:"100%",textAlign:"center",transform:`translateY(${-hpx}px)`}},
-            h("div",{style:{fontSize:46,marginBottom:2}},sp.medal),
-            h("div",{style:{fontSize:25,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},sp.p.name),
-            h("div",{style:{fontSize:17,color:SOFT,marginBottom:8}},`${sp.p.pts} pts · ${sp.p.crav} cravadas`)
+            h("div",{style:{fontSize:V?38:46,marginBottom:2}},sp.medal),
+            h("div",{style:{fontSize:V?20:25,fontWeight:800,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},sp.p.name),
+            h("div",{style:{fontSize:V?14:17,color:SOFT,marginBottom:8}},`${sp.p.pts} pts · ${sp.p.crav} cravadas`)
           ),
-          h("div",{style:{position:"absolute",bottom:HGT-base,left:8,width:200,height:hpx,borderRadius:"14px 14px 0 0",background:`linear-gradient(180deg,rgba(255,223,0,${i===1?.95:.55}),rgba(255,223,0,${i===1?.5:.22}))`,boxShadow:"0 -6px 30px rgba(255,223,0,.25)",display:"flex",alignItems:"flex-end",justifyContent:"center"}},
-            h("div",{style:{paddingBottom:14,fontSize:19,fontWeight:800,color:"#071c4d",opacity:s>=.75?1:0}},sp.p.prize)
+          h("div",{style:{position:"absolute",bottom:HGT-base,left:(colW-pillW)/2,width:pillW,height:hpx,borderRadius:"14px 14px 0 0",background:`linear-gradient(180deg,rgba(255,223,0,${i===1?.95:.55}),rgba(255,223,0,${i===1?.5:.22}))`,boxShadow:"0 -6px 30px rgba(255,223,0,.25)",display:"flex",alignItems:"flex-end",justifyContent:"center"}},
+            h("div",{style:{paddingBottom:V?12:14,fontSize:V?16:19,fontWeight:800,color:"#071c4d",opacity:s>=.75?1:0}},sp.p.prize)
           )
         );
       }),
@@ -9706,6 +9792,9 @@ function cinemaMakeComposition(React,R){
     if(d.race>0){seq.push(h(Sequence,{key:"race",from:at,durationInFrames:d.race},h(Race,{data,dur:d.race})));at+=d.race;}
     if(d.chart>0){seq.push(h(Sequence,{key:"chart",from:at,durationInFrames:d.chart},h(Chart,{data,dur:d.chart})));at+=d.chart;}
     seq.push(h(Sequence,{key:"stats",from:at,durationInFrames:d.stats},h(Stats,{data,dur:d.stats})));at+=d.stats;
+    (data.chatBoards||[]).forEach((b,i)=>{
+      seq.push(h(Sequence,{key:`board${i}`,from:at,durationInFrames:d.board},h(Board,{board:b,dur:d.board})));at+=d.board;
+    });
     seq.push(h(Sequence,{key:"podio",from:at,durationInFrames:d.podio},h(Podium,{data,dur:d.podio})));
     return h(AbsoluteFill,{style:{fontFamily:FONT}},h(Bg),seq,h(Watermark));
   };
@@ -9722,18 +9811,24 @@ function cinemaLoadModules(){
   }
   return cinemaLoadPromise;
 }
+function cinemaCompForOrient(mods,orient){
+  if(!mods.comps) mods.comps={};
+  if(!mods.comps[orient]) mods.comps[orient]=cinemaMakeComposition(mods.React,mods.Remotion,orient);
+  return mods.comps[orient];
+}
+function cinemaDims(orient){return orient==="v"?{w:720,h:1280}:{w:1280,h:720};}
 function cinemaPlayerElement(mods,data){
-  const {React,Remotion,PlayerMod}=mods;
-  if(!mods.Comp) mods.Comp=cinemaMakeComposition(React,Remotion);
+  const {React,PlayerMod}=mods;
+  const dims=cinemaDims(cinemaOrient);
   if(!mods.playerRef) mods.playerRef=React.createRef();
   // Controle imperativo (seek/play) pra depuração no console do admin.
   window.__cinemaPlayer=mods.playerRef;
   return React.createElement(PlayerMod.Player,{
     ref:mods.playerRef,
-    component:mods.Comp,
+    component:cinemaCompForOrient(mods,cinemaOrient),
     inputProps:{data},
     durationInFrames:data.durationInFrames,
-    compositionWidth:1280,compositionHeight:720,fps:30,
+    compositionWidth:dims.w,compositionHeight:dims.h,fps:30,
     controls:true,loop:true,clickToPlay:true,doubleClickToFullscreen:true,
     spaceKeyToPlayOrPause:true,
     acknowledgeRemotionLicense:true,
@@ -9768,7 +9863,7 @@ async function cinemaEnsurePlayer(){
   // Recarregar dados (realtime etc.) só re-renderiza se algo mudou, pra não
   // resetar a reprodução à toa.
   const last=data.frames[data.frames.length-1];
-  const sig=JSON.stringify([data.frames.length,last.values,data.stats.liveGames]);
+  const sig=JSON.stringify([data.frames.length,last.values,data.stats.liveGames,cinemaOrient]);
   if(cinemaRoot&&sig===cinemaDataSig) return;
   cinemaDataSig=sig;
   if(!cinemaRoot){
@@ -9781,6 +9876,153 @@ function cinemaTeardownRootOnly(){
   if(cinemaRoot){try{cinemaRoot.unmount();}catch(e){}cinemaRoot=null;}
   cinemaDataSig=null;
 }
+function cinemaSetOrient(o){
+  if(o===cinemaOrient) return;
+  cinemaOrient=o;
+  try{localStorage.setItem("bolao.cinemaOrient",o);}catch(e){}
+  const m=document.getElementById("cinemaMount");
+  if(m) m.classList.toggle("v",o==="v");
+  const bV=document.getElementById("cinemaOrientV"),bH=document.getElementById("cinemaOrientH");
+  if(bV) bV.classList.toggle("active",o==="v");
+  if(bH) bH.classList.toggle("active",o==="h");
+  cinemaEnsurePlayer(); // a assinatura inclui a orientação → player re-renderiza
+}
+// Guarda o último status: se o shell for destruído (troca de aba) e
+// reconstruído no meio da exportação, o progresso reaparece no lugar.
+let cinemaDlLastStatus=null;
+function cinemaDlStatus(html){
+  cinemaDlLastStatus=html||null;
+  const el=document.getElementById("cinemaDlStatus");
+  if(!el) return;
+  el.style.display=html?"flex":"none";
+  el.innerHTML=html||"";
+}
+function cinemaDownloadCancel(){if(cinemaDlAbort) cinemaDlAbort.aborted=true;}
+// Yield que NÃO usa setTimeout: em aba oculta há 5+ min o Chrome clampa
+// timers a 1 disparo/minuto (intensive throttling) e a exportação viraria
+// lesma. postMessage de MessageChannel não sofre throttle.
+function cinemaNextTick(){
+  return new Promise(r=>{
+    const ch=new MessageChannel();
+    ch.port1.onmessage=()=>{ch.port1.close();r();};
+    ch.port2.postMessage(0);
+  });
+}
+// Exporta o trailer em MP4 (H.264) direto no navegador: renderiza quadro a
+// quadro via <Thumbnail> do Remotion, rasteriza o DOM (modern-screenshot —
+// html-to-image trava no decode de SVG+foreignObject no Chrome) e codifica
+// com WebCodecs + mp4-muxer. Sem backend — GitHub Pages segue estático.
+// maxFrames serve pra QA (render curto via console).
+async function cinemaDownloadVideo(maxFrames){
+  if(cinemaDlAbort) return; // já tem exportação rolando
+  // Arma o guard e trava o botão ANTES de qualquer await — dois cliques
+  // rápidos não podem abrir duas exportações.
+  const abort={aborted:false};
+  cinemaDlAbort=abort;
+  const btn=document.getElementById("cinemaDlBtn");
+  if(btn) btn.disabled=true;
+  const bail=msg=>{cinemaDlStatus(msg);cinemaDlAbort=null;if(btn) btn.disabled=false;};
+  if(!window.VideoEncoder||typeof VideoFrame==="undefined"){
+    bail(`<span>Esse navegador não exporta vídeo (sem WebCodecs). Usa Chrome, Edge ou Safari 17+.</span>`);
+    return;
+  }
+  const FPS=30;
+  // Captura a orientação AGORA: o toggle segue clicável durante a exportação
+  // (só troca o preview) e não pode mudar dimensões, componente nem filename.
+  const orient=cinemaOrient;
+  const dims=cinemaDims(orient);
+  const CW=dims.w,CH=dims.h;
+  let mods,data,mux,shot,flushSync;
+  try{
+    mods=await cinemaLoadModules();
+    data=cinemaBuildData();
+    if(data.steps<1){bail("<span>Ainda não tem lance registrado pra virar filme.</span>");return;}
+    const extra=await Promise.all([import("mp4-muxer"),import("modern-screenshot"),import("react-dom")]);
+    mux=extra[0];shot=extra[1];flushSync=extra[2].flushSync;
+  }catch(err){
+    console.error("Cinema: falha ao preparar exportação",err);
+    bail("<span>Não deu pra carregar os módulos de exportação pelo CDN. Tenta de novo.</span>");
+    return;
+  }
+  // H.264: tenta High → Main → Baseline; o primeiro que o navegador aceitar.
+  let cfg=null;
+  for(const codec of ["avc1.640028","avc1.4d0028","avc1.42E01F"]){
+    const c={codec,width:CW,height:CH,bitrate:8_000_000,framerate:FPS};
+    try{if((await VideoEncoder.isConfigSupported(c)).supported){cfg=c;break;}}catch(e){}
+  }
+  if(!cfg){bail("<span>Esse navegador não codifica H.264. Usa Chrome ou Edge.</span>");return;}
+  const total=Math.min(data.durationInFrames,maxFrames||data.durationInFrames);
+  try{if(mods.playerRef&&mods.playerRef.current) mods.playerRef.current.pause();}catch(e){}
+  // Palco oculto onde cada quadro é montado estaticamente.
+  const stage=document.createElement("div");
+  stage.style.cssText=`position:fixed;left:-10000px;top:0;width:${CW}px;height:${CH}px;pointer-events:none;background:#04122f;`;
+  document.body.appendChild(stage);
+  const {React,ReactDOMClient,PlayerMod}=mods;
+  const Comp=cinemaCompForOrient(mods,orient);
+  const root=ReactDOMClient.createRoot(stage);
+  const muxer=new mux.Muxer({target:new mux.ArrayBufferTarget(),video:{codec:"avc",width:CW,height:CH},fastStart:"in-memory"});
+  let encErr=null;
+  const encoder=new VideoEncoder({
+    output:(chunk,meta)=>muxer.addVideoChunk(chunk,meta),
+    error:e=>{encErr=e;abort.aborted=true;}
+  });
+  encoder.configure(cfg);
+  const t0=performance.now();
+  try{
+    for(let f=0;f<total;f++){
+      if(abort.aborted) throw new Error("cancelado");
+      flushSync(()=>root.render(React.createElement(PlayerMod.Thumbnail,{
+        component:Comp,inputProps:{data},frameToDisplay:f,
+        durationInFrames:data.durationInFrames,fps:FPS,
+        compositionWidth:CW,compositionHeight:CH,
+        style:{width:CW,height:CH}
+      })));
+      const canvas=await shot.domToCanvas(stage,{width:CW,height:CH,scale:1,font:false,backgroundColor:"#04122f"});
+      const vf=new VideoFrame(canvas,{timestamp:Math.round(f*1e6/FPS),duration:Math.round(1e6/FPS)});
+      // encode() lança se o encoder morreu no meio do await acima — o frame
+      // fecha de qualquer jeito, senão fica segurando mídia até o GC.
+      try{encoder.encode(vf,{keyFrame:f%(FPS*5)===0});}finally{vf.close();}
+      // Não deixa a fila do encoder inchar nem a aba congelar.
+      while(encoder.encodeQueueSize>6&&!abort.aborted) await cinemaNextTick();
+      if(f%10===0||f===total-1){
+        const pct=Math.round((f+1)/total*100);
+        const eta=f>10?Math.round((performance.now()-t0)/(f+1)*(total-f-1)/1000):null;
+        cinemaDlStatus(`<span>Renderizando ${pct}%${eta!=null?` · ~${eta>=60?`${Math.ceil(eta/60)} min`:`${eta}s`}`:""}</span><span class="bar"><span style="width:${pct}%"></span></span><button class="action-btn secondary" onclick="cinemaDownloadCancel()">Cancelar</button>`);
+        // cinemaNextTick, não rAF nem setTimeout: em aba oculta o rAF nunca
+        // dispara e o setTimeout é clampado a 1/min pelo Chrome.
+        await cinemaNextTick();
+      }
+    }
+    // Some com o botão Cancelar antes do flush: cancelar aqui não teria efeito.
+    cinemaDlStatus("<span>Finalizando o arquivo…</span>");
+    await encoder.flush();
+    muxer.finalize();
+    const blob=new Blob([muxer.target.buffer],{type:"video/mp4"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=`bolao-filme-${orient==="v"?"stories":"widescreen"}.mp4`;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+    cinemaDlStatus(`<span>✅ MP4 pronto (${(blob.size/1e6).toFixed(1)} MB, ${CW}×${CH}). Já dá pra soltar no grupo.</span>`);
+  }catch(err){
+    if(encErr) console.error("Cinema: erro do encoder",encErr);
+    if(String(err&&err.message)==="cancelado"&&!encErr){
+      cinemaDlStatus("<span>Exportação cancelada.</span>");
+    }else{
+      console.error("Cinema: exportação falhou",err);
+      cinemaDlStatus("<span>Exportação falhou no meio do caminho. Abre o console e me chama.</span>");
+    }
+  }finally{
+    cinemaDlAbort=null;
+    // Reobtém pelo id: se o shell foi recriado (troca de aba), o `btn`
+    // capturado é um nó órfão e o botão real ficaria travado.
+    const liveBtn=document.getElementById("cinemaDlBtn")||btn;
+    if(liveBtn) liveBtn.disabled=false;
+    try{encoder.close();}catch(e){}
+    try{root.unmount();}catch(e){}
+    stage.remove();
+  }
+}
 function renderCinema(){
   const el=document.getElementById("tab-cinema");
   if(!el) return;
@@ -9790,10 +10032,21 @@ function renderCinema(){
     el.innerHTML=`<div class="card cinema-shell">
       <div class="card-title">🎬 Cinema — o trailer do bolão</div>
       <div class="cinema-note">Vídeo gerado na hora (Remotion) com a corrida do ranking, a evolução gol a gol, as estatísticas e o pódio projetado. Por enquanto, só o administrador vê.</div>
-      <div class="cinema-mount" id="cinemaMount">
+      <div class="cinema-toolbar">
+        <div class="cinema-orient">
+          <button class="action-btn secondary${cinemaOrient==="v"?" active":""}" id="cinemaOrientV" onclick="cinemaSetOrient('v')">📱 9:16</button>
+          <button class="action-btn secondary${cinemaOrient==="h"?" active":""}" id="cinemaOrientH" onclick="cinemaSetOrient('h')">🖥️ 16:9</button>
+        </div>
+        <button class="action-btn" id="cinemaDlBtn"${cinemaDlAbort?" disabled":""} onclick="cinemaDownloadVideo()">⬇️ Baixar MP4</button>
+      </div>
+      <div class="cinema-mount${cinemaOrient==="v"?" v":""}" id="cinemaMount">
         <div class="cinema-loading"><div class="spinner"></div><span>Carregando o projetor…</span></div>
       </div>
+      <div class="cinema-dl-status" id="cinemaDlStatus" style="display:none"></div>
     </div>`;
+    // Exportação em curso (ou recém-terminada) sobrevive à troca de aba:
+    // reaplica o último status no shell recém-criado.
+    if(cinemaDlLastStatus) cinemaDlStatus(cinemaDlLastStatus);
   }
   cinemaEnsurePlayer();
 }
