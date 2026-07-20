@@ -399,12 +399,52 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
 /* palpite inline na aba Jogos */
 .brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
-/* pontos como chip DENTRO do pill "ver todos" — contorno único, nada de badge
-   espiando por trás (o fundo translúcido do pill deixava a curva dele vazar) */
-.brx-open-pill .brx-pts{margin:-3px -7px -3px 0;padding:4px 8px;min-width:26px;text-align:center;box-sizing:border-box;border:none;font-size:.58rem}
-.brx-open-pill .brx-pts.ok{background:rgba(74,224,142,.22)}
-.brx-open-pill .brx-pts.inv{background:rgba(255,122,112,.22)}
-.brx-open-pill .brx-pts.zero{background:rgba(255,255,255,.13);color:#c2d2c8}
+/* Jogo revelado: três zonas livres para os resultados apostados. A faixa mantém
+   o mesmo orçamento vertical do card original; com poucos palpites o círculo cresce
+   só visualmente (transform), sem aumentar a altura ocupada no grid. */
+.brx-prediction-ribbon{--pick-layout-size:16px;--pick-scale:1;--pick-slot:18px;--pick-font:.34rem;--pick-score-font:.37rem;--pick-gap:1px;position:relative;grid-column:1/-1;display:grid;width:100%;height:100%;max-width:100%;min-width:0;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:8px;padding:12px 0 4px;overflow:hidden;appearance:none;border:1px solid transparent;border-top-color:rgba(255,255,255,.065);border-radius:0 0 9px 9px;background:transparent;color:inherit;font:inherit;text-align:initial;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s}
+.brx-prediction-ribbon[data-density="sparse"]{--pick-layout-size:23px;--pick-scale:1.4;--pick-slot:34px;--pick-font:.45rem;--pick-score-font:.49rem;--pick-gap:5px}
+.brx-prediction-ribbon[data-density="medium"]{--pick-layout-size:23px;--pick-scale:1.18;--pick-slot:30px;--pick-font:.44rem;--pick-score-font:.47rem;--pick-gap:4px}
+.brx-prediction-ribbon[data-density="dense"]{--pick-layout-size:20px;--pick-scale:1.1;--pick-slot:24px;--pick-font:.4rem;--pick-score-font:.43rem;--pick-gap:3px}
+.brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:16px;--pick-scale:1;--pick-slot:18px;--pick-font:.34rem;--pick-score-font:.37rem;--pick-gap:1px}
+.brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:10px;--pick-scale:1;--pick-slot:11px;--pick-font:.25rem;--pick-score-font:.28rem;--pick-gap:0px}
+.brx-prediction-ribbon:after{content:"";position:absolute;top:50%;right:9px;width:7px;height:7px;border-top:1.5px solid #7f9488;border-right:1.5px solid #7f9488;transform:translateY(-50%) rotate(45deg);transition:border-color .16s,transform .16s}
+.brx-prediction-ribbon:hover{border-color:rgba(255,215,94,.2);background:linear-gradient(180deg,rgba(255,215,94,.035),rgba(255,255,255,.018));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.brx-prediction-ribbon:hover:after{border-color:#ffd75e;transform:translate(2px,-50%) rotate(45deg)}
+.brx-prediction-ribbon:focus-visible{outline:3px solid rgba(255,215,94,.3);outline-offset:2px}
+.brx-card-outcome{display:flex;width:100%;max-width:100%;align-items:center;min-height:0;min-width:0}
+.brx-card-outcome.home{justify-content:flex-end}
+.brx-card-outcome.draw{position:relative;justify-content:center}
+.brx-card-outcome.away{justify-content:flex-start;padding-right:20px}
+.brx-outcome-label{color:#71877b;font-size:.42rem;font-weight:950;letter-spacing:.55px;line-height:1;text-transform:uppercase}
+.brx-card-outcome.draw .brx-outcome-label{position:absolute;top:-11px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.brx-outcome-list{display:flex;width:100%;max-width:100%;align-items:center;gap:var(--pick-gap);min-width:0;flex-wrap:nowrap}
+.brx-card-outcome.home .brx-outcome-list{justify-content:flex-end}
+.brx-card-outcome.draw .brx-outcome-list{justify-content:center}
+.brx-card-outcome.away .brx-outcome-list{justify-content:flex-start}
+.brx-card-pick{display:inline-flex;width:var(--pick-slot);min-width:0;max-width:100%;flex:0 0 var(--pick-slot);flex-direction:column;align-items:center;justify-content:flex-start;gap:3px;border:0;background:transparent;box-shadow:none;white-space:nowrap}
+@keyframes brxCardPickFloat{0%,100%{transform:translateY(0) scale(var(--pick-scale))}50%{transform:translateY(-1.5px) scale(var(--pick-scale))}}
+.brx-card-pav{position:relative;display:grid;place-items:center;width:var(--pick-layout-size);height:var(--pick-layout-size);flex:0 0 auto;transform:scale(var(--pick-scale));transform-origin:center bottom;border:1px solid rgba(255,255,255,.11);border-radius:50%;background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.055));box-shadow:0 5px 13px rgba(0,0,0,.26);color:#cfe2d6;font-size:var(--pick-font);font-weight:950;letter-spacing:-.15px;line-height:1;transition:transform .22s,width .22s,height .22s,font-size .22s}
+.brx-card-outcome.draw .brx-card-pav{transform-origin:center}
+@media(prefers-reduced-motion:no-preference){.brx-card-pav{animation:brxCardPickFloat 3.8s ease-in-out infinite;animation-delay:var(--float-delay,0s)}}
+.brx-card-pav.hit{border-color:rgba(255,215,94,.62);background:linear-gradient(135deg,#ffd75e,#e7a923);color:#241a00;box-shadow:0 5px 14px rgba(255,190,42,.2)}
+.brx-card-pav.ok{border-color:rgba(74,224,142,.44);background:linear-gradient(145deg,rgba(74,224,142,.23),rgba(74,224,142,.11));color:#64eaa1}
+.brx-card-pav.inv{border-color:rgba(255,122,112,.46);background:linear-gradient(145deg,rgba(255,122,112,.23),rgba(255,122,112,.1));color:#ff9b93}
+.brx-card-pav.zero{border-color:rgba(255,255,255,.14);background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.055));color:#c4d3ca}
+.brx-card-pav.me{z-index:2;box-shadow:0 0 0 1.5px #f6faf7,0 5px 12px rgba(0,0,0,.34)}
+.brx-card-pick-score{color:#a8bbb0;font-size:var(--pick-score-font);font-weight:950;font-variant-numeric:tabular-nums;line-height:1;transition:font-size .22s}
+.brx-card-pick.hit .brx-card-pick-score{color:#ffe08a}
+.brx-card-pick.ok .brx-card-pick-score{color:#76e8aa}
+.brx-card-pick.inv .brx-card-pick-score{color:#ff9e96}
+.brx-match:is(.result,.live){padding-top:29px;padding-bottom:17px;column-gap:7px;row-gap:13px}
+.brx-match:has(>.brx-tag.late){padding-top:29px}
+.brx-match.result{padding-top:29px}
+.brx-match.result:has(>.brx-tag.late){padding-top:29px}
+.brx-match:is(.result,.live)>.brx-mid{position:relative;min-width:70px;gap:0}
+.brx-match:is(.result,.live)>.brx-mid>.brx-tag:not(.late){position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);white-space:nowrap}
+.brx-match.result>.brx-mid>.brx-tag:not(.late){bottom:calc(100% + 10px)}
+.brx-match>.brx-tag.late{position:absolute;top:9px;right:12px;padding:3px 6px;border:1px solid rgba(224,179,74,.2);border-radius:6px;background:rgba(224,179,74,.07);font-size:.48rem;letter-spacing:.55px}
+.brx-match:has(>.brx-prediction-ribbon){height:142px;grid-template-rows:30px minmax(0,1fr)}
 .brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-pill-guess:hover{background:rgba(255,215,94,.18)}
 .brx-pill-guess.filled{display:inline-flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#9db3a6;text-transform:none;letter-spacing:0;font-weight:800}
@@ -432,14 +472,6 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-guess-ok .br-saved{min-width:0;font-size:.88rem;line-height:1}
 .brx-guess-ok .br-saved:not(:empty)+svg{display:none}
 .brx-guess-ok:has(.br-saved.err){border-color:rgba(255,122,112,.5);background:rgba(255,122,112,.12)}
-.brx-open-pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.05);color:#c8d9ce;font-weight:900;font-size:.62rem;letter-spacing:.2px;padding:5px 12px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
-.brx-open-pill:hover{background:rgba(255,255,255,.1);color:#fff}
-.brx-open-pill b{color:#fff;font-weight:950}
-.brx-open-pill.scored.hit{border-color:rgba(255,215,94,.46);background:rgba(255,215,94,.15);color:#ffe391}
-.brx-open-pill.scored.ok{border-color:rgba(74,224,142,.42);background:rgba(74,224,142,.12);color:#88ecb5}
-.brx-open-pill.scored.inv{border-color:rgba(255,122,112,.44);background:rgba(255,122,112,.13);color:#ffada6}
-.brx-open-pill.scored.zero{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.075);color:#b6c6bd}
-.brx-open-pill.scored b{color:inherit}
 /* popup "todos os palpites" (overlay escuro, clone do chart-modal) */
 .brx-modal{position:fixed;inset:0;z-index:1300;display:none;align-items:center;justify-content:center;padding:16px}
 .brx-modal.open{display:flex}
@@ -584,6 +616,12 @@ body.brx-modal-open{overflow:hidden}
 .brx-rank-bar{grid-column:1/-1;height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
 .brx-rank-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,168,81,.85),#4ae08e)}
 .brx-empty-note{font-size:.66rem;color:#71877b;font-weight:800;text-align:center;padding:8px 0 2px}
+.brx-profile-name,.profile-link{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;text-align:left;cursor:pointer;padding:0;border-radius:5px}
+.brx-profile-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eef5f0;font-weight:900}
+.brx-profile-name:hover,.profile-link:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.brx-profile-name:focus-visible,.profile-link:focus-visible,.brx-pchip:focus-visible,.brx-card-pick:focus-visible{outline:3px solid rgba(255,215,94,.44);outline-offset:3px}
+.brx-card-pick{appearance:none;color:inherit;cursor:pointer}
+.brx-pchip{appearance:none;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:0;border-radius:9px}
 /* tabela do returno (oficial + projeção pelos palpites) */
 .brx-seg{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
 .brx-seg button{border:none;background:transparent;color:#9fb3a7;font-weight:950;font-size:.72rem;padding:8px 14px;border-radius:8px;cursor:pointer;line-height:1;transition:background .15s,color .15s}
@@ -814,7 +852,26 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
   .brx-guess-box .br-inp{width:34px;height:36px}
   .brx-guess-box>span{padding:0 1px}
   .brx-guess-ok{width:36px;height:36px;margin-left:2px}
+  .brx-prediction-ribbon{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:10px 0 3px}
+  .brx-prediction-ribbon[data-density="sparse"]{--pick-layout-size:21px;--pick-scale:1.38;--pick-slot:31px;--pick-font:.42rem;--pick-score-font:.45rem;--pick-gap:3px}
+  .brx-prediction-ribbon[data-density="medium"]{--pick-layout-size:21px;--pick-scale:1.16;--pick-slot:27px;--pick-font:.41rem;--pick-score-font:.44rem;--pick-gap:3px}
+  .brx-prediction-ribbon[data-density="dense"]{--pick-layout-size:18px;--pick-scale:1.08;--pick-slot:22px;--pick-font:.37rem;--pick-score-font:.4rem;--pick-gap:2px}
+  .brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:14px;--pick-scale:1;--pick-slot:16px;--pick-font:.3rem;--pick-score-font:.34rem;--pick-gap:1px}
+  .brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:9px;--pick-scale:1;--pick-slot:10px;--pick-font:.22rem;--pick-score-font:.27rem;--pick-gap:0px}
+  .brx-card-pick{gap:3px}
+  .brx-card-outcome.away{padding-right:18px}
+  .brx-match:is(.result,.live){padding-top:28px;padding-bottom:16px;column-gap:5px;row-gap:11px}
+  .brx-match:has(>.brx-tag.late){padding-top:28px}
+  .brx-match.result{padding-top:28px}
+  .brx-match.result:has(>.brx-tag.late){padding-top:28px}
+  .brx-match:is(.result,.live)>.brx-mid{min-width:66px}
+  .brx-match>.brx-tag.late{top:7px;right:9px}
+  .brx-match:has(>.brx-prediction-ribbon){height:129px;grid-template-rows:26px minmax(0,1fr)}
   .brx-round-title{min-width:86px;font-size:.94rem}
+}
+@media(prefers-reduced-motion:reduce){
+  .brx-card-pav{animation:none;transform:scale(var(--pick-scale))}
+  .brx-card-pav,.brx-card-pick-score{transition:none}
 }
 .btn-save:active,.icon-btn:active,.btn-ok:active{transform:translateY(1px)}
 
@@ -4232,6 +4289,79 @@ body.chart-modal-open{overflow:hidden}
 	  .copa-games-page.v2 .copa-primary-score .copa-score b{min-width:30px;padding:6px 7px;font-size:.92rem}
 		}
 
+	/* PERFIL DO PARTICIPANTE */
+.user-profile-modal{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;padding:16px}
+.user-profile-modal.open{display:flex}
+.user-profile-backdrop{position:absolute;inset:0;border:0;background:rgba(5,12,9,.74);backdrop-filter:blur(5px);cursor:default}
+.user-profile-card{--profile-accent:#ffd75e;--profile-accent-ink:#172117;--profile-accent-strong:#8a6500;--profile-action:#173d2a;--profile-action-ink:#fff;position:relative;width:min(100%,510px);max-height:92vh;overflow:auto;overscroll-behavior:contain;border:1px solid color-mix(in srgb,var(--profile-accent) 42%,rgba(255,255,255,.12));border-radius:22px;background:linear-gradient(180deg,#fbfdfc,#f4f8f5);box-shadow:0 34px 100px rgba(0,0,0,.5);scrollbar-width:thin;animation:userProfileIn .2s ease}
+@keyframes userProfileIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+.user-profile-close{position:absolute;top:13px;right:13px;z-index:3;display:grid;place-items:center;width:33px;height:33px;border:1px solid rgba(255,255,255,.2);border-radius:50%;background:rgba(8,18,13,.3);color:#fff;font-size:1.15rem;font-weight:900;cursor:pointer;backdrop-filter:blur(8px)}
+.user-profile-close:hover{background:rgba(8,18,13,.56)}
+.user-profile-close:focus-visible{outline:3px solid rgba(255,255,255,.72);outline-offset:2px}
+.user-profile-hero{position:relative;overflow:hidden;min-height:142px;padding:27px 58px 24px 24px;background:radial-gradient(300px 190px at 90% 0%,color-mix(in srgb,var(--profile-accent) 48%,transparent),transparent 72%),linear-gradient(138deg,color-mix(in srgb,var(--profile-accent) 27%,#07140d),#07140d 73%);color:#fff}
+.user-profile-hero:before{content:"";position:absolute;inset:0;background:linear-gradient(110deg,rgba(255,255,255,.055),transparent 42%);pointer-events:none}
+.user-profile-hero:after{content:"";position:absolute;right:-28px;bottom:-55px;width:176px;height:176px;border:1px solid color-mix(in srgb,var(--profile-accent) 28%,transparent);border-radius:50%;box-shadow:0 0 0 28px color-mix(in srgb,var(--profile-accent) 6%,transparent)}
+.user-profile-kicker{position:relative;z-index:1;color:color-mix(in srgb,var(--profile-accent) 76%,#fff);font-size:.58rem;font-weight:950;letter-spacing:1.2px;text-transform:uppercase}
+.user-profile-identity{position:relative;z-index:1;display:flex;align-items:center;gap:14px;margin-top:12px;min-width:0}
+.user-profile-avatar{position:relative;display:grid;place-items:center;width:66px;height:66px;flex:0 0 auto;border:1px solid rgba(255,255,255,.42);border-radius:22px;background:linear-gradient(145deg,color-mix(in srgb,var(--profile-accent) 84%,#fff),var(--profile-accent));box-shadow:0 14px 32px rgba(0,0,0,.34);color:var(--profile-accent-ink);font-size:1.2rem;font-weight:950;letter-spacing:.3px}
+.user-profile-avatar .brx-crest{position:absolute;right:-7px;bottom:-7px;width:29px;height:29px;padding:3px;border:2px solid #0d1a13;border-radius:50%;background:#fff;box-shadow:0 5px 12px rgba(0,0,0,.3)}
+.user-profile-copy{min-width:0}
+.user-profile-name{display:flex;align-items:center;gap:7px;min-width:0}
+.user-profile-name h2{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.46rem;line-height:1.08;font-weight:950;letter-spacing:-.02em}
+.user-profile-you{flex:0 0 auto;padding:3px 7px;border:1px solid color-mix(in srgb,var(--profile-accent) 38%,rgba(255,255,255,.2));border-radius:999px;background:color-mix(in srgb,var(--profile-accent) 14%,rgba(255,255,255,.06));color:#fff;font-size:.49rem;font-weight:950;letter-spacing:.6px;text-transform:uppercase}
+.user-profile-team{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c7d7cd;font-size:.68rem;font-weight:820;min-width:0}
+.user-profile-team-label{color:#91a69a;font-size:.52rem;font-weight:950;letter-spacing:.62px;text-transform:uppercase}
+.user-profile-team strong{color:#fff;font-weight:950}
+.user-profile-team-edit{border:0;background:transparent;color:color-mix(in srgb,var(--profile-accent) 78%,#fff);padding:1px 0;font-size:.62rem;font-weight:950;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.user-profile-body{display:grid;gap:12px;padding:18px 20px 20px;color:#14231a}
+.user-profile-comp{display:flex;align-items:center;justify-content:space-between;gap:10px;color:#66776d;font-size:.59rem;font-weight:950;letter-spacing:.72px;text-transform:uppercase}
+.user-profile-comp span:last-child{padding:5px 9px;border:1px solid color-mix(in srgb,var(--profile-accent) 19%,#dfe9e2);border-radius:999px;background:color-mix(in srgb,var(--profile-accent) 11%,#eef4f0);color:var(--profile-accent-strong)}
+.user-profile-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.user-profile-metric{position:relative;overflow:hidden;min-width:0;padding:12px 11px 11px;border:1px solid #dfe8e2;border-radius:13px;background:#fff;box-shadow:0 5px 16px rgba(17,54,34,.035)}
+.user-profile-metric:first-child:before{content:"";position:absolute;inset:0 auto 0 0;width:3px;background:var(--profile-accent)}
+.user-profile-metric strong{display:block;overflow:hidden;text-overflow:ellipsis;color:#14231a;font-size:1.38rem;font-weight:950;line-height:1;font-variant-numeric:tabular-nums}
+.user-profile-metric:first-child strong{color:var(--profile-accent-strong)}
+.user-profile-metric span{display:block;margin-top:5px;color:#7a8a80;font-size:.54rem;font-weight:950;letter-spacing:.52px;text-transform:uppercase;white-space:nowrap}
+.user-profile-performance{display:grid;gap:11px;padding:14px;border:1px solid #dfe8e2;border-radius:14px;background:#fff;box-shadow:0 6px 18px rgba(17,54,34,.035)}
+.user-profile-performance-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.user-profile-performance-head strong{font-size:.8rem;font-weight:950}
+.user-profile-performance-head span{color:#66776d;font-size:.65rem;font-weight:850;text-align:right}
+.user-profile-breakdown{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.user-profile-pill{display:flex;flex-direction:column;gap:3px;min-width:0;padding:8px 5px;border:1px solid transparent;border-radius:10px;background:#f1f5f2;text-align:center}
+.user-profile-pill b{font-size:.86rem;font-weight:950;line-height:1}.user-profile-pill span{overflow:hidden;text-overflow:ellipsis;color:#728278;font-size:.48rem;font-weight:900;letter-spacing:.35px;text-transform:uppercase;white-space:nowrap}
+.user-profile-pill.hit{border-color:#d3eddf;background:#f0faf5}.user-profile-pill.good{border-color:#dbe6f7;background:#f3f7fc}.user-profile-pill.bad{border-color:#f1d9d7;background:#fff7f6}
+.user-profile-pill.hit b{color:#0b8750}.user-profile-pill.good b{color:#174a9f}.user-profile-pill.bad b{color:#c83b35}
+.user-profile-activity{display:grid;gap:6px;padding-top:2px}
+.user-profile-activity-copy{display:flex;align-items:baseline;justify-content:space-between;gap:10px;color:#718178;font-size:.57rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase}
+.user-profile-activity-copy strong{color:#344a3d;font-size:.63rem;font-variant-numeric:tabular-nums}
+.user-profile-progress{height:6px;overflow:hidden;border-radius:999px;background:#e8eeea}
+.user-profile-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--profile-accent),color-mix(in srgb,var(--profile-accent) 44%,#35c77b))}
+.user-profile-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:1px;min-height:36px}
+.user-profile-foot p{color:#6b7b71;font-size:.66rem;font-weight:780;line-height:1.4}
+.user-profile-action{flex:0 0 auto;border:0;border-radius:10px;background:var(--profile-action);color:var(--profile-action-ink);padding:10px 13px;font-size:.66rem;font-weight:950;cursor:pointer;box-shadow:0 6px 15px color-mix(in srgb,var(--profile-action) 24%,transparent);transition:transform .15s,filter .15s}
+.user-profile-action:hover{filter:brightness(1.08);transform:translateY(-1px)}
+body.user-profile-open{overflow:hidden}
+.profile-link{color:inherit}
+.profile-link-with-avatar{display:inline-flex!important;align-items:center;gap:8px;min-width:0;max-width:100%;text-decoration:none!important}
+.profile-link-with-avatar:hover .profile-link-name{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
+.profile-mini-avatar{display:grid;place-items:center;width:26px;height:26px;flex:0 0 auto;border:1px solid color-mix(in srgb,var(--profile-mini-accent) 52%,rgba(18,48,31,.18));border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--profile-mini-accent) 82%,#fff),var(--profile-mini-accent));color:var(--profile-mini-ink);font-size:.58rem;font-weight:950;letter-spacing:.2px;box-shadow:0 3px 8px color-mix(in srgb,var(--profile-mini-accent) 16%,transparent)}
+.profile-link-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-link-with-avatar.is-on-dark .profile-mini-avatar{border-color:rgba(255,255,255,.38);box-shadow:0 4px 10px rgba(0,0,0,.22)}
+.prize-copy .profile-link{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:.92rem;font-weight:900}
+.prize-copy .profile-mini-avatar{margin:0}
+.prize-copy .profile-link-name{display:block;margin:0;color:inherit;font:inherit;font-weight:inherit}
+.pname .profile-link{font-weight:900;font-size:inherit}
+.pal-profile-trigger{display:flex;align-items:center;gap:12px;min-width:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;border-radius:14px;padding:0}
+.pal-profile-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(1.05rem,2.1vw,1.32rem);font-weight:950;letter-spacing:.2px;line-height:1.05}
+.pal-profile-trigger:hover .pal-profile-name{text-decoration:underline;text-underline-offset:4px}
+.pal-profile-trigger:focus-visible{outline:3px solid rgba(255,223,0,.7);outline-offset:4px}
+.podio-entry .pe-profile{display:contents}
+.podio-entry .pe-profile-btn{display:contents;color:inherit;font:inherit;cursor:pointer}
+.podio-entry .pe-profile-btn:focus-visible .pe-avatar{outline:3px solid rgba(0,39,118,.35);outline-offset:3px}
+.copa-games-page.v2 button.copa-live-pal-name{appearance:none;border:0;background:transparent;padding:0;text-align:left;cursor:pointer;font-family:inherit;font-size:inherit;font-weight:900}
+.copa-games-page.v2 button.copa-live-pal-name:hover{text-decoration:underline;text-underline-offset:3px}
+.copa-games-page.v2 button.copa-live-pal-name:focus-visible{outline:3px solid rgba(0,39,118,.2);outline-offset:2px;border-radius:4px}
+
 	/* TOAST */
 /* z-index acima dos modais do Brasileirão (1290/1300): o popup do clube tem
    palpite inline, e o toast de "não salvou" precisa aparecer POR CIMA do backdrop */
@@ -4398,6 +4528,7 @@ body.chart-modal-open{overflow:hidden}
   .pal-row .score-wrap{justify-content:space-between}
   .pal-hero{padding:12px}
   .pal-hero-title h2{white-space:normal;overflow:visible;text-overflow:clip}
+  .pal-profile-name{white-space:normal;overflow:visible;text-overflow:clip}
   .pal-hero-metrics{
     width:100%;
     display:grid;
@@ -4407,6 +4538,17 @@ body.chart-modal-open{overflow:hidden}
   .pal-stage{padding:7px 8px;font-size:.66rem}
   .pal-stage .ico{font-size:.85rem}
   .pal-stage span:not(.ico){display:none}
+  .user-profile-card{border-radius:17px}
+  .user-profile-hero{padding:22px 48px 19px 18px}
+  .user-profile-avatar{width:56px;height:56px;border-radius:18px;font-size:1.02rem}
+  .user-profile-name h2{font-size:1.2rem}
+  .user-profile-body{padding:15px 14px 17px}
+  .user-profile-metric{padding:10px 8px}.user-profile-metric strong{font-size:1.2rem}
+  .user-profile-breakdown{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .user-profile-performance-head{align-items:flex-start;flex-direction:column;gap:3px}
+  .user-profile-performance-head span{text-align:left}
+  .user-profile-foot{align-items:flex-start;flex-direction:column}.user-profile-action{width:100%}
+  .profile-mini-avatar{width:24px;height:24px;border-radius:8px}
   .pal-filters{
     display:grid;
     grid-template-columns:1fr;
@@ -4732,6 +4874,7 @@ body.chart-modal-open{overflow:hidden}
 <div id="tab-cinema" class="tab"></div>
 <div class="toast" id="toast"></div>
 <div id="chartModal" class="chart-modal"></div>
+<div id="userProfileModal" class="user-profile-modal"></div>
 <div id="brFavoriteModal" class="brx-modal brx-team-modal"></div>
 <div id="brTeamModal" class="brx-modal brx-team-modal"></div>
 <div id="brModal" class="brx-modal"></div>
@@ -4963,6 +5106,9 @@ let remoteSession=null;
 let remotePollTimer=null;
 let currentProfile=null;
 let remoteProfiles=[];
+let userProfilePi=null;
+let userProfileReturnFocus=null;
+let brFavoriteTeamsByParticipant={};
 // Placar ao vivo da Copa (alimentado pelo robô via live_scores; nunca persiste em S)
 let copaLive={};
 // Histórico gol a gol observado pelo robô (live_score_history), por game_id.
@@ -5531,7 +5677,7 @@ async function loadRemoteData(showToast=false,options={}){
   if(!remoteClient||!remoteSession) return;
   const deferRender=options.source==="poll"&&shouldDeferRemoteRender();
   setSyncStatus("warn","Sincronizando...");
-  const [profiles,settings,results,predictions,podium,actualPodio,liveScores,liveHistory]=await Promise.all([
+  const [profiles,settings,results,predictions,podium,actualPodio,liveScores,liveHistory,favoriteTeams]=await Promise.all([
     remoteClient.from("profiles").select("id,participant_index,participant_name,role"),
     remoteClient.from("settings").select("entry_value,prize_percents,knockout_predictions_open,knockout_phase_overrides").eq("id","main").maybeSingle(),
     fetchResultsRemote(),
@@ -5539,7 +5685,8 @@ async function loadRemoteData(showToast=false,options={}){
     remoteClient.from("podium_predictions").select("participant_index,p1,p2,p3,p4"),
     remoteClient.from("actual_podium").select("p1,p2,p3,p4").eq("id","main").maybeSingle(),
     fetchCopaLiveRemote(),
-    fetchCopaLiveHistoryRemote()
+    fetchCopaLiveHistoryRemote(),
+    remoteClient.from(BR_FAVORITE_TABLE).select("user_id,team_key").eq("competition",BR_TOURNAMENT)
   ]);
   // Placar ao vivo e histórico são opcionais: erro aqui não derruba a sincronização principal.
   let brLiveChanged=false;
@@ -5557,6 +5704,11 @@ async function loadRemoteData(showToast=false,options={}){
   }
   remoteProfiles=profiles.data||[];
   currentProfile=remoteProfiles.find(profile=>profile.id===remoteSession.user.id)||null;
+  if(favoriteTeams&&!favoriteTeams.error) brApplyFavoriteRows(favoriteTeams.data||[]);
+  if(currentProfile&&!brFavoriteTeamForParticipant(currentProfile.participant_index)){
+    const localTeam=brReadLocalFavoriteTeam();
+    if(localTeam) brFavoriteTeamsByParticipant[currentProfile.participant_index]=localTeam;
+  }
   // Se ainda não tem perfil vinculado, busca o slot de convite para exibir no painel
   if(!currentProfile&&inviteSlot===null) fetchInviteSlot();
   applyRemoteData({
@@ -9591,14 +9743,14 @@ function cinemaMakeComposition(React,R,orient){
           h("div",{style:{position:"absolute",left:Math.min(Math.max(xv,x0)+(V?10:14),W-(V?66:120)),fontSize:V?17:22,fontWeight:800,fontVariantNumeric:"tabular-nums",color:"#fff",transform:`scale(${1+.25*act})`,transformOrigin:"left center",textShadow:act>.02?`0 0 ${14*act}px rgba(255,223,0,${(.85*act).toFixed(2)})`:"none"}},String(Math.round(v)))
         );
       }),
-      factCards.length?h("div",{style:{position:"absolute",left:cardLeft,top:slotTops[0]-30,width:cardW,fontSize:12,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",opacity:Math.max(...factCards.map(c=>c.op))}},"Enquanto isso, no grupo"):null,
+      factCards.length?h("div",{style:{position:"absolute",left:cardLeft,top:slotTops[0]-30,width:cardW,fontSize:V?14:13,letterSpacing:3,fontWeight:800,color:YELLOW,textTransform:"uppercase",opacity:Math.max(...factCards.map(c=>c.op))}},"Enquanto isso, no grupo"):null,
       factCards.map(c=>h("div",{key:c.fact.on+c.fact.title,style:{position:"absolute",left:cardLeft,top:c.top,width:cardW,boxSizing:"border-box",padding:V?"14px 20px":"12px 16px",borderRadius:14,background:"rgba(255,255,255,.06)",border:"1px solid rgba(255,255,255,.14)",opacity:c.op,transform:`translateY(${c.dy}px)`}},
         h("div",{style:{display:"flex",alignItems:"center",gap:V?14:11}},
           h("div",{style:{fontSize:V?30:24,lineHeight:1.1,flex:"none"}},c.fact.icon),
           h("div",{style:{minWidth:0,flex:1}},
-            h("div",{style:{fontSize:V?12:10.5,letterSpacing:2,fontWeight:800,color:YELLOW,textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.title),
-            h("div",{style:{fontSize:V?22:18,fontWeight:800,color:"#fff",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.stat),
-            c.fact.sub?h("div",{style:{fontSize:V?13:11.5,color:SOFT,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.sub):null
+            h("div",{style:{fontSize:V?16:14,letterSpacing:2,fontWeight:800,color:YELLOW,textTransform:"uppercase",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.title),
+            h("div",{style:{fontSize:V?18:16,fontWeight:800,color:"#fff",marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.stat),
+            c.fact.sub?h("div",{style:{fontSize:V?16:14,color:SOFT,marginTop:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},c.fact.sub):null
           )
         )
       )),
@@ -10287,6 +10439,7 @@ function brSyncSessionUser(session){
   S_BR={fixtures:[],palpites:{},results:{},live:{},loaded:false};
   brLoading=false;
   brFavoriteTeam="";
+  brFavoriteTeamsByParticipant={};
   brFavoritePickerOpen=false;
 }
 
@@ -10362,6 +10515,22 @@ function brWriteLocalFavoriteTeam(team){
   if(!CAN_USE_LOCAL_STORAGE||!brIsSupportedFavoriteTeam(team)) return;
   try{ localStorage.setItem(brFavoriteStorageKey(),team); }catch(e){}
 }
+function brApplyFavoriteRows(rows){
+  const profileByUserId=new Map(remoteProfiles.map(profile=>[profile.id,profile.participant_index]));
+  const next={};
+  (rows||[]).forEach(row=>{
+    const pi=profileByUserId.get(row.user_id);
+    const team=brCanonicalTeam(row.team_key);
+    if(Number.isInteger(pi)&&brIsSupportedFavoriteTeam(team)) next[pi]=team;
+  });
+  brFavoriteTeamsByParticipant=next;
+}
+function brFavoriteTeamForParticipant(pi){
+  const mapped=brCanonicalTeam(brFavoriteTeamsByParticipant[pi]);
+  if(brIsSupportedFavoriteTeam(mapped)) return mapped;
+  if(pi===myParticipantIndex()&&brIsSupportedFavoriteTeam(brFavoriteTeam)) return brFavoriteTeam;
+  return "";
+}
 function brPredKey(pi,gid){ return pi+"_"+gid; }
 function brReturnoFixtures(){ return S_BR.fixtures.filter(f=>f.round==null||f.round>=BR_FIRST_ROUND); }
 /* Jogos adiados: partida de rodada do turno (ex.: rodada 4) remarcada pra dentro da
@@ -10407,15 +10576,17 @@ async function brLoadRemote(opts={}){
     remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin,last_synced_at"),
     remoteClient.from("brasileirao_predictions").select("participant_index,game_id,s1,s2"),
     remoteClient.from("results").select("game_id,s1,s2"),
-    remoteClient.from(BR_FAVORITE_TABLE).select("team_key").eq("user_id",remoteSession.user.id).eq("competition",BR_TOURNAMENT).maybeSingle()
+    remoteClient.from(BR_FAVORITE_TABLE).select("user_id,team_key").eq("competition",BR_TOURNAMENT)
   ]);
   // A classificação ao vivo continua disponível mesmo se apenas a consulta de
   // palpites falhar. Nesse caso, a V2 desabilita a projeção sem bloquear a tabela.
   const failed=[mapRows,liveRows,resRows].find(r=>r&&r.error);
   if(failed){ brSetStatus("err",remoteErrorText(failed.error)); if(!opts.skipRender) render(activeTab); return; }
   brProjectionError=predRows&&predRows.error?remoteErrorText(predRows.error):null;
-  const remoteFavorite=brIsSupportedFavoriteTeam(favoriteRow?.data?.team_key)?favoriteRow.data.team_key:"";
+  if(favoriteRow&&!favoriteRow.error) brApplyFavoriteRows(favoriteRow.data||[]);
+  const remoteFavorite=brFavoriteTeamForParticipant(myParticipantIndex());
   brFavoriteTeam=remoteFavorite||brReadLocalFavoriteTeam();
+  if(brFavoriteTeam&&Number.isInteger(myParticipantIndex())) brFavoriteTeamsByParticipant[myParticipantIndex()]=brFavoriteTeam;
   if(remoteFavorite) brWriteLocalFavoriteTeam(remoteFavorite);
   const liveBy=Object.fromEntries((liveRows.data||[]).map(r=>[r.game_id,r]));
   S_BR.fixtures=(mapRows.data||[]).map(row=>{
@@ -10524,10 +10695,10 @@ function brMatchHTML(fx,opts){
     if(sc.final){
       cls=" result";
       if(sc.s1>sc.s2){ t1cls=" win"; t2cls=" lose"; } else if(sc.s2>sc.s1){ t2cls=" win"; t1cls=" lose"; }
-      mid='<div class="brx-score">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag">Encerrado</div>';
+      mid='<div class="brx-tag">Encerrado</div><div class="brx-score">'+sc.s1+'<span>×</span>'+sc.s2+'</div>';
     }else{
       cls=" live";
-      mid='<div class="brx-score live">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag live">Ao vivo'+(sc.elapsed?" · "+sc.elapsed+"’":"")+'</div>';
+      mid='<div class="brx-tag live">Ao vivo'+(sc.elapsed?" · "+sc.elapsed+"’":"")+'</div><div class="brx-score live">'+sc.s1+'<span>×</span>'+sc.s2+'</div>';
     }
   }else{
     mid=opts.hideDate
@@ -10535,21 +10706,14 @@ function brMatchHTML(fx,opts){
       : '<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
   }
   /* Palpite mora aqui na aba Jogos: jogo aberto vira botão "Palpitar" que abre os
-     campos inline; jogo travado vira um pill que abre o popup com os palpites de
-     todos (segredo até o apito). Só quando opts.interactive — o preview da Home usa
-     o card puro, sem inputs, pra não duplicar os IDs brS1_/brS2_ no DOM. */
-  let pal="",palCls="",matchAttr="",editCls="";
+     campos inline; jogo travado distribui os avatares pelo resultado apostado e
+     oferece o popup completo (segredo até o apito). Só quando opts.interactive — o
+     preview da Home usa o card puro, sem inputs, pra não duplicar IDs no DOM. */
+  let pal="",palCls="",matchAttr="",editCls="",predictionRibbon="";
   if(opts.interactive){
     if(locked){
-      const myPal=pi!=null?S_BR.palpites[brPredKey(pi,fx.id)]:null;
-      const hasPal=myPal&&myPal.s1!=null&&myPal.s2!=null;
-      const res=brScoringResult(fx);
-      const d=(hasPal&&res)?scoreDetails(myPal,res):null;
-      const ptsCls=d?brPtsCls(d):"";
-      pal='<div class="brx-mid-pal">'+
-        '<button class="brx-open-pill'+(d?' scored '+ptsCls:'')+'" onclick="brOpenPopup(\''+gid+'\')" aria-label="Ver os palpites de todos">'+(hasPal?'seu <b>'+myPal.s1+'×'+myPal.s2+'</b> · ver todos':'ver palpites')+(d?brPtsBadge(d):'')+'</button>'+
-      '</div>';
-      palCls=" brx-pal";
+      const revealedRes=sc?{s1:sc.s1,s2:sc.s2}:null;
+      predictionRibbon=brCardPredictionRibbon(fx,gid,revealedRes);
     }else if(pi!=null){
       const myPal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
       const v1=myPal.s1!=null?myPal.s1:'', v2=myPal.s2!=null?myPal.s2:'';
@@ -10575,8 +10739,10 @@ function brMatchHTML(fx,opts){
   const clickAttrs=team=>' role="button" tabindex="0" data-team="'+esc(team||"")+'" title="Ver todos os jogos do clube" aria-label="Ver todos os jogos do '+esc(team||"?")+'" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)"';
   return '<div class="brx-match'+cls+palCls+editCls+roundCls+'"'+matchAttr+'>'+
     '<div class="brx-team home brx-team-click'+t1cls+foc1+'"'+clickAttrs(fx.t1)+'><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
-    '<div class="brx-mid">'+roundTag+mid+lateTag+pal+'</div>'+
+    '<div class="brx-mid">'+roundTag+mid+pal+'</div>'+
     '<div class="brx-team brx-team-click'+t2cls+foc2+'"'+clickAttrs(fx.t2)+'>'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
+    predictionRibbon+
+    lateTag+
   '</div>';
 }
 
@@ -10889,7 +11055,7 @@ function renderBrRanking(){
       return '<div class="brx-rank-row'+(r.i===myPi?' me':'')+'">'+
         '<div class="brx-rank-pos'+posCls+'">'+(idx+1)+'</div>'+
         '<div class="brx-rank-main">'+
-          '<div class="brx-rank-name"><b>'+esc(r.name)+'</b>'+(r.i===myPi?'<span class="you">você</span>':'')+'</div>'+
+          '<div class="brx-rank-name">'+userProfileTriggerHTML(r.i,r.name,{br:true,onDark:true})+(r.i===myPi?'<span class="you">você</span>':'')+'</div>'+
           '<div class="brx-rank-meta">'+
             '<span class="brx-mchip g">'+r.crav+' cravadas</span>'+
             '<span class="brx-mchip v">'+r.corr+' certos</span>'+
@@ -11313,6 +11479,59 @@ async function brAutoSavePalpite(gid){
 function brFirstName(name){ const p=String(name||"").trim().split(/\s+/); return p[0]||String(name||"?"); }
 const BRX_SVG_PENCIL='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>';
 const BRX_SVG_CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+function brPredictionGroups(gid,res){
+  const myPi=myParticipantIndex();
+  const cols={home:[],draw:[],away:[]};
+  (S.participants||[]).forEach((name,i)=>{
+    const p=S_BR.palpites[brPredKey(i,gid)];
+    if(!p||p.s1==null||p.s2==null) return;
+    const out=p.s1>p.s2?'home':(p.s1<p.s2?'away':'draw');
+    const d=res?scoreDetails({s1:p.s1,s2:p.s2},res):null;
+    cols[out].push({i,name,s1:p.s1,s2:p.s2,d,me:i===myPi});
+  });
+  const sortCol=a=>a.sort((x,y)=>((y.d?y.d.pts:0)-(x.d?x.d.pts:0))||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
+  sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
+  return cols;
+}
+function brPredictionPointsLabel(d){
+  if(!d) return "";
+  return d.exact?"+3 pontos":d.base===1?"+1 ponto":d.base===-2?"−2 pontos":"0 pontos";
+}
+function brCardPredictionPick(c,floatIndex=0){
+  const points=brPredictionPointsLabel(c.d);
+  const label=brFirstName(c.name)+" · "+c.s1+"×"+c.s2+(points?" · "+points:"")+(c.me?" · você":"");
+  const cls=c.d?brPtsCls(c.d):"";
+  const floatDelay=(-((floatIndex%8)*.41)).toFixed(2)+'s';
+  return '<button type="button" class="brx-card-pick'+(cls?' '+cls:'')+'" style="--float-delay:'+floatDelay+'" onclick="event.stopPropagation();openUserProfile('+c.i+',this)" aria-label="Abrir perfil de '+esc(c.name)+'. '+esc(label)+'" title="Abrir perfil de '+esc(c.name)+'">'+
+    '<span class="brx-card-pav'+(cls?' '+cls:'')+(c.me?' me':'')+'">'+esc(palInitials(c.name))+'</span>'+
+    '<span class="brx-card-pick-score">'+c.s1+'×'+c.s2+'</span>'+
+  '</button>';
+}
+function brCardPredictionRibbon(fx,domGid,res){
+  const cols=brPredictionGroups(fx.id,res);
+  const total=cols.home.length+cols.draw.length+cols.away.length;
+  const peak=Math.max(cols.home.length,cols.draw.length,cols.away.length);
+  const density=total===0?"empty"
+    :total<=2&&!cols.draw.length?"sparse"
+    :total<=3&&peak<=2?"medium"
+    :total<=6&&peak<=3?"dense"
+    :peak<=5?"packed":"crowded";
+  let floatIndex=0;
+  const picks=arr=>arr.map(c=>brCardPredictionPick(c,floatIndex++)).join("");
+  const outcome=(arr,side,label,visibleLabel="")=>'<span class="brx-card-outcome '+side+'" data-count="'+arr.length+'" aria-label="'+esc(label)+'">'+
+    (visibleLabel&&arr.length?'<span class="brx-outcome-label">'+esc(visibleLabel)+'</span>':'')+
+    '<span class="brx-outcome-list">'+picks(arr)+'</span></span>';
+  const countLabel=total===1?'1 palpite':total+' palpites';
+  return '<div class="brx-prediction-ribbon" data-density="'+density+'" data-pick-count="'+total+'" data-pick-peak="'+peak+'" role="button" tabindex="0" onclick="brOpenPopup(\''+domGid+'\')" onkeydown="brPredictionRibbonKey(event,\''+domGid+'\')" aria-label="Abrir detalhes e placares de '+countLabel+'" title="Ver todos os palpites">'+
+    outcome(cols.home,'home','Palpites em '+(fx.t1||'mandante'))+
+    outcome(cols.draw,'draw','Palpites em empate','Empate')+
+    outcome(cols.away,'away','Palpites em '+(fx.t2||'visitante'))+
+  '</div>';
+}
+function brPredictionRibbonKey(event,gid){
+  if(event.target!==event.currentTarget) return;
+  if(event.key==="Enter"||event.key===" "){ event.preventDefault(); brOpenPopup(gid); }
+}
 function brRefreshPill(gid){
   const btn=document.getElementById('brPill_'+gid); if(!btn) return;
   const pi=myParticipantIndex(); if(pi==null) return;
@@ -11350,9 +11569,11 @@ async function brSaveFavoriteTeam(team){
   team=brCanonicalTeam(team);
   if(!brIsSupportedFavoriteTeam(team)){ toast("Esse clube não está disponível nesta edição."); return; }
   brFavoriteTeam=team;
+  const pi=myParticipantIndex();
+  if(Number.isInteger(pi)) brFavoriteTeamsByParticipant[pi]=team;
   brWriteLocalFavoriteTeam(team);
   brCloseFavoritePicker();
-  renderBrHome();
+  render(activeTab);
   if(!remoteClient||!remoteSession){
     toast("Time salvo neste aparelho.");
     return;
@@ -11422,20 +11643,10 @@ function brPopupHTML(gid){
     '</div>'+statusHTML;
   const locked=Boolean(fx.ts&&Date.now()>=fx.ts);
   if(!locked) return head+'<div class="brx-pop-empty" style="margin-top:16px">Os palpites de todo mundo aparecem quando a bola rolar.</div>';
-  const myPi=myParticipantIndex();
   const res=sc?{s1:sc.s1,s2:sc.s2}:null; // placar atual (final OU ao vivo) pra pontuar cada palpite
-  const cols={home:[],draw:[],away:[]};
-  (S.participants||[]).forEach((name,i)=>{
-    const p=S_BR.palpites[brPredKey(i,gid)];
-    if(!p||p.s1==null||p.s2==null) return;
-    const out=p.s1>p.s2?'home':(p.s1<p.s2?'away':'draw');
-    const d=res?scoreDetails({s1:p.s1,s2:p.s2},res):null;
-    cols[out].push({name,s1:p.s1,s2:p.s2,d,me:i===myPi});
-  });
+  const cols=brPredictionGroups(gid,res);
   const finalRes=(sc&&sc.final)?(sc.s1>sc.s2?'home':(sc.s1<sc.s2?'away':'draw')):null;
-  const sortCol=a=>a.sort((x,y)=>((y.d?y.d.pts:0)-(x.d?x.d.pts:0))||brFirstName(x.name).localeCompare(brFirstName(y.name),"pt-BR"));
-  sortCol(cols.home); sortCol(cols.draw); sortCol(cols.away);
-  const chip=c=>'<span class="brx-pchip'+(c.me?' me':'')+'"'+(c.me?' title="você"':'')+'><span class="brx-pav'+(c.d?' '+brPtsCls(c.d):'')+'">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc">'+c.s1+'×'+c.s2+'</span></span>';
+  const chip=c=>'<button type="button" class="brx-pchip'+(c.me?' me':'')+'" onclick="openUserProfile('+c.i+',this)" aria-label="Abrir perfil de '+esc(c.name)+'" title="Abrir perfil de '+esc(c.name)+'"><span class="brx-pav'+(c.d?' '+brPtsCls(c.d):'')+'">'+esc(palInitials(c.name))+'</span><span class="brx-pnm">'+esc(brFirstName(c.name))+'</span><span class="brx-psc">'+c.s1+'×'+c.s2+'</span></button>';
   // contagem em palavras ("2 pessoas", "1 acertou") — número solto embaixo do time lia como placar
   const capN=(n,winner)=>winner?(n?n+(n===1?' acertou':' acertaram'):'ninguém acertou'):(n?n+(n===1?' pessoa':' pessoas'):'ninguém');
   const col=(arr,label,winner)=>'<div class="brx-pop-col'+(winner?' win':'')+'">'+
@@ -12922,7 +13133,7 @@ function renderHome(){
             return `<div class="prize-row">
               <div class="prize-rank ${medal}" aria-label="${ri+1}º lugar">${medalIcon}</div>
               <div class="prize-copy">
-                <strong>${esc(p.name)}</strong>
+                ${userProfileTriggerHTML(p.i,p.name,{onDark:true})}
                 <span>${p.crav} crav. · ${p.corr} acertos · ${p.inv} inv.</span>
               </div>
               <div class="prize-score"><strong>${p.pts}</strong><span>pts</span></div>
@@ -13137,7 +13348,7 @@ function renderRanking(){
               :`${ri+1}`;
             return `<div class="lb-row ${rowCls}">
               <div class="rank ${rankCls}" aria-label="${ri+1}º lugar">${rankHTML}</div>
-              <div class="pname">${esc(p.name)}</div>
+              <div class="pname">${userProfileTriggerHTML(p.i,p.name)}</div>
               <div class="pstats">
                 <div class="stat crav-stat"><div class="sv">${p.crav}</div><div class="sl">Cravadas</div></div>
                 <div class="stat corr-stat"><div class="sv">${p.corr}</div><div class="sl">Acertos</div></div>
@@ -13690,7 +13901,7 @@ function copaLivePalpiteRowHTML(game,pi,liveRes,opts){
   // Sem placar ainda (jogo de grupo que não começou) → esconde a coluna de pontos.
   const showPts=!opts.hidePts;
   return `<div class="copa-live-pal-row ${meCls} ${showPts?"":"no-pts"}">
-    <span class="copa-live-pal-name">${name}${opts.me?` <small>(você)</small>`:""}</span>
+    <button type="button" class="copa-live-pal-name" onclick="openUserProfile(${pi},this)" aria-label="Abrir perfil de ${name}">${name}${opts.me?` <small>(você)</small>`:""}</button>
     <span class="copa-live-pal-pick">${scoreCell}${advCell}</span>
     ${showPts?`<span class="copa-live-pal-pts ${pts.cls}">${esc(pts.text)}</span>`:""}
   </div>`;
@@ -14017,6 +14228,148 @@ function palInitials(name){
   if(parts.length===1) return parts[0].slice(0,2).toUpperCase();
   return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
 }
+function profileHexLuminance(hex){
+  const clean=String(hex||"").replace("#","");
+  if(!/^[0-9a-f]{6}$/i.test(clean)) return .5;
+  const rgb=[0,2,4].map(i=>parseInt(clean.slice(i,i+2),16)/255).map(value=>value<=.03928?value/12.92:Math.pow((value+.055)/1.055,2.4));
+  return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+}
+function userProfileTheme(pi){
+  const team=brFavoriteTeamForParticipant(pi);
+  const accent=team?brTeamAccent(team):"#ffd75e";
+  const light=profileHexLuminance(accent)>.52;
+  return {
+    team,
+    accent,
+    ink:light?"#142019":"#fff",
+    strong:light?"#40594c":accent,
+    action:light?"#173d2a":accent,
+    actionInk:"#fff"
+  };
+}
+function userProfileTriggerHTML(pi,name,opts={}){
+  const theme=userProfileTheme(pi);
+  const base=opts.br?"brx-profile-name":"profile-link";
+  return '<button type="button" class="'+base+' profile-link-with-avatar'+(opts.onDark?' is-on-dark':'')+'" style="--profile-mini-accent:'+theme.accent+';--profile-mini-ink:'+theme.ink+'" onclick="openUserProfile('+pi+',this)" aria-label="Abrir perfil de '+esc(name)+'">'+
+    '<span class="profile-mini-avatar" aria-hidden="true">'+esc(palInitials(name))+'</span>'+
+    '<span class="profile-link-name">'+esc(name)+'</span>'+
+  '</button>';
+}
+function userProfileCompetitionStats(pi){
+  if(isBrasileirao()){
+    const rows=brRanking();
+    const stats=brPlayerStats(pi);
+    const fixtures=brBolaoFixtures();
+    const predicted=fixtures.filter(fx=>{
+      const p=S_BR.palpites[brPredKey(pi,fx.id)];
+      return p&&p.s1!=null&&p.s2!=null;
+    }).length;
+    return {competition:"Brasileirão 2026",stats,rank:rows.findIndex(row=>row.i===pi)+1,predicted,total:fixtures.length};
+  }
+  const rows=ranking();
+  const stats=playerStats(pi);
+  const predicted=GAMES.filter(game=>isPredictionComplete(game,S.palpites[`${pi}_${game.id}`])).length;
+  return {competition:"Copa 2026",stats,rank:rows.findIndex(row=>row.i===pi)+1,predicted,total:GAMES.length};
+}
+function userProfileHTML(pi){
+  const name=participantName(pi);
+  const theme=userProfileTheme(pi);
+  const team=theme.team;
+  const data=userProfileCompetitionStats(pi);
+  const stats=data.stats;
+  const rank=data.rank||0;
+  const progress=data.total?Math.round(data.predicted*100/data.total):0;
+  const hitRate=stats.played?Math.round((stats.crav+stats.corr)*100/stats.played):0;
+  const isMe=pi===myParticipantIndex();
+  const teamHTML=team
+    ? '<span class="user-profile-team-label">Time do coração</span><strong>'+esc(team)+'</strong>'
+    : '<span class="user-profile-team-label">Time do coração</span><span>Não informado</span>'+(isMe?'<button type="button" class="user-profile-team-edit" onclick="editFavoriteFromProfile()">Escolher</button>':'');
+  const performance=stats.played
+    ? hitRate+'% de acerto · '+stats.played+' '+(stats.played===1?'jogo pontuado':'jogos pontuados')
+    : 'Aguardando os primeiros jogos pontuados';
+  return '<div class="user-profile-card" role="dialog" aria-modal="true" aria-labelledby="userProfileTitle" style="--profile-accent:'+theme.accent+';--profile-accent-ink:'+theme.ink+';--profile-accent-strong:'+theme.strong+';--profile-action:'+theme.action+';--profile-action-ink:'+theme.actionInk+'">'+
+    '<button type="button" class="user-profile-close" onclick="closeUserProfile()" aria-label="Fechar perfil">×</button>'+
+    '<div class="user-profile-hero">'+
+      '<div class="user-profile-kicker">Perfil do bolão</div>'+
+      '<div class="user-profile-identity">'+
+        '<div class="user-profile-avatar">'+esc(palInitials(name))+(team?brLogo(team):'')+'</div>'+
+        '<div class="user-profile-copy">'+
+          '<div class="user-profile-name"><h2 id="userProfileTitle">'+esc(name)+'</h2>'+(isMe?'<span class="user-profile-you">você</span>':'')+'</div>'+
+          '<div class="user-profile-team">'+teamHTML+'</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="user-profile-body">'+
+      '<div class="user-profile-comp"><span>Momento no bolão</span><span>'+esc(data.competition)+'</span></div>'+
+      '<div class="user-profile-metrics">'+
+        '<div class="user-profile-metric"><strong>'+(rank?'#'+rank:'—')+'</strong><span>posição</span></div>'+
+        '<div class="user-profile-metric"><strong>'+stats.pts+'</strong><span>pontos</span></div>'+
+        '<div class="user-profile-metric"><strong>'+stats.crav+'</strong><span>cravadas</span></div>'+
+      '</div>'+
+      '<div class="user-profile-performance">'+
+        '<div class="user-profile-performance-head"><strong>Desempenho</strong><span>'+esc(performance)+'</span></div>'+
+        '<div class="user-profile-breakdown">'+
+          '<span class="user-profile-pill hit"><b>'+stats.crav+'</b><span>cravou</span></span>'+
+          '<span class="user-profile-pill good"><b>'+stats.corr+'</b><span>acertou</span></span>'+
+          '<span class="user-profile-pill"><b>'+stats.err+'</b><span>errou</span></span>'+
+          '<span class="user-profile-pill bad"><b>'+stats.inv+'</b><span>inverteu</span></span>'+
+        '</div>'+
+        '<div class="user-profile-activity">'+
+          '<div class="user-profile-activity-copy"><span>Palpites enviados</span><strong>'+data.predicted+'/'+data.total+'</strong></div>'+
+          '<div class="user-profile-progress" role="progressbar" aria-label="Palpites enviados" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+progress+'"><i style="width:'+progress+'%"></i></div>'+
+        '</div>'+
+      '</div>'+
+      (!isBrasileirao()?'<div class="user-profile-foot"><p>Confira os placares e escolhas de '+esc(String(name).split(/\s+/)[0])+'.</p><button type="button" class="user-profile-action" onclick="userProfileViewPredictions('+pi+')">Ver palpites</button></div>':'')+
+    '</div>'+
+  '</div>';
+}
+function renderUserProfile(){
+  const el=document.getElementById("userProfileModal");
+  if(!el) return;
+  if(!Number.isInteger(userProfilePi)){
+    el.classList.remove("open");
+    el.innerHTML="";
+    document.body.classList.remove("user-profile-open");
+    return;
+  }
+  el.innerHTML='<div class="user-profile-backdrop" onclick="closeUserProfile()" aria-hidden="true"></div>'+userProfileHTML(userProfilePi);
+  el.classList.add("open");
+  document.body.classList.add("user-profile-open");
+  requestAnimationFrame(()=>el.querySelector(".user-profile-close")?.focus({preventScroll:true}));
+}
+function openUserProfile(pi,trigger){
+  pi=Number(pi);
+  if(!Number.isInteger(pi)||pi<0||pi>=S.participants.length) return;
+  userProfileReturnFocus=trigger instanceof HTMLElement?trigger:document.activeElement;
+  userProfilePi=pi;
+  renderUserProfile();
+}
+function closeUserProfile(){
+  const focusTarget=userProfileReturnFocus;
+  userProfilePi=null;
+  userProfileReturnFocus=null;
+  renderUserProfile();
+  setTimeout(()=>{ if(focusTarget&&focusTarget.isConnected) focusTarget.focus({preventScroll:true}); },0);
+}
+function editFavoriteFromProfile(){
+  closeUserProfile();
+  brOpenFavoritePicker();
+}
+function userProfileViewPredictions(pi){
+  closeUserProfile();
+  palPi=pi;
+  palSelectionTouched=true;
+  goTab("palpites");
+}
+function trapUserProfileFocus(event){
+  if(event.key!=="Tab"||!Number.isInteger(userProfilePi)) return;
+  const modal=document.getElementById("userProfileModal");
+  const focusable=modal?Array.from(modal.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(el=>el.offsetParent!==null&&el.tabIndex>=0):[];
+  if(!focusable.length) return;
+  const first=focusable[0],last=focusable[focusable.length-1];
+  if(event.shiftKey&&document.activeElement===first){ event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey&&document.activeElement===last){ event.preventDefault(); first.focus(); }
+}
 function renderPalpites(){
   if(palPi>=S.participants.length) palPi=0;
   if(!["groups","ko","podio"].includes(palStage)) palStage="groups";
@@ -14080,11 +14433,13 @@ function renderPalpites(){
     <div class="pal-hero">
       <div class="pal-hero-top">
         <div class="pal-hero-title">
-          <div class="pal-hero-avatar">${esc(palInitials(participantName(palPi)))}</div>
-          <div style="min-width:0">
+          <button type="button" class="pal-profile-trigger" onclick="openUserProfile(${palPi},this)" aria-label="Abrir perfil de ${esc(participantName(palPi))}">
+          <span class="pal-hero-avatar">${esc(palInitials(participantName(palPi)))}</span>
+          <span style="min-width:0">
             <span class="kicker">Central de palpites</span>
-            <h2>${esc(participantName(palPi))}</h2>
-          </div>
+            <strong class="pal-profile-name">${esc(participantName(palPi))}</strong>
+          </span>
+          </button>
         </div>
         <div class="pal-hero-metrics">
           <div class="pal-metric accent">
@@ -14240,11 +14595,13 @@ function renderPodioBody(){
         ${board.map(row=>{
           const pCls=row.i===myIdx?"me":"";
           return `<div class="podio-entry ${pCls}">
-            <div class="pe-avatar">${esc(palInitials(row.n))}</div>
-            <div class="pe-name">
+            <button type="button" class="pe-profile-btn" onclick="openUserProfile(${row.i},this)" aria-label="Abrir perfil de ${esc(row.n)}">
+            <span class="pe-avatar">${esc(palInitials(row.n))}</span>
+            <span class="pe-name">
               <span>${esc(row.n)}</span>
               ${row.i===myIdx?`<span class="you">você</span>`:""}
-            </div>
+            </span>
+            </button>
             <div class="pe-picks">
               ${pos.map(p=>{
                 const v=row.pd[p.k]||"";
@@ -15214,6 +15571,8 @@ document.addEventListener("click",event=>{
   if(authPanelOpen&&menu&&!menu.contains(event.target)) closeAuthPanel();
 });
 document.addEventListener("keydown",event=>{
+  if(event.key==="Escape"&&Number.isInteger(userProfilePi)){ closeUserProfile(); return; }
+  trapUserProfileFocus(event);
   if(event.key==="Escape"&&authPanelOpen) closeAuthPanel();
   if(event.key==="Escape"&&chartExpanded) closeChartModal();
   // fecha uma camada por Esc: primeiro o popup de palpites, depois o do clube

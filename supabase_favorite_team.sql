@@ -22,10 +22,11 @@ revoke all on public.user_team_preferences from anon;
 grant select, insert, update on public.user_team_preferences to authenticated;
 
 drop policy if exists "users read own team preferences" on public.user_team_preferences;
-create policy "users read own team preferences"
+drop policy if exists "signed in users read team preferences" on public.user_team_preferences;
+create policy "signed in users read team preferences"
 on public.user_team_preferences for select
 to authenticated
-using ((select auth.uid()) = user_id);
+using (true);
 
 drop policy if exists "users create own team preferences" on public.user_team_preferences;
 create policy "users create own team preferences"
