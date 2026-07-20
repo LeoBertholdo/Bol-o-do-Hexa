@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07120f">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Ranking dos participantes · Brasileirão 2026</title>
+  <meta name="description" content="Sala administrativa do ranking dos participantes no Bolão do Brasileirão 2026.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/ranking-brasileirao-admin.css">
+</head>
+<body>
+  <noscript>
+    <div class="noscript">Ative o JavaScript para acessar a sala administrativa.</div>
+  </noscript>
+
+  <div class="access-screen" id="accessScreen">
+    <div class="access-backdrop" aria-hidden="true"></div>
+    <main class="access-card" aria-labelledby="accessTitle">
+      <a class="brand-lockup" href="bolao2026.html" aria-label="Voltar ao Bolão do Hexa">
+        <span class="brand-mark">B</span>
+        <span><b>Bolão do Hexa</b><small>Brasileirão 2026</small></span>
+      </a>
+
+      <div class="access-loader" id="accessLoader" role="status" aria-live="polite">
+        <span class="loader-ball" aria-hidden="true"></span>
+        <div>
+          <p class="access-kicker">Sala administrativa</p>
+          <h1 id="accessTitle">Confirmando acesso</h1>
+          <p>Validando a conta antes de carregar o ranking dos participantes.</p>
+        </div>
+      </div>
+
+      <form class="access-form" id="loginForm" hidden>
+        <p class="access-kicker">Acesso restrito</p>
+        <h1>Ranking dos participantes</h1>
+        <p class="access-copy">Entre com uma conta administradora do bolão para abrir esta página.</p>
+        <label>
+          <span>E-mail</span>
+          <input id="loginEmail" name="email" type="email" autocomplete="email" inputmode="email" required>
+        </label>
+        <label>
+          <span>Senha</span>
+          <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p class="form-error" id="loginError" role="alert" hidden></p>
+        <button class="access-primary" id="loginButton" type="submit">Entrar como administrador</button>
+        <a class="access-secondary" href="bolao2026.html">Voltar ao bolão</a>
+      </form>
+
+      <section class="access-message" id="deniedState" hidden>
+        <p class="access-kicker">Acesso restrito</p>
+        <div class="access-icon" aria-hidden="true">×</div>
+        <h1>Esta sala é só para admins</h1>
+        <p>Sua conta está conectada, mas não possui permissão de administrador. Nenhum dado do ranking foi carregado.</p>
+        <div class="access-actions">
+          <button class="access-primary" id="switchAccountButton" type="button">Trocar de conta</button>
+          <a class="access-secondary" href="bolao2026.html">Voltar ao bolão</a>
+        </div>
+      </section>
+
+      <section class="access-message" id="accessErrorState" hidden>
+        <p class="access-kicker">Não foi possível entrar</p>
+        <div class="access-icon warning" aria-hidden="true">!</div>
+        <h1>Falha ao confirmar o acesso</h1>
+        <p id="accessErrorText">Tente novamente em instantes.</p>
+        <button class="access-primary" id="retryAccessButton" type="button">Tentar novamente</button>
+        <a class="access-secondary" href="bolao2026.html">Voltar ao bolão</a>
+      </section>
+    </main>
+  </div>
+
+  <div class="app-shell" id="appShell" hidden>
+    <header class="site-header">
+      <div class="header-image" aria-hidden="true"></div>
+      <div class="topbar page-width">
+        <a class="brand-lockup compact" href="bolao2026.html" id="backToMain">
+          <span class="brand-mark">B</span>
+          <span><b>Bolão do Hexa</b><small>Brasileirão</small></span>
+        </a>
+        <div class="topbar-actions">
+          <div class="connection-state" id="connectionState" role="status">
+            <span class="connection-dot"></span>
+            <span id="connectionLabel">Atualizado</span>
+          </div>
+          <button class="icon-button" id="refreshButton" type="button" aria-label="Atualizar ranking" title="Atualizar ranking">
+            <span aria-hidden="true">↻</span>
+          </button>
+          <div class="admin-menu">
+            <button class="admin-chip" id="adminMenuButton" type="button" aria-expanded="false" aria-controls="adminMenuPanel">
+              <span class="account-icon" aria-hidden="true"></span>
+              <span class="sr-only">Menu da conta</span>
+              <span class="admin-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="admin-menu-panel" id="adminMenuPanel" hidden>
+              <a href="bolao2026.html">Abrir o bolão principal</a>
+              <button id="signOutButton" type="button">Sair desta conta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero page-width">
+        <div class="hero-copy">
+          <p class="hero-kicker">Brasileirão 2026 <span aria-hidden="true">·</span> Returno</p>
+          <h1>Ranking</h1>
+        </div>
+      </div>
+
+      <div class="club-ribbon" aria-label="Clubes do Brasileirão 2026">
+        <div class="club-ribbon-track" id="clubRibbon"></div>
+      </div>
+    </header>
+
+    <main class="page-width dashboard" id="dashboard">
+      <section class="overview-grid" aria-label="Resumo do ranking">
+        <article class="metric-card">
+          <div class="metric-top"><small>Sua posição</small></div>
+          <strong class="metric-number" id="metricPosition">—</strong>
+          <p>no ranking geral</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><small>Rodada</small></div>
+          <strong class="metric-number" id="metricRound">—</strong>
+          <p id="metricRoundDetail">returno</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><small>Seus pontos</small></div>
+          <strong class="metric-number" id="metricPoints">0</strong>
+          <p>no returno</p>
+        </article>
+        <article class="metric-card">
+          <div class="metric-top"><small>Suas cravadas</small></div>
+          <strong class="metric-number" id="metricExact">0</strong>
+          <p>no returno</p>
+        </article>
+      </section>
+
+      <section class="ranking-panel" aria-labelledby="rankingTitle">
+        <div class="panel-heading ranking-heading">
+          <div>
+            <p class="eyebrow">Participantes</p>
+            <h2 id="rankingTitle">Classificação</h2>
+          </div>
+          <div class="scope-switch" role="group" aria-label="Período do ranking">
+            <button class="active" type="button" data-scope="all" aria-pressed="true">Geral</button>
+            <button type="button" data-scope="round" aria-pressed="false">Rodada</button>
+            <button type="button" data-scope="live" aria-pressed="false">Ao vivo</button>
+          </div>
+        </div>
+        <div class="ranking-context" id="rankingContext">Classificação geral do returno</div>
+        <div class="ranking-column-head" aria-hidden="true">
+          <span>Pos.</span><span>Participante</span><span>Forma</span><span>Pontos</span>
+        </div>
+        <ol class="ranking-list" id="rankingList"></ol>
+        <div class="ranking-legend">
+          <span><i class="result-dot exact"></i> +3 cravada</span>
+          <span><i class="result-dot correct"></i> +1 acerto</span>
+          <span><i class="result-dot miss"></i> 0 erro</span>
+          <span><i class="result-dot inverted"></i> −2 invertido</span>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <p><b>Bolão do Hexa</b> · Brasileirão 2026</p>
+        <p>Resultado ao vivo é provisório. O placar oficial fecha a pontuação.</p>
+      </footer>
+    </main>
+
+    <div class="player-dialog" id="playerDialog" hidden>
+      <button class="player-dialog-backdrop" id="playerDialogBackdrop" type="button" aria-label="Fechar perfil"></button>
+      <section class="player-card" role="dialog" aria-modal="true" aria-labelledby="playerDialogName">
+        <button class="player-close" id="playerDialogClose" type="button" aria-label="Fechar perfil">×</button>
+        <header class="player-head">
+          <span class="player-position" id="playerDialogPosition">1º</span>
+          <span class="participant-avatar player-avatar" id="playerDialogAvatar">LB</span>
+          <div>
+            <p>Participante</p>
+            <h2 id="playerDialogName">—</h2>
+          </div>
+        </header>
+        <div class="player-stats" id="playerDialogStats"></div>
+        <div class="player-efficiency">
+          <div><span>Aproveitamento</span><b id="playerDialogEfficiency">0%</b></div>
+          <div class="efficiency-track"><i id="playerDialogEfficiencyBar"></i></div>
+        </div>
+        <section class="player-recent" aria-labelledby="playerRecentTitle">
+          <div class="player-section-title">
+            <h3 id="playerRecentTitle">Últimos jogos pontuados</h3>
+            <span id="playerDialogGames">0 jogos</span>
+          </div>
+          <div id="playerDialogRecent"></div>
+        </section>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="assets/ranking-brasileirao-admin.js" defer></script>
+</body>
+</html>
