@@ -4293,7 +4293,7 @@ body.chart-modal-open{overflow:hidden}
 .user-profile-modal{position:fixed;inset:0;z-index:1500;display:none;align-items:center;justify-content:center;padding:16px}
 .user-profile-modal.open{display:flex}
 .user-profile-backdrop{position:absolute;inset:0;border:0;background:rgba(5,12,9,.74);backdrop-filter:blur(5px);cursor:default}
-.user-profile-card{--profile-accent:#ffd75e;--profile-accent-ink:#172117;--profile-accent-strong:#8a6500;--profile-action:#173d2a;--profile-action-ink:#fff;position:relative;width:min(100%,510px);max-height:92vh;overflow:auto;overscroll-behavior:contain;border:1px solid color-mix(in srgb,var(--profile-accent) 42%,rgba(255,255,255,.12));border-radius:22px;background:linear-gradient(180deg,#fbfdfc,#f4f8f5);box-shadow:0 34px 100px rgba(0,0,0,.5);scrollbar-width:thin;animation:userProfileIn .2s ease}
+.user-profile-card{--profile-accent:#ffd75e;--profile-accent-strong:#8a6500;--profile-action:#173d2a;--profile-action-ink:#fff;position:relative;width:min(100%,510px);max-height:92vh;overflow:auto;overscroll-behavior:contain;border:1px solid color-mix(in srgb,var(--profile-accent) 42%,rgba(255,255,255,.12));border-radius:22px;background:linear-gradient(180deg,#fbfdfc,#f4f8f5);box-shadow:0 34px 100px rgba(0,0,0,.5);scrollbar-width:thin;animation:userProfileIn .2s ease}
 @keyframes userProfileIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 .user-profile-close{position:absolute;top:13px;right:13px;z-index:3;display:grid;place-items:center;width:33px;height:33px;border:1px solid rgba(255,255,255,.2);border-radius:50%;background:rgba(8,18,13,.3);color:#fff;font-size:1.15rem;font-weight:900;cursor:pointer;backdrop-filter:blur(8px)}
 .user-profile-close:hover{background:rgba(8,18,13,.56)}
@@ -4303,7 +4303,7 @@ body.chart-modal-open{overflow:hidden}
 .user-profile-hero:after{content:"";position:absolute;right:-28px;bottom:-55px;width:176px;height:176px;border:1px solid color-mix(in srgb,var(--profile-accent) 28%,transparent);border-radius:50%;box-shadow:0 0 0 28px color-mix(in srgb,var(--profile-accent) 6%,transparent)}
 .user-profile-kicker{position:relative;z-index:1;color:color-mix(in srgb,var(--profile-accent) 76%,#fff);font-size:.58rem;font-weight:950;letter-spacing:1.2px;text-transform:uppercase}
 .user-profile-identity{position:relative;z-index:1;display:flex;align-items:center;gap:14px;margin-top:12px;min-width:0}
-.user-profile-avatar{position:relative;display:grid;place-items:center;width:66px;height:66px;flex:0 0 auto;border:1px solid rgba(255,255,255,.42);border-radius:22px;background:linear-gradient(145deg,color-mix(in srgb,var(--profile-accent) 84%,#fff),var(--profile-accent));box-shadow:0 14px 32px rgba(0,0,0,.34);color:var(--profile-accent-ink);font-size:1.2rem;font-weight:950;letter-spacing:.3px}
+.user-profile-avatar{position:relative;display:grid;place-items:center;width:66px;height:66px;flex:0 0 auto;border:1px solid rgba(255,255,255,.42);border-radius:22px;background:linear-gradient(145deg,#237a50,#0e452d);box-shadow:0 14px 32px rgba(0,0,0,.34);color:#fff;font-size:1.2rem;font-weight:950;letter-spacing:.3px}
 .user-profile-avatar .brx-crest{position:absolute;right:-7px;bottom:-7px;width:29px;height:29px;padding:3px;border:2px solid #0d1a13;border-radius:50%;background:#fff;box-shadow:0 5px 12px rgba(0,0,0,.3)}
 .user-profile-copy{min-width:0}
 .user-profile-name{display:flex;align-items:center;gap:7px;min-width:0}
@@ -4344,7 +4344,7 @@ body.user-profile-open{overflow:hidden}
 .profile-link{color:inherit}
 .profile-link-with-avatar{display:inline-flex!important;align-items:center;gap:8px;min-width:0;max-width:100%;text-decoration:none!important}
 .profile-link-with-avatar:hover .profile-link-name{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
-.profile-mini-avatar{display:grid;place-items:center;width:26px;height:26px;flex:0 0 auto;border:1px solid color-mix(in srgb,var(--profile-mini-accent) 52%,rgba(18,48,31,.18));border-radius:9px;background:linear-gradient(145deg,color-mix(in srgb,var(--profile-mini-accent) 82%,#fff),var(--profile-mini-accent));color:var(--profile-mini-ink);font-size:.58rem;font-weight:950;letter-spacing:.2px;box-shadow:0 3px 8px color-mix(in srgb,var(--profile-mini-accent) 16%,transparent)}
+.profile-mini-avatar{display:grid;place-items:center;width:26px;height:26px;flex:0 0 auto;border:1px solid rgba(17,71,46,.3);border-radius:9px;background:linear-gradient(145deg,#237a50,#0e452d);color:#fff;font-size:.58rem;font-weight:950;letter-spacing:.2px;box-shadow:0 3px 8px rgba(14,69,45,.18)}
 .profile-link-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .profile-link-with-avatar.is-on-dark .profile-mini-avatar{border-color:rgba(255,255,255,.38);box-shadow:0 4px 10px rgba(0,0,0,.22)}
 .prize-copy .profile-link{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font-size:.92rem;font-weight:900}
@@ -14241,16 +14241,14 @@ function userProfileTheme(pi){
   return {
     team,
     accent,
-    ink:light?"#142019":"#fff",
     strong:light?"#40594c":accent,
     action:light?"#173d2a":accent,
     actionInk:"#fff"
   };
 }
 function userProfileTriggerHTML(pi,name,opts={}){
-  const theme=userProfileTheme(pi);
   const base=opts.br?"brx-profile-name":"profile-link";
-  return '<button type="button" class="'+base+' profile-link-with-avatar'+(opts.onDark?' is-on-dark':'')+'" style="--profile-mini-accent:'+theme.accent+';--profile-mini-ink:'+theme.ink+'" onclick="openUserProfile('+pi+',this)" aria-label="Abrir perfil de '+esc(name)+'">'+
+  return '<button type="button" class="'+base+' profile-link-with-avatar'+(opts.onDark?' is-on-dark':'')+'" onclick="openUserProfile('+pi+',this)" aria-label="Abrir perfil de '+esc(name)+'">'+
     '<span class="profile-mini-avatar" aria-hidden="true">'+esc(palInitials(name))+'</span>'+
     '<span class="profile-link-name">'+esc(name)+'</span>'+
   '</button>';
@@ -14287,7 +14285,7 @@ function userProfileHTML(pi){
   const performance=stats.played
     ? hitRate+'% de acerto · '+stats.played+' '+(stats.played===1?'jogo pontuado':'jogos pontuados')
     : 'Aguardando os primeiros jogos pontuados';
-  return '<div class="user-profile-card" role="dialog" aria-modal="true" aria-labelledby="userProfileTitle" style="--profile-accent:'+theme.accent+';--profile-accent-ink:'+theme.ink+';--profile-accent-strong:'+theme.strong+';--profile-action:'+theme.action+';--profile-action-ink:'+theme.actionInk+'">'+
+  return '<div class="user-profile-card" role="dialog" aria-modal="true" aria-labelledby="userProfileTitle" style="--profile-accent:'+theme.accent+';--profile-accent-strong:'+theme.strong+';--profile-action:'+theme.action+';--profile-action-ink:'+theme.actionInk+'">'+
     '<button type="button" class="user-profile-close" onclick="closeUserProfile()" aria-label="Fechar perfil">×</button>'+
     '<div class="user-profile-hero">'+
       '<div class="user-profile-kicker">Perfil do bolão</div>'+
