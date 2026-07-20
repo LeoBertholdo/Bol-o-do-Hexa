@@ -476,7 +476,6 @@ img { display: block; max-width: 100%; }
   filter: saturate(.75) brightness(.92);
   opacity: .82;
 }
-.club-ribbon:hover .club-ribbon-track { animation-play-state: paused; }
 @keyframes clubsLeftToRight { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 
 /* Ranking */
