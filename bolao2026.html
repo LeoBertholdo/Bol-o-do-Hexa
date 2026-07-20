@@ -4659,6 +4659,19 @@ body.chart-modal-open{overflow:hidden}
 .brazil-confetti-canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:2147483600}
 @media (prefers-reduced-motion:reduce){.brazil-confetti-canvas{display:none}}
 
+/* Faixa de clubes na homepage oficial do Brasileirão. */
+.br-official-club-ribbon{height:54px;overflow:hidden;border-top:1px solid rgba(226,237,229,.12);border-bottom:1px solid rgba(226,237,229,.12);background:#07110d}
+.br-official-club-ribbon-track{display:flex;width:max-content;height:100%;animation:brOfficialClubsLeftToRight 42s linear infinite;will-change:transform}
+.br-official-club-ribbon-group{display:flex;align-items:center;gap:28px;flex:0 0 auto;height:100%;padding:0 14px}
+.br-official-club-ribbon img{width:27px;height:27px;object-fit:contain;filter:saturate(.78) brightness(.93);opacity:.84}
+@keyframes brOfficialClubsLeftToRight{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+@media(max-width:700px){
+  .br-official-club-ribbon{height:50px}
+  .br-official-club-ribbon-group{gap:24px;padding-inline:12px}
+  .br-official-club-ribbon img{width:25px;height:25px}
+}
+@media(prefers-reduced-motion:reduce){.br-official-club-ribbon-track{animation:none;transform:none}}
+
 /* ===== Cinema (Remotion): página admin de evolução do bolão ===== */
 .cinema-shell .cinema-note{font-size:12px;color:var(--muted);margin:2px 0 12px}
 .cinema-mount{position:relative;width:100%;aspect-ratio:16/9;background:#0b1430;border-radius:10px;overflow:hidden;box-shadow:0 12px 34px rgba(0,39,118,.22)}
@@ -4695,6 +4708,8 @@ body.chart-modal-open{overflow:hidden}
     </div>
   </header>
 </div>
+
+<div class="br-official-club-ribbon" id="brOfficialClubRibbon" aria-label="Clubes do Brasileirão 2026" hidden></div>
 
 <nav id="nav">
   <button data-tab="home" class="active" onclick="goTab('home')">Início</button>
@@ -10166,6 +10181,21 @@ const BR_TEAM_LOGOS={
   "Remo":"assets/brasileirao/remo.png","Santos":"assets/brasileirao/santos.png",
   "São Paulo":"assets/brasileirao/sao-paulo.png","Vasco da Gama":"assets/brasileirao/vasco-da-gama.png"
 };
+function syncBrOfficialClubRibbon(tab=activeTab){
+  const ribbon=document.getElementById("brOfficialClubRibbon");
+  if(!ribbon) return;
+  const show=isBrasileirao()&&tab==="home";
+  ribbon.hidden=!show;
+  if(!show||ribbon.dataset.ready==="true") return;
+  const logos=Object.entries(BR_TEAM_LOGOS).map(([team,src])=>
+    '<img src="'+esc(src)+'" alt="'+esc(team)+'" title="'+esc(team)+'">'
+  ).join("");
+  ribbon.innerHTML='<div class="br-official-club-ribbon-track">'+
+    '<div class="br-official-club-ribbon-group">'+logos+'</div>'+
+    '<div class="br-official-club-ribbon-group" aria-hidden="true">'+logos+'</div>'+
+  '</div>';
+  ribbon.dataset.ready="true";
+}
 /* Cor de destaque do popup do clube — tons clareados pro fundo escuro (preto de
    alvinegro some no tema, então esses ganham um prata claro). Fallback: dourado. */
 const BR_TEAM_COLORS={
@@ -11700,6 +11730,7 @@ function renderBrTab(t){
 
 function render(t){
   renderAuthControls();
+  syncBrOfficialClubRibbon(t);
   if(isBrasileirao()){
     renderBrTab(t);
     if(brTeamPopup) renderBrTeamPopup(); // popup do clube acompanha placar ao vivo
