@@ -258,17 +258,18 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-home-day-title{display:block;margin-top:5px;color:#fff;font-size:1.14rem;font-weight:950;line-height:1.05}
 .brx-home-day-meta{display:block;margin-top:5px;color:#8ba295;font-size:.61rem;font-weight:900;letter-spacing:.45px;text-transform:uppercase}
 .brx-home-day-meta .live{color:#4ae08e}
-.brx-home-day-reset{display:inline-flex;margin-top:6px;padding:0;border:0;background:none;color:#ffd75e;font-size:.62rem;font-weight:900;cursor:pointer;text-decoration:underline dotted;text-underline-offset:3px}
 .brx-home-nav{display:inline-flex;align-items:center;gap:5px;padding:4px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);flex:0 0 auto}
-.brx-home-arrow{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#dcebe2;font-size:1.2rem;font-weight:950;line-height:1;cursor:pointer;transition:background .15s,color .15s}
-.brx-home-arrow:hover:not(:disabled){background:rgba(255,255,255,.1);color:#fff}
+.brx-home-arrow,.brx-home-reset{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#dcebe2;font-size:1.2rem;font-weight:950;line-height:1;cursor:pointer;transition:background .15s,color .15s}
+.brx-home-reset{color:#ffd75e;font-size:.9rem}
+.brx-home-arrow:hover:not(:disabled),.brx-home-reset:hover{background:rgba(255,255,255,.1);color:#fff}
 .brx-home-arrow:disabled{opacity:.28;cursor:not-allowed}
 .brx-home-games-list .brx-games{grid-template-columns:1fr}
 .brx-home-days{display:grid;gap:14px}
 .brx-home-day-block+.brx-home-day-block{padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
-.brx-home-day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
-.brx-home-day-label{color:#c9dcd1;font-size:.68rem;font-weight:950;letter-spacing:.6px;text-transform:uppercase}
-.brx-home-day-status{color:#71877b;font-size:.58rem;font-weight:900;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
+.brx-home-day-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 10px;padding:0 0 8px;border-bottom:1px solid rgba(255,255,255,.08)}
+.brx-home-day-label{display:inline-flex;align-items:center;gap:7px;color:#fff;font-size:.78rem;font-weight:950;letter-spacing:.65px;text-transform:uppercase}
+.brx-home-day-label:before{content:"";width:6px;height:6px;border-radius:50%;background:#ffd75e;box-shadow:0 0 12px rgba(255,215,94,.32)}
+.brx-home-day-status{padding:4px 8px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.04);color:#8ba295;font-size:.54rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
 .brx-home-day-status.live{color:#4ae08e}
 .brx-match{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
 .brx-match:hover{border-color:rgba(74,224,142,.3);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
@@ -290,8 +291,10 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-tag.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
 .brx-tag.late{color:#e0b34a;white-space:nowrap}
 .brx-when{display:flex;flex-direction:column;align-items:center;line-height:1.35}
+.brx-when.compact{justify-content:center}
 .brx-when-date{font-size:.6rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase;color:#71877b;white-space:nowrap}
 .brx-when-time{font-size:1.05rem;font-weight:950;color:#ffd75e}
+.brx-when.compact .brx-when-time{font-size:1.02rem}
 /* home / hero */
 .brx-hero{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;margin-bottom:14px;background:radial-gradient(720px 300px at 88% -30%,rgba(0,168,81,.32),transparent 62%),linear-gradient(180deg,#101c14,#0b1410)}
 .brx-hero:before{content:"";position:absolute;top:-70px;right:-70px;width:230px;height:230px;border-radius:50%;border:1.5px solid rgba(255,255,255,.06);pointer-events:none}
@@ -320,25 +323,32 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-focus-more{color:#71877b;font-size:.56rem;font-weight:900;letter-spacing:.3px}
 .brx-favorite{gap:8px;min-width:0}
 .brx-favorite-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.brx-favorite-change{padding:2px 0;border:0;background:none;color:#ffd75e;font-size:.54rem;font-weight:950;letter-spacing:.25px;text-transform:uppercase;cursor:pointer}
+.brx-favorite .brx-focus-label{color:#ffd75e}
+.brx-favorite-change{padding:2px 0;border:0;background:none;color:#8ba295;font-size:.54rem;font-weight:950;letter-spacing:.25px;text-transform:uppercase;cursor:pointer}
 .brx-favorite-change:hover{text-decoration:underline;text-underline-offset:3px}
-.brx-favorite-club{display:flex;align-items:center;gap:8px;width:100%;min-width:0;padding:0;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
+.brx-favorite-club{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-width:0;padding:0;border:0;background:none;color:#fff;text-align:left;cursor:pointer}
 .brx-favorite-club .brx-crest{width:34px;height:34px}
 .brx-favorite-club-copy{display:flex;flex-direction:column;gap:2px;min-width:0}
 .brx-favorite-club-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82rem;font-weight:950;line-height:1.1}
 .brx-favorite-club-copy span{color:#8ba295;font-size:.52rem;font-weight:900;letter-spacing:.4px;text-transform:uppercase}
+.brx-favorite-position{display:flex;flex-direction:column;align-items:flex-end;gap:1px;line-height:1}
+.brx-favorite-position strong{color:#fff;font-size:1.02rem;font-weight:950;font-variant-numeric:tabular-nums}
+.brx-favorite-position span{color:#8ba295;font-size:.43rem;font-weight:950;letter-spacing:.38px;text-transform:uppercase;white-space:nowrap}
 .brx-favorite-games{display:grid;gap:5px;padding-top:7px;border-top:1px solid rgba(255,255,255,.1)}
-.brx-favorite-game{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0}
+.brx-favorite-game{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:7px;min-width:0}
 .brx-favorite-game-copy{display:flex;align-items:center;gap:5px;min-width:0;color:#cfe0d6;font-size:.59rem;font-weight:850}
 .brx-favorite-game-copy .brx-crest{width:19px;height:19px}
 .brx-favorite-game-copy span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.brx-favorite-game-meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;white-space:nowrap}
-.brx-favorite-game-meta strong{color:#dcebe2;font-size:.49rem;font-weight:950;letter-spacing:.1px;text-transform:uppercase}
-.brx-favorite-game-meta strong span{color:#ffd75e}
-.brx-favorite-game-meta small{color:#71877b;font-size:.46rem;font-weight:900;font-variant-numeric:tabular-nums}
+.brx-favorite-game-meta{display:flex;align-items:center;justify-content:flex-end;gap:4px;white-space:nowrap;color:#dcebe2;font-size:.5rem;font-weight:950;letter-spacing:.18px;text-transform:uppercase}
+.brx-favorite-game-meta strong{display:contents}
+.brx-favorite-venue{display:inline-flex;align-items:center;justify-content:center;min-width:32px;min-height:15px;padding:1px 5px;border-radius:999px;font-size:.45rem;font-weight:950;line-height:1;letter-spacing:.35px}
+.brx-favorite-venue.home{border:1px solid rgba(74,224,142,.34);background:rgba(74,224,142,.12);color:#4ae08e}
+.brx-favorite-venue.away{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.065);color:#dcebe2}
+.brx-favorite-date{color:#cfe0d6}
+.brx-favorite-game-meta small{color:#71877b;font-size:.43rem;font-weight:900;font-variant-numeric:tabular-nums}
 .brx-favorite-game-meta.live strong{color:#4ae08e;font-size:.65rem;font-variant-numeric:tabular-nums;letter-spacing:0;text-transform:none}
 .brx-favorite-game-meta.live small{color:#4ae08e;text-transform:uppercase}
-.brx-favorite-form{display:flex;align-items:center;gap:5px;margin-left:auto}
+.brx-favorite-form{display:flex;align-items:center;gap:5px;margin-left:0;align-self:flex-start}
 .brx-favorite-form-label{color:#71877b;font-size:.48rem;font-weight:900;letter-spacing:.35px;text-transform:uppercase}
 .brx-favorite-form-dots{display:flex;gap:3px}
 .brx-favorite-form-dots i{display:block;width:6px;height:6px;border-radius:50%;background:#526359}
@@ -463,9 +473,23 @@ body.brx-modal-open{overflow:hidden}
 .brx-tp-picker-btn:hover:not(:disabled){background:rgba(255,255,255,.12);color:#fff}
 .brx-tp-picker-btn:disabled{opacity:.3;cursor:not-allowed}
 .brx-tp-carousel-shell{min-width:0}
-.brx-tp-carousel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.brx-tp-carousel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
 .brx-tp-carousel-nav{display:inline-flex;align-items:center;gap:4px;padding:3px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.04)}
 .brx-tp-carousel-nav .brx-tp-picker-btn{width:27px;height:27px;border:0;border-radius:6px;background:transparent;font-size:1rem}
+.brx-tp-sequence{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;margin:0 0 10px;padding:1px 1px 4px;touch-action:pan-x pan-y}
+.brx-tp-sequence::-webkit-scrollbar{display:none}
+.brx-tp-seq-btn{flex:0 0 auto;display:flex;align-items:center;gap:6px;max-width:126px;min-height:30px;padding:4px 7px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(255,255,255,.04);color:#dcebe2;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.brx-tp-seq-btn:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18);color:#fff}
+.brx-tp-seq-btn.active{border-color:color-mix(in srgb,var(--club,#ffd75e) 54%,rgba(255,255,255,.16));background:color-mix(in srgb,var(--club,#ffd75e) 14%,rgba(255,255,255,.045));color:#fff}
+.brx-tp-seq-btn.current:not(.active){border-color:rgba(255,215,94,.24)}
+.brx-tp-seq-btn.live:not(.active){border-color:rgba(74,224,142,.24)}
+.brx-tp-seq-btn .brx-crest{width:19px;height:19px;flex:0 0 auto}
+.brx-tp-seq-name{min-width:0;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.62rem;font-weight:950;line-height:1}
+.brx-tp-venue{display:grid;place-items:center;flex:0 0 auto;width:17px;height:17px;border-radius:6px;font-size:.46rem;font-weight:950;line-height:1;text-transform:uppercase}
+.brx-tp-venue.home{border:1px solid rgba(74,224,142,.34);background:rgba(74,224,142,.13);color:#4ae08e}
+.brx-tp-venue.away{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);color:#b9cbc0}
+.brx-tp-seq-btn.active .brx-tp-venue.home{background:rgba(74,224,142,.2)}
+.brx-tp-seq-btn.active .brx-tp-venue.away{background:rgba(255,255,255,.12);color:#eef6f1}
 .brx-tp-carousel{display:flex;gap:0;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;scroll-behavior:smooth;scrollbar-width:none;touch-action:pan-x pan-y}
 .brx-tp-carousel::-webkit-scrollbar{display:none}
 .brx-tp-slide{flex:0 0 100%;width:100%;min-width:0;scroll-snap-align:start;scroll-snap-stop:always}
@@ -9851,10 +9875,9 @@ function applyCompChrome(){
       ? ["home","jogos","ranking","grupos","palpites","config","filme","cinema"]
       : ["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
     order.forEach(tab=>{ const button=byTab(tab); if(button) nav.appendChild(button); });
-    // Palpites já está dentro de Jogos; Config continua acessível pelos fluxos
-    // internos, mas sai da navegação principal do Brasileirão.
+    // Palpites já está dentro de Jogos; Config fica visível para acesso direto.
     const palpitesBtn=byTab("palpites"); if(palpitesBtn) palpitesBtn.hidden=br;
-    const configBtn=byTab("config"); if(configBtn) configBtn.hidden=br;
+    const configBtn=byTab("config"); if(configBtn) configBtn.hidden=false;
   }
   if(br){
     const f=document.getElementById("navFilmeBtn"); if(f) f.hidden=true;
@@ -10224,7 +10247,9 @@ function brMatchHTML(fx,opts){
       mid='<div class="brx-score live">'+sc.s1+'<span>×</span>'+sc.s2+'</div><div class="brx-tag live">Ao vivo'+(sc.elapsed?" · "+sc.elapsed+"’":"")+'</div>';
     }
   }else{
-    mid='<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
+    mid=opts.hideDate
+      ? '<div class="brx-when compact"><span class="brx-when-time">'+esc(fx.time)+'</span></div>'
+      : '<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
   }
   /* Palpite mora aqui na aba Jogos: jogo aberto vira botão "Palpitar" que abre os
      campos inline; jogo travado vira um pill que abre o popup com os palpites de
@@ -10326,10 +10351,11 @@ function brFavoriteUpcomingFixtures(team,now){
 function brFavoriteGameHTML(team,fx){
   const opponent=fx.t1===team?fx.t2:fx.t1;
   const venue=fx.t1===team?"Casa":"Fora";
+  const venueCls=fx.t1===team?"home":"away";
   const score=brFixtureScore(fx);
   const meta=score?.live
     ? '<div class="brx-favorite-game-meta live"><strong>'+score.s1+' × '+score.s2+'</strong><small>Ao vivo'+(score.elapsed?' · '+score.elapsed+'’':'')+'</small></div>'
-    : '<div class="brx-favorite-game-meta"><strong><span>'+esc(venue)+'</span> · '+esc(fx.dshort||fx.date||"A definir")+'</strong><small>'+esc(fx.time||"--:--")+'</small></div>';
+    : '<div class="brx-favorite-game-meta"><strong><span class="brx-favorite-venue '+venueCls+'">'+esc(venue)+'</span><span class="brx-favorite-date">'+esc(fx.dshort||fx.date||"A definir")+'</span></strong><small>'+esc(fx.time||"--:--")+'</small></div>';
   return '<div class="brx-favorite-game">'+
     '<div class="brx-favorite-game-copy">'+brLogo(opponent)+'<span>'+esc(opponent||"Adversário")+'</span></div>'+
     meta+
@@ -10351,12 +10377,13 @@ function brFavoriteHeroHTML(now){
   const formNames={v:"vitória",e:"empate",d:"derrota"};
   const formAria=form.length?("Últimos jogos: "+form.map(r=>formNames[r]).join(", ")):"Forma recente ainda indisponível";
   const formHTML=form.length
-    ? '<span class="brx-favorite-form" role="img" aria-label="'+esc(formAria)+'"><span class="brx-favorite-form-label">Forma</span><span class="brx-favorite-form-dots">'+form.map(r=>'<i class="'+r+'" aria-hidden="true"></i>').join("")+'</span></span>'
+    ? '<span class="brx-favorite-form" role="img" aria-label="'+esc(formAria)+'"><span class="brx-favorite-form-label">Últimos jogos</span><span class="brx-favorite-form-dots">'+form.map(r=>'<i class="'+r+'" aria-hidden="true"></i>').join("")+'</span></span>'
     : '';
+  const posValue=position>=0?(position+1)+'º':'—';
   return '<aside class="brx-hero-focus brx-favorite" aria-label="Meu time: '+esc(team)+'">'+
     '<div class="brx-favorite-head"><div class="brx-focus-label">Meu time</div><button type="button" class="brx-favorite-change" onclick="brOpenFavoritePicker()">Trocar</button></div>'+
     '<button type="button" class="brx-favorite-club" onclick="brOpenTeamPopup(this.dataset.team)" data-team="'+esc(team)+'" aria-label="Abrir detalhes do '+esc(team)+'">'+
-      brLogo(team)+'<span class="brx-favorite-club-copy"><strong>'+esc(team)+'</strong><span>'+(position>=0?(position+1)+'º na tabela':'Posição a definir')+'</span></span>'+
+      brLogo(team)+'<span class="brx-favorite-club-copy"><strong>'+esc(team)+'</strong><span>na tabela</span></span><span class="brx-favorite-position"><strong>'+esc(posValue)+'</strong><span>colocado</span></span>'+
     '</button>'+
     '<div class="brx-favorite-games">'+
       (upcoming.length?upcoming.map(f=>brFavoriteGameHTML(team,f)).join(""):'<span class="brx-focus-date">Nenhum próximo jogo confirmado</span>')+
@@ -10426,16 +10453,25 @@ function brHomeMoveDay(dir){
   renderBrHome();
 }
 function brHomeResetDay(){ brHomeRound=null; brHomeDayKey=null; renderBrHome(); }
-function brHomeDayBlockHTML(day){
+function brHomeFullWeekdayLabel(label){
+  const map={SEG:"SEGUNDA-FEIRA",TER:"TERÇA-FEIRA",QUA:"QUARTA-FEIRA",QUI:"QUINTA-FEIRA",SEX:"SEXTA-FEIRA",SÁB:"SÁBADO",SAB:"SÁBADO",DOM:"DOMINGO"};
+  const m=/^([^,]+)(,.*)$/.exec(String(label||""));
+  if(!m) return label;
+  const key=m[1].trim().toUpperCase();
+  return (map[key]||m[1])+m[2];
+}
+function brHomeDayBlockHTML(day,index){
   const state=brRoundState(day.games);
   const status=state.live?state.live+(state.live===1?" ao vivo":" ao vivo")+(state.done?" · "+state.done+"/"+state.total+" encerrados":""):state.done===state.total?state.done+"/"+state.total+" encerrados":day.games.length+(day.games.length===1?" jogo":" jogos");
+  const label=index===0?brHomeFullWeekdayLabel(day.date):day.date;
   return '<section class="brx-home-day-block">'+
-    '<div class="brx-home-day-head"><span class="brx-home-day-label">'+esc(day.date)+'</span><span class="brx-home-day-status'+(state.live?" live":"")+'">'+esc(status)+'</span></div>'+
-    '<div class="brx-games">'+day.games.map(brMatchHTML).join("")+'</div>'+
+    '<div class="brx-home-day-head"><span class="brx-home-day-label">'+esc(label)+'</span><span class="brx-home-day-status'+(state.live?" live":"")+'">'+esc(status)+'</span></div>'+
+    '<div class="brx-games">'+day.games.map(f=>brMatchHTML(f,{hideDate:true})).join("")+'</div>'+
   '</section>';
 }
 function brHomeDayControlsHTML(win){
   return '<div class="brx-home-nav" role="group" aria-label="Navegar entre dias e rodadas">'+
+    (win.canReset?'<button type="button" class="brx-home-reset" onclick="brHomeResetDay()" aria-label="Voltar ao destaque atual" title="Voltar ao destaque atual">↺</button>':'')+
     '<button type="button" class="brx-home-arrow" onclick="brHomeMoveDay(-1)"'+(win.canPrev?"":" disabled")+' aria-label="Dia ou rodada anterior com jogos">‹</button>'+
     '<button type="button" class="brx-home-arrow" onclick="brHomeMoveDay(1)"'+(win.canNext?"":" disabled")+' aria-label="Próximo dia ou rodada com jogos">›</button>'+
   '</div>';
@@ -10452,7 +10488,6 @@ function renderBrHome(){
   const focusRound=brHomeRound!=null&&byRound[brHomeRound]?brHomeRound:defaultRound;
   const games=byRound[focusRound]||[];
   const st=brRoundState(games);
-  const range=games.length?(games[0].date===games[games.length-1].date?games[0].date:games[0].date+" — "+games[games.length-1].date):"";
   const heroFocus=brFavoriteHeroHTML(now);
   const homeDay=brHomeDayWindow(games,now);
   const roundIndex=rounds.indexOf(focusRound);
@@ -10475,7 +10510,6 @@ function renderBrHome(){
         '<div class="brx-hero-main"><div class="brx-hero-copy">'+
           '<div class="brx-kicker">Brasileirão 2026 · Returno</div>'+
           '<h2>Rodada '+esc(focusRound||"")+'</h2>'+
-          '<div class="brx-hero-sub">'+esc(range)+'</div>'+
           '<div class="brx-hero-actions">'+
             '<button class="brx-btn gold" onclick="goTab(\'jogos\')">Palpitar</button>'+
             '<button class="brx-btn ghost" onclick="goTab(\'grupos\')">Tabela</button>'+
@@ -10492,9 +10526,8 @@ function renderBrHome(){
       '<div class="card brx-home-games-list">'+
         '<div class="brx-home-games-head"><div class="brx-home-games-copy">'+
           '<span class="brx-sec-title">Rodada '+esc(focusRound||"")+' · '+esc(homeDay.title)+'</span>'+
-          (homeDay.canReset?'<button type="button" class="brx-home-day-reset" onclick="brHomeResetDay()">Voltar ao destaque atual</button>':'')+
         '</div>'+brHomeDayControlsHTML(homeDay)+'</div>'+
-        '<div class="brx-home-days">'+homeDay.days.map(brHomeDayBlockHTML).join("")+'</div>'+
+        '<div class="brx-home-days">'+homeDay.days.map((day,index)=>brHomeDayBlockHTML(day,index)).join("")+'</div>'+
       '</div>'+
     '</div>';
 }
@@ -11235,9 +11268,17 @@ function brTeamInitialConfrontation(groups){
   const next=groups.findIndex(g=>g.upcomingGame);
   return next>=0?next:Math.max(0,groups.length-1);
 }
+function brTeamConfrontationVenue(group,team){
+  const f=group&&(group.activeGame||group.upcomingGame||group.todayGame||group.games&&group.games[0]);
+  return f&&f.t1===team?"home":"away";
+}
+function brTeamVenueText(venue){ return venue==="home"?"em casa":"fora"; }
+function brTeamVenueBadge(venue){ return venue==="home"?"C":"F"; }
 function brTeamCarouselSync(track){
   if(!track) return;
   const count=track.children.length;
+  if(!count) return;
+  const prevIndex=track.dataset.index;
   const width=Math.max(1,track.clientWidth);
   const index=Math.max(0,Math.min(count-1,Math.round(track.scrollLeft/width)));
   track.dataset.index=String(index);
@@ -11248,6 +11289,33 @@ function brTeamCarouselSync(track){
   const next=frame&&frame.querySelector('[data-br-tp-dir="1"]');
   if(prev) prev.disabled=index<=0;
   if(next) next.disabled=index>=count-1;
+  const seq=frame&&frame.querySelector(".brx-tp-sequence");
+  if(seq){
+    const buttons=seq.querySelectorAll("[data-br-tp-jump]");
+    buttons.forEach((btn,i)=>{
+      const active=i===index;
+      btn.classList.toggle("active",active);
+      if(active) btn.setAttribute("aria-current","true");
+      else btn.removeAttribute("aria-current");
+    });
+    if(prevIndex!==String(index)){
+      const activeBtn=seq.querySelector('[data-br-tp-jump="'+index+'"]');
+      if(activeBtn&&typeof activeBtn.scrollIntoView==="function") activeBtn.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    }
+  }
+}
+function brTeamCarouselGo(index){
+  const track=document.getElementById("brTpCarousel");
+  if(!track) return;
+  const count=track.children.length;
+  if(!count) return;
+  const target=Math.max(0,Math.min(count-1,Number(index)||0));
+  const slide=track.children[target];
+  if(slide) brTeamPopupOpponent=slide.dataset.opponent||null;
+  const left=target*Math.max(1,track.clientWidth);
+  if(typeof track.scrollTo==="function") track.scrollTo({left,behavior:"smooth"});
+  else track.scrollLeft=left;
+  brTeamCarouselSync(track);
 }
 function brTeamCarouselStep(dir){
   const track=document.getElementById("brTpCarousel");
@@ -11255,10 +11323,7 @@ function brTeamCarouselStep(dir){
   const count=track.children.length;
   const width=Math.max(1,track.clientWidth);
   const current=Number.isFinite(Number(track.dataset.index))?Number(track.dataset.index):Math.round(track.scrollLeft/width);
-  const target=Math.max(0,Math.min(count-1,current+dir));
-  const left=target*width;
-  if(typeof track.scrollTo==="function") track.scrollTo({left,behavior:"smooth"});
-  else track.scrollLeft=left;
+  brTeamCarouselGo(Math.max(0,Math.min(count-1,current+dir)));
 }
 function renderBrTeamPopup(){
   const el=document.getElementById("brTeamModal"); if(!el) return;
@@ -11319,6 +11384,16 @@ function brTeamPopupHTML(team){
   const groups=brTeamConfrontations(team,now);
   const initial=brTeamInitialConfrontation(groups);
   const bolaoIds=new Set(fixtures.map(f=>f.id));
+  const sequence=groups.map((group,index)=>{
+    const venue=brTeamConfrontationVenue(group,team);
+    const active=index===initial;
+    const label="Ver confrontos de "+team+" com "+group.opponent+", "+brTeamVenueText(venue);
+    return '<button type="button" class="brx-tp-seq-btn'+(group.stateClass||'')+(active?' active':'')+'" data-br-tp-jump="'+index+'" onclick="brTeamCarouselGo('+index+')" aria-label="'+esc(label)+'"'+(active?' aria-current="true"':'')+'>'+
+      brLogo(group.opponent)+
+      '<span class="brx-tp-seq-name">'+esc(group.opponent)+'</span>'+
+      '<span class="brx-tp-venue '+venue+'" title="'+esc(brTeamVenueText(venue))+'">'+brTeamVenueBadge(venue)+'</span>'+
+    '</button>';
+  }).join('');
   const slides=groups.map(group=>{
     const games=group.games.slice(0,2).map((f,index)=>{
       const isActive=group.activeGame&&group.activeGame.id===f.id;
@@ -11328,7 +11403,6 @@ function brTeamPopupHTML(team){
       '</div>';
     }).join('');
     return '<section class="brx-tp-slide" data-opponent="'+esc(group.opponent)+'" aria-label="Confrontos com '+esc(group.opponent)+'">'+
-      '<div class="brx-tp-slide-head">'+brLogo(group.opponent)+'<strong>'+esc(group.opponent)+'</strong><span class="brx-tp-slide-state'+group.stateClass+'">'+group.stateLabel+'</span></div>'+
       '<div class="brx-tp-slide-games">'+games+'</div>'+
     '</section>';
   }).join('');
@@ -11340,6 +11414,7 @@ function brTeamPopupHTML(team){
         '<button class="brx-tp-picker-btn" data-br-tp-dir="1" type="button" onclick="brTeamCarouselStep(1)" aria-label="Próximo confronto">›</button>'+
       '</div>'+
     '</div>'+
+    '<div class="brx-tp-sequence" aria-label="Sequência de adversários">'+sequence+'</div>'+
     '<div id="brTpCarousel" class="brx-tp-carousel" data-index="'+initial+'" data-initial="'+initial+'" onscroll="brTeamCarouselSync(this)">'+slides+'</div>'+
   '</div>':'';
   return '<div class="brx-tp-head">'+
