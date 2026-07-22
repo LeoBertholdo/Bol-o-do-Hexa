@@ -3,18 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta id="themeColor" name="theme-color" content="#f8fbf1">
+<meta id="themeColor" name="theme-color" content="#070d09">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script>
-  /* Evita o flash branco ao reabrir o Brasileirão salvo no aparelho. */
+  /* O Brasileirão é a competição padrão; só a escolha explícita pela Copa usa
+     o tema claro ao reabrir o site. */
   try{
-    if(localStorage.getItem("bolaoActiveComp")==="brasileirao"){
+    if(localStorage.getItem("bolaoActiveComp")!=="copa"){
       document.documentElement.classList.add("br-mode");
       document.getElementById("themeColor").setAttribute("content","#070d09");
     }
   }catch(e){}
 </script>
-<title>Bolão da Copa 2026</title>
+<title>Bolão do Brasileirão 2026</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:clip;background:#f8fbf1}
@@ -274,6 +275,8 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-match{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
 .brx-match:hover{border-color:rgba(74,224,142,.3);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .brx-match.live{border-color:rgba(74,224,142,.42);box-shadow:0 0 0 1px rgba(74,224,142,.16),0 14px 34px rgba(0,0,0,.4)}
+.brx-match.is-current{scroll-margin-top:66px}
+.brx-match.is-current:not(.live){border-color:rgba(255,215,94,.52);box-shadow:0 0 0 1px rgba(255,215,94,.14),0 14px 34px rgba(0,0,0,.34)}
 .brx-team{display:flex;align-items:center;gap:9px;min-width:0}
 .brx-team.home{justify-content:flex-end;text-align:right}
 .brx-team-name{font-weight:850;font-size:.84rem;color:#dcebe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -399,15 +402,14 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-legend-item{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;color:#9db3a6;font-weight:800}
 /* palpite inline na aba Jogos */
 .brx-mid-pal{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:2px;width:100%}
-/* Jogo revelado: três zonas livres para os resultados apostados. A faixa mantém
-   o mesmo orçamento vertical do card original; com poucos palpites o círculo cresce
-   só visualmente (transform), sem aumentar a altura ocupada no grid. */
-.brx-prediction-ribbon{--pick-layout-size:16px;--pick-scale:1;--pick-slot:18px;--pick-font:.34rem;--pick-score-font:.37rem;--pick-gap:1px;position:relative;grid-column:1/-1;display:grid;width:100%;height:100%;max-width:100%;min-width:0;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:8px;padding:12px 0 4px;overflow:hidden;appearance:none;border:1px solid transparent;border-top-color:rgba(255,255,255,.065);border-radius:0 0 9px 9px;background:transparent;color:inherit;font:inherit;text-align:initial;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s}
+/* Jogo revelado: três zonas livres para os resultados apostados. A faixa reserva
+   folga no topo para que os círculos maiores nunca sejam cortados. */
+.brx-prediction-ribbon{--pick-layout-size:16px;--pick-scale:1;--pick-slot:18px;--pick-font:.34rem;--pick-score-font:.37rem;--pick-gap:1px;position:relative;grid-column:1/-1;display:grid;width:100%;height:100%;max-width:100%;min-width:0;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:8px;padding:16px 0 5px;overflow:visible;appearance:none;border:1px solid transparent;border-top-color:rgba(255,255,255,.065);border-radius:0 0 9px 9px;background:transparent;color:inherit;font:inherit;text-align:initial;cursor:pointer;transition:background .16s,border-color .16s,box-shadow .16s}
 .brx-prediction-ribbon[data-density="sparse"]{--pick-layout-size:23px;--pick-scale:1.4;--pick-slot:34px;--pick-font:.45rem;--pick-score-font:.49rem;--pick-gap:5px}
 .brx-prediction-ribbon[data-density="medium"]{--pick-layout-size:23px;--pick-scale:1.18;--pick-slot:30px;--pick-font:.44rem;--pick-score-font:.47rem;--pick-gap:4px}
 .brx-prediction-ribbon[data-density="dense"]{--pick-layout-size:20px;--pick-scale:1.1;--pick-slot:24px;--pick-font:.4rem;--pick-score-font:.43rem;--pick-gap:3px}
-.brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:16px;--pick-scale:1;--pick-slot:18px;--pick-font:.34rem;--pick-score-font:.37rem;--pick-gap:1px}
-.brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:10px;--pick-scale:1;--pick-slot:11px;--pick-font:.25rem;--pick-score-font:.28rem;--pick-gap:0px}
+.brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:18px;--pick-scale:1.04;--pick-slot:21px;--pick-font:.37rem;--pick-score-font:.4rem;--pick-gap:2px}
+.brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:13px;--pick-scale:1;--pick-slot:14px;--pick-font:.29rem;--pick-score-font:.32rem;--pick-gap:1px}
 .brx-prediction-ribbon:after{content:"";position:absolute;top:50%;right:9px;width:7px;height:7px;border-top:1.5px solid #7f9488;border-right:1.5px solid #7f9488;transform:translateY(-50%) rotate(45deg);transition:border-color .16s,transform .16s}
 .brx-prediction-ribbon:hover{border-color:rgba(255,215,94,.2);background:linear-gradient(180deg,rgba(255,215,94,.035),rgba(255,255,255,.018));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
 .brx-prediction-ribbon:hover:after{border-color:#ffd75e;transform:translate(2px,-50%) rotate(45deg)}
@@ -415,9 +417,9 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-card-outcome{display:flex;width:100%;max-width:100%;align-items:center;min-height:0;min-width:0}
 .brx-card-outcome.home{justify-content:flex-end}
 .brx-card-outcome.draw{position:relative;justify-content:center}
-.brx-card-outcome.away{justify-content:flex-start;padding-right:20px}
+.brx-card-outcome.away{justify-content:flex-start;padding-right:36px}
 .brx-outcome-label{color:#71877b;font-size:.42rem;font-weight:950;letter-spacing:.55px;line-height:1;text-transform:uppercase}
-.brx-card-outcome.draw .brx-outcome-label{position:absolute;top:-11px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.brx-card-outcome.draw .brx-outcome-label{position:absolute;top:-3px;left:50%;transform:translateX(-50%);white-space:nowrap}
 .brx-outcome-list{display:flex;width:100%;max-width:100%;align-items:center;gap:var(--pick-gap);min-width:0;flex-wrap:nowrap}
 .brx-card-outcome.home .brx-outcome-list{justify-content:flex-end}
 .brx-card-outcome.draw .brx-outcome-list{justify-content:center}
@@ -437,14 +439,15 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-card-pick.ok .brx-card-pick-score{color:#76e8aa}
 .brx-card-pick.inv .brx-card-pick-score{color:#ff9e96}
 .brx-match:is(.result,.live){padding-top:29px;padding-bottom:17px;column-gap:7px;row-gap:13px}
-.brx-match:has(>.brx-tag.late){padding-top:29px}
+.brx-match:has(>.brx-tag.late){padding-top:43px}
 .brx-match.result{padding-top:29px}
-.brx-match.result:has(>.brx-tag.late){padding-top:29px}
+.brx-match.result:has(>.brx-tag.late){padding-top:43px}
 .brx-match:is(.result,.live)>.brx-mid{position:relative;min-width:70px;gap:0}
 .brx-match:is(.result,.live)>.brx-mid>.brx-tag:not(.late){position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);white-space:nowrap}
 .brx-match.result>.brx-mid>.brx-tag:not(.late){bottom:calc(100% + 10px)}
 .brx-match>.brx-tag.late{position:absolute;top:9px;right:12px;padding:3px 6px;border:1px solid rgba(224,179,74,.2);border-radius:6px;background:rgba(224,179,74,.07);font-size:.48rem;letter-spacing:.55px}
 .brx-match:has(>.brx-prediction-ribbon){height:142px;grid-template-rows:30px minmax(0,1fr)}
+.brx-match:has(>.brx-tag.late):has(>.brx-prediction-ribbon){height:156px}
 .brx-pill-guess{border:1px solid rgba(255,215,94,.32);background:rgba(255,215,94,.1);color:#ffd75e;font-weight:950;font-size:.66rem;letter-spacing:.4px;text-transform:uppercase;padding:6px 13px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .brx-pill-guess:hover{background:rgba(255,215,94,.18)}
 .brx-pill-guess.filled{display:inline-flex;align-items:center;gap:6px;border-color:rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#9db3a6;text-transform:none;letter-spacing:0;font-weight:800}
@@ -852,21 +855,22 @@ body.br-mode .tab .card.brv2-shell.is-projected{--brv2-accent:#ffd75e}
   .brx-guess-box .br-inp{width:34px;height:36px}
   .brx-guess-box>span{padding:0 1px}
   .brx-guess-ok{width:36px;height:36px;margin-left:2px}
-  .brx-prediction-ribbon{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:10px 0 3px}
+  .brx-prediction-ribbon{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:14px 0 4px}
   .brx-prediction-ribbon[data-density="sparse"]{--pick-layout-size:21px;--pick-scale:1.38;--pick-slot:31px;--pick-font:.42rem;--pick-score-font:.45rem;--pick-gap:3px}
   .brx-prediction-ribbon[data-density="medium"]{--pick-layout-size:21px;--pick-scale:1.16;--pick-slot:27px;--pick-font:.41rem;--pick-score-font:.44rem;--pick-gap:3px}
   .brx-prediction-ribbon[data-density="dense"]{--pick-layout-size:18px;--pick-scale:1.08;--pick-slot:22px;--pick-font:.37rem;--pick-score-font:.4rem;--pick-gap:2px}
-  .brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:14px;--pick-scale:1;--pick-slot:16px;--pick-font:.3rem;--pick-score-font:.34rem;--pick-gap:1px}
-  .brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:9px;--pick-scale:1;--pick-slot:10px;--pick-font:.22rem;--pick-score-font:.27rem;--pick-gap:0px}
+  .brx-prediction-ribbon[data-density="packed"]{--pick-layout-size:17px;--pick-scale:1.04;--pick-slot:20px;--pick-font:.35rem;--pick-score-font:.38rem;--pick-gap:2px}
+  .brx-prediction-ribbon[data-density="crowded"]{--pick-layout-size:12px;--pick-scale:1;--pick-slot:13px;--pick-font:.27rem;--pick-score-font:.3rem;--pick-gap:1px}
   .brx-card-pick{gap:3px}
-  .brx-card-outcome.away{padding-right:18px}
+  .brx-card-outcome.away{padding-right:32px}
   .brx-match:is(.result,.live){padding-top:28px;padding-bottom:16px;column-gap:5px;row-gap:11px}
-  .brx-match:has(>.brx-tag.late){padding-top:28px}
+  .brx-match:has(>.brx-tag.late){padding-top:41px}
   .brx-match.result{padding-top:28px}
-  .brx-match.result:has(>.brx-tag.late){padding-top:28px}
+  .brx-match.result:has(>.brx-tag.late){padding-top:41px}
   .brx-match:is(.result,.live)>.brx-mid{min-width:66px}
   .brx-match>.brx-tag.late{top:7px;right:9px}
   .brx-match:has(>.brx-prediction-ribbon){height:129px;grid-template-rows:26px minmax(0,1fr)}
+  .brx-match:has(>.brx-tag.late):has(>.brx-prediction-ribbon){height:144px}
   .brx-round-title{min-width:86px;font-size:.94rem}
 }
 @media(prefers-reduced-motion:reduce){
@@ -4837,13 +4841,13 @@ body.user-profile-open{overflow:hidden}
 <div class="hero">
   <header>
     <div>
-      <div class="brand-kicker">Em busca do hexa</div>
-      <h1>Bolão da Copa 2026</h1>
+      <div class="brand-kicker">Returno 2026</div>
+      <h1>Bolão do Brasileirão</h1>
     </div>
     <div class="header-actions">
       <div class="comp-toggle" role="tablist" aria-label="Competição">
-        <button type="button" data-comp="copa" class="active" onclick="setActiveComp('copa')">Copa</button>
-        <button type="button" data-comp="brasileirao" onclick="setActiveComp('brasileirao')">Brasileirão</button>
+        <button type="button" data-comp="copa" onclick="setActiveComp('copa')">Copa</button>
+        <button type="button" data-comp="brasileirao" class="active" onclick="setActiveComp('brasileirao')">Brasileirão</button>
       </div>
       <div class="account-menu" id="accountMenu" onclick="event.stopPropagation()"></div>
       <button class="btn-save" onclick="saveBackup()">Backup</button>
@@ -10219,6 +10223,7 @@ function renderCinema(){
 }
 
 function goTab(t){
+  const previousTab=activeTab;
   if(t==="api-test") t="home";
   // Pódio foi integrado à página de Palpites como um estágio adicional
   if(t==="podio"){palStage="podio";t="palpites";}
@@ -10230,6 +10235,12 @@ function goTab(t){
   if(t==="cinema"&&!cinemaAvailable()) t="home";
   const tabs=["home","ranking","grupos","jogos","palpites","config","filme","cinema"];
   if(!tabs.includes(t)) t="home";
+  // Ao voltar para Jogos no Brasileirão, a rodada deixa de ser a última que a
+  // pessoa consultou e volta ao ponto atual do calendário.
+  if(isBrasileirao()&&t==="jogos"&&previousTab!=="jogos"){
+    brJogosRound=null;
+    brJogosAutoFocus=true;
+  }
   document.querySelectorAll(".tab").forEach(el=>el.classList.remove("active"));
   const nav=document.getElementById("nav");
   if(nav) nav.querySelectorAll("button").forEach(el=>el.classList.remove("active"));
@@ -10251,14 +10262,14 @@ function goTab(t){
   syncApiTestRealtimeSubscription();
 }
 /* ===== COMPETIÇÃO ATIVA (Copa | Brasileirão) ===================================
-   Toggle no header. Copa é o padrão e roda exatamente como antes; o Brasileirão é
-   um modo paralelo que reaproveita os mesmos contêineres de aba e a mesma navegação
+   Toggle no header. Brasileirão é o padrão; a Copa continua disponível e roda
+   exatamente como antes. O modo paralelo reaproveita os mesmos contêineres de aba e a mesma navegação
    (só o rótulo "Grupos"→"Tabela" muda). Nada do fluxo da Copa é alterado aqui. */
 const ACTIVE_COMP_KEY="bolaoActiveComp";
 let ACTIVE_COMP=loadActiveComp();
 function loadActiveComp(){
-  try{return localStorage.getItem(ACTIVE_COMP_KEY)==="brasileirao"?"brasileirao":"copa";}
-  catch(e){return "copa";}
+  try{return localStorage.getItem(ACTIVE_COMP_KEY)==="copa"?"copa":"brasileirao";}
+  catch(e){return "brasileirao";}
 }
 function isBrasileirao(){return ACTIVE_COMP==="brasileirao";}
 function setActiveComp(comp){
@@ -10629,7 +10640,7 @@ async function brSyncNow(){
 function brRefresh(){ S_BR.loaded=false; brLoadRemote(); }
 
 /* ---- Navegação por rodada (estado só de UI) ---- */
-let brJogosRound=null, brPalRound=null;
+let brJogosRound=null, brPalRound=null, brJogosAutoFocus=false;
 function brRoundsIndex(fixtures){
   const byRound={};
   fixtures.forEach(f=>{ const r=(f.slot!=null?f.slot:f.round)||0; (byRound[r]=byRound[r]||[]).push(f); });
@@ -10640,11 +10651,40 @@ function brRoundState(games){
   games.forEach(f=>{ const s=brFixtureScore(f); if(s&&s.final) done++; else if(s&&s.live) live++; });
   return {total:games.length,done,live};
 }
+function brTodayKey(now=Date.now()){
+  return new Intl.DateTimeFormat("en-CA",{
+    year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TZ
+  }).format(new Date(now));
+}
+function brRelativeFixtureDate(fixture,now=Date.now()){
+  const key=fixture?.dateKey;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(key||"")) return fixture?.date||"";
+  const today=brTodayKey(now);
+  const delta=(Date.parse(key+"T00:00:00Z")-Date.parse(today+"T00:00:00Z"))/86400000;
+  if(delta===-1) return "Ontem";
+  if(delta===0) return "Hoje";
+  if(delta===1) return "Amanhã";
+  return fixture.date||"";
+}
+// O foco do calendário segue o tempo real, não a numeração da rodada: ao vivo
+// tem prioridade, depois os jogos de hoje e, por fim, o próximo pontapé inicial.
+function brFocusFixture(fixtures,now=Date.now()){
+  const scheduled=fixtures.filter(f=>Number.isFinite(f.ts));
+  const byKickoff=(a,b)=>(a.ts-b.ts)||String(a.id).localeCompare(String(b.id));
+  const live=scheduled.filter(f=>brFixtureScore(f)?.live).sort(byKickoff);
+  if(live.length) return live[0];
+  const today=scheduled.filter(f=>f.dateKey===brTodayKey(now)).sort(byKickoff);
+  const todayUpcoming=today.filter(f=>f.ts>=now&&!brFixtureScore(f)?.final);
+  if(todayUpcoming.length) return todayUpcoming[0];
+  if(today.length) return today[today.length-1];
+  const future=scheduled.filter(f=>f.ts>=now&&!brFixtureScore(f)?.final).sort(byKickoff);
+  if(future.length) return future[0];
+  return scheduled.length?scheduled.slice().sort(byKickoff)[scheduled.length-1]:(fixtures[fixtures.length-1]||null);
+}
 function brDefaultRound(rounds,byRound){
-  const withLive=rounds.find(r=>brRoundState(byRound[r]).live>0);
-  if(withLive!=null) return withLive;
-  const open=rounds.find(r=>{ const st=brRoundState(byRound[r]); return st.done<st.total; });
-  return open!=null?open:rounds[rounds.length-1];
+  const fixture=brFocusFixture(rounds.flatMap(r=>byRound[r]||[]));
+  const round=fixture&&(fixture.slot!=null?fixture.slot:fixture.round);
+  return byRound[round]?round:rounds[rounds.length-1];
 }
 function brChipsHTML(rounds,byRound,active,setter){
   return '<div class="brx-rounds">'+rounds.map(r=>{
@@ -10681,6 +10721,7 @@ function brMatchHTML(fx,opts){
   opts=opts||{};
   const sc=brFixtureScore(fx);
   const now=Date.now();
+  const whenDate=brRelativeFixtureDate(fx,now);
   const locked=Boolean(fx.ts&&now>=fx.ts);
   /* opts.ns prefixa os ids do DOM (popup do clube renderiza o MESMO jogo que a aba
      atrás — sem prefixo os getElementById acertariam o card errado). O id real do
@@ -10703,7 +10744,7 @@ function brMatchHTML(fx,opts){
   }else{
     mid=opts.hideDate
       ? '<div class="brx-when compact"><span class="brx-when-time">'+esc(fx.time)+'</span></div>'
-      : '<div class="brx-when"><span class="brx-when-date">'+esc(fx.date)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
+      : '<div class="brx-when"><span class="brx-when-date" title="'+esc(fx.date)+'">'+esc(whenDate)+'</span><span class="brx-when-time">'+esc(fx.time)+'</span></div>';
   }
   /* Palpite mora aqui na aba Jogos: jogo aberto vira botão "Palpitar" que abre os
      campos inline; jogo travado distribui os avatares pelo resultado apostado e
@@ -10737,7 +10778,9 @@ function brMatchHTML(fx,opts){
   const foc1=(opts.focusTeam&&fx.t1===opts.focusTeam)?' tpfocus':'';
   const foc2=(opts.focusTeam&&fx.t2===opts.focusTeam)?' tpfocus':'';
   const clickAttrs=team=>' role="button" tabindex="0" data-team="'+esc(team||"")+'" title="Ver todos os jogos do clube" aria-label="Ver todos os jogos do '+esc(team||"?")+'" onclick="brOpenTeamPopup(this.dataset.team)" onkeydown="brTeamKey(event,this)"';
-  return '<div class="brx-match'+cls+palCls+editCls+roundCls+'"'+matchAttr+'>'+
+  const currentCls=opts.current?' is-current':'';
+  const currentAttr=opts.current?' data-br-current="true"':'';
+  return '<div class="brx-match'+cls+palCls+editCls+roundCls+currentCls+'"'+currentAttr+matchAttr+'>'+
     '<div class="brx-team home brx-team-click'+t1cls+foc1+'"'+clickAttrs(fx.t1)+'><span class="brx-team-name">'+esc(fx.t1||"?")+'</span>'+brLogo(fx.t1)+'</div>'+
     '<div class="brx-mid">'+roundTag+mid+pal+'</div>'+
     '<div class="brx-team brx-team-click'+t2cls+foc2+'"'+clickAttrs(fx.t2)+'>'+brLogo(fx.t2)+'<span class="brx-team-name">'+esc(fx.t2||"?")+'</span></div>'+
@@ -10989,6 +11032,7 @@ function renderBrJogos(){
   const {rounds,byRound}=brRoundsIndex(fixtures);
   if(brJogosRound==null||!byRound[brJogosRound]) brJogosRound=brDefaultRound(rounds,byRound);
   const r=brJogosRound, games=byRound[r], st=brRoundState(games), idx=rounds.indexOf(r);
+  const focus=brFocusFixture(games);
   el.innerHTML='<div class="panel">'+
     '<div class="card">'+
       '<div class="brx-sec"><span class="brx-sec-title">Jogos — returno</span><span class="brx-sec-meta">'+fixtures.length+' jogos · rodadas '+rounds[0]+'–'+rounds[rounds.length-1]+'</span></div>'+
@@ -11003,10 +11047,17 @@ function renderBrJogos(){
         '</div>'+
         '<span class="brx-sec-meta">'+(st.live?'<span class="live">'+st.live+' ao vivo</span> · ':'')+st.done+'/'+st.total+' encerrados</span>'+
       '</div>'+
-      '<div class="brx-games">'+games.map(f=>brMatchHTML(f,{interactive:true})).join("")+'</div>'+
+      '<div class="brx-games">'+games.map(f=>brMatchHTML(f,{interactive:true,current:focus&&f.id===focus.id})).join("")+'</div>'+
     '</div>'+
   '</div>';
   brScrollChips(el);
+  if(brJogosAutoFocus){
+    brJogosAutoFocus=false;
+    requestAnimationFrame(()=>{
+      const target=el.querySelector('[data-br-current="true"]');
+      if(target) target.scrollIntoView({behavior:"auto",block:"start"});
+    });
+  }
 }
 
 /* ---- Pontuação (reusa o motor 3/1/0/−2 da Copa: scoreDetails) ---- */
@@ -11514,8 +11565,8 @@ function brCardPredictionRibbon(fx,domGid,res){
   const density=total===0?"empty"
     :total<=2&&!cols.draw.length?"sparse"
     :total<=3&&peak<=2?"medium"
-    :total<=6&&peak<=3?"dense"
-    :peak<=5?"packed":"crowded";
+    :total<=8&&peak<=3?"dense"
+    :peak<=4?"packed":"crowded";
   let floatIndex=0;
   const picks=arr=>arr.map(c=>brCardPredictionPick(c,floatIndex++)).join("");
   const outcome=(arr,side,label,visibleLabel="")=>'<span class="brx-card-outcome '+side+'" data-count="'+arr.length+'" aria-label="'+esc(label)+'">'+
