@@ -275,8 +275,9 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-match{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;padding:13px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .18s,transform .18s,box-shadow .18s}
 .brx-match:hover{border-color:rgba(74,224,142,.3);transform:translateY(-1px);box-shadow:0 12px 30px rgba(0,0,0,.35)}
 .brx-match.live{border-color:rgba(74,224,142,.42);box-shadow:0 0 0 1px rgba(74,224,142,.16),0 14px 34px rgba(0,0,0,.4)}
+.brx-match.postponed{border-color:rgba(224,179,74,.26);background:linear-gradient(180deg,rgba(224,179,74,.045),rgba(255,255,255,.012))}
 .brx-match.is-current{scroll-margin-top:66px}
-.brx-match.is-current:not(.live){border-color:rgba(255,215,94,.52);box-shadow:0 0 0 1px rgba(255,215,94,.14),0 14px 34px rgba(0,0,0,.34)}
+.brx-match.is-current:not(.live):not(.postponed){border-color:rgba(255,215,94,.52);box-shadow:0 0 0 1px rgba(255,215,94,.14),0 14px 34px rgba(0,0,0,.34)}
 .brx-team{display:flex;align-items:center;gap:9px;min-width:0}
 .brx-team.home{justify-content:flex-end;text-align:right}
 .brx-team-name{font-weight:850;font-size:.84rem;color:#dcebe2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -292,6 +293,7 @@ body.br-mode .tab .action-btn.secondary:hover{background:rgba(255,255,255,.11)}
 .brx-tag{font-size:.6rem;font-weight:950;letter-spacing:.8px;text-transform:uppercase;color:#71877b}
 .brx-tag.live{display:inline-flex;align-items:center;gap:5px;color:#4ae08e}
 .brx-tag.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-tag.postponed{color:#e0b34a}
 .brx-tag.late{color:#e0b34a;white-space:nowrap}
 .brx-when{display:flex;flex-direction:column;align-items:center;line-height:1.35}
 .brx-when.compact{justify-content:center}
@@ -533,6 +535,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-tp-slide-state{margin-left:auto;padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#8ba295;font-size:.5rem;font-weight:950;letter-spacing:.45px;text-transform:uppercase;white-space:nowrap}
 .brx-tp-slide-state.live{border-color:rgba(74,224,142,.3);background:rgba(74,224,142,.1);color:#4ae08e}
 .brx-tp-slide-state.current{border-color:rgba(255,215,94,.3);background:rgba(255,215,94,.1);color:#ffd75e}
+.brx-tp-slide-state.postponed{border-color:rgba(224,179,74,.3);background:rgba(224,179,74,.09);color:#e0b34a}
 .brx-tp-slide-games{display:grid;gap:10px}
 .brx-tp-slot{display:grid;min-height:0}
 .brx-tp-leg{margin:0 2px 5px;color:#71877b;font-size:.5rem;font-weight:950;letter-spacing:.65px;text-transform:uppercase}
@@ -572,6 +575,7 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-status{text-align:center;font-size:.6rem;font-weight:950;letter-spacing:.7px;text-transform:uppercase;color:#71877b;margin:9px 0 2px}
 .brx-pop-status.live{color:#4ae08e;display:flex;align-items:center;justify-content:center;gap:6px}
 .brx-pop-status.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#4ae08e;animation:brxPulse 1.2s ease-in-out infinite}
+.brx-pop-status.postponed{color:#e0b34a}
 .brx-pop-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:14px}
 .brx-pop-col{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:10px 5px 12px;min-height:84px}
 .brx-pop-col.win{background:rgba(74,224,142,.07);border-color:rgba(74,224,142,.26)}
@@ -10332,6 +10336,7 @@ const BR_FIRST_ROUND=19;            // o bolão cobre o returno (rodadas 19–38
 const BR_TZ="America/Sao_Paulo";
 const BR_FINAL_STATUSES=new Set(["FT","AET","PEN","AWD","WO","FINISHED","AWARDED"]);
 const BR_LIVE_STATUSES=new Set(["1H","2H","HT","ET","BT","P","LIVE","IN_PLAY","PAUSED"]);
+const BR_POSTPONED_STATUSES=new Set(["PST","POSTPONED"]);
 const BR_TEAM_LOGOS={
   "Atlético-MG":"assets/brasileirao/atletico-mg.png","Athletico-PR":"assets/brasileirao/athletico-pr.png",
   "Bahia":"assets/brasileirao/bahia.png","Botafogo":"assets/brasileirao/botafogo.png",
@@ -10579,12 +10584,21 @@ function brFixtureScore(fx){
   if(historical) return {s1:historical.s1,s2:historical.s2,final:true,live:false};
   return null;
 }
+function brFixtureStatus(fx){
+  return String(fx?.live?.status_short||fx?.live?.status_long||"").trim().toUpperCase();
+}
+function brIsPostponed(fx){
+  return BR_POSTPONED_STATUSES.has(brFixtureStatus(fx));
+}
+function brIsLocked(fx,now=Date.now()){
+  return Boolean(!brIsPostponed(fx)&&fx?.ts&&now>=fx.ts);
+}
 
 async function brLoadRemote(opts={}){
   if(!remoteClient||!remoteSession){ brSetStatus("warn","Entre no bolão para ver o Brasileirão."); return; }
   const [mapRows,liveRows,predRows,resRows,favoriteRow]=await Promise.all([
     remoteClient.from("api_fixture_map").select("game_id,api_fixture_id,kickoff_utc,home_team,away_team,round_label").eq("tournament",BR_TOURNAMENT).order("kickoff_utc",{ascending:true}),
-    remoteClient.from("live_scores").select("game_id,status_short,elapsed,goals_home,goals_away,is_locked_by_admin,last_synced_at"),
+    remoteClient.from("live_scores").select("game_id,status_short,status_long,elapsed,goals_home,goals_away,is_locked_by_admin,last_synced_at"),
     remoteClient.from("brasileirao_predictions").select("participant_index,game_id,s1,s2"),
     remoteClient.from("results").select("game_id,s1,s2"),
     remoteClient.from(BR_FAVORITE_TABLE).select("user_id,team_key").eq("competition",BR_TOURNAMENT)
@@ -10657,6 +10671,7 @@ function brTodayKey(now=Date.now()){
   }).format(new Date(now));
 }
 function brRelativeFixtureDate(fixture,now=Date.now()){
+  if(brIsPostponed(fixture)) return "Data a definir";
   const key=fixture?.dateKey;
   if(!/^\d{4}-\d{2}-\d{2}$/.test(key||"")) return fixture?.date||"";
   const today=brTodayKey(now);
@@ -10669,7 +10684,7 @@ function brRelativeFixtureDate(fixture,now=Date.now()){
 // O foco do calendário segue o tempo real, não a numeração da rodada: ao vivo
 // tem prioridade, depois os jogos de hoje e, por fim, o próximo pontapé inicial.
 function brFocusFixture(fixtures,now=Date.now()){
-  const scheduled=fixtures.filter(f=>Number.isFinite(f.ts));
+  const scheduled=fixtures.filter(f=>Number.isFinite(f.ts)&&!brIsPostponed(f));
   const byKickoff=(a,b)=>(a.ts-b.ts)||String(a.id).localeCompare(String(b.id));
   const live=scheduled.filter(f=>brFixtureScore(f)?.live).sort(byKickoff);
   if(live.length) return live[0];
@@ -10679,7 +10694,7 @@ function brFocusFixture(fixtures,now=Date.now()){
   if(today.length) return today[today.length-1];
   const future=scheduled.filter(f=>f.ts>=now&&!brFixtureScore(f)?.final).sort(byKickoff);
   if(future.length) return future[0];
-  return scheduled.length?scheduled.slice().sort(byKickoff)[scheduled.length-1]:(fixtures[fixtures.length-1]||null);
+  return scheduled.length?scheduled.slice().sort(byKickoff)[scheduled.length-1]:null;
 }
 function brDefaultRound(rounds,byRound){
   const fixture=brFocusFixture(rounds.flatMap(r=>byRound[r]||[]));
@@ -10722,7 +10737,8 @@ function brMatchHTML(fx,opts){
   const sc=brFixtureScore(fx);
   const now=Date.now();
   const whenDate=brRelativeFixtureDate(fx,now);
-  const locked=Boolean(fx.ts&&now>=fx.ts);
+  const postponed=brIsPostponed(fx);
+  const locked=brIsLocked(fx,now);
   /* opts.ns prefixa os ids do DOM (popup do clube renderiza o MESMO jogo que a aba
      atrás — sem prefixo os getElementById acertariam o card errado). O id real do
      jogo sai de brRealGid() na hora de falar com dados/banco. */
@@ -10741,6 +10757,9 @@ function brMatchHTML(fx,opts){
       cls=" live";
       mid='<div class="brx-tag live">Ao vivo'+(sc.elapsed?" · "+sc.elapsed+"’":"")+'</div><div class="brx-score live">'+sc.s1+'<span>×</span>'+sc.s2+'</div>';
     }
+  }else if(postponed){
+    cls=" postponed";
+    mid='<div class="brx-tag postponed">Adiado</div><div class="brx-when'+(opts.hideDate?' compact':'')+'"><span class="brx-when-date">Data a definir</span></div>';
   }else{
     mid=opts.hideDate
       ? '<div class="brx-when compact"><span class="brx-when-time">'+esc(fx.time)+'</span></div>'
@@ -10834,7 +10853,7 @@ function brFavoriteRecentForm(team){
 function brFavoriteUpcomingFixtures(team,now){
   return brTeamSeasonFixtures(team).filter(f=>{
     const score=brFixtureScore(f);
-    return score?.live||(!score?.final&&f.ts&&f.ts>=now);
+    return !brIsPostponed(f)&&(score?.live||(!score?.final&&f.ts&&f.ts>=now));
   }).sort((a,b)=>{
     const aLive=Boolean(brFixtureScore(a)?.live),bLive=Boolean(brFixtureScore(b)?.live);
     return Number(bLive)-Number(aLive)||(a.ts-b.ts);
@@ -10886,28 +10905,29 @@ let brHomeRound=null,brHomeDayKey=null;
 function brHomeRoundDayKeys(games){
   const seen=new Set(),keys=[];
   games.forEach(f=>{
-    const key=f.dateKey||f.date||"a-definir";
+    const key=brIsPostponed(f)?"a-definir":(f.dateKey||f.date||"a-definir");
     if(!seen.has(key)){ seen.add(key); keys.push(key); }
   });
-  return keys;
+  return keys.sort((a,b)=>a==="a-definir"?1:b==="a-definir"?-1:String(a).localeCompare(String(b)));
 }
 function brHomeDayWindow(games,now){
   const byKey={};
   games.forEach(f=>{
-    const key=f.dateKey||f.date||"a-definir";
-    if(!byKey[key]) byKey[key]={key,date:f.date||"Data a definir",games:[]};
+    const postponed=brIsPostponed(f);
+    const key=postponed?"a-definir":(f.dateKey||f.date||"a-definir");
+    if(!byKey[key]) byKey[key]={key,date:postponed?"Data a definir":(f.date||"Data a definir"),games:[]};
     byKey[key].games.push(f);
   });
-  const days=Object.values(byKey);
+  const days=Object.values(byKey).sort((a,b)=>a.key==="a-definir"?1:b.key==="a-definir"?-1:String(a.key).localeCompare(String(b.key)));
   if(!days.length) return {day:null,games:[],prevKey:null,nextKey:null,title:"Jogos da rodada",meta:"",canReset:false};
   const todayKey=new Intl.DateTimeFormat("en-CA",{year:"numeric",month:"2-digit",day:"2-digit",timeZone:BR_TZ}).format(new Date(now));
   const live=days.find(d=>d.games.some(f=>{ const score=brFixtureScore(f); return score&&score.live; }));
   const today=days.find(d=>d.key===todayKey);
   const next=days.find(d=>d.games.some(f=>{
     const score=brFixtureScore(f);
-    return (!score||score.live)&&(!f.ts||f.ts>=now);
+    return !brIsPostponed(f)&&(!score||score.live)&&(!f.ts||f.ts>=now);
   }));
-  const pending=days.find(d=>d.games.some(f=>{ const score=brFixtureScore(f); return !score||score.live; }));
+  const pending=days.find(d=>d.games.some(f=>{ const score=brFixtureScore(f); return !brIsPostponed(f)&&(!score||score.live); }));
   const fallback=live||today||next||pending||days[days.length-1];
   const day=days.find(d=>d.key===brHomeDayKey)||fallback;
   const index=days.indexOf(day);
@@ -10993,7 +11013,7 @@ function renderBrHome(){
     const idx=rows.findIndex(r=>r.i===pi);
     if(idx>=0){ posTxt=(idx+1)+"º"; ptsTxt=String(rows[idx].pts); }
   }
-  const openFx=fixtures.filter(f=>!(f.ts&&now>=f.ts));
+  const openFx=fixtures.filter(f=>!brIsLocked(f,now));
   const filled=pi==null?0:openFx.filter(f=>{ const p=S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; }).length;
   const pct=openFx.length?Math.round(filled*100/openFx.length):100;
   el.innerHTML=
@@ -11198,7 +11218,7 @@ function renderBrTabela(){
   const scored=fixtures.filter(f=>brFixtureScore(f)).length;
   const liveN=fixtures.filter(f=>{ const s=brFixtureScore(f); return s&&s.live; }).length;
   const myProj=pi==null?0:fixtures.filter(f=>!brFixtureScore(f)&&isFilled(f)).length;
-  const openNoPal=pi==null?0:fixtures.filter(f=>!(f.ts&&now>=f.ts)&&!brFixtureScore(f)&&!isFilled(f)).length;
+  const openNoPal=pi==null?0:fixtures.filter(f=>!brIsLocked(f,now)&&!brFixtureScore(f)&&!isFilled(f)).length;
   const counted=proj?scored+myProj:scored;
   let note;
   if(pi==null){
@@ -11393,9 +11413,10 @@ function renderBrTabelaV2(){
    Salva no onchange de cada campo, SEM re-renderizar a aba — assim os palpites das
    outras partidas nunca são apagados. Feedback por um ✓ na própria linha. */
 function brPalpiteRowHTML(fx,pi,now){
-  const locked=Boolean(fx.ts&&now>=fx.ts);
+  const postponed=brIsPostponed(fx);
+  const locked=brIsLocked(fx,now);
   const pal=S_BR.palpites[brPredKey(pi,fx.id)]||{};
-  const when='<div class="brx-pal-when">'+esc(fx.dshort||fx.date||"")+(fx.time?' · '+esc(fx.time):'')+'</div>'+
+  const when='<div class="brx-pal-when">'+(postponed?'Adiado · data a definir':esc(fx.dshort||fx.date||"")+(fx.time?' · '+esc(fx.time):''))+'</div>'+
     (fx.late?'<div class="brx-tag late" title="Jogo adiado da rodada '+fx.round+', remarcado pra esta data">Adiado · rodada '+fx.round+'</div>':'');
   if(locked){
     const res=brScoringResult(fx);
@@ -11438,15 +11459,15 @@ function renderBrPalpites(){
   const now=Date.now();
   const {rounds,byRound}=brRoundsIndex(fixtures);
   if(brPalRound==null||!byRound[brPalRound]){
-    const open=rounds.find(rr=>byRound[rr].some(f=>!(f.ts&&now>=f.ts)));
+    const open=rounds.find(rr=>byRound[rr].some(f=>!brIsLocked(f,now)));
     brPalRound=open!=null?open:brDefaultRound(rounds,byRound);
   }
   const isFilled=f=>{ const p=S_BR.palpites[brPredKey(pi,f.id)]; return p&&p.s1!=null&&p.s2!=null; };
-  const openFx=fixtures.filter(f=>!(f.ts&&now>=f.ts));
+  const openFx=fixtures.filter(f=>!brIsLocked(f,now));
   const filled=openFx.filter(isFilled).length;
   const pct=openFx.length?Math.round(filled*100/openFx.length):100;
   const r=brPalRound, games=byRound[r]||[], idx=rounds.indexOf(r);
-  const openRound=games.filter(f=>!(f.ts&&now>=f.ts));
+  const openRound=games.filter(f=>!brIsLocked(f,now));
   const roundMeta=openRound.length?(openRound.filter(isFilled).length+'/'+openRound.length+' preenchidos'):'rodada travada';
   el.innerHTML='<div class="panel">'+
     '<div class="card">'+
@@ -11483,7 +11504,7 @@ async function brAutoSavePalpite(gid){
   const fromPopup=gid!==realGid; // card do popup do clube → a aba atrás precisa re-renderizar no fechamento
   const syncPills=()=>{ brRefreshPill(gid); if(fromPopup) brRefreshPill(realGid); };
   const fx=S_BR.fixtures.find(f=>f.id===realGid);
-  if(fx&&fx.ts&&Date.now()>=fx.ts){ toast("Jogo já começou — palpite encerrado."); return; }
+  if(fx&&brIsLocked(fx)){ toast("Jogo já começou — palpite encerrado."); return; }
   const e1=document.getElementById('brS1_'+gid), e2=document.getElementById('brS2_'+gid);
   if(!e1||!e2) return;
   const r1=String(e1.value).trim(), r2=String(e2.value).trim();
@@ -11675,11 +11696,15 @@ function brPopupHTML(gid){
   const fx=S_BR.fixtures.find(f=>f.id===gid);
   if(!fx) return '<div class="brx-pop-empty">Jogo não encontrado.</div>';
   const sc=brFixtureScore(fx);
+  const postponed=brIsPostponed(fx);
   const roundTxt=fx.roundLabel||('Rodada '+(fx.slot!=null?fx.slot:(fx.round||'')));
   let scoreHTML,statusHTML;
   if(sc){
     scoreHTML='<div class="brx-pop-score'+(sc.live?' live':'')+'">'+sc.s1+'<span class="x">×</span>'+sc.s2+'</div>';
     statusHTML='<div class="brx-pop-status'+(sc.live?' live':'')+'">'+(sc.live?('Ao vivo'+(sc.elapsed?' · '+sc.elapsed+'’':'')):'Encerrado')+'</div>';
+  }else if(postponed){
+    scoreHTML='<div class="brx-pop-score"><span class="x">×</span></div>';
+    statusHTML='<div class="brx-pop-status postponed">Adiado · data a definir</div>';
   }else{
     scoreHTML='<div class="brx-pop-score"><span class="x">×</span></div>';
     statusHTML='<div class="brx-pop-status">'+esc((fx.dshort||fx.date||'')+(fx.time?' · '+fx.time:''))+'</div>';
@@ -11692,7 +11717,7 @@ function brPopupHTML(gid){
       '<span class="brx-pop-esc">'+brLogo(fx.t2)+'</span>'+
       '<span class="brx-pop-name">'+esc(fx.t2||'?')+'</span>'+
     '</div>'+statusHTML;
-  const locked=Boolean(fx.ts&&Date.now()>=fx.ts);
+  const locked=brIsLocked(fx);
   if(!locked) return head+'<div class="brx-pop-empty" style="margin-top:16px">Os palpites de todo mundo aparecem quando a bola rolar.</div>';
   const res=sc?{s1:sc.s1,s2:sc.s2}:null; // placar atual (final OU ao vivo) pra pontuar cada palpite
   const cols=brPredictionGroups(gid,res);
@@ -11792,15 +11817,16 @@ function brTeamConfrontations(team,now=Date.now()){
   const groups=Array.from(byOpponent,([opponent,games])=>{
     games.sort((a,b)=>((a.ts||Infinity)-(b.ts||Infinity))||String(a.id).localeCompare(String(b.id)));
     const liveGame=games.find(f=>{ const s=brFixtureScore(f); return s&&s.live; })||null;
-    const todayGame=games.find(f=>f.dateKey===today)||null;
+    const todayGame=games.find(f=>!brIsPostponed(f)&&f.dateKey===today)||null;
     const upcomingGame=games.find(f=>{
       const s=brFixtureScore(f);
-      return !(s&&s.final)&&!(f.ts&&f.ts<now);
+      return !brIsPostponed(f)&&!(s&&s.final)&&!(f.ts&&f.ts<now);
     })||null;
-    const activeGame=liveGame||todayGame||upcomingGame||games[games.length-1]||null;
+    const postponedGame=games.find(f=>brIsPostponed(f))||null;
+    const activeGame=liveGame||todayGame||upcomingGame||postponedGame||games[games.length-1]||null;
     const anchorTs=activeGame&&activeGame.ts?activeGame.ts:Infinity;
-    const stateLabel=liveGame?"Ao vivo":todayGame?"Hoje":upcomingGame?"Próximo":"Encerrado";
-    const stateClass=liveGame?" live":(todayGame||upcomingGame)?" current":"";
+    const stateLabel=liveGame?"Ao vivo":todayGame?"Hoje":upcomingGame?"Próximo":postponedGame?"Adiado":"Encerrado";
+    const stateClass=liveGame?" live":(todayGame||upcomingGame)?" current":postponedGame?" postponed":"";
     return {opponent,games,liveGame,todayGame,upcomingGame,activeGame,anchorTs,stateLabel,stateClass};
   });
   return groups.sort((a,b)=>(a.anchorTs-b.anchorTs)||a.opponent.localeCompare(b.opponent,"pt-BR"));
@@ -11914,7 +11940,7 @@ function brTeamPopupHTML(team){
   const offRow=offIdx>=0?official[offIdx]:null;
   let myPts=0;
   if(pi!=null) fixtures.forEach(f=>{
-    if(!(f.ts&&now>=f.ts)) return;
+    if(!brIsLocked(f,now)) return;
     const res=brScoringResult(f); if(!res) return;
     const p=S_BR.palpites[brPredKey(pi,f.id)];
     const d=p?scoreDetails(p,res):null;
