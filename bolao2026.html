@@ -662,11 +662,29 @@ body.brx-modal-open{overflow:hidden}
 .brx-mchip.g{color:#ffd75e;background:rgba(255,215,94,.1)}
 .brx-mchip.v{color:#4ae08e;background:rgba(74,224,142,.1)}
 .brx-mchip.r{color:#ff8b82;background:rgba(255,122,112,.12)}
+.brx-rank-scorebox{display:grid;justify-items:end;gap:5px;min-width:84px}
 .brx-rank-pts{font-weight:950;font-size:1.32rem;color:#4ae08e;display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums}
 .brx-rank-pts.crav{color:#ffd75e}
 .brx-rank-pts.corr{color:#4ae08e}
 .brx-rank-pts.inv,.brx-rank-pts.err{color:#ff8b82}
 .brx-rank-pts span{font-size:.52rem;color:#71877b;text-transform:uppercase;letter-spacing:.5px;font-weight:900}
+.brx-rank-focus-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:22px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,.075);
+  color:#dcebe2;
+  font-size:.62rem;
+  font-weight:950;
+  line-height:1;
+  white-space:nowrap;
+}
+.brx-rank-focus-chip.crav{background:rgba(255,215,94,.13);color:#ffd75e}
+.brx-rank-focus-chip.corr{background:rgba(74,224,142,.13);color:#4ae08e}
+.brx-rank-focus-chip.inv,.brx-rank-focus-chip.err{background:rgba(255,122,112,.14);color:#ff8b82}
 .brx-rank-bar{grid-column:1/-1;height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
 .brx-rank-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,168,81,.85),#4ae08e)}
 .brx-rank-bar.crav i{background:linear-gradient(90deg,#c98a0b,#ffd75e)}
@@ -11149,11 +11167,11 @@ function brPlayerStats(pi){
 }
 let brRankingMode="points";
 const BR_RANKING_MODES=[
-  {id:"points",label:"Geral",title:"Ranking geral",metric:"pts",unit:"pts",tone:"pts",summary:"Classificação principal por pontos"},
-  {id:"crav",label:"Cravadas",title:"Ranking de cravadas",metric:"crav",unit:"cravadas",tone:"crav",summary:"Quem mais acertou o placar exato"},
-  {id:"inv",label:"Invertidas",title:"Ranking de invertidas",metric:"inv",unit:"invertidas",tone:"inv",summary:"Quem mais cravou o placar ao contrário"},
-  {id:"corr",label:"Acertos",title:"Ranking de acertos",metric:"corr",unit:"acertos",tone:"corr",summary:"Quem mais acertou o vencedor ou empate"},
-  {id:"err",label:"Erros",title:"Ranking de erros",metric:"err",unit:"erros",tone:"err",summary:"Quem mais ficou no zero"}
+  {id:"points",label:"Geral",title:"Ranking geral",metric:"pts",unit:"pts",tone:"pts",summary:"Classificação principal por pontos",pointValue:1},
+  {id:"crav",label:"Cravadas",title:"Ranking de cravadas",metric:"crav",unit:"cravadas",tone:"crav",summary:"Quem mais acertou o placar exato",pointValue:3},
+  {id:"inv",label:"Invertidas",title:"Ranking de invertidas",metric:"inv",unit:"invertidas",tone:"inv",summary:"Quem mais cravou o placar ao contrário",pointValue:-2},
+  {id:"corr",label:"Acertos",title:"Ranking de acertos",metric:"corr",unit:"acertos",tone:"corr",summary:"Quem mais acertou o vencedor ou empate",pointValue:1},
+  {id:"err",label:"Erros",title:"Ranking de erros",metric:"err",unit:"erros",tone:"err",summary:"Quem mais ficou no zero",pointValue:0}
 ];
 function brRankingModeConfig(){
   return BR_RANKING_MODES.find(mode=>mode.id===brRankingMode)||BR_RANKING_MODES[0];
@@ -11172,6 +11190,19 @@ function brSortRowsForMode(rows,mode=brRankingModeConfig()){
 }
 function brRanking(){
   return brSortRowsForMode((S.participants||[]).map((name,i)=>({name,i,...brPlayerStats(i)})),BR_RANKING_MODES[0]);
+}
+function brRankingCategoryPoints(row,mode){
+  return mode.id==="points"?(row.pts||0):((row[mode.metric]||0)*mode.pointValue);
+}
+function brRankMetaChips(row,activeMode){
+  const chips=[
+    {metric:"pts",html:'<span class="brx-mchip pts">'+row.pts+' pts</span>'},
+    {metric:"crav",html:'<span class="brx-mchip g">'+row.crav+' cravadas</span>'},
+    {metric:"corr",html:'<span class="brx-mchip v">'+row.corr+' certos</span>'},
+    {metric:"inv",html:'<span class="brx-mchip r">'+row.inv+' invertidos</span>'},
+    {metric:"err",html:'<span class="brx-mchip">'+row.err+' erros</span>'}
+  ];
+  return chips.filter(chip=>activeMode.id==="points"||chip.metric!==activeMode.metric).map(chip=>chip.html).join("");
 }
 function brPtsCls(d){ return d.exact?'hit':d.base===1?'ok':d.base===-2?'inv':'zero'; }
 function brPtsBadge(d){
@@ -11204,21 +11235,19 @@ function renderBrRanking(){
     '<div class="brx-ranking-context"><strong>'+esc(activeMode.title)+'</strong><span>'+esc(activeMode.summary)+'</span></div>'+
     '<div class="brx-rank">'+rows.map((r,idx)=>{
       const posCls=idx===0?' p1':idx===1?' p2':idx===2?' p3':'';
-      const primaryValue=r[activeMode.metric]||0;
-      const barW=maxValue>0?Math.round(Math.max(0,primaryValue)/maxValue*100):0;
+      const categoryCount=r[activeMode.metric]||0;
+      const primaryValue=brRankingCategoryPoints(r,activeMode);
+      const barW=maxValue>0?Math.round(Math.max(0,categoryCount)/maxValue*100):0;
+      const categoryBadge=activeMode.id==="points"?"":'<span class="brx-rank-focus-chip '+activeMode.tone+'">'+categoryCount+' '+activeMode.unit+'</span>';
       return '<div class="brx-rank-row'+(r.i===myPi?' me':'')+'">'+
         '<div class="brx-rank-pos'+posCls+'">'+(idx+1)+'</div>'+
         '<div class="brx-rank-main">'+
           '<div class="brx-rank-name">'+userProfileTriggerHTML(r.i,r.name,{br:true,onDark:true})+(r.i===myPi?'<span class="you">você</span>':'')+'</div>'+
           '<div class="brx-rank-meta">'+
-            '<span class="brx-mchip pts">'+r.pts+' pts</span>'+
-            '<span class="brx-mchip g">'+r.crav+' cravadas</span>'+
-            '<span class="brx-mchip v">'+r.corr+' certos</span>'+
-            '<span class="brx-mchip r">'+r.inv+' invertidos</span>'+
-            '<span class="brx-mchip">'+r.err+' erros</span>'+
+            brRankMetaChips(r,activeMode)+
           '</div>'+
         '</div>'+
-        '<div class="brx-rank-pts '+activeMode.tone+'">'+primaryValue+'<span>'+activeMode.unit+'</span></div>'+
+        '<div class="brx-rank-scorebox"><div class="brx-rank-pts '+activeMode.tone+'">'+primaryValue+'<span>pts</span></div>'+categoryBadge+'</div>'+
         (maxValue>0?'<div class="brx-rank-bar '+activeMode.tone+'"><i style="width:'+barW+'%"></i></div>':'')+
       '</div>';
     }).join("")+'</div>'+

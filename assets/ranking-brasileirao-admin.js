@@ -14,11 +14,11 @@
   const FINAL_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO", "FINISHED", "AWARDED"]);
   const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE", "IN_PLAY", "PAUSED"]);
   const RANKING_MODES = Object.freeze([
-    { id: "points", title: "Classificação", context: "por pontos", metric: "points", label: "pontos" },
-    { id: "exact", title: "Cravadas", context: "por placares exatos", metric: "exact", label: "cravadas" },
-    { id: "inverted", title: "Invertidas", context: "por placares ao contrário", metric: "inverted", label: "invertidas" },
-    { id: "correct", title: "Acertos", context: "por vencedores ou empates corretos", metric: "correct", label: "acertos" },
-    { id: "miss", title: "Erros", context: "por palpites zerados", metric: "miss", label: "erros" }
+    { id: "points", title: "Classificação", context: "por pontos", metric: "points", label: "pontos", pointValue: 1 },
+    { id: "exact", title: "Cravadas", context: "por placares exatos", metric: "exact", label: "cravadas", pointValue: 3 },
+    { id: "inverted", title: "Invertidas", context: "por placares ao contrário", metric: "inverted", label: "invertidas", pointValue: -2 },
+    { id: "correct", title: "Acertos", context: "por vencedores ou empates corretos", metric: "correct", label: "acertos", pointValue: 1 },
+    { id: "miss", title: "Erros", context: "por palpites zerados", metric: "miss", label: "erros", pointValue: 0 }
   ]);
 
   const TEAM_LOGOS = Object.freeze({
@@ -435,6 +435,10 @@
     });
   }
 
+  function rankingCategoryPoints(row, mode) {
+    return mode.id === "points" ? row.points : row[mode.metric] * mode.pointValue;
+  }
+
   function groupByRound(fixtures) {
     const groups = new Map();
     fixtures.forEach(fixture => {
@@ -488,7 +492,7 @@
       live: fixtures.length ? "Pontuação provisória dos jogos ao vivo" : "Nenhum jogo ao vivo agora"
     };
     dom.rankingTitle.textContent = mode.title;
-    if (dom.rankingMetricHead) dom.rankingMetricHead.textContent = mode.label;
+    if (dom.rankingMetricHead) dom.rankingMetricHead.textContent = "Pontos";
     dom.rankingContext.textContent = `${context[state.scope]} · ${mode.context}`;
 
     if (state.scope === "live" && !fixtures.length) {
@@ -505,6 +509,9 @@
       const form = row.recent.length
         ? row.recent.map(item => `<span class="form-chip ${item.kind}" title="${escapeHtml(resultLabel(item.kind))}">${item.points > 0 ? "+" : ""}${item.points}</span>`).join("")
         : '<span class="form-chip">—</span>';
+      const categoryCount = row[mode.metric];
+      const categoryPoints = rankingCategoryPoints(row, mode);
+      const categoryBadge = mode.id === "points" ? "" : `<span class="rank-focus-chip ${mode.id}">${categoryCount} ${escapeHtml(mode.label)}</span>`;
       return `
         <li>
           <button class="ranking-row" type="button" data-player-index="${row.index}" style="animation-delay:${Math.min(index * 35, 240)}ms" aria-label="Abrir perfil de ${escapeHtml(row.name)}">
@@ -514,7 +521,7 @@
               <div class="rank-name"><strong>${escapeHtml(row.name)}</strong><span>Ver perfil</span></div>
             </div>
             <div class="recent-form" aria-label="Forma recente">${form}</div>
-            <div class="rank-points ${mode.id}"><b>${row[mode.metric]}</b><span>${escapeHtml(mode.label)}</span></div>
+            <div class="rank-scorebox"><div class="rank-points ${mode.id}"><b>${categoryPoints}</b><span>pontos</span></div>${categoryBadge}</div>
           </button>
         </li>`;
     }).join("");
