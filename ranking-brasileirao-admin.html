@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07120f">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <title>Ranking dos participantes · Brasileirão 2026</title>
-  <meta name="description" content="Sala administrativa do ranking dos participantes no Bolão do Brasileirão 2026.">
+  <title>Rankings dos participantes · Brasileirão 2026</title>
+  <meta name="description" content="Sala administrativa dos rankings dos participantes no Bolão do Brasileirão 2026.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
@@ -30,13 +30,13 @@
         <div>
           <p class="access-kicker">Sala administrativa</p>
           <h1 id="accessTitle">Confirmando acesso</h1>
-          <p>Validando a conta antes de carregar o ranking dos participantes.</p>
+          <p>Validando a conta antes de carregar os rankings dos participantes.</p>
         </div>
       </div>
 
       <form class="access-form" id="loginForm" hidden>
         <p class="access-kicker">Acesso restrito</p>
-        <h1>Ranking dos participantes</h1>
+        <h1>Rankings dos participantes</h1>
         <p class="access-copy">Entre com uma conta administradora do bolão para abrir esta página.</p>
         <label>
           <span>E-mail</span>
@@ -106,7 +106,7 @@
       <div class="hero page-width">
         <div class="hero-copy">
           <p class="hero-kicker">Brasileirão 2026 <span aria-hidden="true">·</span> Returno</p>
-          <h1>Ranking</h1>
+          <h1>Rankings</h1>
         </div>
       </div>
 
@@ -145,15 +145,24 @@
             <p class="eyebrow">Participantes</p>
             <h2 id="rankingTitle">Classificação</h2>
           </div>
-          <div class="scope-switch" role="group" aria-label="Período do ranking">
-            <button class="active" type="button" data-scope="all" aria-pressed="true">Geral</button>
-            <button type="button" data-scope="round" aria-pressed="false">Rodada</button>
-            <button type="button" data-scope="live" aria-pressed="false">Ao vivo</button>
+          <div class="ranking-actions">
+            <div class="scope-switch" role="group" aria-label="Período do ranking">
+              <button class="active" type="button" data-scope="all" aria-pressed="true">Geral</button>
+              <button type="button" data-scope="round" aria-pressed="false">Rodada</button>
+              <button type="button" data-scope="live" aria-pressed="false">Ao vivo</button>
+            </div>
+            <div class="ranking-mode-switch" role="group" aria-label="Tipo de ranking">
+              <button class="active" type="button" data-ranking-mode="points" aria-pressed="true">Pontos</button>
+              <button type="button" data-ranking-mode="exact" aria-pressed="false">Cravadas</button>
+              <button type="button" data-ranking-mode="inverted" aria-pressed="false">Invertidas</button>
+              <button type="button" data-ranking-mode="correct" aria-pressed="false">Acertos</button>
+              <button type="button" data-ranking-mode="miss" aria-pressed="false">Erros</button>
+            </div>
           </div>
         </div>
         <div class="ranking-context" id="rankingContext">Classificação geral do returno</div>
         <div class="ranking-column-head" aria-hidden="true">
-          <span>Pos.</span><span>Participante</span><span>Forma</span><span>Pontos</span>
+          <span>Pos.</span><span>Participante</span><span>Forma</span><span id="rankingMetricHead">Pontos</span>
         </div>
         <ol class="ranking-list" id="rankingList"></ol>
         <div class="ranking-legend">

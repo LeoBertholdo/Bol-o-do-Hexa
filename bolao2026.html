@@ -602,6 +602,49 @@ body.brx-modal-open{overflow:hidden}
 .brx-pop-empty{font-size:.72rem;color:#5d7267;text-align:center;padding:6px 0}
 .brx-pop-foot{margin-top:13px;text-align:center;font-size:.6rem;font-weight:800;color:#71877b;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
 /* ranking */
+.brx-ranking-head{align-items:flex-start;gap:12px;flex-wrap:wrap}
+.brx-rank-tabs{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:12px;
+  background:rgba(255,255,255,.045);
+  max-width:100%;
+  overflow-x:auto;
+  scrollbar-width:none;
+}
+.brx-rank-tabs::-webkit-scrollbar{display:none}
+.brx-rank-tabs button{
+  border:0;
+  border-radius:8px;
+  padding:8px 11px;
+  background:transparent;
+  color:#9fb3a7;
+  font-size:.62rem;
+  font-weight:950;
+  letter-spacing:.45px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:background .15s,color .15s,box-shadow .15s;
+}
+.brx-rank-tabs button:hover{color:#dcebe2}
+.brx-rank-tabs button.active{background:linear-gradient(120deg,#ffd75e,#f0b53a);color:#241a00;box-shadow:0 7px 18px rgba(255,215,94,.2)}
+.brx-ranking-context{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:10px;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  background:rgba(255,255,255,.025);
+}
+.brx-ranking-context strong{color:#eef5f0;font-size:.76rem;font-weight:950}
+.brx-ranking-context span{color:#8ba295;font-size:.66rem;font-weight:800;text-align:right}
 .brx-rank{display:grid;gap:8px}
 .brx-rank-row{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;column-gap:12px;row-gap:7px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.01))}
 .brx-rank-row.me{border-color:rgba(255,215,94,.42);background:linear-gradient(180deg,rgba(255,215,94,.07),rgba(255,215,94,.015))}
@@ -615,13 +658,20 @@ body.brx-modal-open{overflow:hidden}
 .brx-rank-name .you{flex:0 0 auto;font-size:.52rem;font-weight:950;letter-spacing:.6px;text-transform:uppercase;background:rgba(255,215,94,.16);color:#ffd75e;padding:3px 7px;border-radius:999px}
 .brx-rank-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
 .brx-mchip{font-size:.56rem;font-weight:900;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.06);color:#8ba295;line-height:1}
+.brx-mchip.pts{color:#dcebe2;background:rgba(255,255,255,.09)}
 .brx-mchip.g{color:#ffd75e;background:rgba(255,215,94,.1)}
 .brx-mchip.v{color:#4ae08e;background:rgba(74,224,142,.1)}
 .brx-mchip.r{color:#ff8b82;background:rgba(255,122,112,.12)}
 .brx-rank-pts{font-weight:950;font-size:1.32rem;color:#4ae08e;display:flex;align-items:baseline;gap:4px;font-variant-numeric:tabular-nums}
+.brx-rank-pts.crav{color:#ffd75e}
+.brx-rank-pts.corr{color:#4ae08e}
+.brx-rank-pts.inv,.brx-rank-pts.err{color:#ff8b82}
 .brx-rank-pts span{font-size:.52rem;color:#71877b;text-transform:uppercase;letter-spacing:.5px;font-weight:900}
 .brx-rank-bar{grid-column:1/-1;height:5px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
 .brx-rank-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,rgba(0,168,81,.85),#4ae08e)}
+.brx-rank-bar.crav i{background:linear-gradient(90deg,#c98a0b,#ffd75e)}
+.brx-rank-bar.corr i{background:linear-gradient(90deg,rgba(0,168,81,.85),#4ae08e)}
+.brx-rank-bar.inv i,.brx-rank-bar.err i{background:linear-gradient(90deg,#c84c44,#ff8b82)}
 .brx-empty-note{font-size:.66rem;color:#71877b;font-weight:800;text-align:center;padding:8px 0 2px}
 .brx-profile-name,.profile-link{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;text-align:left;cursor:pointer;padding:0;border-radius:5px}
 .brx-profile-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#eef5f0;font-weight:900}
@@ -4456,6 +4506,10 @@ body.user-profile-open{overflow:hidden}
   .progress-metric-percent{font-size:1rem}
   .ranking-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ranking-grid{grid-template-columns:1fr}
+  .brx-ranking-head{display:grid}
+  .brx-rank-tabs{width:100%}
+  .brx-ranking-context{display:grid;gap:4px}
+  .brx-ranking-context span{text-align:left}
   .section-head{
     display:grid;
     grid-template-columns:minmax(0,1fr) auto;
@@ -4863,7 +4917,7 @@ body.user-profile-open{overflow:hidden}
 
 <nav id="nav">
   <button data-tab="home" class="active" onclick="goTab('home')">Início</button>
-  <button data-tab="ranking" onclick="goTab('ranking')">Ranking</button>
+  <button data-tab="ranking" onclick="goTab('ranking')">Rankings</button>
   <button data-tab="grupos" onclick="goTab('grupos')">Grupos</button>
   <button data-tab="jogos" onclick="goTab('jogos')">Jogos</button>
   <button data-tab="palpites" onclick="goTab('palpites')">Palpites</button>
@@ -11093,19 +11147,41 @@ function brPlayerStats(pi){
   });
   return {pts,crav,corr,inv,err,played};
 }
-function brRanking(){
-  return (S.participants||[]).map((name,i)=>({name,i,...brPlayerStats(i)})).sort((a,b)=>{
+let brRankingMode="points";
+const BR_RANKING_MODES=[
+  {id:"points",label:"Geral",title:"Ranking geral",metric:"pts",unit:"pts",tone:"pts",summary:"Classificação principal por pontos"},
+  {id:"crav",label:"Cravadas",title:"Ranking de cravadas",metric:"crav",unit:"cravadas",tone:"crav",summary:"Quem mais acertou o placar exato"},
+  {id:"inv",label:"Invertidas",title:"Ranking de invertidas",metric:"inv",unit:"invertidas",tone:"inv",summary:"Quem mais cravou o placar ao contrário"},
+  {id:"corr",label:"Acertos",title:"Ranking de acertos",metric:"corr",unit:"acertos",tone:"corr",summary:"Quem mais acertou o vencedor ou empate"},
+  {id:"err",label:"Erros",title:"Ranking de erros",metric:"err",unit:"erros",tone:"err",summary:"Quem mais ficou no zero"}
+];
+function brRankingModeConfig(){
+  return BR_RANKING_MODES.find(mode=>mode.id===brRankingMode)||BR_RANKING_MODES[0];
+}
+function brSortRowsForMode(rows,mode=brRankingModeConfig()){
+  const metric=mode.metric;
+  return rows.slice().sort((a,b)=>{
+    if(metric!=="pts"&&b[metric]!==a[metric]) return b[metric]-a[metric];
     if(b.pts!==a.pts) return b.pts-a.pts;
     if(b.crav!==a.crav) return b.crav-a.crav;
     if(a.inv!==b.inv) return a.inv-b.inv;
+    if(b.corr!==a.corr) return b.corr-a.corr;
+    if(a.err!==b.err) return a.err-b.err;
     return String(a.name).localeCompare(String(b.name),"pt-BR");
   });
+}
+function brRanking(){
+  return brSortRowsForMode((S.participants||[]).map((name,i)=>({name,i,...brPlayerStats(i)})),BR_RANKING_MODES[0]);
 }
 function brPtsCls(d){ return d.exact?'hit':d.base===1?'ok':d.base===-2?'inv':'zero'; }
 function brPtsBadge(d){
   const cls=brPtsCls(d);
   const lbl=d.exact?'+3':d.base===1?'+1':d.base===-2?'−2':'0';
   return '<span class="brx-pts '+cls+'">'+lbl+'</span>';
+}
+function brSetRankingMode(mode){
+  brRankingMode=BR_RANKING_MODES.some(item=>item.id===mode)?mode:"points";
+  renderBrRanking();
 }
 function renderBrRanking(){
   const el=document.getElementById("tab-ranking"); if(!el) return;
@@ -11114,28 +11190,36 @@ function renderBrRanking(){
   const fixtures=brBolaoFixtures();
   if(!fixtures.length){ el.innerHTML=brEmptyCard(); return; }
   const myPi=myParticipantIndex();
-  const rows=brRanking();
+  const allRows=brRanking();
+  const activeMode=brRankingModeConfig();
+  const rows=brSortRowsForMode(allRows,activeMode);
   const anyPlayed=rows.some(r=>r.played>0);
   const scored=fixtures.filter(f=>brScoringResult(f)).length;
-  const maxPts=rows.length?Math.max(rows[0].pts,0):0;
+  const maxValue=rows.length?Math.max(...rows.map(r=>Math.max(0,r[activeMode.metric]||0))):0;
+  const controls=BR_RANKING_MODES.map(mode=>
+    '<button type="button" class="'+(mode.id===activeMode.id?'active':'')+'" onclick="brSetRankingMode(\''+mode.id+'\')" aria-pressed="'+(mode.id===activeMode.id?'true':'false')+'">'+mode.label+'</button>'
+  ).join("");
   el.innerHTML='<div class="panel"><div class="card">'+
-    '<div class="brx-sec"><span class="brx-sec-title">Ranking — returno</span><span class="brx-sec-meta">'+scored+' de '+fixtures.length+' jogos pontuados</span></div>'+
+    '<div class="brx-sec brx-ranking-head"><div><span class="brx-sec-title">Rankings — returno</span><span class="brx-sec-meta">'+scored+' de '+fixtures.length+' jogos pontuados</span></div><div class="brx-rank-tabs" role="group" aria-label="Escolher ranking">'+controls+'</div></div>'+
+    '<div class="brx-ranking-context"><strong>'+esc(activeMode.title)+'</strong><span>'+esc(activeMode.summary)+'</span></div>'+
     '<div class="brx-rank">'+rows.map((r,idx)=>{
       const posCls=idx===0?' p1':idx===1?' p2':idx===2?' p3':'';
-      const barW=maxPts>0?Math.round(Math.max(0,r.pts)/maxPts*100):0;
+      const primaryValue=r[activeMode.metric]||0;
+      const barW=maxValue>0?Math.round(Math.max(0,primaryValue)/maxValue*100):0;
       return '<div class="brx-rank-row'+(r.i===myPi?' me':'')+'">'+
         '<div class="brx-rank-pos'+posCls+'">'+(idx+1)+'</div>'+
         '<div class="brx-rank-main">'+
           '<div class="brx-rank-name">'+userProfileTriggerHTML(r.i,r.name,{br:true,onDark:true})+(r.i===myPi?'<span class="you">você</span>':'')+'</div>'+
           '<div class="brx-rank-meta">'+
+            '<span class="brx-mchip pts">'+r.pts+' pts</span>'+
             '<span class="brx-mchip g">'+r.crav+' cravadas</span>'+
             '<span class="brx-mchip v">'+r.corr+' certos</span>'+
             '<span class="brx-mchip r">'+r.inv+' invertidos</span>'+
             '<span class="brx-mchip">'+r.err+' erros</span>'+
           '</div>'+
         '</div>'+
-        '<div class="brx-rank-pts">'+r.pts+'<span>pts</span></div>'+
-        (maxPts>0?'<div class="brx-rank-bar"><i style="width:'+barW+'%"></i></div>':'')+
+        '<div class="brx-rank-pts '+activeMode.tone+'">'+primaryValue+'<span>'+activeMode.unit+'</span></div>'+
+        (maxValue>0?'<div class="brx-rank-bar '+activeMode.tone+'"><i style="width:'+barW+'%"></i></div>':'')+
       '</div>';
     }).join("")+'</div>'+
     (anyPlayed?'':'<div class="brx-empty-note">Ainda sem jogos pontuados — o ranking anima quando a bola rolar.</div>')+

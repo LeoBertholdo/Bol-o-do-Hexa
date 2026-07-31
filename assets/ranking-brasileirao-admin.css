@@ -566,7 +566,23 @@ img { display: block; max-width: 100%; }
   padding: 3px;
   background: #091612;
 }
-.scope-switch button {
+.ranking-actions {
+  display: grid;
+  justify-items: end;
+  gap: 7px;
+}
+.ranking-mode-switch {
+  display: flex;
+  max-width: min(100%, 520px);
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  padding: 3px;
+  background: #091612;
+  scrollbar-width: none;
+}
+.ranking-mode-switch::-webkit-scrollbar { display: none; }
+.scope-switch button,
+.ranking-mode-switch button {
   min-height: 31px;
   border: 0;
   padding: 0 13px;
@@ -575,9 +591,12 @@ img { display: block; max-width: 100%; }
   font-size: .59rem;
   font-weight: 800;
   cursor: pointer;
+  white-space: nowrap;
 }
-.scope-switch button:hover { color: var(--white); }
-.scope-switch button.active { background: var(--lime); color: var(--ink); }
+.scope-switch button:hover,
+.ranking-mode-switch button:hover { color: var(--white); }
+.scope-switch button.active,
+.ranking-mode-switch button.active { background: var(--lime); color: var(--ink); }
 
 .ranking-context {
   padding: 10px 24px;
@@ -709,6 +728,10 @@ img { display: block; max-width: 100%; }
   font-size: 2.35rem;
   line-height: .74;
 }
+.rank-points.exact b { color: var(--lime); }
+.rank-points.correct b { color: var(--blue); }
+.rank-points.inverted b,
+.rank-points.miss b { color: var(--red); }
 .rank-points span {
   color: var(--muted);
   font-size: .48rem;
@@ -899,7 +922,9 @@ body.dialog-open .dashboard { visibility: hidden; }
   .metric-number { font-size: 2.35rem; }
   .panel-heading { align-items: stretch; flex-direction: column; gap: 15px; padding: 18px 16px 15px; }
   .panel-heading h2 { font-size: 1.7rem; }
+  .ranking-actions { justify-items: stretch; }
   .scope-switch { width: 100%; }
+  .ranking-mode-switch { width: 100%; }
   .scope-switch button { flex: 1; padding-inline: 5px; }
   .ranking-context { padding-inline: 16px; }
   .ranking-column-head { display: none; }
@@ -955,7 +980,7 @@ body.dialog-open .dashboard { visibility: hidden; }
   :root { color-scheme: light; }
   body { background: white; color: #111; }
   .site-header { height: 150px; }
-  .topbar-actions, .club-ribbon, .scope-switch, .toast { display: none !important; }
+  .topbar-actions, .club-ribbon, .scope-switch, .ranking-mode-switch, .toast { display: none !important; }
   .hero { height: 88px; }
   .ranking-panel { border-color: #bbb; background: white; }
   .panel-heading h2, .rank-name strong, .rank-points b { color: #111; }

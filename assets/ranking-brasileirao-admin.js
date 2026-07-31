@@ -13,6 +13,13 @@
   ]);
   const FINAL_STATUSES = new Set(["FT", "AET", "PEN", "AWD", "WO", "FINISHED", "AWARDED"]);
   const LIVE_STATUSES = new Set(["1H", "2H", "HT", "ET", "BT", "P", "LIVE", "IN_PLAY", "PAUSED"]);
+  const RANKING_MODES = Object.freeze([
+    { id: "points", title: "Classificação", context: "por pontos", metric: "points", label: "pontos" },
+    { id: "exact", title: "Cravadas", context: "por placares exatos", metric: "exact", label: "cravadas" },
+    { id: "inverted", title: "Invertidas", context: "por placares ao contrário", metric: "inverted", label: "invertidas" },
+    { id: "correct", title: "Acertos", context: "por vencedores ou empates corretos", metric: "correct", label: "acertos" },
+    { id: "miss", title: "Erros", context: "por palpites zerados", metric: "miss", label: "erros" }
+  ]);
 
   const TEAM_LOGOS = Object.freeze({
     "Atlético-MG": "assets/brasileirao/atletico-mg.png",
@@ -66,6 +73,7 @@
     profile: null,
     data: null,
     scope: "all",
+    rankingMode: "points",
     focusRound: null,
     loading: false,
     channel: null,
@@ -84,7 +92,7 @@
       "deniedState", "accessErrorState", "accessErrorText", "switchAccountButton", "retryAccessButton",
       "appShell", "connectionState", "connectionLabel", "refreshButton", "adminMenuButton", "adminMenuPanel",
       "signOutButton", "clubRibbon", "metricPosition", "metricRound", "metricRoundDetail", "metricPoints",
-      "metricExact", "rankingTitle", "rankingContext", "rankingList",
+      "metricExact", "rankingTitle", "rankingContext", "rankingMetricHead", "rankingList",
       "playerDialog", "playerDialogBackdrop", "playerDialogClose", "playerDialogPosition", "playerDialogAvatar",
       "playerDialogName", "playerDialogStats", "playerDialogEfficiency", "playerDialogEfficiencyBar",
       "playerDialogGames", "playerDialogRecent", "toast"
@@ -406,15 +414,23 @@
     };
   }
 
-  function rankingFor(fixtures) {
+  function activeRankingMode() {
+    return RANKING_MODES.find(mode => mode.id === state.rankingMode) || RANKING_MODES[0];
+  }
+
+  function rankingFor(fixtures, mode = activeRankingMode()) {
+    const metric = mode.metric;
     return participantIndexes().map(index => ({
       index,
       name: participantName(index, state.data.profiles),
       ...computeStats(index, fixtures)
     })).sort((a, b) => {
+      if (metric !== "points" && b[metric] !== a[metric]) return b[metric] - a[metric];
       if (b.points !== a.points) return b.points - a.points;
       if (b.exact !== a.exact) return b.exact - a.exact;
       if (a.inverted !== b.inverted) return a.inverted - b.inverted;
+      if (b.correct !== a.correct) return b.correct - a.correct;
+      if (a.miss !== b.miss) return a.miss - b.miss;
       return a.name.localeCompare(b.name, "pt-BR");
     });
   }
@@ -450,27 +466,30 @@
     return state.data.fixtures;
   }
 
-  function previousPositions() {
+  function previousPositions(mode = activeRankingMode()) {
     if (!state.data || state.focusRound == null || state.scope !== "all") return new Map();
     const previousFixtures = state.data.fixtures.filter(fixture => {
       const round = fixture.slot != null ? fixture.slot : fixture.round;
       return round != null && round < state.focusRound;
     });
     if (!previousFixtures.some(fixtureResult)) return new Map();
-    return new Map(rankingFor(previousFixtures).map((row, index) => [row.index, index + 1]));
+    return new Map(rankingFor(previousFixtures, mode).map((row, index) => [row.index, index + 1]));
   }
 
   function renderRankingPage() {
     const fixtures = scopeFixtures();
-    const ranking = rankingFor(fixtures);
-    const previous = previousPositions();
+    const mode = activeRankingMode();
+    const ranking = rankingFor(fixtures, mode);
+    const previous = previousPositions(mode);
     renderSummary();
     const context = {
       all: "Classificação geral do returno",
       round: state.focusRound == null ? "Rodada atual" : `Pontuação da rodada ${state.focusRound}`,
       live: fixtures.length ? "Pontuação provisória dos jogos ao vivo" : "Nenhum jogo ao vivo agora"
     };
-    dom.rankingContext.textContent = context[state.scope];
+    dom.rankingTitle.textContent = mode.title;
+    if (dom.rankingMetricHead) dom.rankingMetricHead.textContent = mode.label;
+    dom.rankingContext.textContent = `${context[state.scope]} · ${mode.context}`;
 
     if (state.scope === "live" && !fixtures.length) {
       dom.rankingList.innerHTML = '<li class="ranking-empty">Nenhum jogo está ao vivo agora.</li>';
@@ -495,7 +514,7 @@
               <div class="rank-name"><strong>${escapeHtml(row.name)}</strong><span>Ver perfil</span></div>
             </div>
             <div class="recent-form" aria-label="Forma recente">${form}</div>
-            <div class="rank-points"><b>${row.points}</b><span>pontos</span></div>
+            <div class="rank-points ${mode.id}"><b>${row[mode.metric]}</b><span>${escapeHtml(mode.label)}</span></div>
           </button>
         </li>`;
     }).join("");
@@ -504,7 +523,7 @@
   }
 
   function renderSummary() {
-    const allRanking = rankingFor(state.data.fixtures);
+    const allRanking = rankingFor(state.data.fixtures, RANKING_MODES[0]);
     const participantIndex = Number(state.profile.participant_index);
     const position = allRanking.findIndex(row => row.index === participantIndex);
     const player = position >= 0 ? allRanking[position] : null;
@@ -517,7 +536,7 @@
 
   function openPlayerDialog(index, source = null, moveFocus = true) {
     if (!state.data) return;
-    const ranking = rankingFor(scopeFixtures());
+    const ranking = rankingFor(scopeFixtures(), activeRankingMode());
     const rowIndex = ranking.findIndex(row => row.index === Number(index));
     if (rowIndex < 0) return;
     const row = ranking[rowIndex];
@@ -596,6 +615,18 @@
     renderRankingPage();
   }
 
+  function setRankingMode(mode) {
+    if (!state.data || !RANKING_MODES.some(item => item.id === mode)) return;
+    state.rankingMode = mode;
+    document.querySelectorAll("[data-ranking-mode]").forEach(button => {
+      const active = button.dataset.rankingMode === mode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", String(active));
+    });
+    closePlayerDialog(false);
+    renderRankingPage();
+  }
+
   function showToast(message) {
     window.clearTimeout(state.toastTimer);
     dom.toast.textContent = message;
@@ -654,6 +685,7 @@
     dom.playerDialogClose.addEventListener("click", () => closePlayerDialog());
     dom.playerDialogBackdrop.addEventListener("click", () => closePlayerDialog());
     document.querySelectorAll("[data-scope]").forEach(button => button.addEventListener("click", () => setScope(button.dataset.scope)));
+    document.querySelectorAll("[data-ranking-mode]").forEach(button => button.addEventListener("click", () => setRankingMode(button.dataset.rankingMode)));
     document.addEventListener("click", event => {
       if (!event.target.closest(".admin-menu")) closeAdminMenu();
     });
